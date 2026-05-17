@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
-import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
+// LinkedIn OAuth hidden for now; re-enable by uncommenting the import + button below.
+// import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
 
 export default function SignupPage() {
   return (
@@ -14,10 +15,7 @@ export default function SignupPage() {
         Join Thailand&rsquo;s most serious community of co-founders.
       </p>
 
-      <div className="space-y-3">
-        <LinkedInSignInButton />
-        <GoogleSignInButton />
-      </div>
+      <SignupForm />
 
       <div className="flex items-center gap-4 my-6">
         <div className="flex-1 h-px bg-line" />
@@ -27,7 +25,10 @@ export default function SignupPage() {
         <div className="flex-1 h-px bg-line" />
       </div>
 
-      <SignupForm />
+      <div className="space-y-3">
+        <GoogleSignInButton />
+        {/* <LinkedInSignInButton /> */}
+      </div>
 
       <p className="mt-6 text-xs text-ink-muted leading-relaxed">
         By continuing, you agree to our Terms and acknowledge our PDPA privacy

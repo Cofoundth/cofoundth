@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
-import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
+// LinkedIn OAuth hidden for now; re-enable by uncommenting the import + button below.
+// import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
 
 export default function LoginPage() {
   return (
@@ -14,10 +15,7 @@ export default function LoginPage() {
         Continue building with your co-founder community.
       </p>
 
-      <div className="space-y-3">
-        <LinkedInSignInButton />
-        <GoogleSignInButton />
-      </div>
+      <LoginForm />
 
       <div className="flex items-center gap-4 my-6">
         <div className="flex-1 h-px bg-line" />
@@ -27,7 +25,10 @@ export default function LoginPage() {
         <div className="flex-1 h-px bg-line" />
       </div>
 
-      <LoginForm />
+      <div className="space-y-3">
+        <GoogleSignInButton />
+        {/* <LinkedInSignInButton /> */}
+      </div>
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">
         New to Cofoundee?{" "}
