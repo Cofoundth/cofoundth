@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getLocale, t } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const navLinks = [
   { href: "/insights", label: "Insights" },
@@ -6,7 +8,10 @@ const navLinks = [
   { href: "/events", label: "Events" },
 ];
 
-export function MarketingNav() {
+export async function MarketingNav() {
+  const locale = await getLocale();
+  const tr = (en: string) => t(en, locale);
+
   return (
     <nav className="bg-white border-b border-line">
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
@@ -22,7 +27,7 @@ export function MarketingNav() {
                 Cofoundee
               </div>
               <div className="text-[10px] text-ink-muted uppercase tracking-[0.2em] mt-1">
-                Est. 2026 &middot; Bangkok
+                {tr("Est. 2026 · Bangkok")}
               </div>
             </div>
           </Link>
@@ -34,23 +39,24 @@ export function MarketingNav() {
                 href={link.href}
                 className="text-sm text-ink hover:text-navy tracking-wide"
               >
-                {link.label}
+                {tr(link.label)}
               </Link>
             ))}
           </div>
 
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             <Link
               href="/login"
               className="text-sm text-ink hover:text-navy tracking-wide"
             >
-              Sign in
+              {tr("Sign in")}
             </Link>
             <Link
               href="/signup"
               className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
             >
-              Join Cofoundee
+              {tr("Join Cofoundee")}
             </Link>
           </div>
         </div>

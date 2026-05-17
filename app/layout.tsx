@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
+import { Noto_Sans_Thai } from "next/font/google";
+import { getLocale } from "@/lib/i18n";
 import "./globals.css";
+
+const notoSansThai = Noto_Sans_Thai({
+  subsets: ["thai", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-noto-thai",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Cofoundee — Find your co-founder",
@@ -7,13 +16,17 @@ export const metadata: Metadata = {
     "The platform for Thai founders to find their co-founder based on complementary skills, intent, and industry.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="th" className="h-full antialiased">
+    <html
+      lang={locale}
+      className={`${notoSansThai.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         {children}
       </body>
