@@ -47,7 +47,9 @@ export default async function MessagePage({ params }: Props) {
     .filter((m) => m.sender_id !== user!.id && !m.read_at)
     .map((m) => m.id as string);
   if (unreadFromOther.length) {
-    void supabase
+    // Await — fire-and-forget gets cancelled when the response is sent,
+    // leaving messages stuck as unread and the Matches nav badge stuck high.
+    await supabase
       .from("messages")
       .update({ read_at: new Date().toISOString() })
       .in("id", unreadFromOther);
