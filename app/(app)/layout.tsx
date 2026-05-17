@@ -5,6 +5,7 @@ import { getUser } from "@/lib/auth";
 import { signOutAction } from "../(auth)/actions";
 import { Avatar } from "@/components/Avatar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { BrandMark, Wordmark } from "@/components/Brand";
 
 export default async function AppLayout({
   children,
@@ -45,12 +46,8 @@ export default async function AppLayout({
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
               <Link href="/dashboard" className="flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-navy flex items-center justify-center">
-                  <span className="text-white font-serif text-base">C</span>
-                </div>
-                <span className="text-base font-serif text-navy tracking-tight">
-                  Cofoundee
-                </span>
+                <BrandMark size="sm" />
+                <Wordmark className="text-base" />
               </Link>
               <nav className="hidden md:flex items-center gap-1">
                 <NavLink href="/dashboard">Dashboard</NavLink>

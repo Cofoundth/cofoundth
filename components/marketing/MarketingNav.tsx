@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getLocale, t } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { BrandMark, Wordmark } from "@/components/Brand";
 
 const navLinks = [
   { href: "/insights", label: "Insights" },
@@ -17,15 +18,9 @@ export async function MarketingNav() {
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-navy flex items-center justify-center">
-              <span className="text-white text-lg font-serif font-bold tracking-tight">
-                C
-              </span>
-            </div>
+            <BrandMark size="md" />
             <div className="text-left">
-              <div className="text-navy font-serif text-xl tracking-tight leading-none">
-                Cofoundee
-              </div>
+              <Wordmark />
               <div className="text-[10px] text-ink-muted uppercase tracking-[0.2em] mt-1">
                 {tr("Est. 2026 · Bangkok")}
               </div>

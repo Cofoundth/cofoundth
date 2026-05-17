@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { BrandMark, Wordmark } from "@/components/Brand";
 
 export default async function AuthLayout({
   children,
@@ -22,14 +23,8 @@ export default async function AuthLayout({
       <header className="border-b border-line bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-navy flex items-center justify-center">
-              <span className="text-white text-lg font-serif font-bold tracking-tight">
-                C
-              </span>
-            </div>
-            <div className="font-serif text-xl text-navy tracking-tight">
-              Cofoundee
-            </div>
+            <BrandMark size="md" />
+            <Wordmark />
           </Link>
         </div>
       </header>

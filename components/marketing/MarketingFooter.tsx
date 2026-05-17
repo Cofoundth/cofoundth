@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getLocale, t } from "@/lib/i18n";
+import { Wordmark } from "@/components/Brand";
 
 const columns = [
   {
@@ -40,7 +41,9 @@ export async function MarketingFooter() {
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
         <div className="grid md:grid-cols-5 gap-10 mb-12">
           <div className="md:col-span-1">
-            <div className="font-serif text-2xl mb-4 text-white">Cofoundee</div>
+            <div className="mb-4">
+              <Wordmark variant="light" className="text-2xl" />
+            </div>
             <p className="text-sm text-slate-300 leading-relaxed">
               {tr(
                 "The platform for Thailand’s founders to find their co-founder.",
