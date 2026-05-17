@@ -13,7 +13,6 @@ npm install -g @anthropic-ai/claude-code
 ### 2. Start Claude Code in this folder
 
 ```bash
-cd cofound-th
 claude
 ```
 
@@ -38,12 +37,13 @@ npm run dev        # http://localhost:3000
 ## Project Structure
 
 ```
-cofound-th/
+./
 ├── CLAUDE.md                       # Main context for Claude Code (READ THIS FIRST)
 ├── AGENTS.md                       # Next.js 16 caveat for AI agents
 ├── README.md                       # This file
 ├── app/                            # Next.js App Router
 ├── lib/supabase/                   # Supabase server + browser clients
+├── proxy.ts                        # Auth session refresh (Next.js 16 proxy)
 ├── docs/                           # Strategy documents (.docx / .pptx)
 └── design/CoFound_Prototype.jsx    # Full React design reference
 ```

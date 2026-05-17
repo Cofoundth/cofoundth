@@ -195,7 +195,7 @@ You said you'd figure it out in Claude Code. Here are suggestions to consider:
 ## 📂 Suggested File Structure
 
 ```
-cofound-th/
+./
 ├── app/                          # Next.js app router
 │   ├── (marketing)/              # Public landing pages
 │   │   ├── page.tsx              # Landing page
