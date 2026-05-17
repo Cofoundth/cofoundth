@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "../(auth)/actions";
 import { Avatar } from "@/components/Avatar";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export default async function AppLayout({
   children,
@@ -66,7 +67,8 @@ export default async function AppLayout({
               </nav>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              <LanguageSwitcher />
               <Link
                 href={`/profile/${user.id}`}
                 title="Your profile"

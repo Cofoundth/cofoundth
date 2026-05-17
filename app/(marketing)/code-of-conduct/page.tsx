@@ -91,10 +91,10 @@ export default function CodeOfConductPage() {
           <p>
             For urgent issues (threats, ongoing harassment), email{" "}
             <a
-              href="mailto:safety@cofoundee.co"
+              href="mailto:chayanonr@cofoundee.co"
               className="text-navy hover:text-gold"
             >
-              safety@cofoundee.co
+              chayanonr@cofoundee.co
             </a>{" "}
             directly. We respond within 24 hours.
           </p>

@@ -27,7 +27,7 @@ const columns = [
   },
   {
     title: "Company",
-    items: [{ label: "Contact", href: "mailto:hello@cofoundee.co" }],
+    items: [{ label: "Contact", href: "mailto:chayanonr@cofoundee.co" }],
   },
 ];
 

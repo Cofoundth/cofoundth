@@ -172,10 +172,10 @@ export default function TermsPage() {
         <Section title="Contact">
           <p>
             <a
-              href="mailto:legal@cofoundee.co"
+              href="mailto:chayanonr@cofoundee.co"
               className="text-navy hover:text-gold"
             >
-              legal@cofoundee.co
+              chayanonr@cofoundee.co
             </a>
           </p>
         </Section>

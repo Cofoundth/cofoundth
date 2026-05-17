@@ -36,4 +36,16 @@
     color: var(--color-navy);
     letter-spacing: -0.01em;
   }
+
+  /* Tailwind v4 removed the default `cursor: pointer` on buttons —
+     restore it for enabled buttons and add `not-allowed` for disabled. */
+  button:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:not(:disabled):not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+  button:disabled,
+  button[aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }

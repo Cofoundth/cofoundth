@@ -119,10 +119,10 @@ export default function PrivacyPage() {
           <p>
             To exercise any of these rights, email{" "}
             <a
-              href="mailto:privacy@cofoundee.co"
+              href="mailto:chayanonr@cofoundee.co"
               className="text-navy hover:text-gold"
             >
-              privacy@cofoundee.co
+              chayanonr@cofoundee.co
             </a>
             . We respond within 30 days.
           </p>
@@ -153,10 +153,10 @@ export default function PrivacyPage() {
             Bangkok, Thailand
             <br />
             <a
-              href="mailto:privacy@cofoundee.co"
+              href="mailto:chayanonr@cofoundee.co"
               className="text-navy hover:text-gold"
             >
-              privacy@cofoundee.co
+              chayanonr@cofoundee.co
             </a>
           </p>
         </Section>
