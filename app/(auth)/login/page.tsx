@@ -30,7 +30,7 @@ export default function LoginPage() {
       <LoginForm />
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">
-        New to CoFound.th?{" "}
+        New to Cofoundee?{" "}
         <Link href="/signup" className="text-navy hover:text-gold">
           Create your profile
         </Link>

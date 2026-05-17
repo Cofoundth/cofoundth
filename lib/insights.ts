@@ -32,7 +32,7 @@ We see four traps Thai founders fall into:
 
 **4. Avoiding hard conversations early.** Equity split, decision rights, what happens if one of you wants to leave — these get harder, not easier, the longer you defer them.
 
-The CoFound.th matching model is designed to surface complementarity by intent, not just skill. An "idea-haver" looking for an "open" technical co-founder is structurally aligned. Two idea-havers in the same domain are usually not.`,
+The Cofoundee matching model is designed to surface complementarity by intent, not just skill. An "idea-haver" looking for an "open" technical co-founder is structurally aligned. Two idea-havers in the same domain are usually not.`,
   },
   {
     slug: "why-complementary-skills-matter",

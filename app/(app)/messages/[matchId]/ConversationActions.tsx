@@ -83,7 +83,7 @@ function ScheduleDialog({
       action: "TEMPLATE",
       text: `Co-founder intro call: ${otherName}`,
       details:
-        `Co-founder intro call via CoFound.th.\n\n` +
+        `Co-founder intro call via Cofoundee.\n\n` +
         `When you save this event, tick "Google Meet" in the conferencing ` +
         `dropdown — Google will generate the meeting link automatically.`,
       dates: `${toGCalDate(startLocal)}/${toGCalDate(endLocal)}`,

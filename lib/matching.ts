@@ -1,4 +1,4 @@
-// CoFound.th — Complement Score
+// Cofoundee — Complement Score
 //
 // Per CLAUDE.md weights:
 //   Role complementarity (40%) + Intent alignment (30%) + Industry (15%) +

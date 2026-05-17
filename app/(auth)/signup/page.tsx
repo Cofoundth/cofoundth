@@ -35,7 +35,7 @@ export default function SignupPage() {
       </p>
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">
-        Already on CoFound.th?{" "}
+        Already on Cofoundee?{" "}
         <Link href="/login" className="text-navy hover:text-gold">
           Sign in
         </Link>

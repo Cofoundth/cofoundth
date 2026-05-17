@@ -50,7 +50,7 @@ export default async function AppLayout({
                   <span className="text-white font-serif text-base">C</span>
                 </div>
                 <span className="text-base font-serif text-navy tracking-tight">
-                  CoFound.th
+                  Cofoundee
                 </span>
               </Link>
               <nav className="hidden md:flex items-center gap-1">

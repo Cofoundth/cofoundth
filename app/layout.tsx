@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CoFound.th — Find your co-founder",
+  title: "Cofoundee — Find your co-founder",
   description:
     "The platform for Thai founders to find their co-founder based on complementary skills, intent, and industry.",
 };

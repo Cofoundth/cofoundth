@@ -1,7 +1,7 @@
 // Admin allow-list for Phase 1 moderation.
 //
 // Set ADMIN_EMAILS as a comma-separated env var, e.g.:
-//   ADMIN_EMAILS=alice@cofound.th,bob@cofound.th
+//   ADMIN_EMAILS=alice@cofoundee.co,bob@cofoundee.co
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;

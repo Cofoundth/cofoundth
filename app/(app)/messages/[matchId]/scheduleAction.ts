@@ -87,7 +87,7 @@ export async function scheduleCallAction(
       userId: user.id,
       summary: `Co-founder intro call: ${otherName}`,
       description:
-        "Co-founder intro call via CoFound.th. Discuss vision, skills, and fit.",
+        "Co-founder intro call via Cofoundee. Discuss vision, skills, and fit.",
       startISO: startLocal.toISOString(),
       endISO: endLocal.toISOString(),
       attendeeEmails: otherEmail ? [otherEmail] : [],

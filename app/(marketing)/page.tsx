@@ -67,7 +67,7 @@ export default function LandingPage() {
                 The right co-founder is the difference.
               </h1>
               <p className="text-lg text-ink leading-relaxed max-w-2xl mb-10">
-                CoFound.th matches Thai entrepreneurs based on complementary
+                Cofoundee matches Thai entrepreneurs based on complementary
                 skills, intent, and industry — not random swipes. Built for
                 serious founders looking for the right partner to build with.
               </p>
@@ -219,7 +219,7 @@ export default function LandingPage() {
           <Quote className="w-12 h-12 text-gold mx-auto mb-8" strokeWidth={1} />
           <blockquote className="font-serif text-3xl lg:text-4xl leading-relaxed mb-10 italic text-white">
             I had the idea, the customers, and the runway. What I didn&rsquo;t
-            have was a technical co-founder I could trust. CoFound.th matched me
+            have was a technical co-founder I could trust. Cofoundee matched me
             with someone whose skills, values, and ambition perfectly
             complemented mine. Six months later, we&rsquo;re building together.
           </blockquote>

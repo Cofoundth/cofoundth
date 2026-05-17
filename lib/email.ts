@@ -6,7 +6,7 @@
 import { Resend } from "resend";
 
 const FROM =
-  process.env.RESEND_FROM_EMAIL ?? "CoFound.th <onboarding@resend.dev>";
+  process.env.RESEND_FROM_EMAIL ?? "Cofoundee <onboarding@resend.dev>";
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -54,7 +54,7 @@ function wrap(title: string, body: string) {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>${title}</title><style>${BASE_STYLES}</style></head>
 <body><div class="container"><div class="card">${body}</div>
-<div class="footer">CoFound.th — Built by founders, for founders.</div></div></body></html>`;
+<div class="footer">Cofoundee — Built by founders, for founders.</div></div></body></html>`;
 }
 
 export async function sendInterestReceivedEmail(opts: {
@@ -64,7 +64,7 @@ export async function sendInterestReceivedEmail(opts: {
   note: string | null;
 }) {
   const body = `
-    <div class="badge">New on CoFound.th</div>
+    <div class="badge">New on Cofoundee</div>
     <h1>${escapeHtml(opts.fromName)} expressed interest</h1>
     <p>Hi ${escapeHtml(opts.toName)},</p>
     <p><strong>${escapeHtml(opts.fromName)}</strong> just expressed interest in your profile.</p>
@@ -79,7 +79,7 @@ export async function sendInterestReceivedEmail(opts: {
   return send({
     to: opts.toEmail,
     subject: `${opts.fromName} expressed interest in your profile`,
-    html: wrap("New interest on CoFound.th", body),
+    html: wrap("New interest on Cofoundee", body),
   });
 }
 
@@ -100,7 +100,7 @@ export async function sendMutualMatchEmail(opts: {
   return send({
     to: opts.toEmail,
     subject: `You and ${opts.otherName} are a mutual match`,
-    html: wrap("Mutual match on CoFound.th", body),
+    html: wrap("Mutual match on Cofoundee", body),
   });
 }
 
@@ -121,7 +121,7 @@ export async function sendNewMessageEmail(opts: {
   return send({
     to: opts.toEmail,
     subject: `New message from ${opts.fromName}`,
-    html: wrap("New message on CoFound.th", body),
+    html: wrap("New message on Cofoundee", body),
   });
 }
 

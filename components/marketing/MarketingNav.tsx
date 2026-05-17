@@ -19,7 +19,7 @@ export function MarketingNav() {
             </div>
             <div className="text-left">
               <div className="text-navy font-serif text-xl tracking-tight leading-none">
-                CoFound.th
+                Cofoundee
               </div>
               <div className="text-[10px] text-ink-muted uppercase tracking-[0.2em] mt-1">
                 Est. 2026 &middot; Bangkok
@@ -50,7 +50,7 @@ export function MarketingNav() {
               href="/signup"
               className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
             >
-              Join CoFound.th
+              Join Cofoundee
             </Link>
           </div>
         </div>

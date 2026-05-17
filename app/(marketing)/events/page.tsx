@@ -11,7 +11,7 @@ type Event = {
 
 const EVENTS: Event[] = [
   {
-    title: "CoFound.th Launch Mixer",
+    title: "Cofoundee Launch Mixer",
     date: "2026-06-15T18:30:00+07:00",
     location: "Bangkok &middot; To be announced",
     description:
@@ -122,7 +122,7 @@ export default function EventsPage() {
           href="/signup"
           className="text-sm text-navy hover:text-gold inline-flex items-center gap-1.5"
         >
-          Join CoFound.th to propose an event &rarr;
+          Join Cofoundee to propose an event &rarr;
         </Link>
       </div>
     </div>

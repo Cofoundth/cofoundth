@@ -1,4 +1,4 @@
-# CoFound.th
+# Cofoundee
 
 The platform for Thai founders to find their co-founder based on complementary skills, intent, and industry.
 
@@ -51,7 +51,7 @@ npm run dev        # http://localhost:3000
 ## What's Built
 
 - Next.js 16 + React 19 + TypeScript scaffold
-- Tailwind v4 with CoFound.th design tokens (navy / gold / cream, Georgia serif)
+- Tailwind v4 with Cofoundee design tokens (navy / gold / cream, Georgia serif)
 - Supabase client helpers (server + browser) wired with `@supabase/ssr`
 - Placeholder branded landing page
 

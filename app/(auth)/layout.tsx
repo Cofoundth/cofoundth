@@ -28,7 +28,7 @@ export default async function AuthLayout({
               </span>
             </div>
             <div className="font-serif text-xl text-navy tracking-tight">
-              CoFound.th
+              Cofoundee
             </div>
           </Link>
         </div>
@@ -39,7 +39,7 @@ export default async function AuthLayout({
       </main>
 
       <footer className="py-6 text-center text-xs text-ink-muted">
-        &copy; 2026 CoFound (Thailand) Co., Ltd. &middot; PDPA compliant
+        &copy; 2026 Cofoundee Co., Ltd. &middot; PDPA compliant
       </footer>
     </div>
   );

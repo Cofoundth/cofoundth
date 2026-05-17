@@ -50,7 +50,7 @@ export default async function InsightPage({ params }: Props) {
           href="/signup"
           className="inline-block px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
         >
-          Join CoFound.th &middot; Free
+          Join Cofoundee &middot; Free
         </Link>
       </div>
     </article>

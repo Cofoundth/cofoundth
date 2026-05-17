@@ -17,7 +17,7 @@ const columns = [
   {
     title: "Company",
     items: [
-      { label: "Contact", href: "mailto:hello@cofound.th" },
+      { label: "Contact", href: "mailto:hello@cofoundee.co" },
     ],
   },
 ];
@@ -29,7 +29,7 @@ export function MarketingFooter() {
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
             <div className="font-serif text-2xl mb-4 text-white">
-              CoFound.th
+              Cofoundee
             </div>
             <p className="text-sm text-slate-300 leading-relaxed">
               The platform for Thailand&rsquo;s founders to find their
@@ -57,7 +57,7 @@ export function MarketingFooter() {
           ))}
         </div>
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between gap-4 text-xs text-slate-400">
-          <div>&copy; 2026 CoFound (Thailand) Co., Ltd. All rights reserved.</div>
+          <div>&copy; 2026 Cofoundee Co., Ltd. All rights reserved.</div>
           <div className="flex gap-6">
             <span>Privacy (PDPA)</span>
             <span>Terms</span>
