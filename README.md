@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CoFound.th
+
+The platform for Thai founders to find their co-founder based on complementary skills, intent, and industry.
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install Claude Code
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install -g @anthropic-ai/claude-code
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Start Claude Code in this folder
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd cofound-th
+claude
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. First prompt
 
-## Learn More
+Once Claude Code is running, paste this:
 
-To learn more about Next.js, take a look at the following resources:
+```
+Read CLAUDE.md and the strategy docs in /docs. Then help me set up a Next.js 14 project with TypeScript, Tailwind CSS, and Supabase for authentication and database.
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Claude Code will read all the context and begin building.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Local Development
 
-## Deploy on Vercel
+```bash
+npm install        # if node_modules missing
+cp .env.example .env.local   # then fill in Supabase keys
+npm run dev        # http://localhost:3000
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+cofound-th/
+├── CLAUDE.md                       # Main context for Claude Code (READ THIS FIRST)
+├── AGENTS.md                       # Next.js 16 caveat for AI agents
+├── README.md                       # This file
+├── app/                            # Next.js App Router
+├── lib/supabase/                   # Supabase server + browser clients
+├── docs/                           # Strategy documents (.docx / .pptx)
+└── design/CoFound_Prototype.jsx    # Full React design reference
+```
+
+## What's Built
+
+- Next.js 16 + React 19 + TypeScript scaffold
+- Tailwind v4 with CoFound.th design tokens (navy / gold / cream, Georgia serif)
+- Supabase client helpers (server + browser) wired with `@supabase/ssr`
+- Placeholder branded landing page
+
+**Not yet built:** auth flows, profile schema, founder directory, matching, messaging.
+
+## Phase 1 Goal
+
+Build co-founder matching platform. No investors yet. No payments yet. No video calls yet.
+
+**Target:** 500 active users by Month 6.
+
+## Tech Stack
+
+- **Frontend:** Next.js 16 (App Router) + React 19 + TypeScript + Tailwind v4
+- **Backend:** Next.js API routes + Server Actions
+- **Database:** Supabase (Postgres + Auth + Storage)
+- **Hosting:** Coolify on VPS
+- **Email:** Resend (to add)
+
+## Resources
+
+- [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+
+---
+
+Built by founders, for founders.
