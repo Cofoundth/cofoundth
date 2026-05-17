@@ -17,14 +17,14 @@ export async function LanguageSwitcher({
       : "text-ink hover:text-navy";
 
   return (
-    <form action={setLocaleAction}>
+    <form action={setLocaleAction} className="flex">
       <input type="hidden" name="locale" value={next} />
       <button
         type="submit"
-        className={`inline-flex items-center gap-1.5 text-xs tracking-wide ${colorClass}`}
+        className={`inline-flex items-center gap-1.5 text-sm tracking-wide ${colorClass}`}
         title={locale === "th" ? "Switch to English" : "เปลี่ยนเป็นภาษาไทย"}
       >
-        <Globe className="w-3.5 h-3.5" strokeWidth={1.5} />
+        <Globe className="w-4 h-4" strokeWidth={1.5} />
         {label}
       </button>
     </form>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getLocale, t } from "@/lib/i18n";
 
 const columns = [
@@ -17,6 +18,14 @@ const columns = [
     ],
   },
   {
+    title: "Legal",
+    items: [
+      { label: "Privacy (PDPA)", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Code of Conduct", href: "/code-of-conduct" },
+    ],
+  },
+  {
     title: "Company",
     items: [{ label: "Contact", href: "mailto:hello@cofoundee.co" }],
   },
@@ -29,8 +38,8 @@ export async function MarketingFooter() {
   return (
     <footer className="bg-navy text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
-        <div className="grid md:grid-cols-4 gap-10 mb-12">
-          <div>
+        <div className="grid md:grid-cols-5 gap-10 mb-12">
+          <div className="md:col-span-1">
             <div className="font-serif text-2xl mb-4 text-white">Cofoundee</div>
             <p className="text-sm text-slate-300 leading-relaxed">
               {tr(
@@ -44,16 +53,28 @@ export async function MarketingFooter() {
                 {tr(col.title)}
               </div>
               <ul className="space-y-2.5">
-                {col.items.map((item) => (
-                  <li key={item.label}>
-                    <a
-                      href={item.href}
-                      className="text-sm text-slate-200 hover:text-white"
-                    >
-                      {tr(item.label)}
-                    </a>
-                  </li>
-                ))}
+                {col.items.map((item) => {
+                  const isExternal = item.href.startsWith("mailto:");
+                  return (
+                    <li key={item.label}>
+                      {isExternal ? (
+                        <a
+                          href={item.href}
+                          className="text-sm text-slate-200 hover:text-white"
+                        >
+                          {tr(item.label)}
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className="text-sm text-slate-200 hover:text-white"
+                        >
+                          {tr(item.label)}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -61,9 +82,15 @@ export async function MarketingFooter() {
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between gap-4 text-xs text-slate-400">
           <div>&copy; 2026 Cofoundee Co., Ltd. All rights reserved.</div>
           <div className="flex gap-6">
-            <span>{tr("Privacy (PDPA)")}</span>
-            <span>{tr("Terms")}</span>
-            <span>{tr("Code of Conduct")}</span>
+            <Link href="/privacy" className="hover:text-white">
+              {tr("Privacy (PDPA)")}
+            </Link>
+            <Link href="/terms" className="hover:text-white">
+              {tr("Terms")}
+            </Link>
+            <Link href="/code-of-conduct" className="hover:text-white">
+              {tr("Code of Conduct")}
+            </Link>
           </div>
         </div>
       </div>
