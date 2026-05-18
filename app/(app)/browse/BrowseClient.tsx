@@ -133,6 +133,25 @@ export function BrowseClient({ me, myReady, others }: Props) {
             </button>
           )}
         </div>
+
+        {myReady && (
+          <div className="mt-6 bg-cream border-l-2 border-gold p-4">
+            <div className="text-xs uppercase tracking-[0.2em] text-gold mb-1.5">
+              About the Complement Score
+            </div>
+            <p className="text-sm text-ink leading-relaxed">
+              A 0–100 score measuring how well two founders fit:{" "}
+              <strong className="text-navy">role complementarity 40%</strong>{" "}
+              (technical ↔ business, etc.),{" "}
+              <strong className="text-navy">intent 30%</strong> (idea-haver ↔
+              skill-bringer),{" "}
+              <strong className="text-navy">industry 15%</strong>,{" "}
+              <strong className="text-navy">stage 10%</strong>,{" "}
+              <strong className="text-navy">location + commitment 5%</strong>.
+              Higher = better starting point for a conversation.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-12 gap-10">
@@ -339,7 +358,10 @@ function ProfileCard({
             </div>
 
             {showScore && (
-              <div className="text-right shrink-0">
+              <div
+                className="text-right shrink-0"
+                title="How well this founder's profile fits yours: role complementarity 40%, intent 30%, industry 15%, stage 10%, location/commitment 5%"
+              >
                 <div className="font-serif text-3xl text-gold leading-none">
                   {score}
                 </div>

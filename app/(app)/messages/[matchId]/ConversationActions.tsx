@@ -6,12 +6,14 @@ import { postScheduleNoticeAction } from "./scheduleNoticeAction";
 
 type Props = {
   matchId: string;
+  myName: string;
   otherName: string;
   otherEmail?: string | null;
 };
 
 export function ConversationActions({
   matchId,
+  myName,
   otherName,
   otherEmail,
 }: Props) {
@@ -42,6 +44,7 @@ export function ConversationActions({
       {scheduleOpen && (
         <ScheduleDialog
           matchId={matchId}
+          myName={myName}
           otherName={otherName}
           otherEmail={otherEmail ?? null}
           onClose={() => setScheduleOpen(false)}
@@ -53,11 +56,13 @@ export function ConversationActions({
 
 function ScheduleDialog({
   matchId,
+  myName,
   otherName,
   otherEmail,
   onClose,
 }: {
   matchId: string;
+  myName: string;
   otherName: string;
   otherEmail: string | null;
   onClose: () => void;
@@ -81,12 +86,16 @@ function ScheduleDialog({
 
     const params = new URLSearchParams({
       action: "TEMPLATE",
-      text: `Co-founder intro call: ${otherName}`,
+      text: `Cofoundee · Co-founder intro call (${myName} ↔ ${otherName})`,
       details:
-        `Co-founder intro call via Cofoundee.\n\n` +
-        `When you save this event, tick "Google Meet" in the conferencing ` +
-        `dropdown — Google will generate the meeting link automatically.`,
+        `Intro call between ${myName} and ${otherName} via Cofoundee — ` +
+        `the platform for Thai founders to meet their co-founder.\n\n` +
+        `Tick "Google Meet" in the conferencing dropdown before saving — ` +
+        `Google will generate the meeting link automatically and email ` +
+        `both attendees.\n\n` +
+        `Cofoundee: https://cofoundee.co`,
       dates: `${toGCalDate(startLocal)}/${toGCalDate(endLocal)}`,
+      location: "Google Meet (set inside Calendar)",
     });
     if (otherEmail) params.append("add", otherEmail);
 

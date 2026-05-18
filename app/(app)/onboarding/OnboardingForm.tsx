@@ -427,7 +427,7 @@ function StepContext({
     <div className="space-y-10">
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          Industry focus (select up to 3)
+          Industry focus (select all that apply)
         </label>
         <div className="flex flex-wrap gap-2">
           {INDUSTRIES.map((i) => (

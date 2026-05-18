@@ -40,9 +40,10 @@ export default async function ProfileDetailPage({ params }: Props) {
 
   const isOwnProfile = user?.id === profile.id;
 
-  // Track view (don't await — best effort)
+  // Track view — await so the insert actually completes (fire-and-forget
+  // gets cancelled when the response is sent, leaving the view count stuck).
   if (!isOwnProfile && user) {
-    void supabase
+    await supabase
       .from("profile_views")
       .insert({ viewer_id: user.id, viewed_id: profile.id });
   }

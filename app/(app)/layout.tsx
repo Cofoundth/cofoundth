@@ -56,7 +56,7 @@ export default async function AppLayout({
                   Interests
                 </NavLink>
                 <NavLink href="/matches" badge={unreadMessages ?? 0}>
-                  Matches
+                  Chat
                 </NavLink>
                 <NavLink href="/community">Community</NavLink>
               </nav>

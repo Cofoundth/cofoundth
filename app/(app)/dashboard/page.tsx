@@ -2,6 +2,21 @@ import Link from "next/link";
 import { ArrowRight, Eye, Inbox, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
+function timeOfDayGreeting(): string {
+  // Bangkok timezone (UTC+7) — server may be in any region
+  const bangkokHour = new Date().toLocaleString("en-US", {
+    hour: "numeric",
+    hour12: false,
+    timeZone: "Asia/Bangkok",
+  });
+  const h = parseInt(bangkokHour, 10);
+  if (h < 5) return "Working late";
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  if (h < 21) return "Good evening";
+  return "Burning the midnight oil";
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -19,6 +34,7 @@ export default async function DashboardPage() {
     { count: receivedCount },
     { count: matchesCount },
     { count: viewsCount },
+    { count: pendingReceivedCount },
   ] = await Promise.all([
     supabase
       .from("interests")
@@ -32,20 +48,68 @@ export default async function DashboardPage() {
       .from("profile_views")
       .select("id", { count: "exact", head: true })
       .eq("viewed_id", user!.id),
+    supabase
+      .from("interests")
+      .select("id", { count: "exact", head: true })
+      .eq("to_profile_id", user!.id)
+      .eq("status", "pending"),
   ]);
+
+  const firstName =
+    profile?.full_name?.split(" ")[0]?.trim() ||
+    user?.email?.split("@")[0] ||
+    "founder";
+
+  // Personalized subtitle based on profile state
+  let subtitle: React.ReactNode;
+  if (!profile?.onboarded) {
+    subtitle = (
+      <>
+        Finish your profile to start receiving interest from co-founders.
+      </>
+    );
+  } else if ((pendingReceivedCount ?? 0) > 0) {
+    subtitle = (
+      <>
+        <strong className="text-navy">{pendingReceivedCount}</strong> founder
+        {(pendingReceivedCount ?? 0) === 1 ? "" : "s"} have expressed interest
+        in you. Take a look —{" "}
+        <Link
+          href="/interests"
+          className="text-navy hover:text-gold underline underline-offset-4 decoration-gold/30"
+        >
+          your inbox
+        </Link>
+        .
+      </>
+    );
+  } else if ((matchesCount ?? 0) > 0) {
+    subtitle = (
+      <>
+        <strong className="text-navy">{matchesCount}</strong> mutual match
+        {(matchesCount ?? 0) === 1 ? "" : "es"} so far. Keep the conversations
+        going.
+      </>
+    );
+  } else {
+    subtitle = (
+      <>
+        Browse the directory and express interest in founders whose profiles
+        complement yours.
+      </>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12">
       <div className="mb-12 pb-8 border-b border-line">
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Welcome
+          {timeOfDayGreeting()}
         </div>
-        <h1 className="text-4xl lg:text-5xl mb-2">
-          Hello, {profile?.full_name ?? "founder"}.
+        <h1 className="text-4xl lg:text-5xl mb-3 leading-tight">
+          Hello, <span className="text-navy">{firstName}</span>.
         </h1>
-        <p className="text-ink leading-relaxed">
-          You&rsquo;re in. Phase I &middot; co-founder matching.
-        </p>
+        <p className="text-lg text-ink leading-relaxed max-w-2xl">{subtitle}</p>
       </div>
 
       {!profile?.onboarded && (

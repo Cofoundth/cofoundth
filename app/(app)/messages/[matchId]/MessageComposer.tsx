@@ -39,7 +39,13 @@ export function MessageComposer({ matchId }: { matchId: string }) {
           placeholder="Write a message…"
           className="flex-1 px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
           onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            // Enter sends; Shift+Enter inserts a newline.
+            // Don't submit if the user is composing IME (Thai, etc.) text.
+            if (
+              e.key === "Enter" &&
+              !e.shiftKey &&
+              !e.nativeEvent.isComposing
+            ) {
               e.preventDefault();
               formRef.current?.requestSubmit();
             }
@@ -58,7 +64,7 @@ export function MessageComposer({ matchId }: { matchId: string }) {
         <div className="mt-2 text-xs text-red-700">{state.error}</div>
       )}
       <div className="text-[11px] text-ink-muted mt-2">
-        ⌘+Enter to send
+        Enter to send &middot; Shift+Enter for new line
       </div>
     </form>
   );

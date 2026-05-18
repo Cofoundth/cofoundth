@@ -37,6 +37,12 @@ export default async function MessagePage({ params }: Props) {
     .eq("id", otherId)
     .single();
 
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user!.id)
+    .single();
+
   const { data: messages } = await supabase
     .from("messages")
     .select("id, sender_id, content, read_at, created_at")
@@ -56,6 +62,7 @@ export default async function MessagePage({ params }: Props) {
   }
 
   const otherName = (other?.full_name as string) ?? "Founder";
+  const myName = (me?.full_name as string) ?? "A founder";
 
   return (
     <div className="max-w-7xl mx-auto h-[calc(100vh-4rem)] grid lg:grid-cols-12">
@@ -98,6 +105,7 @@ export default async function MessagePage({ params }: Props) {
             </Link>
             <ConversationActions
               matchId={matchId}
+              myName={myName}
               otherName={otherName}
               otherEmail={(other?.email as string | null) ?? null}
             />

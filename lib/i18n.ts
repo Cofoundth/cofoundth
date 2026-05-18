@@ -38,6 +38,12 @@ export const TH: Record<string, string> = {
   "Privacy (PDPA)": "ความเป็นส่วนตัว (PDPA)",
   Terms: "ข้อกำหนด",
   "Code of Conduct": "จรรยาบรรณ",
+  Chat: "แชท",
+  Dashboard: "แดชบอร์ด",
+  Browse: "ค้นหา",
+  Interests: "ความสนใจ",
+  Community: "ชุมชน",
+  "Sign out": "ออกจากระบบ",
   "Built by founders, for founders.":
     "สร้างโดยผู้ก่อตั้ง เพื่อผู้ก่อตั้ง",
   "The platform for Thailand’s founders to find their co-founder.":
