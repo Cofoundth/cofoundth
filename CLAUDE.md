@@ -1,4 +1,4 @@
-# CoFound.th — Project Handoff Brief
+# Cofoundee — Master Strategy
 
 > This file is read automatically by Claude Code. It contains complete project context.
 > Last updated: May 2026
@@ -7,19 +7,149 @@
 
 ---
 
-## 🎯 What We're Building
+## 🎯 Vision
 
-**CoFound.th** is a co-founder matching platform for Thai entrepreneurs. Phase 1 focuses exclusively on connecting founders with complementary co-founders. Investor matching comes in Phase 2 (not now).
+**Build the platform that grows with Thai businesses from idea to exit.**
 
-**One-sentence pitch:** The platform for Thai founders to find their co-founder based on complementary skills, intent, and industry — not random swipes.
+Not just co-founder matching. A multi-decade business that captures founders early and serves them through their entire journey.
+
+```
+Idea → Co-founder → Build → Funding → Hire → Partners → Scale → Exit
+       └────────── All on Cofoundee ──────────┘
+```
 
 ---
 
-## ✅ Phase 1 Scope (Build ONLY These)
+## 🏗️ The Phased Roadmap
+
+### Phase 1 — Co-Founder Matching (Year 1)
+- **Status:** Build this now
+- **Pricing:** 100% FREE
+- **Goal:** 500 active users by Month 6
+- **Features:** Role-based matching, browse directory, Express Interest, mutual-interest messaging, community forum
+- **Investment:** None — bootstrap with ~฿100-150K personal savings
+
+### Phase 2 — Investor Introductions (Year 2)
+- **Pricing:** Still FREE
+- **Goal:** 1,500-2,000 users, real funded deals happening
+- **Features:** Verified investor profiles, introduction requests, deal flow
+- **Investment:** Still bootstrapped — apply for DEPA grant if needed
+
+### Phase 3 — Monetization Begins (Year 3)
+- **Pricing:** Premium tier ฿299/month launches
+- **Features:** Legal services hub, job board for startups, premium memberships
+- **Revenue model:** Subscriptions + per-document legal fees + job board listings
+- **Goal:** First sustainable revenue
+
+### Phase 4 — B2B Partnership Matching (Year 4+)
+- **Features:** Company-to-company matching, strategic alliances, vendor marketplace
+- **Revenue model:** Success fees on partnerships (฿20K-500K+ per deal)
+- **Goal:** Big revenue acceleration
+
+### Phase 5 — Regional Expansion or Deeper Thai Market
+- Vietnam, Indonesia, Philippines
+- Or deeper services in Thailand
+- Decision based on Phase 1-4 traction
+
+---
+
+## 💰 Funding Strategy
+
+**Bootstrapped. No VC. No early investors.**
+
+- **Phase 1+2:** Personal savings (~฿100-150K total for 2 years)
+- **Optional:** One DEPA grant application (up to ฿500K, no equity)
+- **Optional:** AWS Activate credits (free hosting)
+- **Optional:** Accelerator for mentorship only (skip equity-heavy ones)
+
+**Why bootstrap:**
+- Web platforms are cheap to maintain in 2026 (~฿1,000/month operating cost)
+- 100% ownership compounds massively over time
+- No investor pressure to monetize early
+- Patience becomes your competitive advantage
+
+---
+
+## 🧠 The Matching Model (Core Phase 1 Logic)
+
+**Every profile declares three things:**
+
+**1. "I am..."** (Role)
+- Technical / Business / Product / Marketing / Finance / Domain Expert
+
+**2. "I'm bringing..."** (Intent)
+- `idea` — Has a specific idea/vision
+- `open` — Has skills, open to joining someone's idea
+- `explore` — Wants to brainstorm and discover together
+
+**3. "I'm looking for..."** (Complementary roles)
+
+Plus filters: Industry, Stage, Location, Commitment
+
+**Matching logic:** Complementary intent + role + industry alignment
+
+**Complement Score weights:**
+- Role complementarity (40%)
+- Intent alignment (30%)
+- Industry overlap (15%)
+- Stage match (10%)
+- Location & commitment (5%)
+
+**The Pitch field is MANDATORY** — it's the matching fuel. 200–500 chars.
+
+**Conviction signals to filter tire-kickers:**
+- Commitment level (Full-time / Part-time / Side project)
+- Financial runway (3 / 6 / 12 / 18+ months)
+- Founder experience (First-time / 1-2 / 3+)
+- Why this, why now
+
+---
+
+## 🎨 Design Principles
+
+**Conservative, professional, trustworthy. NOT a dating app aesthetic.**
+
+### Brand
+- Think law firm or private bank (McKinsey, Baker McKenzie)
+- Founders are making serious career decisions
+
+### Colors
+- Primary: Navy `#0A1F44`
+- Accent: Gold `#B8941F`
+- Background: Cream `#FAFAF7`
+- Ink (body): `#4A4A4A`
+- Ink muted: `#888888`
+- Border line: `#E2E8F0`
+
+### Typography
+- Headings: Georgia serif
+- Body: Noto Sans Thai + system UI (covers Thai + Latin)
+- Numbers/stats: Serif (elegant, like a finance report)
+
+### Visual Language
+- Sharp corners, no rounded buttons
+- Generous whitespace, editorial layout
+- Roman numerals for steps
+- Thin gold accent lines as section dividers
+- Verified badges in gold (not blue checkmarks)
+
+### Language Rules
+- "Express Interest" not "Like"
+- "Complement Score" not "Match %"
+- "Founder Directory" not "Discover"
+- "Verified founder" not "Pro user"
+- "The Pitch" not "Bio"
+- "Capital Partners" (Phase 2) not "Investors"
+
+**No swipe interface ever.** Co-founder selection is a serious business decision.
+
+---
+
+## ✅ Phase 1 Build Scope (MVP)
 
 ### Critical (Must Have)
-- User registration & authentication (email + LinkedIn OAuth)
-- Profile creation with role-based model (see below)
+- User registration & authentication (email + Google OAuth + LinkedIn OAuth)
+- Profile creation with role-based model
 - Browse directory with filters
 - Express Interest flow
 - Mutual interest unlock messaging
@@ -28,379 +158,219 @@
 ### Important (Build Soon After)
 - Community forum (basic)
 - Content hub / blog
-- Profile verification (email + LinkedIn)
+- Profile verification
 - Admin moderation tools
 
-### Nice to Have (Don't Block on These)
-- Legal templates library (just static downloads)
+### Nice to Have
+- Legal templates (static downloads)
 - Event listings
-- Search analytics
 
 ### DO NOT BUILD in Phase 1
 - ❌ Investor matching
-- ❌ Paid subscriptions / payment integration
+- ❌ Paid subscriptions / payments
 - ❌ Mobile app (web responsive is enough)
 - ❌ Swipe interface
-- ❌ Video calls (users will use Google Meet / Zoom / LINE on their own)
-- ❌ Calendar booking
-- ❌ Multi-language (Thai-only first)
+- ❌ In-app video calls (users use Google Meet/LINE on their own)
+- ❌ In-app calendar booking (Google Calendar URL templates only)
 - ❌ Anything related to investors
 
-**Phase 1 is 100% FREE for all users. No payments. Focus on growth.**
+**Multi-language (Thai + English)** — Phase 1 ships with both. Thai is the primary market; English is included since most Thai founders use both.
 
 ---
 
-## 🧠 The Matching Model (Core Logic)
+## 🚀 Tech Stack (Current)
 
-This is the most important part. Get this right.
+- **Frontend:** Next.js 16 (App Router) + TypeScript + Tailwind v4
+- **Backend:** Next.js Server Actions + Route Handlers
+- **Database:** Supabase (Postgres + Auth + Storage) — Singapore region
+- **Hosting:** Vercel
+- **Email:** Resend
+- **Auth:** Supabase Auth (Google OAuth, email/password, LinkedIn OAuth code present but hidden)
+- **Analytics:** TBD (Plausible recommended)
 
-### Every Profile Declares Three Things:
-
-**1. "I am..."** (Role)
-- Technical
-- Business
-- Product
-- Marketing
-- Finance
-- Domain Expert
-
-**2. "I'm bringing..."** (Intent)
-- `idea` — Has a specific idea/vision
-- `open` — Has skills, open to joining someone's idea
-- `explore` — Wants to brainstorm and discover together
-
-**3. "I'm looking for..."** (Complementary roles — can select multiple)
-- Same options as Role above
-
-### Matching Logic
-
-```
-You: Role = X, Intent = Y, Looking for = [Z1, Z2]
-Match: Their Role is in [Z1, Z2] AND their Looking for contains X
-```
-
-Plus filter by:
-- Industry (FinTech, HealthTech, E-commerce, SaaS, AI, PropTech, Consumer, etc.)
-- Stage (Just exploring / Building MVP / Have traction / Raising)
-- Location (Bangkok / Chiang Mai / Phuket / Remote OK / Other)
-- Commitment (Full-time / Part-time / Side project)
-
-### Complement Score (instead of "Match Score")
-
-Calculate based on:
-- Role complementarity (40%)
-- Intent alignment (30%)
-- Industry match (15%)
-- Stage match (10%)
-- Location/commitment match (5%)
+**Total monthly hosting cost target:** ~฿500–1,500
 
 ---
 
-## 📝 Profile Required Fields
-
-### Basic
-- Full name
-- Age (optional but helpful)
-- Location (city or "Remote OK")
-- Profile photo
-- LinkedIn URL (for verification)
-
-### Role Declaration
-- I am (single select)
-- I'm bringing (single select: idea / open / explore)
-- I'm looking for (multi-select roles)
-
-### The Pitch (MANDATORY — this is the matching fuel)
-- 200–500 character text field
-- Idea-havers describe their idea
-- Skill-bringers describe what they can offer
-- Explorers describe their interests
-
-### Skills & Expertise
-- Tag-based input (React, Sales, Product Design, etc.)
-- Industry tags
-- Years of experience
-
-### Conviction Signals (builds trust, filters tire-kickers)
-- Commitment level (Full-time / Part-time / Side project)
-- Financial runway (3 / 6 / 12 / 18+ months)
-- Founder experience (First-time / 1-2 ventures / 3+ ventures)
-- Why this, why now (open text)
-
----
-
-## 🎨 Design System
-
-### Brand: Conservative, Professional, Trustworthy
-
-**This is NOT a dating app aesthetic.** Think law firm or private bank — McKinsey / Baker McKenzie. Founders are making serious career decisions.
-
-### Color Palette
-```css
---navy-primary: #0A1F44      /* Main brand color */
---navy-dark: #0F2654         /* Hover states */
---gold-accent: #B8941F       /* Subtle accents, badges */
---cream-bg: #FAFAF7          /* Page background */
---slate-text: #4A4A4A        /* Body text */
---slate-light: #888888       /* Muted text */
---white: #FFFFFF
---border: #E2E8F0
-```
-
-### Typography
-- **Headings:** Georgia serif (or similar — Lora, Source Serif Pro)
-- **Body & UI:** System UI sans-serif
-- **Numbers/stats:** Serif (elegant, like a finance report)
-
-### Visual Language
-- **Sharp corners** on buttons (no rounded — too playful)
-- **Generous whitespace** — editorial layout
-- **Roman numerals** (I, II, III) for steps and sections
-- **Thin gold accent lines** as section dividers
-- **Verified badges** in gold, not blue checkmarks
-- **No emoji-heavy design** — use icons sparingly
-
-### Language Rules
-- "Express Interest" not "Like" or "Match"
-- "Complement Score" not "Match %"
-- "Founder Directory" not "Discover" or "Browse Singles"
-- "Verified founder" not "Pro user"
-- "The Pitch" not "Bio" or "About Me"
-
----
-
-## 🛠️ Recommended Tech Stack
-
-You said you'd figure it out in Claude Code. Here are suggestions to consider:
-
-### Option A: Fastest Time-to-Market
-- **Frontend:** Next.js 14+ (App Router) + TailwindCSS
-- **Backend:** Next.js API routes + Server Actions
-- **Database:** Supabase (Postgres + Auth + Storage)
-- **Hosting:** Coolify on your VPS (cheap)
-- **Email:** Resend or SendGrid
-- **Analytics:** Plausible (privacy-friendly, popular in TH)
-
-### Option B: More Control
-- **Frontend:** React + Vite + TailwindCSS
-- **Backend:** Node.js + Express + Prisma
-- **Database:** PostgreSQL (self-hosted on Coolify)
-- **Auth:** Lucia Auth or NextAuth.js
-- **Hosting:** Coolify on your VPS
-
-**My recommendation:** Go with Option A (Next.js + Supabase) for Phase 1. You can migrate later if needed.
-
----
-
-## 📂 Suggested File Structure
-
-```
-./
-├── app/                          # Next.js app router
-│   ├── (marketing)/              # Public landing pages
-│   │   ├── page.tsx              # Landing page
-│   │   ├── how-it-works/
-│   │   ├── for-founders/
-│   │   └── insights/
-│   ├── (app)/                    # Authenticated pages
-│   │   ├── dashboard/
-│   │   ├── browse/               # Founder directory
-│   │   ├── profile/[id]/         # Individual founder profile
-│   │   ├── messages/
-│   │   ├── settings/
-│   │   └── community/
-│   ├── api/                      # API routes
-│   │   ├── profiles/
-│   │   ├── interests/
-│   │   ├── messages/
-│   │   └── auth/
-│   └── layout.tsx
-├── components/
-│   ├── ui/                       # Reusable UI components
-│   ├── profile/
-│   ├── browse/
-│   └── shared/
-├── lib/
-│   ├── supabase/
-│   ├── matching/                 # The matching algorithm
-│   └── utils/
-├── docs/
-│   └── (strategy docs go here)
-├── public/
-└── CLAUDE.md                     # This file
-```
-
----
-
-## 🗄️ Database Schema (Suggested)
+## 🗄️ Database Schema (Designed for Phase 4 too)
 
 ```sql
--- Users (handled by Supabase Auth)
--- Adds custom user profile data
-
 profiles
 ├── id (uuid, PK, references auth.users)
+├── type (enum: individual, company)  -- Phase 4 extensibility
 ├── full_name (text)
+├── company_name (text, nullable)     -- Phase 4
+├── email (text)                      -- synced from auth.users
 ├── age (int, nullable)
 ├── location (text)
 ├── photo_url (text)
 ├── linkedin_url (text)
 ├── i_am (enum: technical, business, product, marketing, finance, domain_expert)
 ├── intent (enum: idea, open, explore)
-├── looking_for (array of enums)
+├── looking_for (array of profile_role)
 ├── industry (array of text)
 ├── stage (enum: exploring, building, traction, raising)
 ├── commitment (enum: full_time, part_time, side_project)
-├── runway (enum: 3_months, 6_months, 12_months, 18_plus)
-├── experience (enum: first_time, 1_2, 3_plus)
-├── pitch (text)
+├── runway (enum: three_months, six_months, twelve_months, eighteen_plus)
+├── experience (enum: first_time, one_to_two, three_plus)
+├── pitch (text, 200-500 chars when set)
 ├── why_this (text)
 ├── skills (array of text)
+├── capabilities (array of text)      -- Phase 4 B2B
 ├── verified (boolean, default false)
-├── created_at (timestamp)
-└── updated_at (timestamp)
+├── onboarded (boolean, default false)
+├── created_at, updated_at
 
 interests
-├── id (uuid, PK)
-├── from_profile_id (uuid, FK)
-├── to_profile_id (uuid, FK)
-├── note (text)             -- personal intro message
-├── status (enum: pending, accepted, declined)
-├── created_at (timestamp)
+├── id, from_profile_id, to_profile_id, note, status, created_at
 
 matches
-├── id (uuid, PK)
-├── profile_a_id (uuid, FK)
-├── profile_b_id (uuid, FK)
-├── created_at (timestamp)   -- when mutual interest unlocked
+├── id, profile_a_id, profile_b_id, created_at (canonical ordering)
 
 messages
-├── id (uuid, PK)
-├── match_id (uuid, FK)
-├── sender_id (uuid, FK)
-├── content (text)
-├── read_at (timestamp, nullable)
-├── created_at (timestamp)
+├── id, match_id, sender_id, content, read_at, created_at
 
 profile_views
-├── id (uuid, PK)
-├── viewer_id (uuid, FK)
-├── viewed_id (uuid, FK)
-├── viewed_at (timestamp)
+├── id, viewer_id, viewed_id, viewed_at
+
+forum_posts
+├── id, author_id, title, content, created_at, updated_at
+
+reports
+├── id, reporter_id, target_kind, target_id, reason, status, created_at
+
+user_google_tokens (dormant — for Phase 1.5+ Google Calendar API)
+├── user_id, access_token, refresh_token, expires_at, scope
 ```
 
+**Key design principle:** Build extensibility for Phase 4 (B2B) now, even though we're only doing individuals in Phase 1. Adding `type`, `company_name`, `capabilities` columns up front means Phase 4 doesn't need a destructive migration.
+
 ---
 
-## 🚀 Build Order (Week-by-Week)
+## 📅 90-Day Launch Plan
 
-### Week 1: Foundation
-- Project setup (Next.js, Supabase, Tailwind)
-- Authentication (email + LinkedIn OAuth)
-- Database schema migration
-- Basic layout & navigation
-- Landing page
+### Month 1 — Build
+- Register Thai company (DBD online)
+- Build MVP
+- Apply to DEPA grant (parallel)
+- Start posting content (TikTok, LinkedIn, Facebook)
 
-### Week 2: Profile System
-- Profile creation flow (multi-step form)
-- Profile edit
-- Profile view (own + others)
-- Photo upload
-- Verification logic
-
-### Week 3: Browse & Discover
-- Founder directory page
-- Filter sidebar (role, intent, industry, stage, location)
-- Profile cards
-- Complement score calculation
-- Profile detail page
-
-### Week 4: Interest & Messaging
-- Express Interest flow
-- Mutual interest detection
-- Match creation
-- Messaging UI
-- Email notifications
-
-### Week 5: Polish & Pre-Launch
-- Onboarding flow
-- Empty states
-- Error handling
-- Mobile responsive testing
-- Admin moderation panel
-
-### Week 6: Soft Launch
-- Deploy to production
-- Recruit first 100 users manually
+### Month 2 — Soft Launch
+- Manually recruit first 100 founders
+- Founding member lifetime free premium (future benefit)
+- One online networking event
 - Iterate based on feedback
 
----
+### Month 3 — Public Launch
+- Press push via Techsauce, e27
+- First in-person event in Bangkok
+- Target 300+ users
 
-## 📊 Success Metrics (Phase 1)
-
-- **Month 6 target:** 500 active users
-- **Active = ** logged in within 30 days
-- **Quality metric:** % of matches that result in actual conversations
-- **Retention:** % of users still active after 90 days
-
----
-
-## 🎨 Design Reference
-
-A complete React prototype showing all 5 pages with the exact design language is included as `/design/CoFound_Prototype.jsx`. Use this as visual reference for:
-
-- Landing page layout & copywriting
-- Dashboard structure
-- Browse page filters & cards
-- Profile page detailed view
-- Community forum structure
-
-Match the typography, color palette, spacing, and tone shown in the prototype.
+### Month 4-6 — Optimize
+- Refine matching quality
+- Build community engagement
+- Reach 500 users
+- Begin Phase 2 prep
 
 ---
 
-## 📚 Strategy Documents
+## 📊 Success Metrics
 
-In `/docs/` folder:
-- `CoFound_Phase1_Strategy.docx` — Detailed strategy document
-- `CoFound_Business_Plan.docx` — Full business plan
-- `CoFound_Pitch_Deck.pptx` — Visual pitch deck
+### Phase 1 (Year 1)
+- 500 active users by Month 6
+- 50+ successful co-founder matches
+- 70%+ user satisfaction
+- Strong organic growth
 
-Read these for full context on the business model and reasoning behind decisions.
+### Phase 2 (Year 2)
+- 1,500–2,000 active users
+- First investor introductions
+- 10+ funded deals via platform
+- Press coverage and partnerships
+
+### Phase 3+ (Year 3+)
+- First sustainable revenue
+- ฿200K–500K/month gross revenue
+- Multiple revenue streams
+- Recognized brand in Thai startup ecosystem
+
+---
+
+## 🧠 Founder Psychology — What I Know About Me
+
+### Strengths
+- Technical co-founder (can build and iterate fast)
+- Co-founder doing content (free distribution)
+- Lean cost structure (can survive long-term)
+- Patient mindset (right for community building)
+- No investor pressure (can take time)
+
+### Honest gaps
+- 27, no prior startup experience
+- Will need to say "I don't know" often
+- Need to build network of advisors
+- Need emotional stamina for slow growth
+
+### Mindset
+- I'm building this WITH founders, not above them
+- "I don't know, let me find out" is a strength, not weakness
+- Reliability comes from showing up consistently, not credentials
+- The community grows together
+
+---
+
+## 🛡️ Brutal Truths I've Accepted
+
+- This is a 2–3 year build to meaningful revenue
+- Free for 2 years means I personally fund operations
+- Network effects need critical mass before monetization works
+- Some users will bypass the platform once they meet
+- Retention is harder than acquisition
+- I will feel imposter syndrome regularly
+- Year 1 may feel like nothing is happening
+- Patience is my competitive advantage
+
+---
+
+## 🎯 The Long Vision
+
+- **Year 1:** Co-founder matching platform
+- **Year 3:** Multi-service startup hub
+- **Year 5:** Thailand's go-to platform for the founder journey
+- **Year 10:** SEA's startup operating system
+
+Each phase builds on the last. Each user grows with the platform.
+
+**One founder. 13 years. Multiple revenue moments per user.**
+
+That's the real opportunity.
 
 ---
 
 ## ⚠️ Important Reminders for Claude Code
 
 1. **Phase 1 only** — Don't build investor features, payments, or video calls
-2. **Conservative design** — No swipe interfaces, no dating-app vibe
-3. **Role-based matching** is the core innovation — get this right
-4. **The Pitch field is mandatory** — it's the matching fuel
-5. **Mutual interest required** before messaging unlocks
-6. **Free for all users** in Phase 1 — no paywalls anywhere
-7. **Build for Thailand first** — Thai language ready, PDPA compliant
-8. **Mobile responsive is enough** — no native mobile app
+2. **But design for Phase 4** — Database extensibility now saves migration pain later
+3. **Conservative design** — No swipe interfaces, no dating-app vibe
+4. **Role-based matching** is the core innovation — get this right
+5. **The Pitch field is mandatory** — it's the matching fuel
+6. **Mutual interest required** before messaging unlocks
+7. **Free for all users** in Phase 1 — no paywalls anywhere
+8. **Build for Thailand first** — Thai + English UI, PDPA compliant
+9. **Mobile responsive is enough** — no native mobile app
+10. **Bootstrapped mindset** — every feature should justify its operating cost
 
 ---
 
-## 🤝 Founder Profile (You)
+## 💪 Mantras to Remember
 
-- Solo developer + non-technical co-founder doing content
-- Budget: ฿150,000 total for Phase 1
-- Hosting: Coolify on VPS (cheap)
-- Tools: Claude Code for development
-- Timeline: MVP in 4-6 weeks
-
----
-
-## 💬 First Tasks for Claude Code
-
-When you start Claude Code in this folder, try these prompts:
-
-1. *"Read CLAUDE.md and the strategy docs in /docs. Summarize what we're building."*
-2. *"Set up a Next.js 14 project with TypeScript, Tailwind, and Supabase."*
-3. *"Create the database schema based on CLAUDE.md."*
-4. *"Build the profile creation flow first — multi-step form following the role-based model."*
+- "Build the platform I would have wanted as a founder"
+- "Free for 2 years builds the trust I need for 20 years"
+- "I don't know" makes me MORE trustworthy, not less
+- "Reliability is shown by showing up, not by experience"
+- "Patience is my unfair advantage"
+- "Phase 1 first, vision later"
 
 ---
 
-**Built by founders, for founders. Let's go. 🚀**
+**Built by founders, for founders. The platform that grows with you. 🚀**
