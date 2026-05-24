@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminEmail } from "@/lib/admin";
 
 export default async function AdminReportsPage() {
@@ -11,7 +12,11 @@ export default async function AdminReportsPage() {
 
   if (!isAdminEmail(user?.email)) notFound();
 
-  const { data: reports, error } = await supabase
+  // Use the service-role client to bypass the reports RLS policy, which only
+  // exposes rows to the reporter themselves. Admin auth was already verified
+  // above via the allowlist, so this is safe.
+  const admin = createAdminClient();
+  const { data: reports, error } = await admin
     .from("reports")
     .select("id, target_kind, target_id, reason, status, created_at, reporter_id")
     .order("created_at", { ascending: false })

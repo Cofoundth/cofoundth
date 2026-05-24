@@ -1,54 +1,69 @@
 import Link from "next/link";
-import { ArrowRight, Check, Compass, Lightbulb, Quote, Wrench } from "lucide-react";
-import { getLocale, t } from "@/lib/i18n";
+import {
+  ArrowRight,
+  Building2,
+  Check,
+  HandshakeIcon,
+  MessageSquare,
+  Quote,
+  Scale,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 
-const founderTypes = [
+const pillars = [
   {
-    icon: Lightbulb,
-    label: "I have an idea",
-    title: "Idea-Haver",
-    body: "You have a clear vision and need someone with complementary skills to execute it with you.",
-    example:
-      "“Building a FinTech for Thai SMEs. Need a technical co-founder.”",
+    icon: Users,
+    label: "Community",
+    title: "Where Thai founders meet",
+    body: "Forum, content, and events for serious Thai startup builders. Ask questions, share what you're shipping, and meet the people who'll shape your journey.",
+    status: "Live",
   },
   {
-    icon: Wrench,
-    label: "I have skills",
-    title: "Skill-Bringer",
-    body: "You can build, sell, or design — but want to join someone else’s vision rather than start your own.",
-    example:
-      "“Senior engineer. Open to joining a strong commercial founder in HealthTech.”",
+    icon: Building2,
+    label: "B2B Network",
+    title: "Companies finding companies",
+    body: "Startups partner with startups — vendors, integrations, distribution, co-marketing. Browse company profiles, see capabilities, start the conversation.",
+    status: "Live",
   },
   {
-    icon: Compass,
-    label: "Let’s figure it out",
-    title: "Explorer",
-    body: "You’re open to brainstorming and finding the right opportunity together with a partner.",
-    example:
-      "“Marketing background. Looking to explore consumer tech ideas with co-founders.”",
+    icon: Scale,
+    label: "Advisor Partners",
+    title: "Legal + finance, on demand",
+    body: "Partnered with vetted Thai law firms and accountants. Get advice on incorporation, contracts, fundraising structure — without paying for a full retainer.",
+    status: "Coming soon",
+  },
+  {
+    icon: TrendingUp,
+    label: "Capital Bridge",
+    title: "Warm intros to investors",
+    body: "Not cold algorithmic matching. Once you're active in the community, we make warm introductions to angel networks and VCs that fit your stage.",
+    status: "Coming soon",
   },
 ];
 
 const processSteps = [
   {
     num: "I",
-    title: "Create profile",
-    body: "Declare what you are, what you bring, and what you need.",
+    title: "Join the community",
+    body: "Free. Build your profile, see who's here, follow the conversations.",
   },
   {
     num: "II",
-    title: "Browse directory",
-    body: "Filter by role, industry, and intent. Read full pitches.",
+    title: "Contribute + connect",
+    body: "Post, comment, attend events. Get known for what you build.",
   },
   {
     num: "III",
-    title: "Express interest",
-    body: "Send a thoughtful note. No spam, no swipes.",
+    title: "Find what you need",
+    body: "B2B partners, co-founders, advisors, investors — unlocked by trust.",
   },
   {
     num: "IV",
-    title: "Mutual unlock",
-    body: "When both express interest, messaging opens.",
+    title: "Grow together",
+    body: "The whole ecosystem compounds. Your network is the platform.",
   },
 ];
 
@@ -65,14 +80,14 @@ export default async function LandingPage() {
             <div className="lg:col-span-7">
               <div className="text-xs uppercase tracking-[0.25em] text-ink-muted mb-8">
                 <span className="inline-block w-12 h-px bg-ink-muted align-middle mr-3" />
-                {tr("Find the missing piece")}
+                {tr("Thailand's startup community")}
               </div>
               <h1 className="text-5xl lg:text-7xl leading-[1.05] tracking-tight mb-8">
-                {tr("The right co-founder is the difference.")}
+                {tr("Where Thai startups build together.")}
               </h1>
               <p className="text-lg text-ink leading-relaxed max-w-2xl mb-10">
                 {tr(
-                  "Cofoundee matches Thai entrepreneurs based on complementary skills, intent, and industry — not random swipes. Built for serious founders looking for the right partner to build with.",
+                  "Cofoundee is the bridge for Thailand's startup ecosystem — a community where founders meet, companies find partners, and investors and advisors come to you when the time is right.",
                 )}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -80,7 +95,7 @@ export default async function LandingPage() {
                   href="/signup"
                   className="px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
                 >
-                  {tr("Create your profile")}{" "}
+                  {tr("Join the community")}{" "}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
@@ -92,7 +107,7 @@ export default async function LandingPage() {
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-gold" /> {tr("Free to join")}
+                  <Check className="w-4 h-4 text-gold" /> {tr("Free forever")}
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-gold" />{" "}
@@ -100,7 +115,7 @@ export default async function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-gold" />{" "}
-                  {tr("Mutual interest required")}
+                  {tr("Built for Thailand")}
                 </div>
               </div>
             </div>
@@ -109,45 +124,40 @@ export default async function LandingPage() {
               <div className="relative">
                 <div className="bg-white border border-line p-8">
                   <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-5">
-                    {tr("Example match")}
+                    {tr("What's inside")}
                   </div>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-cream border-l-2 border-gold">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="text-2xl">👩‍💼</div>
-                        <div>
-                          <div className="font-serif text-lg text-navy">
-                            Praewa C.
-                          </div>
-                          <div className="text-xs text-ink-muted">
-                            Business &middot; FinTech
-                          </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 p-3 bg-cream border-l-2 border-gold">
+                      <MessageSquare className="w-5 h-5 text-gold shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <div>
+                        <div className="font-serif text-base text-navy">
+                          {tr("Daily founder conversations")}
+                        </div>
+                        <div className="text-xs text-ink-muted mt-0.5">
+                          {tr("Community forum, content, weekly events")}
                         </div>
                       </div>
-                      <div className="text-xs text-ink">
-                        💡 Has an idea &middot; Needs: Technical Co-founder
-                      </div>
                     </div>
-                    <div className="text-center py-2">
-                      <div className="text-xs uppercase tracking-[0.2em] text-gold">
-                        ◆ {tr("Complementary")} ◆
-                      </div>
-                    </div>
-                    <div className="p-4 bg-cream border-l-2 border-navy">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="text-2xl">👨‍🔬</div>
-                        <div>
-                          <div className="font-serif text-lg text-navy">
-                            Mint T.
-                          </div>
-                          <div className="text-xs text-ink-muted">
-                            Technical &middot; ML/AI
-                          </div>
+                    <div className="flex items-start gap-3 p-3 bg-cream border-l-2 border-gold">
+                      <HandshakeIcon className="w-5 h-5 text-gold shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <div>
+                        <div className="font-serif text-base text-navy">
+                          {tr("Bridge to partners + capital")}
+                        </div>
+                        <div className="text-xs text-ink-muted mt-0.5">
+                          {tr("B2B network, legal/finance advisors, investor intros")}
                         </div>
                       </div>
-                      <div className="text-xs text-ink">
-                        🔧 Open to ideas &middot; Looking for: Business
-                        Co-founder
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-cream border-l-2 border-navy">
+                      <Users className="w-5 h-5 text-navy shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <div>
+                        <div className="font-serif text-base text-navy">
+                          {tr("Co-founder matching")}
+                        </div>
+                        <div className="text-xs text-ink-muted mt-0.5">
+                          {tr("Cherry on top — find complementary partners when you're ready")}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -162,32 +172,45 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Three founder types */}
+      {/* Four pillars */}
       <section className="py-24 lg:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-20">
             <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
-              {tr("How it works")}
+              {tr("What we do")}
             </div>
             <h2 className="text-4xl lg:text-5xl leading-tight">
-              {tr("Three kinds of founders. One platform that matches them.")}
+              {tr("Everything a Thai startup needs — in one place.")}
             </h2>
+            <p className="mt-6 text-lg text-ink leading-relaxed">
+              {tr(
+                "Built in the order that actually works: community first, then partnerships and capital come on top.",
+              )}
+            </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-            {founderTypes.map((p) => (
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+            {pillars.map((p) => (
               <div
                 key={p.title}
-                className="bg-cream border border-line p-8 lg:p-10"
+                className="bg-cream border border-line p-8 lg:p-10 relative"
               >
                 <p.icon className="w-6 h-6 text-gold mb-4" strokeWidth={1.5} />
-                <div className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
-                  {tr(p.label)}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-gold">
+                    {tr(p.label)}
+                  </div>
+                  <span
+                    className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
+                      p.status === "Live"
+                        ? "border-gold text-gold"
+                        : "border-line text-ink-muted"
+                    }`}
+                  >
+                    {tr(p.status)}
+                  </span>
                 </div>
                 <h3 className="text-2xl mb-4">{tr(p.title)}</h3>
-                <p className="text-ink leading-relaxed mb-5">{tr(p.body)}</p>
-                <div className="pt-5 border-t border-line italic text-sm text-ink-muted">
-                  {p.example}
-                </div>
+                <p className="text-ink leading-relaxed">{tr(p.body)}</p>
               </div>
             ))}
           </div>
@@ -199,10 +222,10 @@ export default async function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-20">
             <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
-              {tr("The process")}
+              {tr("How it works")}
             </div>
             <h2 className="text-4xl lg:text-5xl leading-tight">
-              {tr("Considered. Mutual. Serious.")}
+              {tr("Trust first. Everything else follows.")}
             </h2>
           </div>
           <div className="grid md:grid-cols-4 gap-8">
@@ -227,7 +250,7 @@ export default async function LandingPage() {
           <Quote className="w-12 h-12 text-gold mx-auto mb-8" strokeWidth={1} />
           <blockquote className="font-serif text-3xl lg:text-4xl leading-relaxed mb-10 italic text-white">
             {tr(
-              "I had the idea, the customers, and the runway. What I didn’t have was a technical co-founder I could trust. Cofoundee matched me with someone whose skills, values, and ambition perfectly complemented mine. Six months later, we’re building together.",
+              "I joined for the community, stayed for the conversations, and ended up finding our first enterprise customer through someone I met in the forum. That's the kind of compounding you don't get from cold outreach.",
             )}
           </blockquote>
           <div className="text-sm tracking-wide">
@@ -243,18 +266,18 @@ export default async function LandingPage() {
       <section className="py-24 bg-white border-t border-line">
         <div className="max-w-4xl mx-auto px-6 lg:px-10 text-center">
           <h2 className="text-4xl lg:text-5xl mb-6 leading-tight">
-            {tr("Your missing piece is on the platform.")}
+            {tr("The Thai startup ecosystem — built together.")}
           </h2>
           <p className="text-lg text-ink mb-10 max-w-2xl mx-auto">
             {tr(
-              "Join Thailand’s most serious community of founders looking to build together. Free during our launch phase.",
+              "Join the community of serious Thai founders. Free, forever — because trust takes years and we're playing the long game.",
             )}
           </p>
           <Link
             href="/signup"
             className="inline-block px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
           >
-            {tr("Create your profile — Free")}
+            {tr("Join the community — Free")}
           </Link>
         </div>
       </section>

@@ -23,6 +23,7 @@ const RUNWAY_VALUES = [
   "eighteen_plus",
 ] as const;
 const EXPERIENCE_VALUES = ["first_time", "one_to_two", "three_plus"] as const;
+const PROFILE_TYPES = ["individual", "company"] as const;
 
 export async function saveOnboardingAction(
   _prev: OnboardingState,
@@ -34,22 +35,49 @@ export async function saveOnboardingAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated. Please sign in again." };
 
+  // Per-item / array caps to prevent malicious clients from writing megabytes
+  // into a profile row.
+  const MAX_ITEM_LEN = 50;
+  const MAX_INDUSTRY = 10; // app surfaces ~15 industries; 10 is a reasonable cap
+  const MAX_SKILLS = 30;
+  const MAX_LOOKING_FOR = ROLE_VALUES.length; // can't ask for more roles than exist
+
+  const cap = (arr: string[], max: number) =>
+    arr.map((s) => s.slice(0, MAX_ITEM_LEN)).slice(0, max);
+
   // ---- Read form values
   const i_am = String(formData.get("i_am") ?? "");
   const intent = String(formData.get("intent") ?? "");
-  const looking_for = formData.getAll("looking_for").map(String);
-  const industry = formData.getAll("industry").map(String);
+  const looking_for = cap(
+    formData.getAll("looking_for").map(String),
+    MAX_LOOKING_FOR,
+  );
+  const industry = cap(formData.getAll("industry").map(String), MAX_INDUSTRY);
   const stage = String(formData.get("stage") ?? "");
-  const location = String(formData.get("location") ?? "").trim();
+  const location = String(formData.get("location") ?? "").trim().slice(0, 100);
   const commitment = String(formData.get("commitment") ?? "");
   const runway = String(formData.get("runway") ?? "");
   const experience = String(formData.get("experience") ?? "");
   const pitch = String(formData.get("pitch") ?? "").trim();
-  const why_this = String(formData.get("why_this") ?? "").trim();
-  const skills = String(formData.get("skills") ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const why_this = String(formData.get("why_this") ?? "").trim().slice(0, 1000);
+  const skills = cap(
+    String(formData.get("skills") ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    MAX_SKILLS,
+  );
+
+  // B2B fields (Phase 4 brought forward — see CLAUDE.md for original plan)
+  const profile_type =
+    String(formData.get("profile_type") ?? "individual") || "individual";
+  const company_name = String(formData.get("company_name") ?? "")
+    .trim()
+    .slice(0, 100);
+  const capabilities = cap(
+    formData.getAll("capabilities").map(String),
+    MAX_INDUSTRY,
+  );
 
   // ---- Validate
   if (!ROLE_VALUES.includes(i_am as never))
@@ -74,6 +102,10 @@ export async function saveOnboardingAction(
     return { error: "Your pitch must be at least 200 characters." };
   if (pitch.length > 500)
     return { error: "Your pitch must be 500 characters or less." };
+  if (!PROFILE_TYPES.includes(profile_type as never))
+    return { error: "Invalid profile type." };
+  if (profile_type === "company" && !company_name)
+    return { error: "Company name is required for company profiles." };
 
   // ---- Persist
   const { error } = await supabase
@@ -91,6 +123,9 @@ export async function saveOnboardingAction(
       pitch,
       why_this: why_this || null,
       skills,
+      type: profile_type,
+      company_name: profile_type === "company" ? company_name : null,
+      capabilities: profile_type === "company" ? capabilities : [],
       onboarded: true,
     })
     .eq("id", user.id);

@@ -3,6 +3,7 @@
 import { Fragment, useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { saveOnboardingAction } from "./actions";
+import { useT } from "@/lib/i18n-client";
 
 // ---- Option lists ---------------------------------------------------
 
@@ -78,6 +79,9 @@ const EXPERIENCES = [
 // ---- Types ----------------------------------------------------------
 
 type FormState = {
+  profile_type: "individual" | "company";
+  company_name: string;
+  capabilities: string;
   i_am: string;
   intent: string;
   looking_for: string[];
@@ -106,8 +110,12 @@ const STEPS = [
 // ---- Component ------------------------------------------------------
 
 export function OnboardingForm({ initial }: Props) {
+  const tr = useT();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormState>({
+    profile_type: "individual",
+    company_name: "",
+    capabilities: "",
     i_am: "",
     intent: "",
     looking_for: [],
@@ -144,6 +152,8 @@ export function OnboardingForm({ initial }: Props) {
   function stepValid(): boolean {
     switch (step) {
       case 0:
+        if (data.profile_type === "company" && !data.company_name.trim())
+          return false;
         return !!data.i_am && !!data.intent && data.looking_for.length > 0;
       case 1:
         return data.industry.length > 0 && !!data.stage;
@@ -173,6 +183,13 @@ export function OnboardingForm({ initial }: Props) {
 
   function submit() {
     const fd = new FormData();
+    fd.append("profile_type", data.profile_type);
+    fd.append("company_name", data.company_name);
+    data.capabilities
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .forEach((v) => fd.append("capabilities", v));
     fd.append("i_am", data.i_am);
     fd.append("intent", data.intent);
     data.looking_for.forEach((v) => fd.append("looking_for", v));
@@ -198,15 +215,16 @@ export function OnboardingForm({ initial }: Props) {
 
       <div className="bg-white border border-line p-8 lg:p-12">
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Step {STEPS[step].num} of IV
+          {tr("Step {n} of IV").replace("{n}", STEPS[step].num)}
         </div>
-        <h1 className="text-3xl mb-8">{STEPS[step].title}</h1>
+        <h1 className="text-3xl mb-8">{tr(STEPS[step].title)}</h1>
 
         {step === 0 && (
           <StepRole
             data={data}
             set={set}
             toggleLookingFor={(v) => toggle("looking_for", v)}
+            tr={tr}
           />
         )}
         {step === 1 && (
@@ -214,10 +232,11 @@ export function OnboardingForm({ initial }: Props) {
             data={data}
             set={set}
             toggleIndustry={(v) => toggle("industry", v)}
+            tr={tr}
           />
         )}
-        {step === 2 && <StepConviction data={data} set={set} />}
-        {step === 3 && <StepPitch data={data} set={set} />}
+        {step === 2 && <StepConviction data={data} set={set} tr={tr} />}
+        {step === 3 && <StepPitch data={data} set={set} tr={tr} />}
 
         {error && (
           <div className="mt-6 px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
@@ -232,13 +251,13 @@ export function OnboardingForm({ initial }: Props) {
             disabled={step === 0 || isPending}
             className="text-sm text-ink-muted hover:text-navy disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center gap-2 tracking-wide"
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4" /> {tr("Back")}
           </button>
 
           <div className="flex items-center gap-4">
             {!stepValid() && (
               <span className="text-xs text-ink-muted">
-                {stepMissing(step, data)}
+                {tr(stepMissing(step, data))}
               </span>
             )}
             <button
@@ -249,9 +268,9 @@ export function OnboardingForm({ initial }: Props) {
             >
               {step === STEPS.length - 1
                 ? isPending
-                  ? "Saving…"
-                  : "Complete profile"
-                : "Continue"}
+                  ? tr("Saving…")
+                  : tr("Complete profile")
+                : tr("Continue")}
               {!isPending && <ArrowRight className="w-4 h-4" />}
             </button>
           </div>
@@ -339,20 +358,59 @@ function StepIndicator({ current }: { current: number }) {
 
 // ---- Step 1: Role ---------------------------------------------------
 
+type TR = (s: string) => string;
+
 function StepRole({
   data,
   set,
   toggleLookingFor,
+  tr,
 }: {
   data: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   toggleLookingFor: (v: string) => void;
+  tr: TR;
 }) {
   return (
     <div className="space-y-10">
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          I am…
+          {tr("Joining as…")}
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <ChoiceButton
+            selected={data.profile_type === "individual"}
+            onClick={() => set("profile_type", "individual")}
+          >
+            {tr("Individual")}
+          </ChoiceButton>
+          <ChoiceButton
+            selected={data.profile_type === "company"}
+            onClick={() => set("profile_type", "company")}
+          >
+            {tr("Company")}
+          </ChoiceButton>
+        </div>
+        {data.profile_type === "company" && (
+          <div className="mt-4">
+            <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+              {tr("Company name")}
+            </label>
+            <input
+              type="text"
+              value={data.company_name}
+              onChange={(e) => set("company_name", e.target.value)}
+              maxLength={100}
+              placeholder="e.g. Acme Studios Co. Ltd."
+              className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            />
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
+          {data.profile_type === "company" ? tr("Company role…") : tr("I am…")}
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {ROLES.map((r) => (
@@ -361,7 +419,7 @@ function StepRole({
               selected={data.i_am === r.value}
               onClick={() => set("i_am", r.value)}
             >
-              {r.label}
+              {tr(r.label)}
             </ChoiceButton>
           ))}
         </div>
@@ -369,7 +427,9 @@ function StepRole({
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          I&rsquo;m bringing…
+          {data.profile_type === "company"
+            ? tr("We’re bringing…")
+            : tr("I’m bringing…")}
         </label>
         <div className="space-y-3">
           {INTENTS.map((i) => (
@@ -383,9 +443,11 @@ function StepRole({
                   : "border-line bg-white hover:border-navy"
               }`}
             >
-              <div className="font-serif text-lg text-navy mb-1">{i.label}</div>
+              <div className="font-serif text-lg text-navy mb-1">
+                {tr(i.label)}
+              </div>
               <div className="text-sm text-ink leading-relaxed">
-                {i.description}
+                {tr(i.description)}
               </div>
             </button>
           ))}
@@ -394,7 +456,7 @@ function StepRole({
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          I&rsquo;m looking for… (select all that apply)
+          {tr("I’m looking for… (select all that apply)")}
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {ROLES.map((r) => (
@@ -403,7 +465,7 @@ function StepRole({
               selected={data.looking_for.includes(r.value)}
               onClick={() => toggleLookingFor(r.value)}
             >
-              {r.label}
+              {tr(r.label)}
             </ChoiceButton>
           ))}
         </div>
@@ -418,16 +480,18 @@ function StepContext({
   data,
   set,
   toggleIndustry,
+  tr,
 }: {
   data: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   toggleIndustry: (v: string) => void;
+  tr: TR;
 }) {
   return (
     <div className="space-y-10">
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          Industry focus (select all that apply)
+          {tr("Industry focus (select all that apply)")}
         </label>
         <div className="flex flex-wrap gap-2">
           {INDUSTRIES.map((i) => (
@@ -445,7 +509,7 @@ function StepContext({
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          Your stage
+          {tr("Your stage")}
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {STAGES.map((s) => (
@@ -454,7 +518,7 @@ function StepContext({
               selected={data.stage === s.value}
               onClick={() => set("stage", s.value)}
             >
-              {s.label}
+              {tr(s.label)}
             </ChoiceButton>
           ))}
         </div>
@@ -465,14 +529,14 @@ function StepContext({
           htmlFor="location"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          Location (optional)
+          {tr("Location (optional)")}
         </label>
         <input
           id="location"
           type="text"
           value={data.location}
           onChange={(e) => set("location", e.target.value)}
-          placeholder="Bangkok, Chiang Mai, Remote OK, etc."
+          placeholder={tr("Bangkok, Chiang Mai, Remote, etc.")}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
         />
       </div>
@@ -485,15 +549,17 @@ function StepContext({
 function StepConviction({
   data,
   set,
+  tr,
 }: {
   data: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  tr: TR;
 }) {
   return (
     <div className="space-y-10">
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          Commitment level
+          {tr("Commitment level")}
         </label>
         <div className="grid grid-cols-3 gap-2">
           {COMMITMENTS.map((c) => (
@@ -502,7 +568,7 @@ function StepConviction({
               selected={data.commitment === c.value}
               onClick={() => set("commitment", c.value)}
             >
-              {c.label}
+              {tr(c.label)}
             </ChoiceButton>
           ))}
         </div>
@@ -510,7 +576,7 @@ function StepConviction({
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          Financial runway
+          {tr("Financial runway")}
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {RUNWAYS.map((r) => (
@@ -519,7 +585,7 @@ function StepConviction({
               selected={data.runway === r.value}
               onClick={() => set("runway", r.value)}
             >
-              {r.label}
+              {tr(r.label)}
             </ChoiceButton>
           ))}
         </div>
@@ -527,7 +593,7 @@ function StepConviction({
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          Founder experience
+          {tr("Founder experience")}
         </label>
         <div className="grid grid-cols-3 gap-2">
           {EXPERIENCES.map((e) => (
@@ -536,7 +602,7 @@ function StepConviction({
               selected={data.experience === e.value}
               onClick={() => set("experience", e.value)}
             >
-              {e.label}
+              {tr(e.label)}
             </ChoiceButton>
           ))}
         </div>
@@ -550,9 +616,11 @@ function StepConviction({
 function StepPitch({
   data,
   set,
+  tr,
 }: {
   data: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  tr: TR;
 }) {
   const pitchLen = data.pitch.length;
   return (
@@ -563,7 +631,7 @@ function StepPitch({
             htmlFor="pitch"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
           >
-            The pitch (200–500 chars, required)
+            {tr("The pitch (200–500 chars, required)")}
           </label>
           <span
             className={`text-xs ${
@@ -581,7 +649,9 @@ function StepPitch({
           onChange={(e) => set("pitch", e.target.value)}
           rows={6}
           maxLength={500}
-          placeholder="Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests."
+          placeholder={tr(
+            "Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests.",
+          )}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />
       </div>
@@ -591,14 +661,16 @@ function StepPitch({
           htmlFor="why_this"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          Why this, why now (optional)
+          {tr("Why this, why now (optional)")}
         </label>
         <textarea
           id="why_this"
           value={data.why_this}
           onChange={(e) => set("why_this", e.target.value)}
           rows={3}
-          placeholder="What drew you to this problem? Why is now the right time?"
+          placeholder={tr(
+            "What drew you to this problem? Why is now the right time?",
+          )}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />
       </div>
@@ -608,7 +680,7 @@ function StepPitch({
           htmlFor="skills"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          Skills (comma-separated, optional)
+          {tr("Skills (comma-separated, optional)")}
         </label>
         <input
           id="skills"
@@ -619,6 +691,30 @@ function StepPitch({
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
         />
       </div>
+
+      {data.profile_type === "company" && (
+        <div>
+          <label
+            htmlFor="capabilities"
+            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+          >
+            {tr("Capabilities (comma-separated, optional)")}
+          </label>
+          <input
+            id="capabilities"
+            type="text"
+            value={data.capabilities}
+            onChange={(e) => set("capabilities", e.target.value)}
+            placeholder="API integrations, Logistics fulfilment, Manufacturing, Distribution"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          />
+          <p className="text-xs text-ink-muted mt-2">
+            {tr(
+              "What your company offers to potential partners. Used by other companies to find you.",
+            )}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

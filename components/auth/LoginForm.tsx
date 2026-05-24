@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { ArrowRight } from "lucide-react";
 import { signInAction, type SignInState } from "@/app/(auth)/actions";
+import { useT } from "@/lib/i18n-client";
 
 const INITIAL: SignInState = null;
 
 export function LoginForm() {
+  const tr = useT();
   const [state, formAction, isPending] = useActionState<SignInState, FormData>(
     signInAction,
     INITIAL,
@@ -20,7 +22,7 @@ export function LoginForm() {
           htmlFor="email"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          Email
+          {tr("Email")}
         </label>
         <input
           id="email"
@@ -39,13 +41,13 @@ export function LoginForm() {
             htmlFor="password"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
           >
-            Password
+            {tr("Password")}
           </label>
           <Link
             href="/forgot-password"
             className="text-xs text-ink-muted hover:text-navy"
           >
-            Forgot?
+            {tr("Forgot?")}
           </Link>
         </div>
         <input
@@ -69,7 +71,7 @@ export function LoginForm() {
         disabled={isPending}
         className="w-full px-8 py-4 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
       >
-        {isPending ? "Signing in…" : "Sign in"}
+        {isPending ? tr("Signing in…") : tr("Sign in")}
         {!isPending && <ArrowRight className="w-4 h-4" />}
       </button>
     </form>

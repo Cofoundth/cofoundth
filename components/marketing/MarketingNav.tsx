@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
 
 const navLinks = [
+  { href: "/browse", label: "Community" },
   { href: "/insights", label: "Insights" },
-  { href: "/legal-templates", label: "Legal" },
   { href: "/events", label: "Events" },
+  { href: "/legal-templates", label: "Legal" },
 ];
 
 export async function MarketingNav() {

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/admin";
+import { tServer } from "@/lib/i18n-server";
 import { signOutAction } from "../(auth)/actions";
 import { Avatar } from "@/components/Avatar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -50,15 +52,22 @@ export default async function AppLayout({
                 <Wordmark className="text-base" />
               </Link>
               <nav className="hidden md:flex items-center gap-1">
-                <NavLink href="/dashboard">Dashboard</NavLink>
-                <NavLink href="/browse">Browse</NavLink>
+                <NavLink href="/dashboard">{await tServer("Dashboard")}</NavLink>
+                <NavLink href="/community">{await tServer("Community")}</NavLink>
+                <NavLink href="/browse">
+                  {await tServer("Founders")}
+                </NavLink>
                 <NavLink href="/interests" badge={receivedPending ?? 0}>
-                  Interests
+                  {await tServer("Interests")}
                 </NavLink>
                 <NavLink href="/matches" badge={unreadMessages ?? 0}>
-                  Chat
+                  {await tServer("Chat")}
                 </NavLink>
-                <NavLink href="/community">Community</NavLink>
+                {isAdminEmail(user.email) && (
+                  <NavLink href="/admin/insights">
+                    {await tServer("Admin")}
+                  </NavLink>
+                )}
               </nav>
             </div>
 
@@ -66,7 +75,7 @@ export default async function AppLayout({
               <LanguageSwitcher />
               <Link
                 href={`/profile/${user.id}`}
-                title="Your profile"
+                title={await tServer("Your profile")}
                 className="hover:opacity-80 transition-opacity"
               >
                 <Avatar
@@ -80,7 +89,7 @@ export default async function AppLayout({
                   type="submit"
                   className="text-sm text-ink-muted hover:text-navy tracking-wide"
                 >
-                  Sign out
+                  {await tServer("Sign out")}
                 </button>
               </form>
             </div>

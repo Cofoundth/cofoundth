@@ -1,15 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/Avatar";
 import { ROLE_LABELS } from "@/lib/matching";
+import { LikeButton } from "./LikeButton";
+import { CommentComposer } from "./CommentComposer";
+import { CommentItem } from "./CommentItem";
 
 type Props = { params: Promise<{ id: string }> };
+
+export const dynamic = "force-dynamic";
 
 export default async function PostPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: post } = await supabase
     .from("forum_posts")
@@ -24,6 +33,42 @@ export default async function PostPage({ params }: Props) {
     .select("id, full_name, photo_url, i_am")
     .eq("id", post.author_id as string)
     .single();
+
+  // Likes — count + whether the current viewer liked.
+  const [{ count: likeCount }, { data: myLike }] = await Promise.all([
+    supabase
+      .from("forum_likes")
+      .select("post_id", { count: "exact", head: true })
+      .eq("post_id", id),
+    user
+      ? supabase
+          .from("forum_likes")
+          .select("post_id")
+          .eq("post_id", id)
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  // Comments + authors
+  const { data: comments } = await supabase
+    .from("forum_comments")
+    .select("id, author_id, content, created_at")
+    .eq("post_id", id)
+    .order("created_at", { ascending: true });
+
+  const commentAuthorIds = Array.from(
+    new Set((comments ?? []).map((c) => c.author_id as string)),
+  );
+  const { data: commentAuthors } = commentAuthorIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, photo_url")
+        .in("id", commentAuthorIds)
+    : { data: [] };
+  const authorMap = new Map(
+    (commentAuthors ?? []).map((a) => [a.id as string, a]),
+  );
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
@@ -76,7 +121,61 @@ export default async function PostPage({ params }: Props) {
             </p>
           ))}
         </div>
+
+        <div className="mt-8 pt-6 border-t border-line flex items-center gap-3">
+          <LikeButton
+            postId={post.id as string}
+            initialCount={likeCount ?? 0}
+            initialLiked={!!myLike}
+          />
+          <div className="inline-flex items-center gap-2 px-4 py-2 border border-line text-ink-muted">
+            <MessageCircle className="w-4 h-4" strokeWidth={1.5} />
+            <span className="text-sm font-medium tabular-nums">
+              {comments?.length ?? 0}
+            </span>
+          </div>
+        </div>
       </article>
+
+      {/* Comments thread */}
+      <section className="mt-10">
+        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+          Comments
+        </div>
+
+        {comments?.length ? (
+          <div className="bg-white border border-line divide-y divide-line px-6 mb-6">
+            {comments.map((c) => {
+              const a = authorMap.get(c.author_id as string);
+              return (
+                <CommentItem
+                  key={c.id as string}
+                  id={c.id as string}
+                  postId={post.id as string}
+                  content={c.content as string}
+                  createdAt={c.created_at as string}
+                  isOwn={user?.id === c.author_id}
+                  author={
+                    a
+                      ? {
+                          id: a.id as string,
+                          full_name: (a.full_name as string) ?? null,
+                          photo_url: (a.photo_url as string | null) ?? null,
+                        }
+                      : null
+                  }
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-ink-muted mb-6">
+            No comments yet. Be the first.
+          </p>
+        )}
+
+        <CommentComposer postId={post.id as string} />
+      </section>
     </div>
   );
 }

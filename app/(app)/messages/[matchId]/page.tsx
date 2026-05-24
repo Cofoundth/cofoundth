@@ -7,6 +7,11 @@ import { Avatar } from "@/components/Avatar";
 import { MessageComposer } from "./MessageComposer";
 import { ConversationActions } from "./ConversationActions";
 import { NextStepsPanel } from "./NextStepsPanel";
+import { ReadOnMount } from "./ReadOnMount";
+
+// Don't pre-render or cache — this page reads per-user message state and
+// fires a side-effecting read-receipt on mount.
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ matchId: string }> };
 
@@ -49,23 +54,16 @@ export default async function MessagePage({ params }: Props) {
     .eq("match_id", matchId)
     .order("created_at", { ascending: true });
 
-  const unreadFromOther = (messages ?? [])
-    .filter((m) => m.sender_id !== user!.id && !m.read_at)
-    .map((m) => m.id as string);
-  if (unreadFromOther.length) {
-    // Await — fire-and-forget gets cancelled when the response is sent,
-    // leaving messages stuck as unread and the Matches nav badge stuck high.
-    await supabase
-      .from("messages")
-      .update({ read_at: new Date().toISOString() })
-      .in("id", unreadFromOther);
-  }
+  // Read-receipt is fired client-side from <ReadOnMount /> below — keeps
+  // browser prefetch from accidentally marking messages read, and unblocks
+  // first paint on slow networks.
 
   const otherName = (other?.full_name as string) ?? "Founder";
   const myName = (me?.full_name as string) ?? "A founder";
 
   return (
     <div className="max-w-7xl mx-auto h-[calc(100vh-4rem)] grid lg:grid-cols-12">
+      <ReadOnMount matchId={matchId} />
       {/* Conversation column */}
       <div className="lg:col-span-8 flex flex-col h-full min-h-0 border-r border-line">
         <header className="border-b border-line bg-white px-6 py-4">

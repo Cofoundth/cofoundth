@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Eye, Inbox, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { tServer } from "@/lib/i18n-server";
 
 function timeOfDayGreeting(): string {
   // Bangkok timezone (UTC+7) — server may be in any region
@@ -65,20 +66,21 @@ export default async function DashboardPage() {
   if (!profile?.onboarded) {
     subtitle = (
       <>
-        Finish your profile to start receiving interest from co-founders.
+        {await tServer(
+          "Finish your profile to start receiving interest from co-founders.",
+        )}
       </>
     );
   } else if ((pendingReceivedCount ?? 0) > 0) {
     subtitle = (
       <>
-        <strong className="text-navy">{pendingReceivedCount}</strong> founder
-        {(pendingReceivedCount ?? 0) === 1 ? "" : "s"} have expressed interest
-        in you. Take a look —{" "}
+        <strong className="text-navy">{pendingReceivedCount}</strong>{" "}
+        {await tServer("founder(s) expressed interest in you. Take a look —")}{" "}
         <Link
           href="/interests"
           className="text-navy hover:text-gold underline underline-offset-4 decoration-gold/30"
         >
-          your inbox
+          {await tServer("your inbox")}
         </Link>
         .
       </>
@@ -86,16 +88,16 @@ export default async function DashboardPage() {
   } else if ((matchesCount ?? 0) > 0) {
     subtitle = (
       <>
-        <strong className="text-navy">{matchesCount}</strong> mutual match
-        {(matchesCount ?? 0) === 1 ? "" : "es"} so far. Keep the conversations
-        going.
+        <strong className="text-navy">{matchesCount}</strong>{" "}
+        {await tServer("mutual match(es) so far. Keep the conversations going.")}
       </>
     );
   } else {
     subtitle = (
       <>
-        Browse the directory and express interest in founders whose profiles
-        complement yours.
+        {await tServer(
+          "Browse the directory and express interest in founders whose profiles complement yours.",
+        )}
       </>
     );
   }
@@ -104,10 +106,11 @@ export default async function DashboardPage() {
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12">
       <div className="mb-12 pb-8 border-b border-line">
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          {timeOfDayGreeting()}
+          {await tServer(timeOfDayGreeting())}
         </div>
         <h1 className="text-4xl lg:text-5xl mb-3 leading-tight">
-          Hello, <span className="text-navy">{firstName}</span>.
+          {await tServer("Hello,")}{" "}
+          <span className="text-navy">{firstName}</span>.
         </h1>
         <p className="text-lg text-ink leading-relaxed max-w-2xl">{subtitle}</p>
       </div>
@@ -119,16 +122,20 @@ export default async function DashboardPage() {
               I
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl mb-3">Finish your founder profile</h2>
+              <h2 className="text-2xl mb-3">
+                {await tServer("Finish your founder profile")}
+              </h2>
               <p className="text-ink leading-relaxed mb-6 max-w-2xl">
-                Declare what you are, what you bring, and what you&rsquo;re
-                looking for. The more your profile says, the better the matches.
+                {await tServer(
+                  "Declare what you are, what you bring, and what you’re looking for. The more your profile says, the better the matches.",
+                )}
               </p>
               <Link
                 href="/onboarding"
                 className="px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2"
               >
-                Start onboarding <ArrowRight className="w-4 h-4" />
+                {await tServer("Start onboarding")}{" "}
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
@@ -139,19 +146,19 @@ export default async function DashboardPage() {
       <div className="grid sm:grid-cols-3 gap-4 mb-10">
         <StatCard
           icon={Inbox}
-          label="Interests received"
+          label={await tServer("Interests received")}
           value={receivedCount ?? 0}
           href="/interests"
         />
         <StatCard
           icon={Users}
-          label="Mutual matches"
+          label={await tServer("Mutual matches")}
           value={matchesCount ?? 0}
           href="/matches"
         />
         <StatCard
           icon={Eye}
-          label="Profile views"
+          label={await tServer("Profile views")}
           value={viewsCount ?? 0}
           href={`/profile/${user!.id}`}
         />
@@ -160,34 +167,37 @@ export default async function DashboardPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white border border-line p-6">
           <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-3">
-            Founder directory
+            {await tServer("Founder directory")}
           </div>
-          <h3 className="text-xl mb-2">Browse founders</h3>
+          <h3 className="text-xl mb-2">{await tServer("Browse founders")}</h3>
           <p className="text-sm text-ink leading-relaxed mb-4">
-            Filter by role, industry, and stage. Read full pitches before you
-            express interest.
+            {await tServer(
+              "Filter by role, industry, and stage. Read full pitches before you express interest.",
+            )}
           </p>
           <Link
             href="/browse"
             className="text-sm text-navy hover:text-gold inline-flex items-center gap-1"
           >
-            Open directory <ArrowRight className="w-3.5 h-3.5" />
+            {await tServer("Open directory")} <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         <div className="bg-white border border-line p-6">
           <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-3">
-            Your profile
+            {await tServer("Your profile")}
           </div>
-          <h3 className="text-xl mb-2">Update your pitch</h3>
+          <h3 className="text-xl mb-2">{await tServer("Update your pitch")}</h3>
           <p className="text-sm text-ink leading-relaxed mb-4">
-            Refine your pitch and details. Better signal &mdash; better matches.
+            {await tServer(
+              "Refine your pitch and details. Better signal — better matches.",
+            )}
           </p>
           <Link
             href="/onboarding"
             className="text-sm text-navy hover:text-gold inline-flex items-center gap-1"
           >
-            Edit profile <ArrowRight className="w-3.5 h-3.5" />
+            {await tServer("Edit profile")} <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>

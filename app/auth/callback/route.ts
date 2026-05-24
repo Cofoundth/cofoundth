@@ -31,8 +31,11 @@ export async function GET(request: Request) {
     );
   }
 
-  // If user authenticated via Google with Calendar scope, persist provider tokens
-  // so server actions can call Calendar API on their behalf later.
+  // If user authenticated via Google, verify the token's actual scope + TTL
+  // via Google's tokeninfo endpoint before persisting. The OAuth exchange
+  // doesn't expose expires_in or scope to Supabase, so we MUST introspect —
+  // otherwise we'd be lying about both (asserting calendar.events scope and
+  // a 1-hour TTL regardless of what the user actually granted).
   try {
     const session = data.session;
     const providerToken = session?.provider_token;
@@ -46,18 +49,46 @@ export async function GET(request: Request) {
       userProvider === "google" &&
       process.env.SUPABASE_SECRET_KEY
     ) {
-      await storeTokens({
-        userId,
-        accessToken: providerToken,
-        refreshToken: providerRefreshToken ?? null,
-        expiresIn: 3600,
-        scope:
-          "openid email profile https://www.googleapis.com/auth/calendar.events",
-      });
+      const info = await fetchGoogleTokenInfo(providerToken);
+      if (info) {
+        await storeTokens({
+          userId,
+          accessToken: providerToken,
+          refreshToken: providerRefreshToken ?? null,
+          expiresIn: info.expires_in,
+          scope: info.scope,
+        });
+      }
     }
   } catch (e) {
     console.error("[auth/callback] token storage failed", e);
   }
 
   return NextResponse.redirect(`${publicOrigin}${next}`);
+}
+
+async function fetchGoogleTokenInfo(
+  accessToken: string,
+): Promise<{ expires_in: number; scope: string } | null> {
+  try {
+    const res = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`,
+    );
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      expires_in?: string | number;
+      scope?: string;
+    };
+    const expires_in = Number(json.expires_in ?? 0);
+    if (!expires_in || !json.scope) return null;
+    // Cap stored TTL at the real value minus 60s headroom so refresh fires
+    // before Google considers the token expired.
+    return {
+      expires_in: Math.max(60, expires_in - 60),
+      scope: json.scope,
+    };
+  } catch (e) {
+    console.error("[auth/callback] tokeninfo lookup failed", e);
+    return null;
+  }
 }

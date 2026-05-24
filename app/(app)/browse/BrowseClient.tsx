@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowRight, BadgeCheck, MapPin } from "lucide-react";
+import { ArrowRight, BadgeCheck, Building2, MapPin } from "lucide-react";
 import {
   complementScore,
   type ProfileLike,
@@ -12,6 +12,7 @@ import {
   COMMITMENT_LABELS,
 } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
+import { useT } from "@/lib/i18n-client";
 
 type Profile = ProfileLike & {
   id: string;
@@ -21,7 +22,12 @@ type Profile = ProfileLike & {
   verified: boolean;
   pitch: string | null;
   skills: string[];
+  type: "individual" | "company";
+  company_name: string | null;
+  capabilities: string[];
 };
+
+type TypeFilter = "all" | "individual" | "company";
 
 type Props = {
   me: ProfileLike;
@@ -49,11 +55,13 @@ const INDUSTRY_OPTIONS = [
 ];
 
 export function BrowseClient({ me, myReady, others }: Props) {
+  const tr = useT();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilters, setRoleFilters] = useState<string[]>([]);
   const [industryFilters, setIndustryFilters] = useState<string[]>([]);
   const [stageFilter, setStageFilter] = useState<string>("");
   const [commitmentFilter, setCommitmentFilter] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
 
   const scored = useMemo(() => {
     return others
@@ -63,12 +71,18 @@ export function BrowseClient({ me, myReady, others }: Props) {
 
   const filtered = useMemo(() => {
     return scored.filter(({ profile: p }) => {
-      if (
-        searchTerm &&
-        !p.full_name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !(p.pitch?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
-      ) {
-        return false;
+      if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        const hay = [
+          p.full_name,
+          p.company_name ?? "",
+          p.pitch ?? "",
+          ...p.capabilities,
+          ...p.skills,
+        ]
+          .join(" ")
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
       }
       if (roleFilters.length > 0 && (!p.i_am || !roleFilters.includes(p.i_am)))
         return false;
@@ -79,9 +93,18 @@ export function BrowseClient({ me, myReady, others }: Props) {
         return false;
       if (stageFilter && p.stage !== stageFilter) return false;
       if (commitmentFilter && p.commitment !== commitmentFilter) return false;
+      if (typeFilter !== "all" && p.type !== typeFilter) return false;
       return true;
     });
-  }, [scored, searchTerm, roleFilters, industryFilters, stageFilter, commitmentFilter]);
+  }, [
+    scored,
+    searchTerm,
+    roleFilters,
+    industryFilters,
+    stageFilter,
+    commitmentFilter,
+    typeFilter,
+  ]);
 
   function toggleRole(v: string) {
     setRoleFilters((s) => (s.includes(v) ? s.filter((x) => x !== v) : [...s, v]));
@@ -97,6 +120,7 @@ export function BrowseClient({ me, myReady, others }: Props) {
     setIndustryFilters([]);
     setStageFilter("");
     setCommitmentFilter("");
+    setTypeFilter("all");
   }
 
   const activeFilterCount =
@@ -104,7 +128,8 @@ export function BrowseClient({ me, myReady, others }: Props) {
     industryFilters.length +
     (stageFilter ? 1 : 0) +
     (commitmentFilter ? 1 : 0) +
-    (searchTerm ? 1 : 0);
+    (searchTerm ? 1 : 0) +
+    (typeFilter !== "all" ? 1 : 0);
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
@@ -112,14 +137,16 @@ export function BrowseClient({ me, myReady, others }: Props) {
         <div className="flex items-end justify-between">
           <div>
             <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-              The directory
+              {tr("The directory")}
             </div>
-            <h1 className="text-4xl lg:text-5xl mb-2">Founder directory</h1>
+            <h1 className="text-4xl lg:text-5xl mb-2">
+              {tr("Founder directory")}
+            </h1>
             <p className="text-ink">
-              {filtered.length} founder{filtered.length !== 1 ? "s" : ""}
+              {filtered.length} {tr("founders")}
               {!myReady && (
                 <span className="text-ink-muted ml-2">
-                  &middot; complete your profile for complement scores
+                  &middot; {tr("complete your profile for complement scores")}
                 </span>
               )}
             </p>
@@ -129,7 +156,7 @@ export function BrowseClient({ me, myReady, others }: Props) {
               onClick={clearAll}
               className="text-sm text-ink-muted hover:text-navy tracking-wide"
             >
-              Clear all filters
+              {tr("Clear all filters")}
             </button>
           )}
         </div>
@@ -137,18 +164,17 @@ export function BrowseClient({ me, myReady, others }: Props) {
         {myReady && (
           <div className="mt-6 bg-cream border-l-2 border-gold p-4">
             <div className="text-xs uppercase tracking-[0.2em] text-gold mb-1.5">
-              About the Complement Score
+              {tr("About the Complement Score")}
             </div>
             <p className="text-sm text-ink leading-relaxed">
-              A 0–100 score measuring how well two founders fit:{" "}
-              <strong className="text-navy">role complementarity 40%</strong>{" "}
-              (technical ↔ business, etc.),{" "}
-              <strong className="text-navy">intent 30%</strong> (idea-haver ↔
-              skill-bringer),{" "}
-              <strong className="text-navy">industry 15%</strong>,{" "}
-              <strong className="text-navy">stage 10%</strong>,{" "}
-              <strong className="text-navy">location + commitment 5%</strong>.
-              Higher = better starting point for a conversation.
+              {tr("A 0–100 score measuring how well two founders fit:")}{" "}
+              <strong className="text-navy">{tr("role complementarity 40%")}</strong>
+              ,{" "}
+              <strong className="text-navy">{tr("intent 30%")}</strong>,{" "}
+              <strong className="text-navy">{tr("industry 15%")}</strong>,{" "}
+              <strong className="text-navy">{tr("stage 10%")}</strong>,{" "}
+              <strong className="text-navy">{tr("location + commitment 5%")}</strong>
+              . {tr("Higher = better starting point for a conversation.")}
             </p>
           </div>
         )}
@@ -163,31 +189,52 @@ export function BrowseClient({ me, myReady, others }: Props) {
                 htmlFor="search"
                 className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
               >
-                Search
+                {tr("Search")}
               </label>
               <input
                 id="search"
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Name or keyword"
+                placeholder={tr("Name or keyword")}
                 className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
               />
             </div>
 
-            <FilterGroup label="Looking for (Role)">
+            <FilterGroup label={tr("Profile type")}>
+              <FilterChip
+                selected={typeFilter === "all"}
+                onClick={() => setTypeFilter("all")}
+              >
+                {tr("All")}
+              </FilterChip>
+              <FilterChip
+                selected={typeFilter === "individual"}
+                onClick={() => setTypeFilter("individual")}
+              >
+                {tr("Individuals")}
+              </FilterChip>
+              <FilterChip
+                selected={typeFilter === "company"}
+                onClick={() => setTypeFilter("company")}
+              >
+                {tr("Companies")}
+              </FilterChip>
+            </FilterGroup>
+
+            <FilterGroup label={tr("Looking for (Role)")}>
               {ROLE_OPTIONS.map(([value, label]) => (
                 <FilterChip
                   key={value}
                   selected={roleFilters.includes(value)}
                   onClick={() => toggleRole(value)}
                 >
-                  {label}
+                  {tr(label)}
                 </FilterChip>
               ))}
             </FilterGroup>
 
-            <FilterGroup label="Industry">
+            <FilterGroup label={tr("Industry")}>
               <div className="flex flex-wrap gap-1.5">
                 {INDUSTRY_OPTIONS.map((i) => (
                   <FilterChip
@@ -202,7 +249,7 @@ export function BrowseClient({ me, myReady, others }: Props) {
               </div>
             </FilterGroup>
 
-            <FilterGroup label="Stage">
+            <FilterGroup label={tr("Stage")}>
               {STAGE_OPTIONS.map(([value, label]) => (
                 <FilterChip
                   key={value}
@@ -211,12 +258,12 @@ export function BrowseClient({ me, myReady, others }: Props) {
                     setStageFilter(stageFilter === value ? "" : value)
                   }
                 >
-                  {label}
+                  {tr(label)}
                 </FilterChip>
               ))}
             </FilterGroup>
 
-            <FilterGroup label="Commitment">
+            <FilterGroup label={tr("Commitment")}>
               {COMMITMENT_OPTIONS.map(([value, label]) => (
                 <FilterChip
                   key={value}
@@ -225,7 +272,7 @@ export function BrowseClient({ me, myReady, others }: Props) {
                     setCommitmentFilter(commitmentFilter === value ? "" : value)
                   }
                 >
-                  {label}
+                  {tr(label)}
                 </FilterChip>
               ))}
             </FilterGroup>
@@ -236,10 +283,11 @@ export function BrowseClient({ me, myReady, others }: Props) {
         <div className="lg:col-span-9">
           {filtered.length === 0 ? (
             <div className="bg-white border border-line p-12 text-center">
-              <h3 className="text-2xl mb-2">No matches yet</h3>
+              <h3 className="text-2xl mb-2">{tr("No matches yet")}</h3>
               <p className="text-ink-muted">
-                Try widening your filters, or check back as more founders
-                onboard.
+                {tr(
+                  "Try widening your filters, or check back as more founders onboard.",
+                )}
               </p>
             </div>
           ) : (
@@ -330,21 +378,31 @@ function ProfileCard({
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
               <h3 className="font-serif text-xl text-navy leading-tight inline-flex items-center gap-1.5">
-                {profile.full_name}
+                {profile.type === "company" && profile.company_name
+                  ? profile.company_name
+                  : profile.full_name}
                 {profile.verified && (
                   <BadgeCheck
                     className="w-4 h-4 text-gold shrink-0"
                     strokeWidth={2}
                   />
                 )}
-                {profile.age && (
+                {profile.type === "company" && (
+                  <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold">
+                    <Building2 className="w-2.5 h-2.5" strokeWidth={2} />
+                    Company
+                  </span>
+                )}
+                {profile.age && profile.type !== "company" && (
                   <span className="text-ink-muted text-base font-sans">
                     , {profile.age}
                   </span>
                 )}
               </h3>
               <div className="text-sm text-ink-muted mt-1">
-                {profile.i_am && ROLE_LABELS[profile.i_am]}
+                {profile.type === "company"
+                  ? `Represented by ${profile.full_name}`
+                  : profile.i_am && ROLE_LABELS[profile.i_am]}
                 {profile.intent && (
                   <>
                     {" "}

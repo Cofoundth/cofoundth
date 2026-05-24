@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
+import { tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 
 export default async function MatchesPage() {
@@ -27,7 +28,9 @@ export default async function MatchesPage() {
   const { data: profilesData } = otherIds.length
     ? await supabase
         .from("profiles")
-        .select("id, full_name, i_am, intent, location, photo_url")
+        .select(
+          "id, full_name, i_am, intent, location, photo_url, type, company_name",
+        )
         .in("id", otherIds)
     : { data: [] };
 
@@ -68,28 +71,28 @@ export default async function MatchesPage() {
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-10 pb-8 border-b border-line">
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Mutual interest
+          {await tServer("Mutual interest")}
         </div>
-        <h1 className="text-4xl lg:text-5xl mb-2">Matches</h1>
+        <h1 className="text-4xl lg:text-5xl mb-2">{await tServer("Matches")}</h1>
         <p className="text-ink">
-          {matches?.length ?? 0} match{matches?.length === 1 ? "" : "es"} so far
-          &middot; messaging is unlocked.
+          {matches?.length ?? 0}{" "}
+          {await tServer("match(es) so far · messaging is unlocked.")}
         </p>
       </div>
 
       {!matches?.length ? (
         <div className="bg-white border border-line p-12 text-center">
-          <h3 className="text-2xl mb-2">No matches yet</h3>
+          <h3 className="text-2xl mb-2">{await tServer("No matches yet")}</h3>
           <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
-            Mutual interest creates a match. Browse the directory, express
-            interest in founders whose profiles align, and matches will appear
-            here when they reciprocate.
+            {await tServer(
+              "Mutual interest creates a match. Browse the directory, express interest in founders whose profiles align, and matches will appear here when they reciprocate.",
+            )}
           </p>
           <Link
             href="/browse"
             className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
           >
-            Open directory <ArrowRight className="w-4 h-4" />
+            {await tServer("Open directory")} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       ) : (
@@ -117,7 +120,9 @@ export default async function MatchesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-1">
                       <div className="font-serif text-xl text-navy">
-                        {p?.full_name as string}
+                        {p?.type === "company" && p?.company_name
+                          ? (p.company_name as string)
+                          : (p?.full_name as string)}
                       </div>
                       {msg?.unread ? (
                         <span className="text-[10px] uppercase tracking-[0.2em] bg-gold text-white px-2 py-0.5 shrink-0">

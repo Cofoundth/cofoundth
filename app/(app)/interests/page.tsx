@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Send, Inbox } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
+import { tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 
 export default async function InterestsPage() {
@@ -60,11 +61,15 @@ export default async function InterestsPage() {
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-10 pb-8 border-b border-line">
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Express Interest
+          {await tServer("Express Interest")}
         </div>
-        <h1 className="text-4xl lg:text-5xl mb-2">Interests</h1>
+        <h1 className="text-4xl lg:text-5xl mb-2">
+          {await tServer("Interests")}
+        </h1>
         <p className="text-ink">
-          When interest is mutual, messaging unlocks automatically.
+          {await tServer(
+            "When interest is mutual, messaging unlocks automatically.",
+          )}
         </p>
       </div>
 
@@ -73,34 +78,43 @@ export default async function InterestsPage() {
         <section>
           <div className="flex items-center gap-3 mb-6">
             <Inbox className="w-5 h-5 text-gold" strokeWidth={1.5} />
-            <h2 className="text-2xl">Received</h2>
+            <h2 className="text-2xl">{await tServer("Received")}</h2>
             <span className="text-sm text-ink-muted ml-auto">
               {received?.length ?? 0}
             </span>
           </div>
 
           {!received?.length ? (
-            <EmptyState message="No one has expressed interest yet. Make sure your profile is complete." />
+            <EmptyState
+              message={await tServer(
+                "No one has expressed interest yet. Make sure your profile is complete.",
+              )}
+            />
           ) : (
             <div className="space-y-3">
-              {received.map((i) => {
-                const p = profiles.get(i.from_profile_id as string);
-                const isMutual = mutualWith.has(i.from_profile_id as string);
-                return (
-                  <InterestCard
-                    key={i.id as string}
-                    profileId={i.from_profile_id as string}
-                    name={p?.full_name as string}
-                    photoUrl={p?.photo_url as string | null}
-                    role={p?.i_am as string | null}
-                    intent={p?.intent as string | null}
-                    note={i.note as string | null}
-                    createdAt={i.created_at as string}
-                    isMutual={isMutual}
-                    actionLabel={isMutual ? "Open conversation" : "View profile"}
-                  />
-                );
-              })}
+              {await Promise.all(
+                received.map(async (i) => {
+                  const p = profiles.get(i.from_profile_id as string);
+                  const isMutual = mutualWith.has(i.from_profile_id as string);
+                  return (
+                    <InterestCard
+                      key={i.id as string}
+                      profileId={i.from_profile_id as string}
+                      name={p?.full_name as string}
+                      photoUrl={p?.photo_url as string | null}
+                      role={p?.i_am as string | null}
+                      intent={p?.intent as string | null}
+                      note={i.note as string | null}
+                      createdAt={i.created_at as string}
+                      isMutual={isMutual}
+                      actionLabel={await tServer(
+                        isMutual ? "Open conversation" : "View profile",
+                      )}
+                      mutualLabel={await tServer("Mutual")}
+                    />
+                  );
+                }),
+              )}
             </div>
           )}
         </section>
@@ -109,34 +123,43 @@ export default async function InterestsPage() {
         <section>
           <div className="flex items-center gap-3 mb-6">
             <Send className="w-5 h-5 text-gold" strokeWidth={1.5} />
-            <h2 className="text-2xl">Sent</h2>
+            <h2 className="text-2xl">{await tServer("Sent")}</h2>
             <span className="text-sm text-ink-muted ml-auto">
               {sent?.length ?? 0}
             </span>
           </div>
 
           {!sent?.length ? (
-            <EmptyState message="You haven't expressed interest in anyone yet. Browse the directory." />
+            <EmptyState
+              message={await tServer(
+                "You haven't expressed interest in anyone yet. Browse the directory.",
+              )}
+            />
           ) : (
             <div className="space-y-3">
-              {sent.map((i) => {
-                const p = profiles.get(i.to_profile_id as string);
-                const isMutual = mutualWith.has(i.to_profile_id as string);
-                return (
-                  <InterestCard
-                    key={i.id as string}
-                    profileId={i.to_profile_id as string}
-                    name={p?.full_name as string}
-                    photoUrl={p?.photo_url as string | null}
-                    role={p?.i_am as string | null}
-                    intent={p?.intent as string | null}
-                    note={i.note as string | null}
-                    createdAt={i.created_at as string}
-                    isMutual={isMutual}
-                    actionLabel={isMutual ? "Open conversation" : "Waiting"}
-                  />
-                );
-              })}
+              {await Promise.all(
+                sent.map(async (i) => {
+                  const p = profiles.get(i.to_profile_id as string);
+                  const isMutual = mutualWith.has(i.to_profile_id as string);
+                  return (
+                    <InterestCard
+                      key={i.id as string}
+                      profileId={i.to_profile_id as string}
+                      name={p?.full_name as string}
+                      photoUrl={p?.photo_url as string | null}
+                      role={p?.i_am as string | null}
+                      intent={p?.intent as string | null}
+                      note={i.note as string | null}
+                      createdAt={i.created_at as string}
+                      isMutual={isMutual}
+                      actionLabel={await tServer(
+                        isMutual ? "Open conversation" : "Waiting",
+                      )}
+                      mutualLabel={await tServer("Mutual")}
+                    />
+                  );
+                }),
+              )}
             </div>
           )}
         </section>
@@ -155,6 +178,7 @@ function InterestCard({
   createdAt,
   isMutual,
   actionLabel,
+  mutualLabel,
 }: {
   profileId: string;
   name: string | null | undefined;
@@ -165,6 +189,7 @@ function InterestCard({
   createdAt: string;
   isMutual: boolean;
   actionLabel: string;
+  mutualLabel: string;
 }) {
   const href = isMutual ? `/matches` : `/profile/${profileId}`;
   void createdAt;
@@ -197,7 +222,7 @@ function InterestCard({
             </div>
             {isMutual && (
               <span className="text-[10px] uppercase tracking-[0.2em] text-gold border border-gold px-2 py-0.5 shrink-0">
-                Mutual
+                {mutualLabel}
               </span>
             )}
           </div>

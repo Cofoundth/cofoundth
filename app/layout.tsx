@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
-import { getLocale } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
+import { LocaleProvider } from "@/lib/i18n-client";
 import "./globals.css";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -28,7 +29,7 @@ export default async function RootLayout({
       className={`${notoSansThai.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
-        {children}
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );

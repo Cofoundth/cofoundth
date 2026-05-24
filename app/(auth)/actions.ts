@@ -2,79 +2,127 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // ------------------------------------------------------------------
-// SIGN UP — step 1: create user + send OTP, step 2: verify OTP
+// SIGN UP — link-only flow.
+// User submits credentials → Supabase sends a confirmation LINK to email
+// → user clicks → /auth/callback exchanges code → user lands on /dashboard.
+// No 6-digit OTP step. (See email template "Confirm signup" — uses
+// {{ .ConfirmationURL }}.)
 // ------------------------------------------------------------------
 
 export type SignupState =
   | { step: "credentials"; error?: string }
-  | { step: "verify"; email: string; error?: string };
+  | { step: "check_email"; email: string };
 
 export async function signupAction(
-  prev: SignupState,
+  _prev: SignupState,
   formData: FormData,
 ): Promise<SignupState> {
   const supabase = await createClient();
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-  if (prev.step === "credentials") {
-    const fullName = String(formData.get("fullName") ?? "").trim();
-    const email = String(formData.get("email") ?? "")
-      .trim()
-      .toLowerCase();
-    const password = String(formData.get("password") ?? "");
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-    if (!fullName || !email || !password) {
-      return { step: "credentials", error: "All fields are required." };
-    }
-    if (password.length < 8) {
+  if (!fullName || !email || !password) {
+    return { step: "credentials", error: "All fields are required." };
+  }
+  const passwordError = validatePassword(password);
+  if (passwordError) return { step: "credentials", error: passwordError };
+  if (password !== confirmPassword) {
+    return { step: "credentials", error: "Passwords don't match." };
+  }
+
+  // Pre-check via service role: did this email already register?
+  // Avoids Supabase's enumeration-protection ambiguity that would otherwise
+  // strand users who signed up but never clicked the confirmation link.
+  const existing = await findUserByEmail(email);
+
+  if (existing) {
+    if (existing.email_confirmed_at) {
       return {
         step: "credentials",
-        error: "Password must be at least 8 characters.",
+        error:
+          "This email is already registered. Sign in instead, or use forgot password.",
       };
     }
-
-    const { data, error } = await supabase.auth.signUp({
+    // Unconfirmed: silently resend the confirmation link and show check-email.
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
       email,
-      password,
       options: {
-        data: { full_name: fullName },
         emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
       },
     });
-
-    if (error) return { step: "credentials", error: error.message };
-
-    // If email confirmation is OFF in Supabase, signUp returns a session
-    // immediately — skip the OTP step.
-    if (data.session) redirect("/dashboard");
-
-    return { step: "verify", email };
+    if (resendError) {
+      return { step: "credentials", error: resendError.message };
+    }
+    return { step: "check_email", email };
   }
 
-  // step === "verify" — confirm the email with the OTP code
-  const token = String(formData.get("code") ?? "").trim();
-
-  if (!/^\d{6}$/.test(token)) {
-    return {
-      step: "verify",
-      email: prev.email,
-      error: "Enter the 6-digit code from your email.",
-    };
-  }
-
-  const { error } = await supabase.auth.verifyOtp({
-    email: prev.email,
-    token,
-    type: "signup",
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: fullName },
+      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+    },
   });
 
-  if (error) {
-    return { step: "verify", email: prev.email, error: error.message };
-  }
+  if (error) return { step: "credentials", error: error.message };
 
-  redirect("/dashboard");
+  // If email confirmation is OFF in Supabase, signUp returns a session
+  // immediately — skip the check-email step.
+  if (data.session) redirect("/dashboard");
+
+  return { step: "check_email", email };
+}
+
+// Password validation rules — kept in sync with client-side checks in
+// SignupForm so the user gets immediate feedback AND the server still
+// enforces (defense in depth).
+function validatePassword(pw: string): string | null {
+  if (pw.length < 8) return "Password must be at least 8 characters.";
+  if (pw.length > 72) return "Password is too long (max 72 characters).";
+  if (!/[a-zA-Z]/.test(pw)) return "Password must include a letter.";
+  if (!/[0-9]/.test(pw)) return "Password must include a number.";
+  return null;
+}
+
+// Server-only: looks up a user by email via the admin API (bypasses
+// enumeration protection). Returns null if not found.
+//
+// Implementation: `profiles.email` is synced from `auth.users` (migration 0005)
+// and indexed, so we look up the user id from there first (O(1)) and then
+// fetch the confirmed-at flag from auth.users by id (O(1)). Avoids the
+// page-1-of-listUsers trap that strands users once the table exceeds 1000.
+async function findUserByEmail(
+  email: string,
+): Promise<{ email_confirmed_at: string | null } | null> {
+  const admin = createAdminClient();
+  const { data: profile, error: profileError } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("email", email.toLowerCase())
+    .maybeSingle();
+  if (profileError) {
+    console.error("[signup.findUserByEmail] profile lookup failed", profileError);
+    return null;
+  }
+  if (!profile) return null;
+
+  const { data, error } = await admin.auth.admin.getUserById(profile.id);
+  if (error || !data?.user) {
+    console.error("[signup.findUserByEmail] auth lookup failed", error);
+    return null;
+  }
+  return { email_confirmed_at: data.user.email_confirmed_at ?? null };
 }
 
 // ------------------------------------------------------------------

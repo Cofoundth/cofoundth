@@ -1,7 +1,7 @@
 # Cofoundee — Master Strategy
 
 > This file is read automatically by Claude Code. It contains complete project context.
-> Last updated: May 2026
+> Last updated: May 2026 — strategy pivoted from "co-founder matching" to **community-first bridge platform**.
 
 @AGENTS.md
 
@@ -9,47 +9,74 @@
 
 ## 🎯 Vision
 
-**Build the platform that grows with Thai businesses from idea to exit.**
+**The bridge for Thailand's startup ecosystem — community, partners, capital, and co-founders, in one place.**
 
-Not just co-founder matching. A multi-decade business that captures founders early and serves them through their entire journey.
+We're not a co-founder matching app. We're the platform where Thai startups build trust over time, then unlock everything they need on top of that trust: B2B partnerships, investor intros, legal + finance advisors, and yes — co-founders too.
 
 ```
-Idea → Co-founder → Build → Funding → Hire → Partners → Scale → Exit
-       └────────── All on Cofoundee ──────────┘
+Community  ←  the trust layer (months 0–6)
+    ↓
+B2B Network ←  startups partnering with startups (months 3–9)
+    ↓
+Advisor Partners ←  legal + finance firms via partnership (months 6–12)
+    ↓
+Investor Intros ←  warm intros once we're trusted (months 9–18)
+    ↓
+Co-founder Matching ←  cherry on top, always available
 ```
+
+The community is the wedge. Everything else compounds on the trust built there.
+
+---
+
+## 🧭 Why community-first
+
+Online co-founder matching mostly fails (YC tried, Founders Inc tried, dating-app-for-cofounders tried). The reasons are deep:
+
+1. **Trust isn't built through profiles.** Co-founder is a 5–10 year equity-shared relationship. People don't hand that to strangers.
+2. **Signal on platforms is cheap.** Anyone can claim a great idea or strong skills. Pitches don't predict execution.
+3. **The serious founders aren't online looking.** They build from existing networks. Online sign-ups are biased toward those without strong networks.
+4. **Thai culture amplifies this.** เกรงใจ, face-saving, relationship-first. Five-year equity commitments don't happen via a website three weeks in.
+
+**But community-first works because:**
+- People hang out for content, conversations, events — low commitment, repeated exposure
+- Trust gets built passively over months
+- Once trust exists, matching/intros/partnerships happen organically
+- The platform earns the right to be the bridge
+
+This is how Indie Hackers, Y Combinator's network, and AngelList all grew. Community came first; matching/funding/services came later, on top.
 
 ---
 
 ## 🏗️ The Phased Roadmap
 
-### Phase 1 — Co-Founder Matching (Year 1)
-- **Status:** Build this now
+### Phase 0 — Community + Bridge (Months 0–12)
+- **Status:** Building now
 - **Pricing:** 100% FREE
-- **Goal:** 500 active users by Month 6
-- **Features:** Role-based matching, browse directory, Express Interest, mutual-interest messaging, community forum
-- **Investment:** None — bootstrap with ~฿100-150K personal savings
+- **Goal:** 500 active community members by Month 6, 1,500 by Month 12
+- **Features:** Community forum (likes, comments), content hub, founder directory, B2B profiles, co-founder matching, events listings
+- **Investment:** Personal savings (~฿100–150K)
 
-### Phase 2 — Investor Introductions (Year 2)
-- **Pricing:** Still FREE
-- **Goal:** 1,500-2,000 users, real funded deals happening
-- **Features:** Verified investor profiles, introduction requests, deal flow
-- **Investment:** Still bootstrapped — apply for DEPA grant if needed
+### Phase 1 — Advisor Partnerships (Months 6–18)
+- **Pricing:** Still FREE for users; revenue share with partners
+- **Goal:** 3–5 legal firms + 2–3 finance/accounting firms onboarded as partners
+- **Features:** Partner-delivered legal templates, Q&A with vetted partners, paid consultation booking
+- **Revenue model:** Revenue share on consultations + sponsored content
 
-### Phase 3 — Monetization Begins (Year 3)
-- **Pricing:** Premium tier ฿299/month launches
-- **Features:** Legal services hub, job board for startups, premium memberships
-- **Revenue model:** Subscriptions + per-document legal fees + job board listings
-- **Goal:** First sustainable revenue
+### Phase 2 — Investor Intros (Months 12–24)
+- **Pricing:** Free for founders; paid tier or per-intro fee for VCs
+- **Goal:** First 10 funded deals via Cofoundee
+- **Features:** Verified investor profiles, warm intro workflows, deal flow
+- **Revenue model:** VC subscriptions + success fees on funded rounds
 
-### Phase 4 — B2B Partnership Matching (Year 4+)
-- **Features:** Company-to-company matching, strategic alliances, vendor marketplace
-- **Revenue model:** Success fees on partnerships (฿20K-500K+ per deal)
-- **Goal:** Big revenue acceleration
+### Phase 3 — B2B Marketplace (Months 18–36)
+- **Features:** Company-to-company matching, vendor marketplace, strategic alliances
+- **Revenue model:** Success fees on B2B deals (฿20K–500K+ per deal)
 
-### Phase 5 — Regional Expansion or Deeper Thai Market
-- Vietnam, Indonesia, Philippines
-- Or deeper services in Thailand
-- Decision based on Phase 1-4 traction
+### Phase 4 — Premium + Expansion (Year 3+)
+- Premium memberships (฿299/month) for power users
+- Job board (founders hiring)
+- Regional expansion (Vietnam, Indonesia, Philippines)
 
 ---
 
@@ -57,61 +84,61 @@ Idea → Co-founder → Build → Funding → Hire → Partners → Scale → Ex
 
 **Bootstrapped. No VC. No early investors.**
 
-- **Phase 1+2:** Personal savings (~฿100-150K total for 2 years)
-- **Optional:** One DEPA grant application (up to ฿500K, no equity)
-- **Optional:** AWS Activate credits (free hosting)
-- **Optional:** Accelerator for mentorship only (skip equity-heavy ones)
-
-**Why bootstrap:**
-- Web platforms are cheap to maintain in 2026 (~฿1,000/month operating cost)
-- 100% ownership compounds massively over time
-- No investor pressure to monetize early
-- Patience becomes your competitive advantage
+- **Phases 0–1:** Personal savings (~฿100–150K total)
+- **Optional:** DEPA grant (up to ฿500K, no equity)
+- **Optional:** AWS Activate credits
+- **Patience > capital.** Web platforms in 2026 cost ~฿1,000/month to run.
 
 ---
 
-## 🧠 The Matching Model (Core Phase 1 Logic)
+## 🧠 The Product Model
+
+### Three core flows
+
+**1. Community + Networking** (the trust layer — primary)
+- Forum: ask, share, learn (likes + comments live now)
+- Content hub / insights blog
+- Events listings + (later) in-person meetups
+- Founder directory: who's in the community, what they're doing
+
+**2. Matching + Connections** (built on trust)
+- **B2B startup ↔ startup**: company profile type, capabilities listing, browse by company
+- **Investor ↔ founder** (Phase 2): warm intros via Cofoundee, not cold algorithmic matches
+- **Co-founder ↔ co-founder** (cherry on top): role-based + intent-based pairing for those who want it
+
+**3. Partner Services** (Phase 1)
+- Legal partners: templates, Q&A, consultations
+- Finance partners: accounting, fundraising prep, structuring advice
+- Cofoundee aggregates + distributes; partners deliver
+
+### Co-founder matching — design (already built, not the headline)
 
 **Every profile declares three things:**
+1. **"I am..."** (Role) — Technical / Business / Product / Marketing / Finance / Domain Expert
+2. **"I'm bringing..."** (Intent) — `idea` / `open` / `explore`
+3. **"I'm looking for..."** (Complementary roles)
 
-**1. "I am..."** (Role)
-- Technical / Business / Product / Marketing / Finance / Domain Expert
+**Complement Score weights:** Role 40% / Intent 30% / Industry 15% / Stage 10% / Location+Commitment 5%
 
-**2. "I'm bringing..."** (Intent)
-- `idea` — Has a specific idea/vision
-- `open` — Has skills, open to joining someone's idea
-- `explore` — Wants to brainstorm and discover together
+Mutual interest required before messaging unlocks. The Pitch field is mandatory (200–500 chars).
 
-**3. "I'm looking for..."** (Complementary roles)
+### B2B profile type (built)
 
-Plus filters: Industry, Stage, Location, Commitment
+Every profile is either `individual` or `company`. Company profiles add:
+- `company_name`
+- `capabilities` (what the company offers to partners)
 
-**Matching logic:** Complementary intent + role + industry alignment
-
-**Complement Score weights:**
-- Role complementarity (40%)
-- Intent alignment (30%)
-- Industry overlap (15%)
-- Stage match (10%)
-- Location & commitment (5%)
-
-**The Pitch field is MANDATORY** — it's the matching fuel. 200–500 chars.
-
-**Conviction signals to filter tire-kickers:**
-- Commitment level (Full-time / Part-time / Side project)
-- Financial runway (3 / 6 / 12 / 18+ months)
-- Founder experience (First-time / 1-2 / 3+)
-- Why this, why now
+Browse filter lets users view All / Individuals / Companies separately.
 
 ---
 
 ## 🎨 Design Principles
 
-**Conservative, professional, trustworthy. NOT a dating app aesthetic.**
+**Conservative, professional, trustworthy. Editorial — not dating-app.**
 
 ### Brand
-- Think law firm or private bank (McKinsey, Baker McKenzie)
-- Founders are making serious career decisions
+- Law firm / private bank aesthetic (McKinsey, Baker McKenzie)
+- Founders are making serious business decisions; the platform should feel that way
 
 ### Colors
 - Primary: Navy `#0A1F44`
@@ -122,255 +149,196 @@ Plus filters: Industry, Stage, Location, Commitment
 - Border line: `#E2E8F0`
 
 ### Typography
-- Headings: Georgia serif
+- Headings: Georgia serif (English) / Noto Sans Thai (Thai locale)
 - Body: Noto Sans Thai + system UI (covers Thai + Latin)
 - Numbers/stats: Serif (elegant, like a finance report)
 
 ### Visual Language
 - Sharp corners, no rounded buttons
 - Generous whitespace, editorial layout
-- Roman numerals for steps
+- Roman numerals for steps (I, II, III)
 - Thin gold accent lines as section dividers
 - Verified badges in gold (not blue checkmarks)
 
 ### Language Rules
+- Thai users naturally code-switch — keep English loanwords (`founder`, `co-founder`, `pitch`, `MVP`, `startup`) where they sound natural in Thai
+- Avoid over-formal translations that read bureaucratic
 - "Express Interest" not "Like"
 - "Complement Score" not "Match %"
 - "Founder Directory" not "Discover"
-- "Verified founder" not "Pro user"
 - "The Pitch" not "Bio"
-- "Capital Partners" (Phase 2) not "Investors"
 
-**No swipe interface ever.** Co-founder selection is a serious business decision.
-
----
-
-## ✅ Phase 1 Build Scope (MVP)
-
-### Critical (Must Have)
-- User registration & authentication (email + Google OAuth + LinkedIn OAuth)
-- Profile creation with role-based model
-- Browse directory with filters
-- Express Interest flow
-- Mutual interest unlock messaging
-- Email notifications
-
-### Important (Build Soon After)
-- Community forum (basic)
-- Content hub / blog
-- Profile verification
-- Admin moderation tools
-
-### Nice to Have
-- Legal templates (static downloads)
-- Event listings
-
-### DO NOT BUILD in Phase 1
-- ❌ Investor matching
-- ❌ Paid subscriptions / payments
-- ❌ Mobile app (web responsive is enough)
-- ❌ Swipe interface
-- ❌ In-app video calls (users use Google Meet/LINE on their own)
-- ❌ In-app calendar booking (Google Calendar URL templates only)
-- ❌ Anything related to investors
-
-**Multi-language (Thai + English)** — Phase 1 ships with both. Thai is the primary market; English is included since most Thai founders use both.
+**No swipe interface ever.** Trust + commitment > velocity + dopamine.
 
 ---
 
-## 🚀 Tech Stack (Current)
+## ✅ Currently Built (Phase 0)
 
-- **Frontend:** Next.js 16 (App Router) + TypeScript + Tailwind v4
-- **Backend:** Next.js Server Actions + Route Handlers
-- **Database:** Supabase (Postgres + Auth + Storage) — Singapore region
+### Working end-to-end
+- Auth: email + Google + LinkedIn OAuth, password confirm, link-only confirmation flow
+- Onboarding: 4-step form with B2B toggle (individual / company), Thai i18n
+- Browse directory: filter by role / industry / stage / commitment / **profile type (B2B)**
+- Profile pages: individual + company display variants
+- Express Interest → mutual → messaging unlock (with Google Calendar invite gen)
+- Community forum: posts, **likes (optimistic)**, **comments (own can delete)**
+- Insights blog: DB-backed, bilingual, admin CRUD at `/admin/insights`
+- Admin: insights editor, reports moderation
+- Thai i18n: full coverage of marketing + app pages with natural Thai register
+- Email pipeline: Supabase Auth → Resend (verified `cofoundee.co` domain)
+
+### Not yet built
+- Partner section (legal + finance firms) — Phase 1
+- Investor section — Phase 2
+- Events listings (static placeholder exists)
+- Job board — Phase 4
+- Direct messaging from community / B2B (currently DM requires mutual interest via co-founder flow)
+- Premium tier / payments — Phase 4
+
+---
+
+## 🚀 Tech Stack
+
+- **Frontend:** Next.js 16 (App Router) + React 19 + TypeScript + Tailwind v4
+- **Backend:** Next.js Server Actions + Route Handlers + Supabase service role
+- **Database:** Supabase (Postgres + Auth + Storage) — Singapore region, project `fhimrhyhmdwrktfctvcc`
+- **Email:** Resend (verified domain `cofoundee.co`), used both for Supabase Auth and app transactional emails
 - **Hosting:** Vercel
-- **Email:** Resend
-- **Auth:** Supabase Auth (Google OAuth, email/password, LinkedIn OAuth code present but hidden)
-- **Analytics:** TBD (Plausible recommended)
+- **Domain:** cofoundee.co (GoDaddy, M365 for `chayanonr@cofoundee.co`)
+- **MCPs:** Supabase MCP authenticated, Claude Preview for dev server
 
 **Total monthly hosting cost target:** ~฿500–1,500
 
 ---
 
-## 🗄️ Database Schema (Designed for Phase 4 too)
+## 🗄️ Database Schema (current)
 
 ```sql
 profiles
-├── id (uuid, PK, references auth.users)
-├── type (enum: individual, company)  -- Phase 4 extensibility
-├── full_name (text)
-├── company_name (text, nullable)     -- Phase 4
-├── email (text)                      -- synced from auth.users
-├── age (int, nullable)
-├── location (text)
-├── photo_url (text)
-├── linkedin_url (text)
-├── i_am (enum: technical, business, product, marketing, finance, domain_expert)
-├── intent (enum: idea, open, explore)
-├── looking_for (array of profile_role)
-├── industry (array of text)
-├── stage (enum: exploring, building, traction, raising)
-├── commitment (enum: full_time, part_time, side_project)
-├── runway (enum: three_months, six_months, twelve_months, eighteen_plus)
-├── experience (enum: first_time, one_to_two, three_plus)
-├── pitch (text, 200-500 chars when set)
-├── why_this (text)
-├── skills (array of text)
-├── capabilities (array of text)      -- Phase 4 B2B
-├── verified (boolean, default false)
-├── onboarded (boolean, default false)
-├── created_at, updated_at
+├── id, type ('individual'|'company'), full_name, company_name, email,
+├── age, location, photo_url, linkedin_url
+├── i_am, intent, looking_for[], industry[], stage, commitment, runway, experience
+├── pitch, why_this, skills[], capabilities[]
+├── verified, onboarded, created_at, updated_at
 
-interests
-├── id, from_profile_id, to_profile_id, note, status, created_at
-
-matches
-├── id, profile_a_id, profile_b_id, created_at (canonical ordering)
-
-messages
-├── id, match_id, sender_id, content, read_at, created_at
-
-profile_views
-├── id, viewer_id, viewed_id, viewed_at
-
-forum_posts
-├── id, author_id, title, content, created_at, updated_at
-
+interests / matches / messages / profile_views
+forum_posts / forum_likes / forum_comments
 reports
-├── id, reporter_id, target_kind, target_id, reason, status, created_at
-
-user_google_tokens (dormant — for Phase 1.5+ Google Calendar API)
-├── user_id, access_token, refresh_token, expires_at, scope
+insights (bilingual, draft/published)
+user_google_tokens
 ```
 
-**Key design principle:** Build extensibility for Phase 4 (B2B) now, even though we're only doing individuals in Phase 1. Adding `type`, `company_name`, `capabilities` columns up front means Phase 4 doesn't need a destructive migration.
+15 migrations applied (0001–0015 + recent additions), all tracked in Supabase migration history.
 
 ---
 
-## 📅 90-Day Launch Plan
+## 📅 Operating Cadence
 
-### Month 1 — Build
-- Register Thai company (DBD online)
-- Build MVP
-- Apply to DEPA grant (parallel)
-- Start posting content (TikTok, LinkedIn, Facebook)
+### Now → Month 3 (foundation)
+- Polish + ship community features (forum, content, networking)
+- Manually recruit first 100 active community members
+- Daily/weekly content (Insights blog posts)
+- Start hosting small online events (Q&A sessions, founder AMAs)
 
-### Month 2 — Soft Launch
-- Manually recruit first 100 founders
-- Founding member lifetime free premium (future benefit)
-- One online networking event
-- Iterate based on feedback
+### Months 3–6 (community gains traction)
+- 500 active members target
+- Identify natural B2B matches happening in the community
+- Begin reaching out to 1–2 legal firms as Phase 1 partners
 
-### Month 3 — Public Launch
-- Press push via Techsauce, e27
+### Months 6–12 (advisor partnerships)
+- 1–2 legal + 1 finance partner onboarded
+- Per-consultation booking flow live
+- 1,500 members
 - First in-person event in Bangkok
-- Target 300+ users
 
-### Month 4-6 — Optimize
-- Refine matching quality
-- Build community engagement
-- Reach 500 users
-- Begin Phase 2 prep
+### Months 12–24 (investor flow)
+- Reach out to angel networks (Wavemaker, 500 Global, East Ventures TH partners)
+- Warm-intro flow live
+- First 5 funded deals via Cofoundee
 
 ---
 
 ## 📊 Success Metrics
 
-### Phase 1 (Year 1)
-- 500 active users by Month 6
-- 50+ successful co-founder matches
-- 70%+ user satisfaction
-- Strong organic growth
+### Phase 0 (Year 1)
+- 500 community members by Month 6
+- 1,500 by Month 12
+- Forum: 5+ daily active posters
+- Content: 1 insight published per week minimum
+- Retention: 30%+ monthly active
 
-### Phase 2 (Year 2)
-- 1,500–2,000 active users
-- First investor introductions
-- 10+ funded deals via platform
-- Press coverage and partnerships
+### Phase 1 (Year 2)
+- 3+ partners delivering services
+- 50+ paid consultations facilitated
+- First sustainable revenue stream
 
-### Phase 3+ (Year 3+)
-- First sustainable revenue
-- ฿200K–500K/month gross revenue
-- Multiple revenue streams
-- Recognized brand in Thai startup ecosystem
+### Phase 2 (Year 2–3)
+- 10+ funded deals via investor intros
+- Press coverage in TechSauce / e27
 
 ---
 
-## 🧠 Founder Psychology — What I Know About Me
+## 🧠 Founder Self-Awareness
 
 ### Strengths
-- Technical co-founder (can build and iterate fast)
+- Technical (can build + iterate fast)
 - Co-founder doing content (free distribution)
-- Lean cost structure (can survive long-term)
-- Patient mindset (right for community building)
-- No investor pressure (can take time)
+- Lean cost structure
+- Patient mindset
 
 ### Honest gaps
-- 27, no prior startup experience
-- Will need to say "I don't know" often
-- Need to build network of advisors
-- Need emotional stamina for slow growth
-
-### Mindset
-- I'm building this WITH founders, not above them
-- "I don't know, let me find out" is a strength, not weakness
-- Reliability comes from showing up consistently, not credentials
-- The community grows together
+- 27 years old, no prior startup
+- Will need advisor network
+- 1 real user today — distribution is the bottleneck, not code
+- Community-building is slow; need emotional stamina for 12+ months of "nothing happening"
 
 ---
 
-## 🛡️ Brutal Truths I've Accepted
+## 🛡️ Brutal Truths
 
-- This is a 2–3 year build to meaningful revenue
-- Free for 2 years means I personally fund operations
-- Network effects need critical mass before monetization works
-- Some users will bypass the platform once they meet
-- Retention is harder than acquisition
-- I will feel imposter syndrome regularly
-- Year 1 may feel like nothing is happening
-- Patience is my competitive advantage
-
----
-
-## 🎯 The Long Vision
-
-- **Year 1:** Co-founder matching platform
-- **Year 3:** Multi-service startup hub
-- **Year 5:** Thailand's go-to platform for the founder journey
-- **Year 10:** SEA's startup operating system
-
-Each phase builds on the last. Each user grows with the platform.
-
-**One founder. 13 years. Multiple revenue moments per user.**
-
-That's the real opportunity.
+- **This is a 2–3 year build before meaningful revenue.**
+- **Building features ≠ users.** With 1 user, every hour on code is an hour not spent recruiting members. Code is the easy 10%.
+- **Community needs to be alive before anything else matters.** An empty forum is worse than no forum.
+- **Partner outreach starts at month 4–6**, not month 1. You need eyeballs to pitch them.
+- **Investor matching only works once you're trusted.** Don't pitch this in year 1.
+- **Some users will bypass the platform once they meet.** That's fine — community trust is the long game.
+- **Year 1 may feel like nothing is happening.** It is. Stay.
 
 ---
 
 ## ⚠️ Important Reminders for Claude Code
 
-1. **Phase 1 only** — Don't build investor features, payments, or video calls
-2. **But design for Phase 4** — Database extensibility now saves migration pain later
-3. **Conservative design** — No swipe interfaces, no dating-app vibe
-4. **Role-based matching** is the core innovation — get this right
-5. **The Pitch field is mandatory** — it's the matching fuel
-6. **Mutual interest required** before messaging unlocks
-7. **Free for all users** in Phase 1 — no paywalls anywhere
-8. **Build for Thailand first** — Thai + English UI, PDPA compliant
-9. **Mobile responsive is enough** — no native mobile app
-10. **Bootstrapped mindset** — every feature should justify its operating cost
+1. **Community-first** — features that help community grow > features that don't
+2. **Co-founder matching is built but NOT the headline.** Don't make it the main marketing message.
+3. **B2B (company profile type) is first-class**, not an afterthought
+4. **Design for trust** — no swipes, no gamification, no urgency hacks
+5. **Mutual interest required** before messaging unlocks (current pattern)
+6. **Free for all users** in Phase 0–1
+7. **Build for Thailand first** — Thai + English UI, PDPA compliant, Thai cultural register
+8. **Mobile responsive is enough** — no native mobile app
+9. **Database is built for B2B + investors + partners already** — schema extensibility is in place
+10. **Honesty over agreement** — when user wants to ship a feature that's premature, push back
 
 ---
 
-## 💪 Mantras to Remember
+## 🎯 The Long Vision
 
-- "Build the platform I would have wanted as a founder"
-- "Free for 2 years builds the trust I need for 20 years"
-- "I don't know" makes me MORE trustworthy, not less
-- "Reliability is shown by showing up, not by experience"
-- "Patience is my unfair advantage"
-- "Phase 1 first, vision later"
+- **Year 1:** Community + bridge for Thai startup ecosystem
+- **Year 2:** Advisor partnerships generating first revenue
+- **Year 3:** Investor flow + premium tier
+- **Year 5:** Thailand's go-to platform for the founder journey
+- **Year 10:** SEA's startup operating system
+
+Each phase compounds on the trust built in the prior phase.
 
 ---
 
-**Built by founders, for founders. The platform that grows with you. 🚀**
+## 🚦 Active project status (May 2026)
+
+- **Users:** 1 real onboarded founder (Ratthamontree Burimas)
+- **Code:** Phase 0 features mostly complete; community + B2B + co-founder all live
+- **Distribution:** Not started — biggest gap right now
+- **Strategy clarity:** Just pivoted from "co-founder matching" to "community-first bridge platform" (May 2026)
+
+---
+
+**Built by founders, for the Thai startup community. 🚀**

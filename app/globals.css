@@ -10,7 +10,10 @@
   --color-ink-muted: #888888;
   --color-line: #e2e8f0;
 
-  --font-serif: Georgia, "Times New Roman", serif;
+  /* Per-glyph fallback: Latin renders Georgia (editorial feel),
+     Thai falls through to Noto Sans Thai (Georgia has no Thai glyphs). */
+  --font-serif:
+    Georgia, "Times New Roman", var(--font-noto-thai), serif;
   --font-sans:
     var(--font-noto-thai), system-ui, -apple-system, "Segoe UI",
     "Helvetica Neue", sans-serif;
@@ -35,6 +38,20 @@
     font-family: var(--font-serif);
     color: var(--color-navy);
     letter-spacing: -0.01em;
+  }
+
+  /* Thai locale: drop the Georgia serif look — Thai script doesn't have a
+     matching elegant serif, so a clean sans (Noto Sans Thai) reads more
+     professionally than a forced serif fallback. */
+  html[lang="th"] h1,
+  html[lang="th"] h2,
+  html[lang="th"] h3,
+  html[lang="th"] h4,
+  html[lang="th"] h5,
+  html[lang="th"] h6 {
+    font-family: var(--font-noto-thai), system-ui, sans-serif;
+    letter-spacing: 0;
+    font-weight: 600;
   }
 
   /* Tailwind v4 removed the default `cursor: pointer` on buttons —

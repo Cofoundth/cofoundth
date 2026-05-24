@@ -25,11 +25,26 @@ export async function sendMessageAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
+  // Verify the caller is a party to this match before inserting. RLS would
+  // catch a bad insert too, but surfacing the raw Postgres error to the UI
+  // leaks policy internals — explicit pre-check + generic error is cleaner
+  // and defends against any future RLS regression.
+  const { data: match } = await supabase
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`)
+    .maybeSingle();
+  if (!match) return { error: "Conversation not found." };
+
   const { error } = await supabase
     .from("messages")
     .insert({ match_id: matchId, sender_id: user.id, content });
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[sendMessage] insert failed", error);
+    return { error: "Couldn't send your message. Try again." };
+  }
 
   // Notify the other party (best-effort)
   void notifyNewMessage(matchId, user.id, content);
@@ -83,4 +98,25 @@ async function notifyNewMessage(
   } catch (e) {
     console.error("[notifyNewMessage failed]", e);
   }
+}
+
+// Fire-and-forget: client mounts the conversation and calls this to mark
+// the other party's messages as read. Decoupled from the page render so
+// browser prefetch (which doesn't run client effects) can't accidentally
+// mark messages read before the user actually sees them.
+export async function markConversationRead(matchId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("messages")
+    .update({ read_at: new Date().toISOString() })
+    .eq("match_id", matchId)
+    .neq("sender_id", user.id)
+    .is("read_at", null);
+
+  revalidatePath(`/messages/${matchId}`);
 }

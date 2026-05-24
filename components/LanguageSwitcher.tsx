@@ -1,5 +1,6 @@
 import { Globe } from "lucide-react";
-import { getLocale, type Locale } from "@/lib/i18n";
+import { type Locale } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { setLocaleAction } from "@/app/actions/locale";
 
 export async function LanguageSwitcher({

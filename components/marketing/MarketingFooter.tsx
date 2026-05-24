@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { Wordmark } from "@/components/Brand";
 
 const columns = [
