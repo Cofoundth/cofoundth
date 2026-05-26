@@ -16,6 +16,7 @@ import { useT } from "@/lib/i18n-client";
 
 type Profile = ProfileLike & {
   id: string;
+  slug: string;
   full_name: string;
   age: number | null;
   photo_url: string | null;
@@ -364,7 +365,7 @@ function ProfileCard({
 }) {
   return (
     <Link
-      href={`/profile/${profile.id}`}
+      href={`/profile/${profile.slug}`}
       className="block bg-white border border-line p-6 hover:border-navy transition-colors group"
     >
       <div className="flex items-start gap-5">

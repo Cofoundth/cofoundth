@@ -26,9 +26,10 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, onboarded, i_am, intent")
+    .select("full_name, onboarded, i_am, intent, slug")
     .eq("id", user!.id)
     .single();
+  const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user!.id}`;
 
   // Counts
   const [
@@ -160,7 +161,7 @@ export default async function DashboardPage() {
           icon={Eye}
           label={await tServer("Profile views")}
           value={viewsCount ?? 0}
-          href={`/profile/${user!.id}`}
+          href={myProfileHref}
         />
       </div>
 

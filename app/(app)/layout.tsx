@@ -22,9 +22,10 @@ export default async function AppLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, photo_url")
+    .select("full_name, photo_url, slug")
     .eq("id", user.id)
     .single();
+  const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
   // Notification dots (best-effort, exact counts not shown)
   const [{ count: receivedPending }, { count: unreadMessages }] =
@@ -74,7 +75,7 @@ export default async function AppLayout({
             <div className="flex items-center gap-4">
               <LanguageSwitcher />
               <Link
-                href={`/profile/${user.id}`}
+                href={myProfileHref}
                 title={await tServer("Your profile")}
                 className="hover:opacity-80 transition-opacity"
               >

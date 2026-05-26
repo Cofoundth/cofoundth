@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Building2, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -12,6 +12,7 @@ import {
   EXPERIENCE_LABELS,
 } from "@/lib/matching";
 import { tServer } from "@/lib/i18n-server";
+import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
 import { ExpressInterestForm } from "./ExpressInterestForm";
 import { ReportForm } from "./ReportForm";
@@ -21,7 +22,7 @@ type Props = {
 };
 
 const COLUMNS =
-  "id, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, verified, onboarded, type, company_name, capabilities";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, verified, onboarded, type, company_name, capabilities";
 
 export default async function ProfileDetailPage({ params }: Props) {
   const { id } = await params;
@@ -31,13 +32,21 @@ export default async function ProfileDetailPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Route accepts either a slug (canonical) or a legacy UUID share-link.
+  // If a UUID is passed and the profile has a slug, 301 to the slug URL —
+  // keeps old links working but consolidates SEO on the slug.
+  const lookupField = isUuid(id) ? "id" : "slug";
   const { data: profile } = await supabase
     .from("profiles")
     .select(COLUMNS)
-    .eq("id", id)
-    .single();
+    .eq(lookupField, id)
+    .maybeSingle();
 
   if (!profile) notFound();
+
+  if (lookupField === "id" && profile.slug) {
+    redirect(`/profile/${profile.slug}`);
+  }
 
   const isOwnProfile = user?.id === profile.id;
 
