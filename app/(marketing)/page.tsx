@@ -27,8 +27,8 @@ const pillars = [
     icon: Building2,
     label: "B2B Network",
     title: "Companies finding companies",
-    body: "Startups partner with startups — vendors, integrations, distribution, co-marketing. Browse company profiles, see capabilities, start the conversation.",
-    status: "Live",
+    body: "Startups partner with startups — vendors, integrations, distribution, co-marketing. Send a partnership request, get a response, unlock messaging. No mutual-interest gate.",
+    status: "Beta",
   },
   {
     icon: Scale,
@@ -358,7 +358,9 @@ export default async function LandingPage() {
                     className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
                       p.status === "Live"
                         ? "border-gold text-gold"
-                        : "border-line text-ink-muted"
+                        : p.status === "Beta"
+                          ? "border-gold/60 text-gold/80"
+                          : "border-line text-ink-muted"
                     }`}
                   >
                     {tr(p.status)}

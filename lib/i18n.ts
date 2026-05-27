@@ -39,6 +39,7 @@ export const TH: Record<string, string> = {
   Dashboard: "หน้าหลัก",
   Browse: "สำรวจ",
   Founders: "Founder",
+  Companies: "บริษัท",
   Interests: "ความสนใจ",
   Community: "ชุมชน",
   Admin: "ผู้ดูแลระบบ",
@@ -82,8 +83,6 @@ export const TH: Record<string, string> = {
     "ฟอรัม บทความ และอีเวนต์ สำหรับคนที่จริงจังกับ startup ไทย ตั้งคำถาม แบ่งปันงานที่กำลังสร้าง และพบกับผู้คนที่จะร่วมกำหนดเส้นทางของคุณ",
   "B2B Network": "เครือข่าย B2B",
   "Companies finding companies": "หาพาร์ตเนอร์ธุรกิจที่ใช่",
-  "Startups partner with startups — vendors, integrations, distribution, co-marketing. Browse company profiles, see capabilities, start the conversation.":
-    "Startup จับมือกัน — vendor, integration, การจัดจำหน่าย, co-marketing สำรวจโปรไฟล์บริษัท ตรวจสอบความสามารถ และเริ่มต้นการสนทนา",
   "Advisor Partners": "พาร์ตเนอร์ที่ปรึกษา",
   "Legal + finance, on demand": "กฎหมายและการเงิน เมื่อจำเป็น",
   "Partnered with vetted Thai law firms and accountants. Get advice on incorporation, contracts, fundraising structure — without paying for a full retainer.":
@@ -93,7 +92,16 @@ export const TH: Record<string, string> = {
   "Not cold algorithmic matching. Once you're active in the community, we make warm introductions to angel networks and VCs that fit your stage.":
     "ไม่ใช่การจับคู่ด้วย algorithm เมื่อคุณมีส่วนร่วมในชุมชน เราจะแนะนำคุณกับเครือข่าย angel และ VC ที่เหมาะกับช่วงของคุณ",
   Live: "เปิดใช้งานแล้ว",
+  Beta: "Beta",
   "Coming soon": "เร็วๆ นี้",
+  "Startups partner with startups — vendors, integrations, distribution, co-marketing. Send a partnership request, get a response, unlock messaging. No mutual-interest gate.":
+    "Startup จับมือกัน — vendor, integration, การจัดจำหน่าย, co-marketing ส่งคำขอความร่วมมือ รอตอบกลับ แล้วเปิดให้สนทนา ไม่ต้องสนใจตรงกันสองทาง",
+
+  // ─── Onboarding — partnership seeking (B2B) ───────────────────────
+  "Partners you're seeking (comma-separated, optional)":
+    "พาร์ตเนอร์ที่กำลังหา (คั่นด้วยจุลภาค, ไม่บังคับ)",
+  "What capabilities you're looking for in a partner. Companies offering these will see you in their matches.":
+    "ความสามารถที่คุณกำลังมองหาในพาร์ตเนอร์ บริษัทที่นำเสนอสิ่งเหล่านี้จะเห็นคุณในผลลัพธ์",
 
   // ─── Landing — Process ────────────────────────────────────────────
   "The process": "ขั้นตอน",
@@ -232,7 +240,6 @@ export const TH: Record<string, string> = {
   "Profile type": "ประเภทโปรไฟล์",
   All: "ทั้งหมด",
   Individuals: "บุคคล",
-  Companies: "บริษัท",
   "Looking for (Role)": "กำลังหา (บทบาท)",
   Industry: "อุตสาหกรรม",
   Stage: "ช่วง",

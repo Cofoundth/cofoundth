@@ -82,6 +82,7 @@ type FormState = {
   profile_type: "individual" | "company";
   company_name: string;
   capabilities: string;
+  partnership_seeking: string;
   i_am: string;
   intent: string;
   looking_for: string[];
@@ -116,6 +117,7 @@ export function OnboardingForm({ initial }: Props) {
     profile_type: "individual",
     company_name: "",
     capabilities: "",
+    partnership_seeking: "",
     i_am: "",
     intent: "",
     looking_for: [],
@@ -190,6 +192,11 @@ export function OnboardingForm({ initial }: Props) {
       .map((c) => c.trim())
       .filter(Boolean)
       .forEach((v) => fd.append("capabilities", v));
+    data.partnership_seeking
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .forEach((v) => fd.append("partnership_seeking", v));
     fd.append("i_am", data.i_am);
     fd.append("intent", data.intent);
     data.looking_for.forEach((v) => fd.append("looking_for", v));
@@ -711,6 +718,30 @@ function StepPitch({
           <p className="text-xs text-ink-muted mt-2">
             {tr(
               "What your company offers to potential partners. Used by other companies to find you.",
+            )}
+          </p>
+        </div>
+      )}
+
+      {data.profile_type === "company" && (
+        <div>
+          <label
+            htmlFor="partnership_seeking"
+            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+          >
+            {tr("Partners you're seeking (comma-separated, optional)")}
+          </label>
+          <input
+            id="partnership_seeking"
+            type="text"
+            value={data.partnership_seeking}
+            onChange={(e) => set("partnership_seeking", e.target.value)}
+            placeholder="payments, logistics, distribution, white-label"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          />
+          <p className="text-xs text-ink-muted mt-2">
+            {tr(
+              "What capabilities you're looking for in a partner. Companies offering these will see you in their matches.",
             )}
           </p>
         </div>

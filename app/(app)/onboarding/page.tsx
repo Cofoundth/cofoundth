@@ -13,7 +13,7 @@ export default async function OnboardingPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, photo_url, type, company_name, capabilities, i_am, intent, looking_for, industry, stage, location, commitment, runway, experience, pitch, why_this, skills",
+      "full_name, photo_url, type, company_name, capabilities, partnership_seeking, i_am, intent, looking_for, industry, stage, location, commitment, runway, experience, pitch, why_this, skills",
     )
     .eq("id", user.id)
     .single();
@@ -25,6 +25,9 @@ export default async function OnboardingPage() {
           | "company",
         company_name: (profile.company_name as string | null) ?? "",
         capabilities: ((profile.capabilities ?? []) as string[]).join(", "),
+        partnership_seeking: (
+          (profile.partnership_seeking ?? []) as string[]
+        ).join(", "),
         i_am: profile.i_am ?? "",
         intent: profile.intent ?? "",
         looking_for: profile.looking_for ?? [],

@@ -78,6 +78,10 @@ export async function saveOnboardingAction(
     formData.getAll("capabilities").map(String),
     MAX_INDUSTRY,
   );
+  const partnership_seeking = cap(
+    formData.getAll("partnership_seeking").map(String),
+    10,
+  );
 
   // ---- Validate
   if (!ROLE_VALUES.includes(i_am as never))
@@ -126,6 +130,8 @@ export async function saveOnboardingAction(
       type: profile_type,
       company_name: profile_type === "company" ? company_name : null,
       capabilities: profile_type === "company" ? capabilities : [],
+      partnership_seeking:
+        profile_type === "company" ? partnership_seeking : [],
       onboarded: true,
     })
     .eq("id", user.id);

@@ -125,6 +125,42 @@ export async function sendNewMessageEmail(opts: {
   });
 }
 
+export async function sendPartnershipRequestEmail(opts: {
+  toEmail: string;
+  toRep: string;
+  toCompany: string;
+  fromCompany: string;
+  subject: string;
+  requestType: string;
+}) {
+  const typeLabel: Record<string, string> = {
+    integration: "Integration",
+    distribution: "Distribution",
+    white_label: "White label",
+    co_marketing: "Co-marketing",
+    vendor_supplier: "Vendor / supplier",
+    other: "Partnership",
+  };
+  const label = typeLabel[opts.requestType] ?? "Partnership";
+  const body = `
+    <div class="badge">New partnership request</div>
+    <h1>${escapeHtml(opts.fromCompany)} wants to partner with ${escapeHtml(opts.toCompany)}</h1>
+    <p>Hi ${escapeHtml(opts.toRep)},</p>
+    <p>
+      <strong>${escapeHtml(opts.fromCompany)}</strong> sent a
+      <strong>${escapeHtml(label)}</strong> request:
+    </p>
+    <div class="note">"${escapeHtml(opts.subject)}"</div>
+    <p>Open Cofoundee to see the full request and respond. Messaging unlocks the moment you accept.</p>
+    <a href="${SITE_URL}/interests?tab=partnerships" class="button">Review request</a>
+  `;
+  return send({
+    to: opts.toEmail,
+    subject: `${opts.fromCompany} sent a partnership request`,
+    html: wrap("Partnership request on Cofoundee", body),
+  });
+}
+
 function escapeHtml(s: string) {
   return s
     .replace(/&/g, "&amp;")
