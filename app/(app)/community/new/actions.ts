@@ -11,12 +11,30 @@ export async function createPostAction(
 ): Promise<PostState> {
   const title = String(formData.get("title") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
+  const tagsRaw = String(formData.get("tags") ?? "").trim();
 
   if (!title) return { error: "Title is required." };
   if (title.length > 200) return { error: "Title must be 200 chars or less." };
   if (!content) return { error: "Content is required." };
   if (content.length > 5000)
     return { error: "Content must be 5000 chars or less." };
+
+  // Parse tags: split on whitespace/commas, normalize, dedupe, validate
+  const tags = Array.from(
+    new Set(
+      tagsRaw
+        .split(/[,\s]+/)
+        .map((t) => t.trim().toLowerCase().replace(/^#/, ""))
+        .filter(Boolean),
+    ),
+  ).slice(0, 5);
+  for (const tag of tags) {
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(tag) || tag.length > 30) {
+      return {
+        error: `Bad tag "${tag}" — lowercase letters/digits/hyphens only, max 30 chars.`,
+      };
+    }
+  }
 
   const supabase = await createClient();
   const {
@@ -26,7 +44,7 @@ export async function createPostAction(
 
   const { data, error } = await supabase
     .from("forum_posts")
-    .insert({ author_id: user.id, title, content })
+    .insert({ author_id: user.id, title, content, tags })
     .select("id")
     .single();
 

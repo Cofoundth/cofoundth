@@ -22,7 +22,7 @@ export default async function PostPage({ params }: Props) {
 
   const { data: post } = await supabase
     .from("forum_posts")
-    .select("id, author_id, title, content, created_at")
+    .select("id, author_id, title, content, tags, created_at")
     .eq("id", id)
     .single();
 
@@ -80,9 +80,22 @@ export default async function PostPage({ params }: Props) {
       </Link>
 
       <article className="bg-white border border-line p-8 lg:p-12">
-        <h1 className="text-3xl lg:text-4xl mb-6 leading-tight">
+        <h1 className="text-3xl lg:text-4xl mb-4 leading-tight">
           {post.title as string}
         </h1>
+
+        {((post.tags as string[] | null) ?? []).length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-6">
+            {((post.tags ?? []) as string[]).map((tag) => (
+              <span
+                key={tag}
+                className="text-[10px] uppercase tracking-[0.15em] px-2 py-1 border border-gold/40 text-gold"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-line">
           <Link href={`/profile/${author?.id}`}>

@@ -40,7 +40,7 @@ export default async function CommunityPage() {
   // Posts feed (may fail gracefully if forum table not yet migrated)
   const { data: posts, error } = await supabase
     .from("forum_posts")
-    .select("id, author_id, title, content, created_at")
+    .select("id, author_id, title, content, tags, created_at")
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -186,6 +186,18 @@ export default async function CommunityPage() {
                     <p className="text-sm text-ink leading-relaxed mb-3 line-clamp-2">
                       {p.content as string}
                     </p>
+                    {((p.tags as string[] | null) ?? []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {((p.tags ?? []) as string[]).slice(0, 5).map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <div className="text-xs text-ink-muted flex items-center gap-4 flex-wrap">
                       <span>
                         {(author?.full_name as string) ?? "A founder"}

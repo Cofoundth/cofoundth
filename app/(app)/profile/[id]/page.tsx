@@ -11,7 +11,7 @@ import {
   RUNWAY_LABELS,
   EXPERIENCE_LABELS,
 } from "@/lib/matching";
-import { tServer } from "@/lib/i18n-server";
+import { tServer, getLocale } from "@/lib/i18n-server";
 import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
 import { ExpressInterestForm } from "./ExpressInterestForm";
@@ -22,7 +22,18 @@ type Props = {
 };
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, verified, onboarded, type, company_name, capabilities";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, verified, onboarded, type, company_name, capabilities, created_at";
+
+function cohortLabel(createdAt: string, locale: string): string {
+  const d = new Date(createdAt);
+  if (locale === "th") {
+    const monthTh = d.toLocaleDateString("th-TH", { month: "short" });
+    return `รุ่น ${monthTh} ${d.getFullYear() + 543}`;
+  }
+  const monthEn = d.toLocaleDateString("en-US", { month: "short" });
+  const yearShort = d.getFullYear().toString().slice(-2);
+  return `Class of ${monthEn} '${yearShort}`;
+}
 
 export default async function ProfileDetailPage({ params }: Props) {
   const { id } = await params;
@@ -43,6 +54,8 @@ export default async function ProfileDetailPage({ params }: Props) {
     .maybeSingle();
 
   if (!profile) notFound();
+
+  const locale = await getLocale();
 
   if (lookupField === "id" && profile.slug) {
     redirect(`/profile/${profile.slug}`);
@@ -143,6 +156,11 @@ export default async function ProfileDetailPage({ params }: Props) {
                     <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold font-sans">
                       <Building2 className="w-3 h-3" strokeWidth={2} />
                       Company
+                    </span>
+                  )}
+                  {profile.created_at && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-line text-ink-muted font-sans">
+                      {cohortLabel(profile.created_at as string, locale)}
                     </span>
                   )}
                   {profile.age && profile.type !== "company" && (

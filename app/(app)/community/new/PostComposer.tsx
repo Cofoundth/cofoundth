@@ -51,6 +51,26 @@ export function PostComposer() {
         />
       </div>
 
+      <div>
+        <label
+          htmlFor="tags"
+          className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+        >
+          Tags <span className="normal-case tracking-normal text-ink-muted">(up to 5, comma or space separated)</span>
+        </label>
+        <input
+          id="tags"
+          name="tags"
+          type="text"
+          maxLength={200}
+          placeholder="fundraising, sales, hiring, thai-market"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+        />
+        <p className="text-xs text-ink-muted mt-2">
+          Lowercase letters, digits, and hyphens only. Helps others find your post.
+        </p>
+      </div>
+
       {state?.error && (
         <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
           {state.error}

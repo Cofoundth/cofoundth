@@ -50,10 +50,28 @@ function timeAgo(iso: string, locale: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-const KIND_META: Record<StatusKind, { icon: typeof Sparkles; en: string; th: string; tone: string }> = {
-  status: { icon: Sparkles, en: "working on", th: "กำลังทำ", tone: "text-ink-muted" },
-  milestone: { icon: Trophy, en: "hit a milestone", th: "ประสบความสำเร็จ", tone: "text-gold" },
-  show_and_tell: { icon: ExternalLink, en: "shipped", th: "เพิ่งปล่อย", tone: "text-navy" },
+const KIND_META: Record<StatusKind, { icon: typeof Sparkles; en: string; th: string; tone: string; bg: string }> = {
+  status: {
+    icon: Sparkles,
+    en: "working on",
+    th: "กำลังทำ",
+    tone: "text-ink-muted",
+    bg: "",
+  },
+  milestone: {
+    icon: Trophy,
+    en: "hit a milestone",
+    th: "ประสบความสำเร็จ",
+    tone: "text-gold",
+    bg: "bg-gold/5",
+  },
+  show_and_tell: {
+    icon: ExternalLink,
+    en: "shipped",
+    th: "เพิ่งปล่อย",
+    tone: "text-navy",
+    bg: "bg-cream",
+  },
 };
 
 export function StatusFeed({ items, locale, emptyMessage }: Props) {
@@ -94,7 +112,7 @@ function StatusRow({ item, locale }: { item: StatusItem; locale: "en" | "th" }) 
   const fresh = Date.now() - new Date(item.created_at).getTime() < 3 * 3600_000;
 
   return (
-    <div className="p-4 flex items-start gap-3">
+    <div className={`p-4 flex items-start gap-3 ${meta.bg}`}>
       <Link href={authorHref} className="shrink-0">
         <Avatar
           name={item.author?.full_name}

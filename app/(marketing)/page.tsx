@@ -86,8 +86,10 @@ export default async function LandingPage() {
   // Live platform data — service-role to read past RLS
   const admin = createAdminClient();
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000).toISOString();
   const [
     { data: featured },
+    { data: recentMilestones },
     { count: totalFounders },
     { count: foundersThisWeek },
     { count: postsThisWeek },
@@ -98,6 +100,13 @@ export default async function LandingPage() {
       .eq("onboarded", true)
       .order("created_at", { ascending: false })
       .limit(6),
+    admin
+      .from("status_updates")
+      .select("id, author_id, content, kind, created_at")
+      .in("kind", ["milestone", "show_and_tell"])
+      .gte("created_at", thirtyDaysAgo)
+      .order("created_at", { ascending: false })
+      .limit(3),
     admin
       .from("profiles")
       .select("id", { count: "exact", head: true })
@@ -112,6 +121,20 @@ export default async function LandingPage() {
       .select("id", { count: "exact", head: true })
       .gte("created_at", sevenDaysAgo),
   ]);
+
+  // Hydrate milestone authors
+  const milestoneAuthorIds = Array.from(
+    new Set((recentMilestones ?? []).map((m) => m.author_id as string)),
+  );
+  const { data: milestoneAuthors } = milestoneAuthorIds.length
+    ? await admin
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", milestoneAuthorIds)
+    : { data: [] };
+  const milestoneAuthorMap = new Map(
+    (milestoneAuthors ?? []).map((a) => [a.id as string, a]),
+  );
 
   return (
     <>
@@ -250,6 +273,59 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Recent wins from the community — only render if there are any */}
+      {(recentMilestones?.length ?? 0) > 0 && (
+        <section className="py-16 bg-white border-b border-line">
+          <div className="max-w-7xl mx-auto px-6 lg:px-10">
+            <div className="flex items-end justify-between gap-6 mb-8 flex-wrap">
+              <div>
+                <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                  {isTH ? "ความสำเร็จล่าสุดในชุมชน" : "Recent wins"}
+                </div>
+                <h2 className="text-2xl lg:text-3xl leading-tight">
+                  {isTH
+                    ? "Founder ในชุมชนกำลังขับเคลื่อนอะไรอยู่"
+                    : "What founders in the community just shipped."}
+                </h2>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              {(recentMilestones ?? []).map((m) => {
+                const author = milestoneAuthorMap.get(m.author_id as string);
+                const isMilestone = m.kind === "milestone";
+                return (
+                  <div
+                    key={m.id as string}
+                    className={`border p-5 ${
+                      isMilestone
+                        ? "bg-gold/5 border-gold/40"
+                        : "bg-cream border-line"
+                    }`}
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-gold mb-2 inline-flex items-center gap-1.5">
+                      {isMilestone
+                        ? isTH
+                          ? "ความสำเร็จ"
+                          : "Milestone"
+                        : isTH
+                          ? "เพิ่งปล่อย"
+                          : "Shipped"}
+                    </div>
+                    <p className="text-sm text-ink leading-relaxed mb-3 line-clamp-3">
+                      {m.content as string}
+                    </p>
+                    <div className="text-xs text-ink-muted">
+                      {(author?.full_name as string) ?? "A founder"}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Four pillars */}
       <section className="py-24 lg:py-32 bg-white">
