@@ -3,8 +3,6 @@ import {
   ArrowRight,
   Building2,
   Check,
-  HandshakeIcon,
-  MessageSquare,
   Quote,
   Scale,
   TrendingUp,
@@ -12,6 +10,10 @@ import {
 } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { Avatar } from "@/components/Avatar";
+
+export const revalidate = 60; // refresh live numbers every minute
 
 const pillars = [
   {
@@ -67,20 +69,84 @@ const processSteps = [
   },
 ];
 
+const ROLE_LABEL_EN: Record<string, string> = {
+  technical: "Technical",
+  business: "Business",
+  product: "Product",
+  marketing: "Marketing",
+  finance: "Finance",
+  domain_expert: "Domain Expert",
+};
+
 export default async function LandingPage() {
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);
+  const isTH = locale === "th";
+
+  // Live platform data — service-role to read past RLS
+  const admin = createAdminClient();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
+  const [
+    { data: featured },
+    { count: totalFounders },
+    { count: foundersThisWeek },
+    { count: postsThisWeek },
+  ] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("id, full_name, photo_url, i_am, intent, slug, location, pitch")
+      .eq("onboarded", true)
+      .order("created_at", { ascending: false })
+      .limit(6),
+    admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("onboarded", true),
+    admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("onboarded", true)
+      .gte("created_at", sevenDaysAgo),
+    admin
+      .from("forum_posts")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", sevenDaysAgo),
+  ]);
 
   return (
     <>
       {/* Hero */}
       <section className="bg-cream border-b border-line">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-24 lg:py-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20 lg:py-28">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7">
-              <div className="text-xs uppercase tracking-[0.25em] text-ink-muted mb-8">
-                <span className="inline-block w-12 h-px bg-ink-muted align-middle mr-3" />
-                {tr("Thailand's startup community")}
+              <div className="text-xs uppercase tracking-[0.25em] text-ink-muted mb-6 flex items-center gap-3 flex-wrap">
+                <span className="inline-flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                  {tr("Thailand's startup community")}
+                </span>
+                <span className="text-line">·</span>
+                <span className="normal-case tracking-normal text-ink-muted text-xs">
+                  {totalFounders ?? 0} {tr("founders")}
+                </span>
+                {(foundersThisWeek ?? 0) > 0 && (
+                  <>
+                    <span className="text-line">·</span>
+                    <span className="normal-case tracking-normal text-gold text-xs">
+                      +{foundersThisWeek}{" "}
+                      {isTH ? "ใหม่สัปดาห์นี้" : "joined this week"}
+                    </span>
+                  </>
+                )}
+                {(postsThisWeek ?? 0) > 0 && (
+                  <>
+                    <span className="text-line">·</span>
+                    <span className="normal-case tracking-normal text-ink-muted text-xs">
+                      {postsThisWeek}{" "}
+                      {isTH ? "โพสต์ใหม่ 7 วัน" : "new posts in 7d"}
+                    </span>
+                  </>
+                )}
               </div>
               <h1 className="text-5xl lg:text-7xl leading-[1.05] tracking-tight mb-8">
                 {tr("Where Thai startups build together.")}
@@ -120,47 +186,60 @@ export default async function LandingPage() {
               </div>
             </div>
 
+            {/* Right column — REAL founders */}
             <div className="lg:col-span-5">
               <div className="relative">
-                <div className="bg-white border border-line p-8">
-                  <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-5">
-                    {tr("What's inside")}
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 p-3 bg-cream border-l-2 border-gold">
-                      <MessageSquare className="w-5 h-5 text-gold shrink-0 mt-0.5" strokeWidth={1.5} />
-                      <div>
-                        <div className="font-serif text-base text-navy">
-                          {tr("Daily founder conversations")}
-                        </div>
-                        <div className="text-xs text-ink-muted mt-0.5">
-                          {tr("Community forum, content, weekly events")}
-                        </div>
-                      </div>
+                <div className="bg-white border border-line p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-xs uppercase tracking-[0.2em] text-gold">
+                      {isTH ? "ในชุมชนตอนนี้" : "In the community now"}
                     </div>
-                    <div className="flex items-start gap-3 p-3 bg-cream border-l-2 border-gold">
-                      <HandshakeIcon className="w-5 h-5 text-gold shrink-0 mt-0.5" strokeWidth={1.5} />
-                      <div>
-                        <div className="font-serif text-base text-navy">
-                          {tr("Bridge to partners + capital")}
-                        </div>
-                        <div className="text-xs text-ink-muted mt-0.5">
-                          {tr("B2B network, legal/finance advisors, investor intros")}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-cream border-l-2 border-navy">
-                      <Users className="w-5 h-5 text-navy shrink-0 mt-0.5" strokeWidth={1.5} />
-                      <div>
-                        <div className="font-serif text-base text-navy">
-                          {tr("Co-founder matching")}
-                        </div>
-                        <div className="text-xs text-ink-muted mt-0.5">
-                          {tr("Cherry on top — find complementary partners when you're ready")}
-                        </div>
-                      </div>
+                    <div className="text-xs text-ink-muted">
+                      {totalFounders ?? 0} {isTH ? "คน" : "total"}
                     </div>
                   </div>
+                  {!featured?.length ? (
+                    <div className="py-8 text-center text-sm text-ink-muted">
+                      {isTH
+                        ? "เป็นคนแรกที่เข้าร่วม"
+                        : "Be the first to join."}
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-line">
+                      {featured.slice(0, 5).map((f) => (
+                        <Link
+                          key={f.id as string}
+                          href={`/browse`}
+                          className="flex items-start gap-3 py-3 group"
+                        >
+                          <Avatar
+                            name={f.full_name as string}
+                            url={f.photo_url as string | null}
+                            size="sm"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-navy font-medium truncate group-hover:text-gold transition-colors">
+                              {f.full_name as string}
+                            </div>
+                            <div className="text-xs text-ink-muted truncate">
+                              {f.i_am
+                                ? ROLE_LABEL_EN[f.i_am as string] ??
+                                  (f.i_am as string)
+                                : "—"}
+                              {f.location ? ` · ${f.location}` : ""}
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  <Link
+                    href="/browse"
+                    className="mt-4 pt-3 border-t border-line text-xs text-navy hover:text-gold inline-flex items-center gap-1 transition-colors"
+                  >
+                    {isTH ? "ดู founder ทั้งหมด" : "Browse all founders"}
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
                 </div>
                 <div
                   className="absolute -bottom-3 -right-3 w-full h-full border border-gold"
