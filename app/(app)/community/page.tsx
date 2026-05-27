@@ -1,13 +1,41 @@
 import Link from "next/link";
 import { ArrowRight, Heart, MessageCircle, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { tServer } from "@/lib/i18n-server";
+import { tServer, getLocale } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
+function timeAgo(iso: string, locale: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  const h = Math.floor(diff / 3_600_000);
+  const d = Math.floor(diff / 86_400_000);
+  if (locale === "th") {
+    if (m < 1) return "เมื่อสักครู่";
+    if (m < 60) return `${m} นาทีที่แล้ว`;
+    if (h < 24) return `${h} ชั่วโมงที่แล้ว`;
+    if (d < 7) return `${d} วันที่แล้ว`;
+    return new Date(iso).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+    });
+  }
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  if (h < 24) return `${h}h ago`;
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 export default async function CommunityPage() {
   const supabase = await createClient();
+  const locale = await getLocale();
+  const isTH = locale === "th";
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
 
   // Posts feed (may fail gracefully if forum table not yet migrated)
   const { data: posts, error } = await supabase
@@ -21,24 +49,32 @@ export default async function CommunityPage() {
   );
   const postIds = (posts ?? []).map((p) => p.id as string);
 
-  const [{ data: authors }, { data: likes }, { data: comments }] =
-    await Promise.all([
-      authorIds.length
-        ? supabase
-            .from("profiles")
-            .select("id, full_name, photo_url, i_am")
-            .in("id", authorIds)
-        : Promise.resolve({ data: [] }),
-      postIds.length
-        ? supabase.from("forum_likes").select("post_id").in("post_id", postIds)
-        : Promise.resolve({ data: [] }),
-      postIds.length
-        ? supabase
-            .from("forum_comments")
-            .select("post_id")
-            .in("post_id", postIds)
-        : Promise.resolve({ data: [] }),
-    ]);
+  const [
+    { data: authors },
+    { data: likes },
+    { data: comments },
+    { count: postsThisWeek },
+  ] = await Promise.all([
+    authorIds.length
+      ? supabase
+          .from("profiles")
+          .select("id, full_name, photo_url, i_am, slug")
+          .in("id", authorIds)
+      : Promise.resolve({ data: [] }),
+    postIds.length
+      ? supabase.from("forum_likes").select("post_id").in("post_id", postIds)
+      : Promise.resolve({ data: [] }),
+    postIds.length
+      ? supabase
+          .from("forum_comments")
+          .select("post_id")
+          .in("post_id", postIds)
+      : Promise.resolve({ data: [] }),
+    supabase
+      .from("forum_posts")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", sevenDaysAgo),
+  ]);
   const authorMap = new Map((authors ?? []).map((a) => [a.id as string, a]));
 
   // Tally counts per post
@@ -55,10 +91,20 @@ export default async function CommunityPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 lg:px-10 py-10">
-      <div className="mb-10 pb-8 border-b border-line flex items-start justify-between gap-6">
+      <div className="mb-10 pb-8 border-b border-line flex items-start justify-between gap-6 flex-wrap">
         <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
             {await tServer("The community")}
+            {(postsThisWeek ?? 0) > 0 && (
+              <>
+                <span className="text-line">·</span>
+                <span className="normal-case tracking-normal text-ink-muted">
+                  {postsThisWeek}{" "}
+                  {isTH ? "โพสต์ใหม่ 7 วัน" : "new posts in 7d"}
+                </span>
+              </>
+            )}
           </div>
           <h1 className="text-4xl lg:text-5xl mb-2">
             {await tServer("Community")}
@@ -105,11 +151,20 @@ export default async function CommunityPage() {
         <div className="space-y-3">
           {posts.map((p) => {
             const author = authorMap.get(p.author_id as string);
+            const ageMs =
+              Date.now() - new Date(p.created_at as string).getTime();
+            const fresh = ageMs < 24 * 3600_000;
+            const commentN = commentCount.get(p.id as string) ?? 0;
+            const likeN = likeCount.get(p.id as string) ?? 0;
             return (
               <Link
                 key={p.id as string}
                 href={`/community/${p.id}`}
-                className="block bg-white border border-line hover:border-navy p-6 transition-colors group"
+                className={`block bg-white border p-6 transition-colors group ${
+                  fresh
+                    ? "border-gold/40 hover:border-gold"
+                    : "border-line hover:border-navy"
+                }`}
               >
                 <div className="flex items-start gap-4">
                   <Avatar
@@ -118,28 +173,55 @@ export default async function CommunityPage() {
                     size="md"
                   />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-serif text-xl text-navy mb-1 group-hover:text-gold transition-colors">
-                      {p.title as string}
-                    </h3>
-                    <p className="text-sm text-ink leading-relaxed mb-2 line-clamp-2">
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <h3 className="font-serif text-xl text-navy leading-tight group-hover:text-gold transition-colors">
+                        {p.title as string}
+                      </h3>
+                      {fresh && (
+                        <span className="text-[9px] uppercase tracking-[0.15em] text-gold border border-gold px-1.5 py-0.5 shrink-0">
+                          {isTH ? "ใหม่" : "new"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-ink leading-relaxed mb-3 line-clamp-2">
                       {p.content as string}
                     </p>
-                    <div className="text-xs text-ink-muted flex items-center gap-3 flex-wrap">
+                    <div className="text-xs text-ink-muted flex items-center gap-4 flex-wrap">
                       <span>
                         {(author?.full_name as string) ?? "A founder"}
                         {" · "}
-                        {new Date(p.created_at as string).toLocaleDateString(
-                          "en-GB",
-                          { day: "numeric", month: "short", year: "numeric" },
-                        )}
+                        {timeAgo(p.created_at as string, locale)}
                       </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Heart className="w-3 h-3" strokeWidth={1.5} />
-                        {likeCount.get(p.id as string) ?? 0}
+                      <span
+                        className={`inline-flex items-center gap-1 ${
+                          likeN > 0 ? "text-navy" : ""
+                        }`}
+                      >
+                        <Heart
+                          className="w-3.5 h-3.5"
+                          strokeWidth={1.5}
+                          fill={likeN > 0 ? "currentColor" : "none"}
+                        />
+                        {likeN}
                       </span>
-                      <span className="inline-flex items-center gap-1">
-                        <MessageCircle className="w-3 h-3" strokeWidth={1.5} />
-                        {commentCount.get(p.id as string) ?? 0}
+                      <span
+                        className={`inline-flex items-center gap-1 ${
+                          commentN > 0 ? "text-navy font-medium" : ""
+                        }`}
+                      >
+                        <MessageCircle
+                          className="w-3.5 h-3.5"
+                          strokeWidth={1.5}
+                        />
+                        {commentN}{" "}
+                        {commentN > 0 &&
+                          (isTH
+                            ? commentN === 1
+                              ? "ความคิดเห็น"
+                              : "ความคิดเห็น"
+                            : commentN === 1
+                              ? "reply"
+                              : "replies")}
                       </span>
                     </div>
                   </div>

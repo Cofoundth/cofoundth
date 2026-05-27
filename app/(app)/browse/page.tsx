@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BrowseClient } from "./BrowseClient";
 
 const PROFILE_COLUMNS =
-  "id, slug, full_name, age, location, photo_url, verified, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, onboarded, type, company_name, capabilities";
+  "id, slug, full_name, age, location, photo_url, verified, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, onboarded, type, company_name, capabilities, created_at";
 
 export default async function BrowsePage() {
   const supabase = await createClient();
@@ -62,6 +62,7 @@ export default async function BrowsePage() {
     type: ((p.type as string) ?? "individual") as "individual" | "company",
     company_name: (p.company_name as string | null) ?? null,
     capabilities: ((p.capabilities ?? []) as string[]) ?? [],
+    created_at: (p.created_at as string) ?? new Date(0).toISOString(),
   }));
 
   return (

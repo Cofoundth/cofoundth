@@ -26,6 +26,7 @@ type Profile = ProfileLike & {
   type: "individual" | "company";
   company_name: string | null;
   capabilities: string[];
+  created_at: string;
 };
 
 type TypeFilter = "all" | "individual" | "company";
@@ -378,7 +379,7 @@ function ProfileCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
-              <h3 className="font-serif text-xl text-navy leading-tight inline-flex items-center gap-1.5">
+              <h3 className="font-serif text-xl text-navy leading-tight inline-flex items-center gap-1.5 flex-wrap">
                 {profile.type === "company" && profile.company_name
                   ? profile.company_name
                   : profile.full_name}
@@ -387,6 +388,13 @@ function ProfileCard({
                     className="w-4 h-4 text-gold shrink-0"
                     strokeWidth={2}
                   />
+                )}
+                {Date.now() - new Date(profile.created_at).getTime() <
+                  7 * 86400_000 && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold font-sans">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                    New
+                  </span>
                 )}
                 {profile.type === "company" && (
                   <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold">
