@@ -5,7 +5,7 @@ import { CompaniesClient, type CompanyProfile } from "./CompaniesClient";
 export const dynamic = "force-dynamic";
 
 const COMPANY_COLUMNS =
-  "id, slug, full_name, company_name, photo_url, verified, location, i_am, intent, industry, stage, pitch, capabilities, partnership_seeking, created_at";
+  "id, slug, full_name, company_name, photo_url, verified, location, i_am, intent, industry, stage, pitch, capabilities, partnership_seeking, status_tags, created_at";
 
 export default async function CompaniesPage() {
   const supabase = await createClient();
@@ -48,6 +48,7 @@ export default async function CompaniesPage() {
       pitch: (c.pitch as string | null) ?? null,
       capabilities: ((c.capabilities ?? []) as string[]) ?? [],
       partnership_seeking: ((c.partnership_seeking ?? []) as string[]) ?? [],
+      status_tags: ((c.status_tags ?? []) as string[]) ?? [],
       created_at: c.created_at as string,
     }));
 

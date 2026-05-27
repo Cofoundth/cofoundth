@@ -78,11 +78,19 @@ const EXPERIENCES = [
 
 // ---- Types ----------------------------------------------------------
 
+type StatusTag =
+  | "open_to_partnerships"
+  | "open_to_cofounder"
+  | "hiring"
+  | "raising"
+  | "looking_for_advisors";
+
 type FormState = {
   profile_type: "individual" | "company";
   company_name: string;
   capabilities: string;
   partnership_seeking: string;
+  status_tags: StatusTag[];
   i_am: string;
   intent: string;
   looking_for: string[];
@@ -118,6 +126,7 @@ export function OnboardingForm({ initial }: Props) {
     company_name: "",
     capabilities: "",
     partnership_seeking: "",
+    status_tags: [],
     i_am: "",
     intent: "",
     looking_for: [],
@@ -197,6 +206,7 @@ export function OnboardingForm({ initial }: Props) {
       .map((c) => c.trim())
       .filter(Boolean)
       .forEach((v) => fd.append("partnership_seeking", v));
+    data.status_tags.forEach((v) => fd.append("status_tags", v));
     fd.append("i_am", data.i_am);
     fd.append("intent", data.intent);
     data.looking_for.forEach((v) => fd.append("looking_for", v));
@@ -746,6 +756,73 @@ function StepPitch({
           </p>
         </div>
       )}
+
+      <div>
+        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
+          {tr("Right now I'm…")}
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              {
+                v: "open_to_cofounder" as const,
+                en: "Open to co-founder",
+                th: "เปิดรับ co-founder",
+                hideForCompany: true,
+              },
+              {
+                v: "open_to_partnerships" as const,
+                en: "Open to partnerships",
+                th: "เปิดรับพาร์ตเนอร์",
+              },
+              { v: "hiring" as const, en: "Hiring", th: "กำลังจ้าง" },
+              { v: "raising" as const, en: "Raising", th: "กำลังระดมทุน" },
+              {
+                v: "looking_for_advisors" as const,
+                en: "Looking for advisors",
+                th: "หาที่ปรึกษา",
+              },
+            ] as const
+          )
+            .filter(
+              (t) =>
+                !(
+                  "hideForCompany" in t &&
+                  t.hideForCompany &&
+                  data.profile_type === "company"
+                ),
+            )
+            .map((t) => {
+              const selected = data.status_tags.includes(t.v);
+              return (
+                <button
+                  key={t.v}
+                  type="button"
+                  onClick={() => {
+                    set(
+                      "status_tags",
+                      selected
+                        ? data.status_tags.filter((x) => x !== t.v)
+                        : [...data.status_tags, t.v].slice(0, 5),
+                    );
+                  }}
+                  className={`px-3 py-1.5 text-sm tracking-wide border transition-colors ${
+                    selected
+                      ? "bg-navy border-navy text-white"
+                      : "bg-white border-line text-ink hover:border-navy"
+                  }`}
+                >
+                  {tr(t.en)}
+                </button>
+              );
+            })}
+        </div>
+        <p className="text-xs text-ink-muted mt-2">
+          {tr(
+            "Status signals shown as chips on your profile. Pick what's true today.",
+          )}
+        </p>
+      </div>
     </div>
   );
 }

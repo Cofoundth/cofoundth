@@ -27,7 +27,19 @@ export type CompanyProfile = {
   pitch: string | null;
   capabilities: string[];
   partnership_seeking: string[];
+  status_tags: string[];
   created_at: string;
+};
+
+const STATUS_TAG_LABEL: Record<string, { en: string; th: string }> = {
+  open_to_partnerships: {
+    en: "Open to partnerships",
+    th: "เปิดรับพาร์ตเนอร์",
+  },
+  open_to_cofounder: { en: "Open to co-founder", th: "เปิดรับ co-founder" },
+  hiring: { en: "Hiring", th: "กำลังจ้าง" },
+  raising: { en: "Raising", th: "กำลังระดมทุน" },
+  looking_for_advisors: { en: "Looking for advisors", th: "หาที่ปรึกษา" },
 };
 
 type Props = {
@@ -123,12 +135,21 @@ export function CompaniesClient({
                 : "Find the right business partner. Filter by capabilities offered or partnerships sought."}
             </p>
           </div>
-          <div className="text-right">
-            <div className="font-serif text-3xl text-navy leading-none">
-              {companies.length}
-            </div>
-            <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mt-1">
-              {isTH ? "บริษัท" : "Companies"}
+          <div className="flex items-center gap-6">
+            <Link
+              href="/companies/requests"
+              className="text-sm text-navy hover:text-gold inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors"
+            >
+              <HandshakeIcon className="w-4 h-4" strokeWidth={1.5} />
+              {isTH ? "บอร์ดความร่วมมือ" : "Partnership board"}
+            </Link>
+            <div className="text-right">
+              <div className="font-serif text-3xl text-navy leading-none">
+                {companies.length}
+              </div>
+              <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mt-1">
+                {isTH ? "บริษัท" : "Companies"}
+              </div>
             </div>
           </div>
         </div>
@@ -369,6 +390,23 @@ function CompanyCard({
               </div>
             </div>
           </div>
+
+          {c.status_tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {c.status_tags.map((t) => {
+                const meta = STATUS_TAG_LABEL[t];
+                if (!meta) return null;
+                return (
+                  <span
+                    key={t}
+                    className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border border-gold/60 text-gold bg-gold/5"
+                  >
+                    {isTH ? meta.th : meta.en}
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
           {c.pitch && (
             <p className="text-sm text-ink leading-relaxed mb-4 line-clamp-2">

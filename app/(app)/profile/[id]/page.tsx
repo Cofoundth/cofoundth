@@ -22,7 +22,38 @@ type Props = {
 };
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, verified, onboarded, type, company_name, capabilities, created_at";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
+
+const STATUS_TAG_LABELS: Record<
+  string,
+  { en: string; th: string; tone: string }
+> = {
+  open_to_partnerships: {
+    en: "Open to partnerships",
+    th: "เปิดรับพาร์ตเนอร์",
+    tone: "border-gold/60 text-gold bg-gold/5",
+  },
+  open_to_cofounder: {
+    en: "Open to co-founder",
+    th: "เปิดรับ co-founder",
+    tone: "border-gold/60 text-gold bg-gold/5",
+  },
+  hiring: {
+    en: "Hiring",
+    th: "กำลังจ้าง",
+    tone: "border-navy text-navy bg-cream",
+  },
+  raising: {
+    en: "Raising",
+    th: "กำลังระดมทุน",
+    tone: "border-navy text-navy bg-cream",
+  },
+  looking_for_advisors: {
+    en: "Looking for advisors",
+    th: "หาที่ปรึกษา",
+    tone: "border-line text-ink-muted",
+  },
+};
 
 function cohortLabel(createdAt: string, locale: string): string {
   const d = new Date(createdAt);
@@ -86,6 +117,16 @@ export default async function ProfileDetailPage({ params }: Props) {
         )
         .eq("id", user!.id)
         .single();
+
+  // Recent milestones / shipped posts from this profile — surfaces life
+  // and credibility on the profile page itself.
+  const { data: recentMilestones } = await supabase
+    .from("status_updates")
+    .select("id, content, kind, link_url, created_at")
+    .eq("author_id", profile.id)
+    .in("kind", ["milestone", "show_and_tell"])
+    .order("created_at", { ascending: false })
+    .limit(4);
 
   const score =
     me && profile.i_am && me.i_am
@@ -218,6 +259,34 @@ export default async function ProfileDetailPage({ params }: Props) {
                       {((profile.capabilities ?? []) as string[]).join(", ")}
                     </div>
                   )}
+                {profile.type === "company" &&
+                  ((profile.partnership_seeking ?? []) as string[]).length >
+                    0 && (
+                    <div className="text-sm text-ink mt-3">
+                      <span className="text-ink-muted">
+                        {locale === "th" ? "กำลังหา: " : "Seeking: "}
+                      </span>
+                      {(
+                        (profile.partnership_seeking ?? []) as string[]
+                      ).join(", ")}
+                    </div>
+                  )}
+                {((profile.status_tags ?? []) as string[]).length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {((profile.status_tags ?? []) as string[]).map((t) => {
+                      const meta = STATUS_TAG_LABELS[t];
+                      if (!meta) return null;
+                      return (
+                        <span
+                          key={t}
+                          className={`text-[10px] uppercase tracking-[0.15em] px-2 py-1 border ${meta.tone}`}
+                        >
+                          {locale === "th" ? meta.th : meta.en}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </header>
@@ -259,6 +328,76 @@ export default async function ProfileDetailPage({ params }: Props) {
                     {s}
                   </span>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {(recentMilestones?.length ?? 0) > 0 && (
+            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
+              <div className="text-xs uppercase tracking-[0.2em] text-gold mb-5">
+                {locale === "th"
+                  ? "ความสำเร็จและงานที่ปล่อยล่าสุด"
+                  : "Recent milestones & launches"}
+              </div>
+              <div className="space-y-4">
+                {(recentMilestones ?? []).map((m) => {
+                  const isMilestone = m.kind === "milestone";
+                  return (
+                    <div
+                      key={m.id as string}
+                      className={`p-4 border-l-2 ${
+                        isMilestone
+                          ? "border-gold bg-gold/5"
+                          : "border-navy bg-cream"
+                      }`}
+                    >
+                      <div className="text-[10px] uppercase tracking-[0.2em] mb-1.5">
+                        <span
+                          className={
+                            isMilestone ? "text-gold" : "text-navy"
+                          }
+                        >
+                          {isMilestone
+                            ? locale === "th"
+                              ? "ความสำเร็จ"
+                              : "Milestone"
+                            : locale === "th"
+                              ? "เพิ่งปล่อย"
+                              : "Shipped"}
+                        </span>
+                        <span className="text-ink-muted ml-2">
+                          {new Date(
+                            m.created_at as string,
+                          ).toLocaleDateString(
+                            locale === "th" ? "th-TH" : "en-GB",
+                            { day: "numeric", month: "short" },
+                          )}
+                        </span>
+                      </div>
+                      <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">
+                        {m.content as string}
+                      </p>
+                      {m.link_url && (
+                        <a
+                          href={m.link_url as string}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 text-xs text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 break-all inline-block"
+                        >
+                          {(() => {
+                            try {
+                              return new URL(
+                                m.link_url as string,
+                              ).hostname.replace(/^www\./, "");
+                            } catch {
+                              return m.link_url as string;
+                            }
+                          })()}
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}

@@ -24,6 +24,13 @@ const RUNWAY_VALUES = [
 ] as const;
 const EXPERIENCE_VALUES = ["first_time", "one_to_two", "three_plus"] as const;
 const PROFILE_TYPES = ["individual", "company"] as const;
+const STATUS_TAGS = [
+  "open_to_partnerships",
+  "open_to_cofounder",
+  "hiring",
+  "raising",
+  "looking_for_advisors",
+] as const;
 
 export async function saveOnboardingAction(
   _prev: OnboardingState,
@@ -82,6 +89,11 @@ export async function saveOnboardingAction(
     formData.getAll("partnership_seeking").map(String),
     10,
   );
+  const status_tags = formData
+    .getAll("status_tags")
+    .map(String)
+    .filter((t) => (STATUS_TAGS as readonly string[]).includes(t))
+    .slice(0, 5);
 
   // ---- Validate
   if (!ROLE_VALUES.includes(i_am as never))
@@ -132,6 +144,7 @@ export async function saveOnboardingAction(
       capabilities: profile_type === "company" ? capabilities : [],
       partnership_seeking:
         profile_type === "company" ? partnership_seeking : [],
+      status_tags,
       onboarded: true,
     })
     .eq("id", user.id);
