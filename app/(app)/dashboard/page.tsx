@@ -3,6 +3,8 @@ import { ArrowRight, Heart, MessageCircle, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
+import { StatusComposer } from "../status/StatusComposer";
+import { StatusFeed, type StatusItem } from "../status/StatusFeed";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +58,7 @@ export default async function DashboardPage() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
   const [
     { data: recentPosts },
+    { data: recentStatuses },
     { data: newFounders },
     { count: totalFounders },
     { count: postsThisWeek },
@@ -65,7 +68,12 @@ export default async function DashboardPage() {
       .from("forum_posts")
       .select("id, author_id, title, created_at")
       .order("created_at", { ascending: false })
-      .limit(4),
+      .limit(3),
+    supabase
+      .from("status_updates")
+      .select("id, author_id, content, kind, link_url, created_at")
+      .order("created_at", { ascending: false })
+      .limit(6),
     supabase
       .from("profiles")
       .select("id, full_name, photo_url, i_am, intent, slug, created_at")
@@ -88,19 +96,70 @@ export default async function DashboardPage() {
       .gte("created_at", sevenDaysAgo),
   ]);
 
-  // Hydrate post authors
-  const postAuthorIds = Array.from(
-    new Set((recentPosts ?? []).map((p) => p.author_id as string)),
+  // Hydrate authors for posts + statuses
+  const authorIds = Array.from(
+    new Set([
+      ...(recentPosts ?? []).map((p) => p.author_id as string),
+      ...(recentStatuses ?? []).map((s) => s.author_id as string),
+    ]),
   );
-  const { data: postAuthors } = postAuthorIds.length
+  const { data: postAuthors } = authorIds.length
     ? await supabase
         .from("profiles")
         .select("id, full_name, photo_url, slug")
-        .in("id", postAuthorIds)
+        .in("id", authorIds)
     : { data: [] };
   const authorMap = new Map(
     (postAuthors ?? []).map((a) => [a.id as string, a]),
   );
+
+  // Status likes (count + my likes)
+  const statusIds = (recentStatuses ?? []).map((s) => s.id as string);
+  const [{ data: statusLikeRows }, { data: myStatusLikes }] = await Promise.all([
+    statusIds.length
+      ? supabase
+          .from("status_likes")
+          .select("status_id")
+          .in("status_id", statusIds)
+      : Promise.resolve({ data: [] }),
+    statusIds.length
+      ? supabase
+          .from("status_likes")
+          .select("status_id")
+          .in("status_id", statusIds)
+          .eq("user_id", user!.id)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const statusLikeCount = new Map<string, number>();
+  (statusLikeRows ?? []).forEach((l) => {
+    const k = l.status_id as string;
+    statusLikeCount.set(k, (statusLikeCount.get(k) ?? 0) + 1);
+  });
+  const myLiked = new Set(
+    (myStatusLikes ?? []).map((l) => l.status_id as string),
+  );
+
+  const statusItems: StatusItem[] = (recentStatuses ?? []).map((s) => {
+    const a = authorMap.get(s.author_id as string);
+    return {
+      id: s.id as string,
+      content: s.content as string,
+      kind: s.kind as StatusItem["kind"],
+      link_url: (s.link_url as string | null) ?? null,
+      created_at: s.created_at as string,
+      author: a
+        ? {
+            id: a.id as string,
+            full_name: (a.full_name as string) ?? null,
+            photo_url: (a.photo_url as string | null) ?? null,
+            slug: (a.slug as string | null) ?? null,
+          }
+        : null,
+      isOwn: s.author_id === user!.id,
+      likeCount: statusLikeCount.get(s.id as string) ?? 0,
+      myLike: myLiked.has(s.id as string),
+    };
+  });
 
   // Comment counts for those posts
   const postIds = (recentPosts ?? []).map((p) => p.id as string);
@@ -247,8 +306,24 @@ export default async function DashboardPage() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Recent in community — primary column */}
-        <section className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-5">
+        <section className="lg:col-span-2 space-y-6">
+          {/* Status composer — what are you working on? */}
+          {profile?.onboarded && <StatusComposer />}
+
+          {/* Status feed */}
+          {statusItems.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
+                  {isTH ? "อัปเดตล่าสุด" : "Latest updates"}
+                </h2>
+              </div>
+              <StatusFeed items={statusItems} locale={locale} />
+            </div>
+          )}
+
+          {/* Forum posts */}
+          <div className="flex items-center justify-between mb-3 mt-2">
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
               {isTH ? "ในชุมชน · ล่าสุด" : "Live in the community"}
             </h2>
