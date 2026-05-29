@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Link2, Send, Sparkles, Trophy } from "lucide-react";
 import { createStatusAction, type StatusState } from "./actions";
-import { useT } from "@/lib/i18n-client";
+import { useLocale } from "@/lib/i18n-client";
 
 const INITIAL: StatusState = null;
 
@@ -16,8 +16,7 @@ const KIND_OPTIONS: { value: Kind; en: string; th: string; icon: typeof Sparkles
 ];
 
 export function StatusComposer() {
-  const tr = useT();
-  const isTH = tr("test") !== "test"; // crude TH detection via dictionary miss
+  const isTH = useLocale() === "th";
   const [state, formAction, isPending] = useActionState<StatusState, FormData>(
     createStatusAction,
     INITIAL,

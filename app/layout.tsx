@@ -11,10 +11,60 @@ const notoSansThai = Noto_Sans_Thai({
   display: "swap",
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
+
 export const metadata: Metadata = {
-  title: "Cofoundee — Find your co-founder",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Cofoundee — Where Thai startups build together",
+    template: "%s · Cofoundee",
+  },
   description:
-    "The platform for Thai founders to find their co-founder based on complementary skills, intent, and industry.",
+    "The bridge for Thailand's startup ecosystem — a community where founders meet, companies find partners, and investors and advisors come to you when the time is right.",
+  keywords: [
+    "Thai startup",
+    "startup Thailand",
+    "co-founder",
+    "founder community",
+    "B2B partnership",
+    "startup network",
+    "Cofoundee",
+  ],
+  authors: [{ name: "Cofoundee" }],
+  openGraph: {
+    type: "website",
+    siteName: "Cofoundee",
+    title: "Cofoundee — Where Thai startups build together",
+    description:
+      "Community, partners, capital, and co-founders for Thailand's startup ecosystem — in one place.",
+    url: SITE_URL,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Cofoundee — Where Thai startups build together",
+      },
+    ],
+    locale: "en_US",
+    alternateLocale: ["th_TH"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cofoundee — Where Thai startups build together",
+    description:
+      "Community, partners, capital, and co-founders for Thailand's startup ecosystem — in one place.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-touch-icon.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default async function RootLayout({

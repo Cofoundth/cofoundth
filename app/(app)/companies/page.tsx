@@ -7,7 +7,12 @@ export const dynamic = "force-dynamic";
 const COMPANY_COLUMNS =
   "id, slug, full_name, company_name, photo_url, verified, location, i_am, intent, industry, stage, pitch, capabilities, partnership_seeking, status_tags, created_at";
 
-export default async function CompaniesPage() {
+export default async function CompaniesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ focus?: string }>;
+}) {
+  const { focus } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -73,6 +78,7 @@ export default async function CompaniesPage() {
       currentUserCompanyName={
         (me?.company_name as string | null) ?? null
       }
+      focusId={focus ?? null}
     />
   );
 }

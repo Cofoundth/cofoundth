@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -49,6 +49,7 @@ type Props = {
   locale: "en" | "th";
   currentUserIsCompany: boolean;
   currentUserCompanyName: string | null;
+  focusId?: string | null;
 };
 
 export function CompaniesClient({
@@ -58,6 +59,7 @@ export function CompaniesClient({
   locale,
   currentUserIsCompany,
   currentUserCompanyName,
+  focusId,
 }: Props) {
   const tr = useT();
   const isTH = locale === "th";
@@ -68,6 +70,16 @@ export function CompaniesClient({
   const [requestTarget, setRequestTarget] = useState<CompanyProfile | null>(
     null,
   );
+
+  // Deep-link from the partnership board ("Respond" → /companies?focus=<id>):
+  // auto-open the request dialog for that company, if the viewer can send.
+  useEffect(() => {
+    if (!focusId || !currentUserIsCompany) return;
+    const target = companies.find((c) => c.id === focusId);
+    if (target) setRequestTarget(target);
+    // Only on mount / when the focus target changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusId]);
 
   function toggle(
     set: React.Dispatch<React.SetStateAction<string[]>>,
