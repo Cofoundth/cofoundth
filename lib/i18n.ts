@@ -51,13 +51,15 @@ export const TH: Record<string, string> = {
   "Legal templates": "เทมเพลตเอกสารกฎหมาย",
 
   // ─── Landing — hero ───────────────────────────────────────────────
+  // Thai copy is rewritten native (short parallel phrases, no English
+  // em-dash trailing clauses), not translated word-for-word.
   "Thailand's startup community": "เครือข่าย founder ไทย",
-  "Where Thai startups build together.": "วงการ startup ไทย ในที่เดียว",
+  "Where Thai startups build together.": "ที่ที่ startup ไทย เติบโตไปด้วยกัน",
   "Cofoundee is the bridge for Thailand's startup ecosystem — a community where founders meet, companies find partners, and investors and advisors come to you when the time is right.":
-    "Cofoundee เชื่อม founder ไทย เข้ากับพาร์ตเนอร์ ที่ปรึกษา และนักลงทุน — เพื่อให้ทุกการเดินทางของ startup มีคนเดินด้วย",
+    "ชุมชนที่ founder ไทยมาเจอกัน หาพาร์ตเนอร์ หาทุน และที่ปรึกษา ครบในที่เดียว",
   "Create your profile": "สร้างโปรไฟล์",
   "Join the community": "สร้างโปรไฟล์",
-  "Browse founders": "สำรวจชุมชน",
+  "Browse founders": "ดู founder",
   "Free forever": "ฟรีตลอดการใช้งาน",
   "Verified profiles": "โปรไฟล์ผ่านการยืนยัน",
   "Built for Thailand": "สำหรับวงการ startup ไทย",
@@ -75,12 +77,12 @@ export const TH: Record<string, string> = {
   // ─── Landing — Pillars ────────────────────────────────────────────
   "What we do": "บริการของเรา",
   "Everything a Thai startup needs — in one place.":
-    "ทุกสิ่งที่ startup ไทยต้องการ — ในที่เดียว",
+    "ทุกอย่างที่ startup ไทยต้องใช้ ในที่เดียว",
   "Built in the order that actually works: community first, then partnerships and capital come on top.":
-    "สร้างตามลำดับที่ได้ผลจริง: ชุมชนต้องมาก่อน พาร์ตเนอร์และเงินทุนตามมาทีหลัง",
-  "Where Thai founders meet": "พบ founder ไทยคนอื่น",
+    "สร้างตามลำดับที่เวิร์กจริง — ชุมชนมาก่อน แล้วพาร์ตเนอร์กับเงินทุนค่อยตามมา",
+  "Where Thai founders meet": "ที่ที่ founder ไทยมาเจอกัน",
   "Forum, content, and events for serious Thai startup builders. Ask questions, share what you're shipping, and meet the people who'll shape your journey.":
-    "ฟอรัม บทความ และอีเวนต์ สำหรับคนที่จริงจังกับ startup ไทย ตั้งคำถาม แบ่งปันงานที่กำลังสร้าง และพบกับผู้คนที่จะร่วมกำหนดเส้นทางของคุณ",
+    "ฟอรัม บทความ และอีเวนต์ สำหรับคนที่จริงจังกับ startup ถามได้ แชร์ได้ และเจอคนที่ใช่",
   "B2B Network": "เครือข่าย B2B",
   "Companies finding companies": "หาพาร์ตเนอร์ธุรกิจที่ใช่",
   "Advisor Partners": "พาร์ตเนอร์ที่ปรึกษา",
