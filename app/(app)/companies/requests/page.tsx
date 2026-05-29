@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { getLocale } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 import { AskRowActions } from "./AskRowActions";
@@ -61,14 +62,12 @@ export default async function PartnershipRequestsBoardPage() {
   const locale = await getLocale();
   const isTH = locale === "th";
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
 
   const { data: me } = await supabase
     .from("profiles")
     .select("type, onboarded")
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
   const canPost = me?.type === "company" && me?.onboarded === true;
 
@@ -190,7 +189,7 @@ export default async function PartnershipRequestsBoardPage() {
               ask.status === "open" &&
               Date.now() - new Date(ask.created_at as string).getTime() <
                 24 * 3600_000;
-            const isMine = ask.author_id === user!.id;
+            const isMine = ask.author_id === user.id;
             const canRespond =
               !isMine && canPost && ask.status === "open";
 

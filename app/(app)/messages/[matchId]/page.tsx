@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
 import { MessageComposer } from "./MessageComposer";
@@ -19,9 +20,7 @@ export default async function MessagePage({ params }: Props) {
   const { matchId } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
 
   const { data: match } = await supabase
     .from("matches")
@@ -32,7 +31,7 @@ export default async function MessagePage({ params }: Props) {
   if (!match) notFound();
 
   const otherId =
-    match.profile_a_id === user!.id
+    match.profile_a_id === user.id
       ? (match.profile_b_id as string)
       : (match.profile_a_id as string);
 
@@ -45,7 +44,7 @@ export default async function MessagePage({ params }: Props) {
   const { data: me } = await supabase
     .from("profiles")
     .select("full_name")
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
 
   const { data: messages } = await supabase
@@ -124,7 +123,7 @@ export default async function MessagePage({ params }: Props) {
             </div>
           ) : (
             messages.map((m) => {
-              const mine = m.sender_id === user!.id;
+              const mine = m.sender_id === user.id;
               return (
                 <div
                   key={m.id as string}

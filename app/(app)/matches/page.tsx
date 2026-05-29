@@ -1,26 +1,25 @@
 import Link from "next/link";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 
 export default async function MatchesPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
 
   // All my matches
   const { data: matches } = await supabase
     .from("matches")
     .select("id, profile_a_id, profile_b_id, created_at")
-    .or(`profile_a_id.eq.${user!.id},profile_b_id.eq.${user!.id}`)
+    .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`)
     .order("created_at", { ascending: false });
 
   // Resolve "other party" IDs and fetch profiles
   const otherIds = (matches ?? []).map((m) =>
-    m.profile_a_id === user!.id
+    m.profile_a_id === user.id
       ? (m.profile_b_id as string)
       : (m.profile_a_id as string),
   );
@@ -61,7 +60,7 @@ export default async function MatchesPage() {
         last_content: (msgs[0]?.content as string) ?? null,
         last_at: (msgs[0]?.created_at as string) ?? null,
         unread: msgs.filter(
-          (m) => m.sender_id !== user!.id && !m.read_at,
+          (m) => m.sender_id !== user.id && !m.read_at,
         ).length,
       });
     }
@@ -99,7 +98,7 @@ export default async function MatchesPage() {
         <div className="space-y-3">
           {matches.map((m) => {
             const otherId =
-              m.profile_a_id === user!.id
+              m.profile_a_id === user.id
                 ? (m.profile_b_id as string)
                 : (m.profile_a_id as string);
             const p = profiles.get(otherId);

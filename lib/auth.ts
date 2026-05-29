@@ -3,6 +3,7 @@
 // layout, sub-layout, and page each ask for the current user.
 
 import { cache } from "react";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export const getUser = cache(async () => {
@@ -12,6 +13,18 @@ export const getUser = cache(async () => {
   } = await supabase.auth.getUser();
   return user;
 });
+
+// Page-level auth guard. The (app) layout redirects logged-out users, but
+// layouts + pages render concurrently in the App Router — so a page that
+// dereferences `user.id` will still crash on a logged-out request before
+// the layout redirect resolves. Calling requireUser() at the top of each
+// guarded page converts that crash into a clean redirect. cache() dedupes
+// the underlying getUser() call, so this adds no extra roundtrip.
+export async function requireUser() {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  return user;
+}
 
 export const getOwnProfile = cache(async () => {
   const user = await getUser();

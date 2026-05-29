@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Heart, MessageCircle, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 import { StatusComposer } from "../status/StatusComposer";
@@ -43,16 +44,14 @@ function timeAgo(iso: string, locale: string): string {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, onboarded, i_am, intent, slug")
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
-  const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user!.id}`;
+  const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
   // ---- Platform-wide activity (the heartbeat) ----------------------
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
@@ -78,7 +77,7 @@ export default async function DashboardPage() {
       .from("profiles")
       .select("id, full_name, photo_url, i_am, intent, slug, created_at")
       .eq("onboarded", true)
-      .neq("id", user!.id)
+      .neq("id", user.id)
       .order("created_at", { ascending: false })
       .limit(4),
     supabase
@@ -127,7 +126,7 @@ export default async function DashboardPage() {
           .from("status_likes")
           .select("status_id")
           .in("status_id", statusIds)
-          .eq("user_id", user!.id)
+          .eq("user_id", user.id)
       : Promise.resolve({ data: [] }),
   ]);
   const statusLikeCount = new Map<string, number>();
@@ -155,7 +154,7 @@ export default async function DashboardPage() {
             slug: (a.slug as string | null) ?? null,
           }
         : null,
-      isOwn: s.author_id === user!.id,
+      isOwn: s.author_id === user.id,
       likeCount: statusLikeCount.get(s.id as string) ?? 0,
       myLike: myLiked.has(s.id as string),
     };
@@ -194,12 +193,12 @@ export default async function DashboardPage() {
     supabase
       .from("interests")
       .select("id", { count: "exact", head: true })
-      .eq("to_profile_id", user!.id)
+      .eq("to_profile_id", user.id)
       .eq("status", "pending"),
     supabase
       .from("matches")
       .select("id", { count: "exact", head: true })
-      .or(`profile_a_id.eq.${user!.id},profile_b_id.eq.${user!.id}`),
+      .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`),
   ]);
 
   const firstName =

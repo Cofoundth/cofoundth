@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { getLocale } from "@/lib/i18n-server";
 import { CompaniesClient, type CompanyProfile } from "./CompaniesClient";
 
@@ -14,9 +15,7 @@ export default async function CompaniesPage({
 }) {
   const { focus } = await searchParams;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
   const locale = await getLocale();
 
   // All onboarded companies (excluding self for the "send request" affordance)
@@ -34,11 +33,11 @@ export default async function CompaniesPage({
     .select(
       "id, type, company_name, capabilities, partnership_seeking, onboarded",
     )
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
 
   const items: CompanyProfile[] = (companies ?? [])
-    .filter((c) => c.id !== user!.id)
+    .filter((c) => c.id !== user.id)
     .map((c) => ({
       id: c.id as string,
       slug: (c.slug as string) ?? (c.id as string),

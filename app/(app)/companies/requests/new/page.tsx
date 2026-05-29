@@ -2,18 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { getLocale } from "@/lib/i18n-server";
 import { NewAskForm } from "./NewAskForm";
 
 export default async function NewAskPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
   const { data: me } = await supabase
     .from("profiles")
     .select("type, onboarded, company_name")
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
 
   // Only companies can post asks

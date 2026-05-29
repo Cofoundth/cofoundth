@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, HandshakeIcon, Inbox, Send } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
@@ -21,21 +22,19 @@ export default async function InterestsPage({
   const locale = await getLocale();
   const isTH = locale === "th";
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
 
   // ---- Co-founder interests (existing flow) ------------------------
   const { data: sent } = await supabase
     .from("interests")
     .select("id, note, status, created_at, to_profile_id")
-    .eq("from_profile_id", user!.id)
+    .eq("from_profile_id", user.id)
     .order("created_at", { ascending: false });
 
   const { data: received } = await supabase
     .from("interests")
     .select("id, note, status, created_at, from_profile_id")
-    .eq("to_profile_id", user!.id)
+    .eq("to_profile_id", user.id)
     .order("created_at", { ascending: false });
 
   // ---- B2B partnership requests (both directions) ------------------
@@ -48,14 +47,14 @@ export default async function InterestsPage({
       .select(
         "id, request_type, subject, context, status, deadline_at, response_note, created_at, from_profile_id",
       )
-      .eq("to_profile_id", user!.id)
+      .eq("to_profile_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("partnership_requests")
       .select(
         "id, request_type, subject, context, status, deadline_at, response_note, created_at, to_profile_id",
       )
-      .eq("from_profile_id", user!.id)
+      .eq("from_profile_id", user.id)
       .order("created_at", { ascending: false }),
   ]);
 
@@ -94,11 +93,11 @@ export default async function InterestsPage({
       .from("matches")
       .select("id, profile_a_id, profile_b_id")
       .or(
-        `profile_a_id.eq.${user!.id},profile_b_id.eq.${user!.id}`,
+        `profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`,
       );
     (matches ?? []).forEach((m) => {
       const other =
-        m.profile_a_id === user!.id ? m.profile_b_id : m.profile_a_id;
+        m.profile_a_id === user.id ? m.profile_b_id : m.profile_a_id;
       matchByPair.set(other as string, m.id as string);
     });
   }
@@ -107,11 +106,11 @@ export default async function InterestsPage({
   const { data: matches } = await supabase
     .from("matches")
     .select("profile_a_id, profile_b_id")
-    .or(`profile_a_id.eq.${user!.id},profile_b_id.eq.${user!.id}`);
+    .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`);
 
   const mutualWith = new Set<string>(
     (matches ?? []).map((m) =>
-      m.profile_a_id === user!.id
+      m.profile_a_id === user.id
         ? (m.profile_b_id as string)
         : (m.profile_a_id as string),
     ),

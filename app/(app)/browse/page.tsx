@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { BrowseClient } from "./BrowseClient";
 
 const PROFILE_COLUMNS =
@@ -7,15 +8,13 @@ const PROFILE_COLUMNS =
 export default async function BrowsePage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
 
   // Current user's profile (for scoring)
   const { data: me } = await supabase
     .from("profiles")
     .select(PROFILE_COLUMNS)
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
 
   // All other onboarded founders
@@ -23,7 +22,7 @@ export default async function BrowsePage() {
     .from("profiles")
     .select(PROFILE_COLUMNS)
     .eq("onboarded", true)
-    .neq("id", user!.id);
+    .neq("id", user.id);
 
   const myReady = !!(
     me &&

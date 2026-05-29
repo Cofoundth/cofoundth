@@ -13,6 +13,7 @@ import {
   EXPERIENCE_LABELS,
 } from "@/lib/matching";
 import { tServer, getLocale } from "@/lib/i18n-server";
+import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
 import { ExpressInterestForm } from "./ExpressInterestForm";
@@ -94,10 +95,7 @@ function cohortLabel(createdAt: string, locale: string): string {
 export default async function ProfileDetailPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireUser();
 
   // Route accepts either a slug (canonical) or a legacy UUID share-link.
   // If a UUID is passed and the profile has a slug, 301 to the slug URL —
@@ -140,7 +138,7 @@ export default async function ProfileDetailPage({ params }: Props) {
         .select(
           "i_am, intent, looking_for, industry, stage, commitment, location",
         )
-        .eq("id", user!.id)
+        .eq("id", user.id)
         .single();
 
   // Recent milestones / shipped posts from this profile — surfaces life
@@ -182,7 +180,7 @@ export default async function ProfileDetailPage({ params }: Props) {
     : await supabase
         .from("interests")
         .select("id")
-        .eq("from_profile_id", user!.id)
+        .eq("from_profile_id", user.id)
         .eq("to_profile_id", profile.id)
         .maybeSingle();
 
