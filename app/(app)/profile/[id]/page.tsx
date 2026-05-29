@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Building2, MapPin } from "lucide-react";
@@ -20,6 +21,30 @@ import { ReportForm } from "./ReportForm";
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const field = isUuid(id) ? "id" : "slug";
+  const { data } = await supabase
+    .from("profiles")
+    .select("full_name, company_name, type, i_am, pitch")
+    .eq(field, id)
+    .maybeSingle();
+  if (!data) return { title: "Profile" };
+  const name =
+    data.type === "company" && data.company_name
+      ? (data.company_name as string)
+      : (data.full_name as string);
+  return {
+    title: name,
+    description:
+      (data.pitch as string | null)?.slice(0, 160) ??
+      `${name} on Cofoundee`,
+  };
+}
 
 const COLUMNS =
   "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";

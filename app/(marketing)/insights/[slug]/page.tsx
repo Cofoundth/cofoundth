@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -15,6 +16,33 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateStaticParams() {
   const slugs = await listAllSlugsForStaticParams();
   return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const locale = await getLocale();
+  const insight = await getInsightBySlug(slug, locale);
+  if (!insight) return { title: "Insight not found" };
+
+  return {
+    title: insight.title,
+    description: insight.excerpt,
+    openGraph: {
+      type: "article",
+      title: insight.title,
+      description: insight.excerpt,
+      publishedTime: insight.published_at ?? undefined,
+      url: `/insights/${insight.slug}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: insight.title,
+      description: insight.excerpt,
+    },
+    alternates: { canonical: `/insights/${insight.slug}` },
+  };
 }
 
 export default async function InsightPage({ params }: Props) {

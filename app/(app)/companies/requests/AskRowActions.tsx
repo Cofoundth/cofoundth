@@ -25,7 +25,7 @@ export function AskRowActions({ askId, status, locale }: Props) {
           }}
           className="text-xs px-3 py-1.5 border border-gold text-gold hover:bg-gold/10 transition-colors"
         >
-          {isTH ? "ทำเครื่องหมายว่าเจอแล้ว" : "Mark as filled"}
+          {isTH ? "เจอพาร์ตเนอร์แล้ว" : "Mark as filled"}
         </button>
         <button
           type="button"

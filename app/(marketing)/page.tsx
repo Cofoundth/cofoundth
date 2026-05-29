@@ -286,7 +286,7 @@ export default async function LandingPage() {
                 </div>
                 <h2 className="text-2xl lg:text-3xl leading-tight">
                   {isTH
-                    ? "Founder ในชุมชนกำลังขับเคลื่อนอะไรอยู่"
+                    ? "ผลงานล่าสุดจาก founder ในชุมชน"
                     : "What founders in the community just shipped."}
                 </h2>
               </div>
