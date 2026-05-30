@@ -2,15 +2,16 @@
 
 import { useRef, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { uploadAvatarAction } from "@/components/avatar-actions";
 
 type Props = {
-  userId: string;
+  /** Accepted for call-site compatibility; the server action derives the user from the session. */
+  userId?: string;
   initialUrl?: string | null;
   initial: string;
 };
 
-export function AvatarUploader({ userId, initialUrl, initial }: Props) {
+export function AvatarUploader({ initialUrl, initial }: Props) {
   const [url, setUrl] = useState<string | null>(initialUrl ?? null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,25 +30,11 @@ export function AvatarUploader({ userId, initialUrl, initial }: Props) {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `${userId}/avatar-${Date.now()}.${ext}`;
-
-      const { error: upErr } = await supabase.storage
-        .from("avatars")
-        .upload(path, file, { upsert: true, cacheControl: "3600" });
-      if (upErr) throw upErr;
-
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-      const publicUrl = data.publicUrl;
-
-      const { error: dbErr } = await supabase
-        .from("profiles")
-        .update({ photo_url: publicUrl })
-        .eq("id", userId);
-      if (dbErr) throw dbErr;
-
-      setUrl(publicUrl);
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await uploadAvatarAction(fd);
+      if (res.error || !res.url) throw new Error(res.error ?? "Upload failed.");
+      setUrl(res.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
