@@ -475,38 +475,50 @@ export default async function LandingPage() {
             {isTH ? (
               <>
                 <p>
-                  ผมสร้าง Cofoundee เพราะการหาคนที่ใช่คือเรื่องที่ยากที่สุดของการทำสตาร์ทอัพในไทย
-                  และมันไม่ได้เกิดจากการดูโปรไฟล์หรือปัดซ้ายปัดขวา
-                  แต่เกิดจากความไว้ใจที่ค่อยๆ ก่อตัวในชุมชนจริงๆ
+                  ตอนแรกผมตั้งใจจะทำแอปหา co-founder แต่ยิ่งคิดยิ่งเห็นว่า
+                  เราแมตช์ co-founder ผ่านโปรไฟล์ไม่ได้จริงๆ การมี co-founder
+                  คือความสัมพันธ์ห้าปีสิบปีที่แบ่งหุ้นแบ่งความเสี่ยงกัน
+                  ไม่มีใครมอบสิ่งนั้นให้คนที่เพิ่งเจอกันบนเว็บไม่กี่สัปดาห์ได้
+                  ยิ่งในไทยด้วยแล้ว เราสร้างกันจากความไว้ใจและความสัมพันธ์
+                  ไม่ใช่จากอัลกอริทึมที่ไล่จัดอันดับคนแปลกหน้า
                 </p>
                 <p>
-                  เราเลยเริ่มจากตรงนั้น ไม่ใช่อัลกอริทึมจับคู่
-                  แต่เป็นที่ที่ founder ไทยมาเจอกัน แชร์สิ่งที่กำลังทำ แล้วค่อยๆ
-                  รู้จักกัน จนพาร์ตเนอร์ การแนะนำ และ co-founder
-                  เกิดขึ้นเองตามธรรมชาติ
+                  ผมเลยเลิกพยายามบังคับให้เกิดการแมตช์ Cofoundee
+                  เริ่มจากการเป็นชุมชนก่อน ที่ที่ founder ไทยได้มาเจอกัน
+                  แชร์สิ่งที่กำลังทำ แล้วค่อยๆ รู้จักกันเมื่อเวลาผ่านไป
+                  ความไว้ใจเกิดตรงนั้น แล้วทุกอย่างก็ต่อยอดขึ้นมาเอง ทั้งพาร์ตเนอร์
+                  ที่ปรึกษา การแนะนำนักลงทุน และใช่ — co-founder —
+                  แบบที่มันเกิดขึ้นจริงในชีวิต
                 </p>
                 <p>
-                  ยังเป็นช่วงเริ่มต้น ถ้าคุณเป็น founder ที่เหนื่อยกับการเดินคนเดียว
-                  ที่นี่สร้างมาเพื่อคุณ
+                  ยังเป็นช่วงเริ่มต้นมากๆ ผมตั้งใจค่อยๆ สร้างมันอย่างใจเย็น
+                  เพราะเชื่อว่า founder ไทยควรมีพื้นที่แบบนี้
+                  และเพราะผมเองก็อยากให้มันมีตั้งแต่ตอนที่ผมเริ่มต้น
                 </p>
               </>
             ) : (
               <>
                 <p>
-                  I&apos;m building Cofoundee because finding the right people is
-                  the hardest part of starting up in Thailand — and it
-                  doesn&apos;t happen through cold profiles or a swipe. It happens
-                  through trust, built slowly, in a real community.
+                  I set out to build a co-founder matching app. The more I
+                  looked at it, the clearer it got: you can&apos;t match
+                  co-founders through a profile. A co-founder is a five-,
+                  ten-year relationship with shared equity and shared risk — no
+                  one hands that to someone they met on a website three weeks
+                  ago. Especially here: Thai founders build from trust and
+                  relationships, not from an algorithm ranking strangers.
                 </p>
                 <p>
-                  So that&apos;s where we start. Not a matching algorithm — a
-                  place where Thai founders show up, share what they&apos;re
-                  building, and get to know each other. The partnerships, the
-                  intros, and yes, the co-founders follow naturally.
+                  So I stopped trying to force the match. Cofoundee starts as a
+                  community instead — a place where Thai founders show up, share
+                  what they&apos;re building, and get to know each other over
+                  time. Trust forms there. And once it does, everything else
+                  compounds on top: partners, advisors, investor intros, and yes
+                  — co-founders — the way it actually happens in real life.
                 </p>
                 <p>
-                  It&apos;s early. If you&apos;re a founder tired of doing this
-                  alone, this is built for you.
+                  It&apos;s early. I&apos;m building this patiently, because
+                  Thailand&apos;s founders deserve a home like this — and because
+                  I wished it existed when I started out.
                 </p>
               </>
             )}
