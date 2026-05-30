@@ -459,7 +459,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                 {await tServer("This is your own profile.")}
               </p>
               <Link
-                href="/onboarding"
+                href="/settings"
                 className="inline-block px-4 py-2 border border-navy text-navy hover:bg-navy hover:text-white text-sm tracking-wide transition-colors"
               >
                 {await tServer("Edit profile")}
