@@ -496,6 +496,39 @@ export default async function DashboardPage() {
           >
             {isTH ? "ดูโปรไฟล์ของคุณ" : "View your profile"}
           </Link>
+
+          {/* Invite — the community comes alive with real founders */}
+          <div className="mt-6 bg-cream border border-gold/40 p-5">
+            <div className="text-xs uppercase tracking-[0.2em] text-gold mb-2">
+              {isTH ? "ชวน founder มาร่วม" : "Grow the community"}
+            </div>
+            <p className="text-sm text-ink leading-relaxed mb-4">
+              {isTH
+                ? "ชุมชนจะมีชีวิตเมื่อมี founder จริงมาเจอกัน ชวนคนที่คุณรู้จักมาเข้าร่วม"
+                : "It comes alive when real founders show up. Invite people you know."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href="https://social-plugins.line.me/lineit/share?url=https%3A%2F%2Fcofoundee.co"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+              >
+                {isTH ? "แชร์ทาง LINE" : "Share on LINE"}
+              </a>
+              <a
+                href="https://twitter.com/intent/tweet?text=Join%20me%20on%20Cofoundee%20%E2%80%94%20Thailand%27s%20community%20for%20startup%20founders.&url=https%3A%2F%2Fcofoundee.co"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 border border-line hover:border-navy text-ink hover:text-navy text-sm tracking-wide transition-colors"
+              >
+                X
+              </a>
+            </div>
+            <div className="text-xs text-ink-muted mt-3 select-all">
+              cofoundee.co
+            </div>
+          </div>
         </aside>
       </div>
     </div>
