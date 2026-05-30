@@ -76,6 +76,27 @@ const EXPERIENCES = [
   { value: "three_plus", label: "3+ ventures" },
 ];
 
+// Tappable pitch scaffolds — beat blank-page paralysis (the #1 onboarding
+// abandonment driver). Each fills the textarea with a fill-in-the-blank
+// starter the founder edits. `template` strings are i18n keys.
+const PITCH_STARTERS = [
+  {
+    en: "I have an idea",
+    template:
+      "I'm building [what] for [who]. The problem is [problem]. I've already [traction so far], and I'm looking for a co-founder who can [what they bring].",
+  },
+  {
+    en: "I have skills",
+    template:
+      "I'm a [your role] with [N] years in [domain]. I've built [notable work]. I want to join a founder with a strong vision in [industry] and own [what you'd own].",
+  },
+  {
+    en: "Still exploring",
+    template:
+      "My background is [background]. I'm drawn to problems in [areas]. I'm looking for someone to explore ideas with and figure out what to build together.",
+  },
+];
+
 // ---- Types ----------------------------------------------------------
 
 type StatusTag =
@@ -169,9 +190,10 @@ export function OnboardingForm({ initial }: Props) {
       case 1:
         return data.industry.length > 0 && !!data.stage;
       case 2:
-        return !!data.commitment && !!data.runway && !!data.experience;
+        // runway is optional — invasive to force before any trust is built
+        return !!data.commitment && !!data.experience;
       case 3:
-        return data.pitch.length >= 200 && data.pitch.length <= 500;
+        return data.pitch.length >= 120 && data.pitch.length <= 500;
       default:
         return false;
     }
@@ -310,12 +332,11 @@ function stepMissing(step: number, d: FormState): string {
       return "";
     case 2:
       if (!d.commitment) return "Pick commitment level";
-      if (!d.runway) return "Pick runway";
       if (!d.experience) return "Pick founder experience";
       return "";
     case 3:
-      if (d.pitch.length < 200)
-        return `Pitch needs ${200 - d.pitch.length} more chars (200 min)`;
+      if (d.pitch.length < 120)
+        return `Pitch needs ${120 - d.pitch.length} more chars (120 min)`;
       if (d.pitch.length > 500) return "Pitch must be 500 chars or less";
       return "";
     default:
@@ -593,7 +614,10 @@ function StepConviction({
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          {tr("Financial runway")}
+          {tr("Financial runway")}{" "}
+          <span className="normal-case tracking-normal text-ink-muted">
+            ({tr("optional")})
+          </span>
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {RUNWAYS.map((r) => (
@@ -648,16 +672,18 @@ function StepPitch({
             htmlFor="pitch"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
           >
-            {tr("The pitch (200–500 chars, required)")}
+            {tr("The pitch (120–500 chars, required)")}
           </label>
           <span
             className={`text-xs ${
-              pitchLen < 200 || pitchLen > 500
+              pitchLen < 120 || pitchLen > 500
                 ? "text-ink-muted"
                 : "text-gold"
             }`}
           >
-            {pitchLen} / 500
+            {pitchLen < 120
+              ? tr("{n} more").replace("{n}", String(120 - pitchLen))
+              : `${pitchLen} / 500`}
           </span>
         </div>
         <textarea
@@ -671,6 +697,25 @@ function StepPitch({
           )}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />
+        {data.pitch.length === 0 && (
+          <div className="mt-3">
+            <div className="text-xs text-ink-muted mb-2">
+              {tr("Stuck? Start from one of these:")}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {PITCH_STARTERS.map((s) => (
+                <button
+                  key={s.en}
+                  type="button"
+                  onClick={() => set("pitch", tr(s.template))}
+                  className="text-xs px-3 py-1.5 border border-line text-ink hover:border-navy hover:text-navy transition-colors"
+                >
+                  {tr(s.en)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div>

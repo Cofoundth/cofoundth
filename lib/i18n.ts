@@ -307,8 +307,19 @@ export const TH: Record<string, string> = {
   "Commitment level": "ระดับความทุ่มเท",
   "Financial runway": "ทุนสำรอง (runway)",
   "Founder experience": "ประสบการณ์ founder",
-  "The pitch (200–500 chars, required)":
-    "Pitch (200–500 ตัวอักษร, บังคับ)",
+  "The pitch (120–500 chars, required)":
+    "Pitch (120–500 ตัวอักษร, บังคับ)",
+  "{n} more": "เหลืออีก {n} ตัว",
+  optional: "ไม่บังคับ",
+  "Stuck? Start from one of these:":
+    "ไม่รู้จะเริ่มยังไง? ลองเลือกจากนี้:",
+  "Still exploring": "ยังมองหาอยู่",
+  "I'm building [what] for [who]. The problem is [problem]. I've already [traction so far], and I'm looking for a co-founder who can [what they bring].":
+    "ผมกำลังสร้าง [อะไร] สำหรับ [ใคร] ปัญหาคือ [ปัญหา] ตอนนี้ทำไปแล้ว [ความคืบหน้า] กำลังมองหา co-founder ที่ช่วย [สิ่งที่อีกฝ่ายนำมา] ได้",
+  "I'm a [your role] with [N] years in [domain]. I've built [notable work]. I want to join a founder with a strong vision in [industry] and own [what you'd own].":
+    "ผมเป็น [บทบาท] มีประสบการณ์ [N] ปีใน [สายงาน] เคยสร้าง [ผลงานเด่น] อยากร่วมงานกับ founder ที่มีวิสัยทัศน์ชัดใน [อุตสาหกรรม] และดูแล [สิ่งที่จะรับผิดชอบ]",
+  "My background is [background]. I'm drawn to problems in [areas]. I'm looking for someone to explore ideas with and figure out what to build together.":
+    "พื้นเพของผมคือ [พื้นเพ] สนใจปัญหาในด้าน [ด้านที่สนใจ] กำลังมองหาคนมาระดมไอเดียและหาคำตอบไปด้วยกันว่าจะสร้างอะไร",
   "Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests.":
     "เจ้าของไอเดีย: อธิบายไอเดียของคุณ ผู้เชี่ยวชาญ: อธิบายสิ่งที่นำเสนอ ผู้ค้นหา: อธิบายความสนใจ",
   "Why this, why now (optional)": "ทำไมเรื่องนี้ ทำไมตอนนี้ (ไม่บังคับ)",
