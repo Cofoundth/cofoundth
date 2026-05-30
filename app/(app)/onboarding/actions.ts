@@ -110,12 +110,14 @@ export async function saveOnboardingAction(
     return { error: "Please select your stage." };
   if (!COMMITMENT_VALUES.includes(commitment as never))
     return { error: "Please select your commitment level." };
-  if (!RUNWAY_VALUES.includes(runway as never))
-    return { error: "Please select your runway." };
+  // runway is optional (see OnboardingForm + step 3 "(optional)" label).
+  // Only validate when the user actually picked something.
+  if (runway && !RUNWAY_VALUES.includes(runway as never))
+    return { error: "Please select a valid runway." };
   if (!EXPERIENCE_VALUES.includes(experience as never))
     return { error: "Please select your founder experience." };
-  if (pitch.length < 200)
-    return { error: "Your pitch must be at least 200 characters." };
+  if (pitch.length < 120)
+    return { error: "Your pitch must be at least 120 characters." };
   if (pitch.length > 500)
     return { error: "Your pitch must be 500 characters or less." };
   if (!PROFILE_TYPES.includes(profile_type as never))
@@ -134,7 +136,7 @@ export async function saveOnboardingAction(
       stage,
       location: location || null,
       commitment,
-      runway,
+      runway: runway || null,
       experience,
       pitch,
       why_this: why_this || null,
