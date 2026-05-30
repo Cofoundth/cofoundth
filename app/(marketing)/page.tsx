@@ -377,6 +377,63 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* Who it's for */}
+      <section className="py-24 bg-white border-t border-line">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+          <div className="max-w-3xl mb-16">
+            <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+              {isTH ? "เหมาะกับใคร" : "Who it's for"}
+            </div>
+            <h2 className="text-4xl lg:text-5xl leading-tight">
+              {isTH
+                ? "ถ้าคุณกำลังสร้างอะไรสักอย่างในไทย ที่นี่มีที่สำหรับคุณ"
+                : "If you're building something in Thailand, you belong here."}
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            <div className="bg-white border border-line p-8">
+              <div className="font-serif text-4xl text-gold mb-4 leading-none">
+                I
+              </div>
+              <h3 className="text-xl mb-3">
+                {isTH ? "คุณสร้างได้" : "You can build"}
+              </h3>
+              <p className="text-ink leading-relaxed text-sm">
+                {isTH
+                  ? "Technical founder ที่อยากเจอคนมาดูแลธุรกิจ การขาย หรือการเติบโต เพื่อไปด้วยกัน"
+                  : "A technical founder looking for someone to own the business, sales, or growth alongside you."}
+              </p>
+            </div>
+            <div className="bg-white border border-line p-8">
+              <div className="font-serif text-4xl text-gold mb-4 leading-none">
+                II
+              </div>
+              <h3 className="text-xl mb-3">
+                {isTH ? "คุณมีวิสัยทัศน์" : "You have the vision"}
+              </h3>
+              <p className="text-ink leading-relaxed text-sm">
+                {isTH
+                  ? "มีไอเดียและเข้าใจตลาด แต่ต้องการพาร์ตเนอร์ที่ลงมือสร้างผลิตภัณฑ์จริง"
+                  : "You've got the idea and the market — you need a partner to actually build the product."}
+              </p>
+            </div>
+            <div className="bg-white border border-line p-8">
+              <div className="font-serif text-4xl text-gold mb-4 leading-none">
+                III
+              </div>
+              <h3 className="text-xl mb-3">
+                {isTH ? "คุณกำลังมองหา" : "You're exploring"}
+              </h3>
+              <p className="text-ink leading-relaxed text-sm">
+                {isTH
+                  ? "ยังไม่แน่ใจว่าจะทำอะไร แต่อยากอยู่ท่ามกลาง founder คนอื่น แล้วหาทางที่ใช่ไปด้วยกัน"
+                  : "Not sure what to build yet — but you want to be around other founders and find the right thing together."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Process */}
       <section className="py-24 bg-cream border-y border-line">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
@@ -404,26 +461,122 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section className="py-24 bg-navy text-white">
-        <div className="max-w-5xl mx-auto px-6 lg:px-10 text-center">
-          <Quote className="w-12 h-12 text-gold mx-auto mb-8" strokeWidth={1} />
-          <blockquote className="font-serif text-3xl lg:text-4xl leading-relaxed mb-10 italic text-white">
-            {tr(
-              "I joined for the community, stayed for the conversations, and ended up finding our first enterprise customer through someone I met in the forum. That's the kind of compounding you don't get from cold outreach.",
+      {/* A note from the founder — authentic, not a fabricated testimonial */}
+      <section className="py-24 lg:py-28 bg-navy text-white">
+        <div className="max-w-3xl mx-auto px-6 lg:px-10">
+          <Quote
+            className="w-10 h-10 text-gold mb-8"
+            strokeWidth={1}
+          />
+          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-8">
+            {isTH ? "จากผู้ก่อตั้ง" : "A note from the founder"}
+          </div>
+          <div className="font-serif text-2xl lg:text-3xl leading-relaxed space-y-6">
+            {isTH ? (
+              <>
+                <p>
+                  ผมสร้าง Cofoundee เพราะการหาคนที่ใช่คือเรื่องที่ยากที่สุดของการทำสตาร์ทอัพในไทย
+                  และมันไม่ได้เกิดจากการดูโปรไฟล์หรือปัดซ้ายปัดขวา
+                  แต่เกิดจากความไว้ใจที่ค่อยๆ ก่อตัวในชุมชนจริงๆ
+                </p>
+                <p>
+                  เราเลยเริ่มจากตรงนั้น ไม่ใช่อัลกอริทึมจับคู่
+                  แต่เป็นที่ที่ founder ไทยมาเจอกัน แชร์สิ่งที่กำลังทำ แล้วค่อยๆ
+                  รู้จักกัน จนพาร์ตเนอร์ การแนะนำ และ co-founder
+                  เกิดขึ้นเองตามธรรมชาติ
+                </p>
+                <p>
+                  ยังเป็นช่วงเริ่มต้น ถ้าคุณเป็น founder ที่เหนื่อยกับการเดินคนเดียว
+                  ที่นี่สร้างมาเพื่อคุณ
+                </p>
+              </>
+            ) : (
+              <>
+                <p>
+                  I&apos;m building Cofoundee because finding the right people is
+                  the hardest part of starting up in Thailand — and it
+                  doesn&apos;t happen through cold profiles or a swipe. It happens
+                  through trust, built slowly, in a real community.
+                </p>
+                <p>
+                  So that&apos;s where we start. Not a matching algorithm — a
+                  place where Thai founders show up, share what they&apos;re
+                  building, and get to know each other. The partnerships, the
+                  intros, and yes, the co-founders follow naturally.
+                </p>
+                <p>
+                  It&apos;s early. If you&apos;re a founder tired of doing this
+                  alone, this is built for you.
+                </p>
+              </>
             )}
-          </blockquote>
-          <div className="text-sm tracking-wide">
-            <div className="font-semibold text-white">Somchai Tanaka</div>
-            <div className="text-slate-300 mt-1">
-              {tr("Co-founder, FlexPay Thailand")}
-            </div>
+          </div>
+          <div className="mt-8 text-sm tracking-wide text-slate-300">
+            — Chayanon, {isTH ? "ผู้ก่อตั้ง Cofoundee" : "founder of Cofoundee"}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
+      {/* FAQ */}
       <section className="py-24 bg-white border-t border-line">
+        <div className="max-w-3xl mx-auto px-6 lg:px-10">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+            {isTH ? "คำถามที่พบบ่อย" : "Questions"}
+          </div>
+          <h2 className="text-4xl lg:text-5xl leading-tight mb-12">
+            {isTH ? "เรื่องที่ founder มักถาม" : "What founders usually ask."}
+          </h2>
+          <dl className="border-t border-line">
+            {[
+              {
+                q_en: "Is it really free?",
+                q_th: "ฟรีจริงไหม?",
+                a_en: "Yes — free for founders, and it stays that way in this phase. We'll earn from partners and services later, never from charging founders to meet each other.",
+                a_th: "ฟรีสำหรับ founder จริงๆ และจะเป็นแบบนี้ตลอดช่วงนี้ รายได้ในอนาคตมาจากพาร์ตเนอร์และบริการ ไม่ใช่การเก็บเงิน founder เพื่อให้ได้มาเจอกัน",
+              },
+              {
+                q_en: "Do I need a co-founder or an idea already?",
+                q_th: "ต้องมี co-founder หรือไอเดียก่อนไหม?",
+                a_en: "No. Come for the community first. Plenty of people arrive just exploring — the connections come from being around, not from having everything figured out.",
+                a_th: "ไม่ต้อง มาเป็นส่วนหนึ่งของชุมชนก่อน หลายคนเริ่มจากแค่เข้ามาดูๆ คอนเนกชันเกิดจากการได้อยู่ในชุมชน ไม่ใช่จากการมีทุกอย่างพร้อม",
+              },
+              {
+                q_en: "Who is Cofoundee for?",
+                q_th: "Cofoundee เหมาะกับใคร?",
+                a_en: "Thai startup founders — technical, business, solo, or just starting to explore what to build.",
+                a_th: "founder สตาร์ทอัพไทย ทั้งสาย technical สายธุรกิจ คนที่ทำอยู่คนเดียว หรือเพิ่งเริ่มมองหาว่าจะทำอะไรดี",
+              },
+              {
+                q_en: "Thai or English?",
+                q_th: "ใช้ภาษาไทยหรืออังกฤษ?",
+                a_en: "Both — use whichever you're comfortable with. The whole platform works in Thai and English.",
+                a_th: "ได้ทั้งสองภาษา ใช้ภาษาที่คุณถนัดได้เลย ทั้งแพลตฟอร์มรองรับทั้งไทยและอังกฤษ",
+              },
+              {
+                q_en: "How is this different from LinkedIn or co-founder matching apps?",
+                q_th: "ต่างจาก LinkedIn หรือแอปหา co-founder ยังไง?",
+                a_en: "Those start with a transaction. We start with a community. Trust comes first — matching, intros, and partnerships grow on top of it, not the other way around.",
+                a_th: "พวกนั้นเริ่มจากการจับคู่ แต่เราเริ่มจากชุมชน ความไว้ใจมาก่อน แล้วการแมตช์ การแนะนำ และพาร์ตเนอร์จึงค่อยตามมา ไม่ใช่กลับกัน",
+              },
+            ].map((f) => (
+              <div
+                key={f.q_en}
+                className="border-b border-line py-6"
+              >
+                <dt className="font-serif text-xl text-navy mb-2">
+                  {isTH ? f.q_th : f.q_en}
+                </dt>
+                <dd className="text-ink leading-relaxed">
+                  {isTH ? f.a_th : f.a_en}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 bg-cream border-t border-line">
         <div className="max-w-4xl mx-auto px-6 lg:px-10 text-center">
           <h2 className="text-4xl lg:text-5xl mb-6 leading-tight">
             {tr("The Thai startup ecosystem — built together.")}
