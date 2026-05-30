@@ -53,6 +53,7 @@ export async function saveOnboardingAction(
     arr.map((s) => s.slice(0, MAX_ITEM_LEN)).slice(0, max);
 
   // ---- Read form values
+  const full_name = String(formData.get("full_name") ?? "").trim().slice(0, 80);
   const i_am = cap(formData.getAll("i_am").map(String), ROLE_VALUES.length);
   const intent = cap(
     formData.getAll("intent").map(String),
@@ -99,6 +100,7 @@ export async function saveOnboardingAction(
     .slice(0, 5);
 
   // ---- Validate
+  if (full_name.length < 2) return { error: "Please enter your name." };
   if (i_am.length === 0) return { error: "Please select your role." };
   if (i_am.some((r) => !ROLE_VALUES.includes(r as never)))
     return { error: "Invalid role." };
@@ -135,6 +137,7 @@ export async function saveOnboardingAction(
   const { error } = await supabase
     .from("profiles")
     .update({
+      full_name,
       i_am,
       intent,
       looking_for,

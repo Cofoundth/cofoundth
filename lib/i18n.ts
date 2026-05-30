@@ -283,6 +283,8 @@ export const TH: Record<string, string> = {
   Context: "บริบท",
   Conviction: "ความมุ่งมั่น",
   Pitch: "Pitch",
+  "Your name": "ชื่อของคุณ",
+  "How you'll appear to other founders": "ชื่อที่ founder คนอื่นจะเห็น",
   "Joining as…": "เข้าร่วมในฐานะ…",
   Individual: "บุคคล",
   "Company name": "ชื่อบริษัท",

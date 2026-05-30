@@ -20,6 +20,7 @@ export default async function OnboardingPage() {
 
   const initial = profile
     ? {
+        full_name: (profile.full_name as string | null) ?? "",
         profile_type: ((profile.type as string) ?? "individual") as
           | "individual"
           | "company",
