@@ -60,6 +60,7 @@ export const TH: Record<string, string> = {
   "Create your profile": "สร้างโปรไฟล์",
   "Join the community": "สร้างโปรไฟล์",
   "Browse founders": "ดู founder",
+  "Founding members": "สมาชิกรุ่นก่อตั้ง",
   "Free forever": "ฟรีตลอดการใช้งาน",
   "Verified profiles": "โปรไฟล์ผ่านการยืนยัน",
   "Built for Thailand": "สำหรับวงการ startup ไทย",

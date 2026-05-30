@@ -150,7 +150,9 @@ export default async function LandingPage() {
                 </span>
                 <span className="text-line">·</span>
                 <span className="normal-case tracking-normal text-ink-muted text-xs">
-                  {totalFounders ?? 0} {tr("founders")}
+                  {(totalFounders ?? 0) >= 25
+                    ? `${totalFounders} ${tr("founders")}`
+                    : tr("Founding members")}
                 </span>
                 {(foundersThisWeek ?? 0) > 0 && (
                   <>
