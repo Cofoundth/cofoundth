@@ -28,7 +28,7 @@ const pillars = [
     label: "B2B Network",
     title: "Companies finding companies",
     body: "Startups partner with startups — vendors, integrations, distribution, co-marketing. Send a partnership request, get a response, unlock messaging. No mutual-interest gate.",
-    status: "Beta",
+    status: "Coming soon",
   },
   {
     icon: Scale,

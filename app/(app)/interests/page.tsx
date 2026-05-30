@@ -158,10 +158,6 @@ export default async function InterestsPage({
     ...(partnershipSent ?? []).map((p) => adaptPartnership(p, "sent")),
   ].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 
-  const partnershipBadge = (partnershipReceived ?? []).filter(
-    (p) => p.status === "open",
-  ).length;
-
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-8 pb-6 border-b border-line">
@@ -176,7 +172,8 @@ export default async function InterestsPage({
         </p>
       </div>
 
-      {/* Tab switcher */}
+      {/* B2B partnerships tab parked until Phase 3 — co-founder interests only.
+          Re-enable this switcher (and TabLink below) to bring B2B back.
       <div className="mb-8 flex items-center gap-1 border-b border-line">
         <TabLink
           href="/interests"
@@ -190,6 +187,7 @@ export default async function InterestsPage({
           badge={partnershipBadge}
         />
       </div>
+      */}
 
       {activeTab === "founder" ? (
         <div className="grid lg:grid-cols-2 gap-10">
@@ -336,35 +334,36 @@ export default async function InterestsPage({
   );
 }
 
-function TabLink({
-  href,
-  active,
-  label,
-  badge,
-}: {
-  href: string;
-  active: boolean;
-  label: string;
-  badge?: number;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`relative inline-flex items-center gap-2 px-5 py-3 text-sm tracking-wide -mb-px border-b-2 transition-colors ${
-        active
-          ? "border-navy text-navy font-medium"
-          : "border-transparent text-ink-muted hover:text-navy"
-      }`}
-    >
-      {label}
-      {badge !== undefined && badge > 0 && (
-        <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-gold text-white inline-flex items-center justify-center font-medium">
-          {badge > 9 ? "9+" : badge}
-        </span>
-      )}
-    </Link>
-  );
-}
+// TabLink — parked with the B2B partnerships tab (re-enable both together).
+// function TabLink({
+//   href,
+//   active,
+//   label,
+//   badge,
+// }: {
+//   href: string;
+//   active: boolean;
+//   label: string;
+//   badge?: number;
+// }) {
+//   return (
+//     <Link
+//       href={href}
+//       className={`relative inline-flex items-center gap-2 px-5 py-3 text-sm tracking-wide -mb-px border-b-2 transition-colors ${
+//         active
+//           ? "border-navy text-navy font-medium"
+//           : "border-transparent text-ink-muted hover:text-navy"
+//       }`}
+//     >
+//       {label}
+//       {badge !== undefined && badge > 0 && (
+//         <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-gold text-white inline-flex items-center justify-center font-medium">
+//           {badge > 9 ? "9+" : badge}
+//         </span>
+//       )}
+//     </Link>
+//   );
+// }
 
 function InterestCard({
   profileSlug,

@@ -58,9 +58,11 @@ export default async function AppLayout({
                 <NavLink href="/browse">
                   {await tServer("Founders")}
                 </NavLink>
+                {/* B2B parked until Phase 3 — community-first focus.
                 <NavLink href="/companies">
                   {await tServer("Companies")}
                 </NavLink>
+                */}
                 <NavLink href="/interests" badge={receivedPending ?? 0}>
                   {await tServer("Interests")}
                 </NavLink>

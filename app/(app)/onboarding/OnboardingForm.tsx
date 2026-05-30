@@ -443,6 +443,9 @@ function StepRole({
         />
       </div>
 
+      {/* B2B company profile type parked until Phase 3 — community-first focus.
+          profile_type stays "individual" by default. Re-enable to bring back
+          company profiles in onboarding.
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
           {tr("Joining as…")}
@@ -477,6 +480,7 @@ function StepRole({
           </div>
         )}
       </div>
+      */}
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">

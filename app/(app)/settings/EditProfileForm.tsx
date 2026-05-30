@@ -93,7 +93,6 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
     });
   }
 
-  const [type, setType] = useState(initial.type ?? "individual");
   const [iAm, setIAm] = useState<string[]>(initial.i_am ?? []);
   const [intent, setIntent] = useState<string[]>(initial.intent ?? []);
   const [lookingFor, setLookingFor] = useState<string[]>(
@@ -170,6 +169,10 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
 
       {/* Identity */}
       <Section title={tr("Identity")}>
+        {/* B2B company profile type parked until Phase 3 — everyone is an
+            individual for now. Keep the hidden input so the action still gets a
+            valid profile_type. Re-enable the toggle + company-name field to bring
+            company profiles back.
         <Label>{tr("Joining as…")}</Label>
         <div className="flex gap-3">
           <Chip on={type === "individual"} onClick={() => setType("individual")}>
@@ -179,8 +182,6 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             {tr("Company")}
           </Chip>
         </div>
-        <input type="hidden" name="profile_type" value={type} />
-
         {type === "company" && (
           <Field label={tr("Company name")}>
             <input
@@ -191,6 +192,8 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             />
           </Field>
         )}
+        */}
+        <input type="hidden" name="profile_type" value="individual" />
 
         <Label>{tr("I am…")}</Label>
         <Pills
