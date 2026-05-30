@@ -277,7 +277,7 @@ export default async function DashboardPage() {
         <div className="mb-8 flex flex-wrap gap-3">
           {(pendingReceivedCount ?? 0) > 0 && (
             <Link
-              href="/interests"
+              href="/matches"
               className="inline-flex items-center gap-3 bg-gold/10 border border-gold/40 px-4 py-3 hover:bg-gold/20 transition-colors"
             >
               <Sparkles className="w-4 h-4 text-gold" strokeWidth={1.5} />

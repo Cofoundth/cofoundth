@@ -63,11 +63,12 @@ export default async function AppLayout({
                   {await tServer("Companies")}
                 </NavLink>
                 */}
-                <NavLink href="/interests" badge={receivedPending ?? 0}>
-                  {await tServer("Interests")}
-                </NavLink>
-                <NavLink href="/matches" badge={unreadMessages ?? 0}>
-                  {await tServer("Chat")}
+                {/* Interests + Chat merged into one "Connections" inbox. */}
+                <NavLink
+                  href="/matches"
+                  badge={(receivedPending ?? 0) + (unreadMessages ?? 0)}
+                >
+                  {await tServer("Connections")}
                 </NavLink>
                 {isAdminEmail(user.email) && (
                   <NavLink href="/admin/insights">
