@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, BadgeCheck, Building2, MapPin } from "lucide-react";
 import {
-  complementScore,
   type ProfileLike,
   ROLE_LABELS,
   INTENT_LABELS,
@@ -32,8 +31,6 @@ type Profile = ProfileLike & {
 type TypeFilter = "all" | "individual" | "company";
 
 type Props = {
-  me: ProfileLike;
-  myReady: boolean;
   others: Profile[];
 };
 
@@ -56,7 +53,7 @@ const INDUSTRY_OPTIONS = [
   "Food & Beverage",
 ];
 
-export function BrowseClient({ me, myReady, others }: Props) {
+export function BrowseClient({ others }: Props) {
   const tr = useT();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilters, setRoleFilters] = useState<string[]>([]);
@@ -65,14 +62,16 @@ export function BrowseClient({ me, myReady, others }: Props) {
   const [commitmentFilter, setCommitmentFilter] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
 
-  const scored = useMemo(() => {
-    return others
-      .map((p) => ({ profile: p, score: complementScore(me, p) }))
-      .sort((a, b) => b.score - a.score);
-  }, [me, others]);
+  const sorted = useMemo(
+    () =>
+      [...others].sort((a, b) =>
+        (b.created_at ?? "").localeCompare(a.created_at ?? ""),
+      ),
+    [others],
+  );
 
   const filtered = useMemo(() => {
-    return scored.filter(({ profile: p }) => {
+    return sorted.filter((p) => {
       if (searchTerm) {
         const q = searchTerm.toLowerCase();
         const hay = [
@@ -99,7 +98,7 @@ export function BrowseClient({ me, myReady, others }: Props) {
       return true;
     });
   }, [
-    scored,
+    sorted,
     searchTerm,
     roleFilters,
     industryFilters,
@@ -146,11 +145,6 @@ export function BrowseClient({ me, myReady, others }: Props) {
             </h1>
             <p className="text-ink">
               {filtered.length} {tr("founders")}
-              {!myReady && (
-                <span className="text-ink-muted ml-2">
-                  &middot; {tr("complete your profile for complement scores")}
-                </span>
-              )}
             </p>
           </div>
           {activeFilterCount > 0 && (
@@ -162,24 +156,6 @@ export function BrowseClient({ me, myReady, others }: Props) {
             </button>
           )}
         </div>
-
-        {myReady && (
-          <div className="mt-6 bg-cream border-l-2 border-gold p-4">
-            <div className="text-xs uppercase tracking-[0.2em] text-gold mb-1.5">
-              {tr("About the Complement Score")}
-            </div>
-            <p className="text-sm text-ink leading-relaxed">
-              {tr("A 0–100 score measuring how well two founders fit:")}{" "}
-              <strong className="text-navy">{tr("role complementarity 40%")}</strong>
-              ,{" "}
-              <strong className="text-navy">{tr("intent 30%")}</strong>,{" "}
-              <strong className="text-navy">{tr("industry 15%")}</strong>,{" "}
-              <strong className="text-navy">{tr("stage 10%")}</strong>,{" "}
-              <strong className="text-navy">{tr("location + commitment 5%")}</strong>
-              . {tr("Higher = better starting point for a conversation.")}
-            </p>
-          </div>
-        )}
       </div>
 
       <div className="grid lg:grid-cols-12 gap-10">
@@ -294,13 +270,8 @@ export function BrowseClient({ me, myReady, others }: Props) {
             </div>
           ) : (
             <div className="space-y-4">
-              {filtered.map(({ profile, score }) => (
-                <ProfileCard
-                  key={profile.id}
-                  profile={profile}
-                  score={score}
-                  showScore={myReady}
-                />
+              {filtered.map((profile) => (
+                <ProfileCard key={profile.id} profile={profile} />
               ))}
             </div>
           )}
@@ -355,15 +326,7 @@ function FilterChip({
   );
 }
 
-function ProfileCard({
-  profile,
-  score,
-  showScore,
-}: {
-  profile: Profile;
-  score: number;
-  showScore: boolean;
-}) {
+function ProfileCard({ profile }: { profile: Profile }) {
   return (
     <Link
       href={`/profile/${profile.slug}`}
@@ -423,20 +386,6 @@ function ProfileCard({
                 )}
               </div>
             </div>
-
-            {showScore && (
-              <div
-                className="text-right shrink-0"
-                title="How well this founder's profile fits yours: role complementarity 40%, intent 30%, industry 15%, stage 10%, location/commitment 5%"
-              >
-                <div className="font-serif text-3xl text-gold leading-none">
-                  {score}
-                </div>
-                <div className="text-[10px] uppercase tracking-[0.15em] text-ink-muted mt-1">
-                  Complement
-                </div>
-              </div>
-            )}
           </div>
 
           {profile.pitch && (

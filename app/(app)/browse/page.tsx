@@ -10,37 +10,12 @@ export default async function BrowsePage() {
 
   const user = await requireUser();
 
-  // Current user's profile (for scoring)
-  const { data: me } = await supabase
-    .from("profiles")
-    .select(PROFILE_COLUMNS)
-    .eq("id", user.id)
-    .single();
-
   // All other onboarded founders
   const { data: others } = await supabase
     .from("profiles")
     .select(PROFILE_COLUMNS)
     .eq("onboarded", true)
     .neq("id", user.id);
-
-  const myReady = !!(
-    me &&
-    me.i_am &&
-    me.intent &&
-    Array.isArray(me.looking_for) &&
-    me.looking_for.length > 0
-  );
-
-  const meAdapted = {
-    i_am: me?.i_am ?? null,
-    intent: me?.intent ?? null,
-    looking_for: me?.looking_for ?? [],
-    industry: me?.industry ?? [],
-    stage: me?.stage ?? null,
-    commitment: me?.commitment ?? null,
-    location: me?.location ?? null,
-  };
 
   const othersAdapted = (others ?? []).map((p) => ({
     id: p.id as string,
@@ -64,7 +39,5 @@ export default async function BrowsePage() {
     created_at: (p.created_at as string) ?? new Date(0).toISOString(),
   }));
 
-  return (
-    <BrowseClient me={meAdapted} myReady={myReady} others={othersAdapted} />
-  );
+  return <BrowseClient others={othersAdapted} />;
 }

@@ -4,7 +4,6 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Building2, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
-  complementScore,
   ROLE_LABELS,
   INTENT_LABELS,
   STAGE_LABELS,
@@ -130,17 +129,6 @@ export default async function ProfileDetailPage({ params }: Props) {
       );
   }
 
-  // Fetch own profile for complement score + existing interest
-  const { data: me } = isOwnProfile
-    ? { data: null }
-    : await supabase
-        .from("profiles")
-        .select(
-          "i_am, intent, looking_for, industry, stage, commitment, location",
-        )
-        .eq("id", user.id)
-        .single();
-
   // Recent milestones / shipped posts from this profile — surfaces life
   // and credibility on the profile page itself.
   const { data: recentMilestones } = await supabase
@@ -150,30 +138,6 @@ export default async function ProfileDetailPage({ params }: Props) {
     .in("kind", ["milestone", "show_and_tell"])
     .order("created_at", { ascending: false })
     .limit(4);
-
-  const score =
-    me && profile.i_am && me.i_am
-      ? complementScore(
-          {
-            i_am: me.i_am,
-            intent: me.intent,
-            looking_for: me.looking_for ?? [],
-            industry: me.industry ?? [],
-            stage: me.stage,
-            commitment: me.commitment,
-            location: me.location,
-          },
-          {
-            i_am: profile.i_am,
-            intent: profile.intent,
-            looking_for: profile.looking_for ?? [],
-            industry: profile.industry ?? [],
-            stage: profile.stage,
-            commitment: profile.commitment,
-            location: profile.location,
-          },
-        )
-      : null;
 
   const { data: existingInterest } = isOwnProfile
     ? { data: null }
@@ -428,17 +392,6 @@ export default async function ProfileDetailPage({ params }: Props) {
 
         {/* Sidebar */}
         <aside className="lg:col-span-4 space-y-6">
-          {score !== null && (
-            <div className="bg-white border border-gold/30 p-6 text-center">
-              <div className="font-serif text-5xl text-gold leading-none mb-2">
-                {score}
-              </div>
-              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-                {await tServer("Complement Score")}
-              </div>
-            </div>
-          )}
-
           {!isOwnProfile && (
             <>
               <div className="bg-white border border-line p-6">

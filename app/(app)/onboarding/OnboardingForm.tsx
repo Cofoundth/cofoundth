@@ -4,6 +4,7 @@ import { Fragment, useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { saveOnboardingAction } from "./actions";
 import { useT } from "@/lib/i18n-client";
+import { THAI_PROVINCES } from "@/lib/provinces";
 
 // ---- Option lists ---------------------------------------------------
 
@@ -572,11 +573,17 @@ function StepContext({
         <input
           id="location"
           type="text"
+          list="thai-provinces"
           value={data.location}
           onChange={(e) => set("location", e.target.value)}
           placeholder={tr("Bangkok, Chiang Mai, Remote, etc.")}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
         />
+        <datalist id="thai-provinces">
+          {THAI_PROVINCES.map((p) => (
+            <option key={p} value={p} />
+          ))}
+        </datalist>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { updateProfileAction } from "./actions";
 import { useT } from "@/lib/i18n-client";
+import { THAI_PROVINCES } from "@/lib/provinces";
 
 type SaveResult = { error?: string; ok?: boolean } | null;
 
@@ -145,10 +146,16 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           <Field label={tr("Location (optional)")}>
             <input
               name="location"
+              list="thai-provinces"
               defaultValue={initial.location ?? ""}
               placeholder="Bangkok, Remote, etc."
               className={inputCls}
             />
+            <datalist id="thai-provinces">
+              {THAI_PROVINCES.map((p) => (
+                <option key={p} value={p} />
+              ))}
+            </datalist>
           </Field>
         </div>
         <Field label={tr("LinkedIn (optional)")}>
