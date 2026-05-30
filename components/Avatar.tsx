@@ -14,27 +14,18 @@ type Props = {
 };
 
 export function Avatar({ name, url, size = "md" }: Props) {
-  const initial = (name ?? "?").trim().charAt(0).toUpperCase();
   const cls = SIZE_CLASSES[size];
-
-  if (url) {
-    return (
-      <div className={`${cls} bg-navy overflow-hidden shrink-0`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url}
-          alt={name ?? "Profile"}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  }
+  // Fall back to the brand mascot when a member hasn't uploaded a photo.
+  const src = url || "/default-avatar.png";
 
   return (
-    <div
-      className={`${cls} bg-navy flex items-center justify-center text-white font-serif shrink-0`}
-    >
-      {initial}
+    <div className={`${cls} bg-white overflow-hidden shrink-0`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={name ?? "Profile"}
+        className="w-full h-full object-cover"
+      />
     </div>
   );
 }

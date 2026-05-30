@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
-import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
+// LinkedIn login disabled for now — provider not enabled in Supabase + no LinkedIn app yet.
+// import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
 import { tServer } from "@/lib/i18n-server";
 
 export default async function LoginPage() {
@@ -28,7 +29,7 @@ export default async function LoginPage() {
 
       <div className="space-y-3">
         <GoogleSignInButton />
-        <LinkedInSignInButton />
+        {/* <LinkedInSignInButton /> */}
       </div>
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">
