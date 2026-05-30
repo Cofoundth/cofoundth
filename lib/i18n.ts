@@ -395,6 +395,7 @@ export const TH: Record<string, string> = {
   Decline: "ปฏิเสธ",
 
   // ─── Matches / Messages ──────────────────────────────────────────
+  Matches: "แมตช์",
   "Mutual interest": "ความสนใจร่วมกัน",
   "match(es) so far · messaging is unlocked.":
     "แมตช์ · เปิดให้สนทนาได้แล้ว",
