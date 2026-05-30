@@ -456,13 +456,19 @@ export default async function ProfileDetailPage({ params }: Props) {
           {isOwnProfile && (
             <div className="bg-cream border border-gold/40 p-6 text-center">
               <p className="text-sm text-ink mb-3">
-                {await tServer("This is your own profile.")}
+                {await tServer(
+                  profile.onboarded
+                    ? "This is your own profile."
+                    : "Finish setting up your profile.",
+                )}
               </p>
               <Link
-                href="/settings"
+                href={profile.onboarded ? "/settings" : "/onboarding"}
                 className="inline-block px-4 py-2 border border-navy text-navy hover:bg-navy hover:text-white text-sm tracking-wide transition-colors"
               >
-                {await tServer("Edit profile")}
+                {await tServer(
+                  profile.onboarded ? "Edit profile" : "Complete profile",
+                )}
               </Link>
             </div>
           )}

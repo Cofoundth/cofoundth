@@ -175,6 +175,10 @@ export async function updateProfileAction(
       partnership_seeking:
         profile_type === "company" ? partnership_seeking : [],
       status_tags,
+      // A complete, validated save through the editor also completes
+      // onboarding — so /settings works as a standalone path to a finished
+      // profile, fully separate from the wizard.
+      onboarded: true,
     })
     .eq("id", user.id);
 

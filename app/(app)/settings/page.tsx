@@ -20,8 +20,11 @@ export default async function SettingsPage() {
     .eq("id", user.id)
     .single();
 
-  // Not onboarded yet → the first-time wizard, not the editor.
-  if (!profile?.onboarded) redirect("/onboarding");
+  // Every authed user has a profile row (created on signup). If somehow
+  // missing, fall back to the wizard. Note: we intentionally DON'T gate on
+  // `onboarded` — the editor is available even before onboarding, and a
+  // complete save here marks the profile onboarded (see updateProfileAction).
+  if (!profile) redirect("/onboarding");
 
   const profileHref = `/profile/${profile.slug ?? profile.id}`;
 
