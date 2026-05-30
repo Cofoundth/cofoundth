@@ -50,12 +50,6 @@ export default async function OnboardingPage() {
       }
     : {};
 
-  const initialChar = (profile?.full_name ?? user.email ?? "?")
-    .toString()
-    .trim()
-    .charAt(0)
-    .toUpperCase();
-
   return (
     <>
       <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-10">
@@ -66,7 +60,7 @@ export default async function OnboardingPage() {
           <AvatarUploader
             userId={user.id}
             initialUrl={profile?.photo_url ?? null}
-            initial={initialChar}
+            name={profile?.full_name ?? user.email ?? null}
           />
         </div>
       </div>

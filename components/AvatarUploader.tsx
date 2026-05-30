@@ -3,15 +3,16 @@
 import { useRef, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { uploadAvatarAction } from "@/components/avatar-actions";
+import { getInitials } from "@/components/Avatar";
 
 type Props = {
   /** Accepted for call-site compatibility; the server action derives the user from the session. */
   userId?: string;
   initialUrl?: string | null;
-  initial: string;
+  name?: string | null;
 };
 
-export function AvatarUploader({ initialUrl, initial }: Props) {
+export function AvatarUploader({ initialUrl, name }: Props) {
   const [url, setUrl] = useState<string | null>(initialUrl ?? null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +54,7 @@ export function AvatarUploader({ initialUrl, initial }: Props) {
             className="w-full h-full object-cover"
           />
         ) : (
-          initial
+          getInitials(name)
         )}
         {uploading && (
           <div className="absolute inset-0 bg-navy/80 flex items-center justify-center">
