@@ -85,7 +85,7 @@ export function BrowseClient({ others }: Props) {
           .toLowerCase();
         if (!hay.includes(q)) return false;
       }
-      if (roleFilters.length > 0 && (!p.i_am || !roleFilters.includes(p.i_am)))
+      if (roleFilters.length > 0 && !roleFilters.some((r) => p.i_am.includes(r)))
         return false;
       if (
         industryFilters.length > 0 &&
@@ -374,13 +374,14 @@ function ProfileCard({ profile }: { profile: Profile }) {
               <div className="text-sm text-ink-muted mt-1">
                 {profile.type === "company"
                   ? `Represented by ${profile.full_name}`
-                  : profile.i_am && ROLE_LABELS[profile.i_am]}
-                {profile.intent && (
+                  : profile.i_am.length > 0 &&
+                    profile.i_am.map((r) => ROLE_LABELS[r]).join(" · ")}
+                {profile.intent.length > 0 && (
                   <>
                     {" "}
                     &middot;{" "}
                     <span className="text-gold">
-                      {INTENT_LABELS[profile.intent]}
+                      {profile.intent.map((x) => INTENT_LABELS[x]).join(" · ")}
                     </span>
                   </>
                 )}

@@ -66,8 +66,8 @@ export type ProfileInitial = {
   capabilities?: string[] | null;
   partnership_seeking?: string[] | null;
   status_tags?: string[] | null;
-  i_am?: string | null;
-  intent?: string | null;
+  i_am?: string[] | null;
+  intent?: string[] | null;
   looking_for?: string[] | null;
   industry?: string[] | null;
   stage?: string | null;
@@ -94,8 +94,8 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
   }
 
   const [type, setType] = useState(initial.type ?? "individual");
-  const [iAm, setIAm] = useState(initial.i_am ?? "");
-  const [intent, setIntent] = useState(initial.intent ?? "");
+  const [iAm, setIAm] = useState<string[]>(initial.i_am ?? []);
+  const [intent, setIntent] = useState<string[]>(initial.intent ?? []);
   const [lookingFor, setLookingFor] = useState<string[]>(
     initial.looking_for ?? [],
   );
@@ -195,20 +195,24 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         <Label>{tr("I am…")}</Label>
         <Pills
           options={ROLES}
-          selected={[iAm]}
-          onPick={(v) => setIAm(v)}
+          selected={iAm}
+          onPick={(v) => setIAm((s) => toggle(s, v))}
           tr={tr}
         />
-        <input type="hidden" name="i_am" value={iAm} />
+        {iAm.map((v) => (
+          <input key={v} type="hidden" name="i_am" value={v} />
+        ))}
 
         <Label>{tr("I'm bringing…")}</Label>
         <Pills
           options={INTENTS}
-          selected={[intent]}
-          onPick={(v) => setIntent(v)}
+          selected={intent}
+          onPick={(v) => setIntent((s) => toggle(s, v))}
           tr={tr}
         />
-        <input type="hidden" name="intent" value={intent} />
+        {intent.map((v) => (
+          <input key={v} type="hidden" name="intent" value={v} />
+        ))}
 
         <Label>{tr("I'm looking for…")}</Label>
         <Pills

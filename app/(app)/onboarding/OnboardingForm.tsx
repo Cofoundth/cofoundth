@@ -113,8 +113,8 @@ type FormState = {
   capabilities: string;
   partnership_seeking: string;
   status_tags: StatusTag[];
-  i_am: string;
-  intent: string;
+  i_am: string[];
+  intent: string[];
   looking_for: string[];
   industry: string[];
   stage: string;
@@ -149,8 +149,8 @@ export function OnboardingForm({ initial }: Props) {
     capabilities: "",
     partnership_seeking: "",
     status_tags: [],
-    i_am: "",
-    intent: "",
+    i_am: [],
+    intent: [],
     looking_for: [],
     industry: [],
     stage: "",
@@ -170,7 +170,10 @@ export function OnboardingForm({ initial }: Props) {
     setData((d) => ({ ...d, [key]: value }));
   }
 
-  function toggle(key: "looking_for" | "industry", value: string) {
+  function toggle(
+    key: "looking_for" | "industry" | "i_am" | "intent",
+    value: string,
+  ) {
     setData((d) => {
       const list = d[key];
       return {
@@ -187,7 +190,11 @@ export function OnboardingForm({ initial }: Props) {
       case 0:
         if (data.profile_type === "company" && !data.company_name.trim())
           return false;
-        return !!data.i_am && !!data.intent && data.looking_for.length > 0;
+        return (
+          data.i_am.length > 0 &&
+          data.intent.length > 0 &&
+          data.looking_for.length > 0
+        );
       case 1:
         return data.industry.length > 0 && !!data.stage;
       case 2:
@@ -230,8 +237,8 @@ export function OnboardingForm({ initial }: Props) {
       .filter(Boolean)
       .forEach((v) => fd.append("partnership_seeking", v));
     data.status_tags.forEach((v) => fd.append("status_tags", v));
-    fd.append("i_am", data.i_am);
-    fd.append("intent", data.intent);
+    data.i_am.forEach((v) => fd.append("i_am", v));
+    data.intent.forEach((v) => fd.append("intent", v));
     data.looking_for.forEach((v) => fd.append("looking_for", v));
     data.industry.forEach((v) => fd.append("industry", v));
     fd.append("stage", data.stage);
@@ -263,6 +270,8 @@ export function OnboardingForm({ initial }: Props) {
           <StepRole
             data={data}
             set={set}
+            toggleRole={(v) => toggle("i_am", v)}
+            toggleIntent={(v) => toggle("intent", v)}
             toggleLookingFor={(v) => toggle("looking_for", v)}
             tr={tr}
           />
@@ -323,8 +332,8 @@ export function OnboardingForm({ initial }: Props) {
 function stepMissing(step: number, d: FormState): string {
   switch (step) {
     case 0:
-      if (!d.i_am) return "Pick your role";
-      if (!d.intent) return "Pick what you’re bringing";
+      if (d.i_am.length === 0) return "Pick at least one role";
+      if (d.intent.length === 0) return "Pick what you’re bringing";
       if (d.looking_for.length === 0) return "Pick at least one role to look for";
       return "";
     case 1:
@@ -402,11 +411,15 @@ type TR = (s: string) => string;
 function StepRole({
   data,
   set,
+  toggleRole,
+  toggleIntent,
   toggleLookingFor,
   tr,
 }: {
   data: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  toggleRole: (v: string) => void;
+  toggleIntent: (v: string) => void;
   toggleLookingFor: (v: string) => void;
   tr: TR;
 }) {
@@ -449,14 +462,16 @@ function StepRole({
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-          {data.profile_type === "company" ? tr("Company role…") : tr("I am…")}
+          {data.profile_type === "company"
+            ? tr("Company role… (select all that apply)")
+            : tr("I am… (select all that apply)")}
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {ROLES.map((r) => (
             <ChoiceButton
               key={r.value}
-              selected={data.i_am === r.value}
-              onClick={() => set("i_am", r.value)}
+              selected={data.i_am.includes(r.value)}
+              onClick={() => toggleRole(r.value)}
             >
               {tr(r.label)}
             </ChoiceButton>
@@ -467,17 +482,17 @@ function StepRole({
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
           {data.profile_type === "company"
-            ? tr("We’re bringing…")
-            : tr("I’m bringing…")}
+            ? tr("We’re bringing… (select all that apply)")
+            : tr("I’m bringing… (select all that apply)")}
         </label>
         <div className="space-y-3">
           {INTENTS.map((i) => (
             <button
               key={i.value}
               type="button"
-              onClick={() => set("intent", i.value)}
+              onClick={() => toggleIntent(i.value)}
               className={`w-full text-left p-4 border transition-colors ${
-                data.intent === i.value
+                data.intent.includes(i.value)
                   ? "border-navy bg-cream"
                   : "border-line bg-white hover:border-navy"
               }`}

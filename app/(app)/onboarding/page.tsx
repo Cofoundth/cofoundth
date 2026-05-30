@@ -35,8 +35,8 @@ export default async function OnboardingPage() {
           | "raising"
           | "looking_for_advisors"
         >),
-        i_am: profile.i_am ?? "",
-        intent: profile.intent ?? "",
+        i_am: profile.i_am ?? [],
+        intent: profile.intent ?? [],
         looking_for: profile.looking_for ?? [],
         industry: profile.industry ?? [],
         stage: profile.stage ?? "",

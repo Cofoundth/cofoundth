@@ -206,14 +206,19 @@ export default async function ProfileDetailPage({ params }: Props) {
                   </div>
                 )}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted mb-2">
-                  {profile.i_am && (
+                  {(profile.i_am ?? []).length > 0 && (
                     <span className="text-navy font-medium">
-                      {ROLE_LABELS[profile.i_am]}
+                      {(profile.i_am ?? [])
+                        .map((r: string) => ROLE_LABELS[r])
+                        .join(" · ")}
                     </span>
                   )}
-                  {profile.intent && (
+                  {(profile.intent ?? []).length > 0 && (
                     <span className="text-gold">
-                      &middot; {INTENT_LABELS[profile.intent]}
+                      &middot;{" "}
+                      {(profile.intent ?? [])
+                        .map((x: string) => INTENT_LABELS[x])
+                        .join(" · ")}
                     </span>
                   )}
                   {profile.location && (

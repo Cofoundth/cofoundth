@@ -245,9 +245,10 @@ export default async function LandingPage() {
                               {f.full_name as string}
                             </div>
                             <div className="text-xs text-ink-muted truncate">
-                              {f.i_am
-                                ? ROLE_LABEL_EN[f.i_am as string] ??
-                                  (f.i_am as string)
+                              {((f.i_am as string[] | null) ?? []).length > 0
+                                ? ((f.i_am as string[] | null) ?? [])
+                                    .map((r) => ROLE_LABEL_EN[r] ?? r)
+                                    .join(" · ")
                                 : "—"}
                               {f.location ? ` · ${f.location}` : ""}
                             </div>

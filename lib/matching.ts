@@ -2,8 +2,8 @@
 
 export type ProfileLike = {
   id?: string;
-  i_am: string | null;
-  intent: string | null;
+  i_am: string[];
+  intent: string[];
   looking_for: string[];
   industry: string[];
   stage: string | null;

@@ -463,8 +463,11 @@ export default async function DashboardPage() {
                           {f.full_name as string}
                         </div>
                         <div className="text-xs text-ink-muted mt-0.5 truncate">
-                          {(f.i_am as string) ?? "—"}
-                          {f.intent ? ` · ${f.intent}` : ""}
+                          {((f.i_am as string[] | null) ?? []).join(" · ") ||
+                            "—"}
+                          {((f.intent as string[] | null) ?? []).length > 0
+                            ? ` · ${((f.intent as string[] | null) ?? []).join(" · ")}`
+                            : ""}
                         </div>
                         <div className="text-[10px] text-ink-muted mt-1 inline-flex items-center gap-2">
                           {timeAgo(f.created_at as string, locale)}

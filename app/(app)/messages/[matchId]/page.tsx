@@ -87,13 +87,18 @@ export default async function MessagePage({ params }: Props) {
                   {otherName}
                 </div>
                 <div className="text-xs text-ink-muted truncate">
-                  {other?.i_am && ROLE_LABELS[other.i_am as string]}
-                  {other?.intent && (
+                  {((other?.i_am as string[] | null) ?? []).length > 0 &&
+                    ((other?.i_am as string[] | null) ?? [])
+                      .map((r) => ROLE_LABELS[r])
+                      .join(" · ")}
+                  {((other?.intent as string[] | null) ?? []).length > 0 && (
                     <>
                       {" "}
                       &middot;{" "}
                       <span className="text-gold">
-                        {INTENT_LABELS[other.intent as string]}
+                        {((other?.intent as string[] | null) ?? [])
+                          .map((x) => INTENT_LABELS[x])
+                          .join(" · ")}
                       </span>
                     </>
                   )}

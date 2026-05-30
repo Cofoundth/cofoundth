@@ -130,13 +130,18 @@ export default async function MatchesPage() {
                       ) : null}
                     </div>
                     <div className="text-xs text-ink-muted mb-2">
-                      {p?.i_am && ROLE_LABELS[p.i_am as string]}
-                      {p?.intent && (
+                      {((p?.i_am as string[] | null) ?? []).length > 0 &&
+                        ((p?.i_am as string[] | null) ?? [])
+                          .map((r) => ROLE_LABELS[r])
+                          .join(" · ")}
+                      {((p?.intent as string[] | null) ?? []).length > 0 && (
                         <>
                           {" "}
                           &middot;{" "}
                           <span className="text-gold">
-                            {INTENT_LABELS[p.intent as string]}
+                            {((p?.intent as string[] | null) ?? [])
+                              .map((x) => INTENT_LABELS[x])
+                              .join(" · ")}
                           </span>
                         </>
                       )}

@@ -58,8 +58,11 @@ export async function updateProfileAction(
     .slice(0, 200);
 
   // ---- Professional
-  const i_am = String(formData.get("i_am") ?? "");
-  const intent = String(formData.get("intent") ?? "");
+  const i_am = cap(formData.getAll("i_am").map(String), ROLE_VALUES.length);
+  const intent = cap(
+    formData.getAll("intent").map(String),
+    INTENT_VALUES.length,
+  );
   const looking_for = cap(
     formData.getAll("looking_for").map(String),
     ROLE_VALUES.length,
@@ -123,10 +126,13 @@ export async function updateProfileAction(
     linkedin_url = normalized;
   }
 
-  if (!ROLE_VALUES.includes(i_am as never))
-    return { error: "Please select your role." };
-  if (!INTENT_VALUES.includes(intent as never))
+  if (i_am.length === 0) return { error: "Please select your role." };
+  if (i_am.some((r) => !ROLE_VALUES.includes(r as never)))
+    return { error: "Invalid role." };
+  if (intent.length === 0)
     return { error: "Please tell us what you're bringing." };
+  if (intent.some((x) => !INTENT_VALUES.includes(x as never)))
+    return { error: "Invalid intent." };
   if (looking_for.length === 0)
     return { error: "Please select at least one role you're looking for." };
   if (looking_for.some((r) => !ROLE_VALUES.includes(r as never)))

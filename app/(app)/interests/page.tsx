@@ -225,8 +225,8 @@ export default async function InterestsPage({
                         }
                         name={(p?.full_name as string) ?? "A founder"}
                         photoUrl={(p?.photo_url as string | null) ?? null}
-                        role={(p?.i_am as string | null) ?? null}
-                        intent={(p?.intent as string | null) ?? null}
+                        role={(p?.i_am as string[] | null) ?? []}
+                        intent={(p?.intent as string[] | null) ?? []}
                         note={(i.note as string | null) ?? null}
                         isMutual={isMutual}
                         actionLabel={await tServer(
@@ -271,8 +271,8 @@ export default async function InterestsPage({
                         }
                         name={(p?.full_name as string) ?? "A founder"}
                         photoUrl={(p?.photo_url as string | null) ?? null}
-                        role={(p?.i_am as string | null) ?? null}
-                        intent={(p?.intent as string | null) ?? null}
+                        role={(p?.i_am as string[] | null) ?? []}
+                        intent={(p?.intent as string[] | null) ?? []}
                         note={(i.note as string | null) ?? null}
                         isMutual={isMutual}
                         actionLabel={await tServer(
@@ -380,8 +380,8 @@ function InterestCard({
   profileSlug: string;
   name: string;
   photoUrl: string | null;
-  role: string | null;
-  intent: string | null;
+  role: string[];
+  intent: string[];
   note: string | null;
   isMutual: boolean;
   actionLabel: string;
@@ -404,12 +404,14 @@ function InterestCard({
             <div>
               <div className="font-serif text-lg text-navy">{name}</div>
               <div className="text-xs text-ink-muted">
-                {role && ROLE_LABELS[role]}
-                {intent && (
+                {role.length > 0 && role.map((r) => ROLE_LABELS[r]).join(" · ")}
+                {intent.length > 0 && (
                   <>
                     {" "}
                     &middot;{" "}
-                    <span className="text-gold">{INTENT_LABELS[intent]}</span>
+                    <span className="text-gold">
+                      {intent.map((x) => INTENT_LABELS[x]).join(" · ")}
+                    </span>
                   </>
                 )}
               </div>

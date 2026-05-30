@@ -113,7 +113,9 @@ export default async function PostPage({ params }: Props) {
               {(author?.full_name as string) ?? "A founder"}
             </Link>
             <div className="text-xs text-ink-muted">
-              {author?.i_am && ROLE_LABELS[author.i_am as string]}
+              {((author?.i_am as string[] | null) ?? [])
+                .map((r) => ROLE_LABELS[r])
+                .join(" · ")}
               {" · "}
               {new Date(post.created_at as string).toLocaleDateString("en-GB", {
                 day: "numeric",
