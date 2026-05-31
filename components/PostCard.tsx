@@ -12,6 +12,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
+import { ShareButton } from "@/components/ShareButton";
 import { useT } from "@/lib/i18n-client";
 import { t, type Locale } from "@/lib/i18n";
 import type { PostComment, PostItem, PostKind } from "@/lib/post-types";
@@ -264,6 +265,10 @@ export function PostCard({
                 <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                 <span className="tabular-nums">{commentCount}</span>
               </button>
+              <ShareButton
+                path={`/p/${post.id}`}
+                className="inline-flex items-center gap-1 text-ink-muted hover:text-navy transition-colors ml-auto"
+              />
             </div>
           </div>
         </div>
