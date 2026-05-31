@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, Heart, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowRight, Heart, MapPin, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
+import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { StatusComposer } from "../status/StatusComposer";
 import { StatusFeed, type StatusItem } from "../status/StatusFeed";
 
@@ -48,7 +49,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, onboarded, i_am, intent, slug")
+    .select("full_name, onboarded, i_am, intent, slug, photo_url, location, pitch")
     .eq("id", user.id)
     .single();
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
@@ -189,6 +190,7 @@ export default async function DashboardPage() {
   const [
     { count: pendingReceivedCount },
     { count: matchesCount },
+    { count: profileViewsCount },
   ] = await Promise.all([
     supabase
       .from("interests")
@@ -199,12 +201,29 @@ export default async function DashboardPage() {
       .from("matches")
       .select("id", { count: "exact", head: true })
       .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`),
+    supabase
+      .from("profile_views")
+      .select("id", { count: "exact", head: true })
+      .eq("viewed_id", user.id),
   ]);
 
   const firstName =
     profile?.full_name?.split(" ")[0]?.trim() ||
     user?.email?.split("@")[0] ||
     "founder";
+
+  // Identity-card derived labels (i_am / intent are string[])
+  const rolesLabel = ((profile?.i_am as string[] | null) ?? [])
+    .map((r) => ROLE_LABELS[r] ?? r)
+    .filter(Boolean)
+    .join(" · ");
+  const intentsLabel = ((profile?.intent as string[] | null) ?? [])
+    .map((i) => INTENT_LABELS[i] ?? i)
+    .filter(Boolean)
+    .join(" · ");
+  const identityLine = [rolesLabel, intentsLabel]
+    .filter(Boolean)
+    .join(" · ");
 
   const locale = (await import("@/lib/i18n-server").then((m) =>
     m.getLocale(),
@@ -214,12 +233,12 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
       {/* Greeting + live pulse */}
-      <div className="mb-10 pb-6 border-b border-line flex items-end justify-between gap-6 flex-wrap">
+      <div className="mb-8 pb-5 border-b border-line flex items-end justify-between gap-6 flex-wrap">
         <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-2">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-1.5">
             {await tServer(timeOfDayGreeting())}
           </div>
-          <h1 className="text-3xl lg:text-4xl leading-tight">
+          <h1 className="text-2xl lg:text-3xl leading-tight">
             {await tServer("Hello,")}{" "}
             <span className="text-navy">{firstName}</span>.
           </h1>
@@ -272,40 +291,87 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Personal mini-alerts (only when there's something) */}
-      {((pendingReceivedCount ?? 0) > 0 || (matchesCount ?? 0) > 0) && (
-        <div className="mb-8 flex flex-wrap gap-3">
-          {(pendingReceivedCount ?? 0) > 0 && (
-            <Link
-              href="/matches"
-              className="inline-flex items-center gap-3 bg-gold/10 border border-gold/40 px-4 py-3 hover:bg-gold/20 transition-colors"
-            >
-              <Sparkles className="w-4 h-4 text-gold" strokeWidth={1.5} />
-              <span className="text-sm">
-                <strong className="text-navy">{pendingReceivedCount}</strong>{" "}
-                {isTH ? "founder สนใจคุณ" : "founder(s) interested in you"}
-              </span>
-              <ArrowRight className="w-3.5 h-3.5 text-navy" />
-            </Link>
-          )}
-          {(matchesCount ?? 0) > 0 && (
-            <Link
-              href="/matches"
-              className="inline-flex items-center gap-3 bg-cream border border-line px-4 py-3 hover:border-navy transition-colors"
-            >
-              <span className="text-sm">
-                <strong className="text-navy">{matchesCount}</strong>{" "}
-                {isTH ? "แมตช์ — สานต่อการสนทนา" : "match(es) — keep the conversations going"}
-              </span>
-              <ArrowRight className="w-3.5 h-3.5 text-navy" />
-            </Link>
-          )}
-        </div>
-      )}
+      <div className="grid lg:grid-cols-12 gap-8">
+        {/* LEFT — identity + stats */}
+        <aside className="lg:col-span-3 space-y-6 lg:sticky lg:top-24 self-start">
+          {/* Identity card */}
+          <div className="bg-white border border-line p-6">
+            <Avatar
+              name={profile?.full_name as string}
+              url={profile?.photo_url as string | null}
+              size="lg"
+            />
+            <h2 className="font-serif text-xl text-navy mt-4 leading-tight">
+              {(profile?.full_name as string) || firstName}
+            </h2>
+            {identityLine && (
+              <p className="text-sm text-ink-muted mt-1 leading-snug">
+                {identityLine}
+              </p>
+            )}
+            {profile?.location && (
+              <p className="text-sm text-ink-muted mt-2 inline-flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-gold" strokeWidth={1.5} />
+                {profile.location as string}
+              </p>
+            )}
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Recent in community — primary column */}
-        <section className="lg:col-span-2 space-y-6">
+            <div className="border-t border-gold/30 my-4" />
+
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-ink-muted">
+                  {isTH ? "ผู้เข้าชมโปรไฟล์" : "Profile views"}
+                </span>
+                <span className="text-navy font-medium">
+                  {profileViewsCount ?? 0}
+                </span>
+              </div>
+              <Link
+                href="/matches"
+                className="flex items-center justify-between group"
+              >
+                <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
+                  {isTH ? "ความสนใจ" : "Interests"}
+                </span>
+                <span className="text-navy font-medium">
+                  {pendingReceivedCount ?? 0}
+                </span>
+              </Link>
+              <Link
+                href="/matches"
+                className="flex items-center justify-between group"
+              >
+                <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
+                  {isTH ? "แมตช์" : "Matches"}
+                </span>
+                <span className="text-navy font-medium">
+                  {matchesCount ?? 0}
+                </span>
+              </Link>
+            </div>
+
+            <div className="border-t border-line my-4" />
+
+            <div className="space-y-2">
+              <Link
+                href={myProfileHref}
+                className="block bg-navy hover:bg-navy-dark text-white text-center py-2.5 text-sm transition-colors"
+              >
+                {isTH ? "ดูโปรไฟล์" : "View profile"}
+              </Link>
+              <Link
+                href="/settings"
+                className="block border border-line hover:border-navy text-ink hover:text-navy text-center py-2.5 text-sm transition-colors"
+              >
+                {isTH ? "แก้ไขโปรไฟล์" : "Edit profile"}
+              </Link>
+            </div>
+          </div>
+        </aside>
+
+        {/* CENTER — the feed */}
+        <section className="lg:col-span-6 space-y-6">
           {/* Status composer — what are you working on? */}
           {profile?.onboarded && <StatusComposer />}
 
@@ -416,8 +482,8 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        {/* New founders sidebar */}
-        <aside>
+        {/* RIGHT — new founders */}
+        <aside className="lg:col-span-3 lg:sticky lg:top-24 self-start">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
               {isTH ? "Founder ใหม่" : "New founders"}
@@ -488,13 +554,6 @@ export default async function DashboardPage() {
             className="mt-6 block bg-navy hover:bg-navy-dark text-white text-sm text-center py-3 transition-colors"
           >
             {isTH ? "+ เขียนโพสต์ในชุมชน" : "+ Write a community post"}
-          </Link>
-
-          <Link
-            href={myProfileHref}
-            className="mt-2 block border border-line hover:border-navy text-ink hover:text-navy text-sm text-center py-3 transition-colors"
-          >
-            {isTH ? "ดูโปรไฟล์ของคุณ" : "View your profile"}
           </Link>
         </aside>
       </div>
