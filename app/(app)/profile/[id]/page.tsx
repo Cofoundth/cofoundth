@@ -47,7 +47,7 @@ export async function generateMetadata({
 }
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
 
 const STATUS_TAG_LABELS: Record<
   string,
@@ -302,6 +302,18 @@ export default async function ProfileDetailPage({ params }: Props) {
                 {await tServer("Why this, why now")}
               </div>
               <p className="text-ink leading-relaxed">{profile.why_this}</p>
+            </section>
+          )}
+
+          {/* Background / track record */}
+          {profile.background && (
+            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
+              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-3">
+                {await tServer("Background")}
+              </div>
+              <p className="text-ink leading-relaxed whitespace-pre-line">
+                {profile.background}
+              </p>
             </section>
           )}
 

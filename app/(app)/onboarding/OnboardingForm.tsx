@@ -110,6 +110,7 @@ type FormState = {
   experience: string;
   pitch: string;
   why_this: string;
+  background: string;
   skills: string;
 };
 
@@ -147,6 +148,7 @@ export function OnboardingForm({ initial }: Props) {
     experience: "",
     pitch: "",
     why_this: "",
+    background: "",
     skills: "",
     ...initial,
   });
@@ -237,6 +239,7 @@ export function OnboardingForm({ initial }: Props) {
     fd.append("experience", data.experience);
     fd.append("pitch", data.pitch);
     fd.append("why_this", data.why_this);
+    fd.append("background", data.background);
     fd.append("skills", data.skills);
 
     startTransition(async () => {
@@ -797,6 +800,26 @@ function StepPitch({
           rows={3}
           placeholder={tr(
             "What drew you to this problem? Why is now the right time?",
+          )}
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="background"
+          className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+        >
+          {tr("Background (optional)")}
+        </label>
+        <textarea
+          id="background"
+          value={data.background}
+          onChange={(e) => set("background", e.target.value)}
+          rows={4}
+          maxLength={600}
+          placeholder={tr(
+            "What you've built, where you've worked or studied — a couple of lines.",
           )}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />

@@ -13,7 +13,7 @@ export default async function OnboardingPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, location, commitment, runway, experience, pitch, why_this, skills",
+      "full_name, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, location, commitment, runway, experience, pitch, why_this, background, skills",
     )
     .eq("id", user.id)
     .single();
@@ -47,6 +47,7 @@ export default async function OnboardingPage() {
         experience: profile.experience ?? "",
         pitch: profile.pitch ?? "",
         why_this: profile.why_this ?? "",
+        background: (profile.background as string | null) ?? "",
         skills: (profile.skills ?? []).join(", "),
       }
     : {};

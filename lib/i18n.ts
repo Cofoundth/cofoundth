@@ -329,6 +329,9 @@ export const TH: Record<string, string> = {
   "Why this, why now (optional)": "ทำไมเรื่องนี้ ทำไมตอนนี้ (ไม่บังคับ)",
   "What drew you to this problem? Why is now the right time?":
     "อะไรที่ทำให้คุณสนใจปัญหานี้? เหตุใดตอนนี้คือเวลาที่เหมาะสม?",
+  "Background (optional)": "ประสบการณ์ที่ผ่านมา (ไม่บังคับ)",
+  "What you've built, where you've worked or studied — a couple of lines.":
+    "เคยสร้างอะไร เคยทำงานหรือเรียนที่ไหน เขียนสั้นๆ ไม่กี่บรรทัด",
   "Skills (comma-separated, optional)":
     "ทักษะ (คั่นด้วยจุลภาค, ไม่บังคับ)",
   "Capabilities (comma-separated, optional)":

@@ -72,6 +72,7 @@ export type ProfileInitial = {
   experience?: string | null;
   pitch?: string | null;
   why_this?: string | null;
+  background?: string | null;
   skills?: string[] | null;
 };
 
@@ -328,6 +329,18 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             rows={3}
             maxLength={1000}
             className={inputCls}
+          />
+        </Field>
+        <Field label={tr("Background (optional)")}>
+          <textarea
+            name="background"
+            defaultValue={initial.background ?? ""}
+            rows={4}
+            maxLength={600}
+            className={inputCls}
+            placeholder={tr(
+              "What you've built, where you've worked or studied — a couple of lines.",
+            )}
           />
         </Field>
         <Field label={tr("Skills (comma-separated, optional)")}>

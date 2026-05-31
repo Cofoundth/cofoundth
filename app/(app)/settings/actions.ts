@@ -74,6 +74,7 @@ export async function updateProfileAction(
   const experience = String(formData.get("experience") ?? "");
   const pitch = String(formData.get("pitch") ?? "").trim();
   const why_this = String(formData.get("why_this") ?? "").trim().slice(0, 1000);
+  const background = String(formData.get("background") ?? "").trim().slice(0, 600);
   const skills = cap(
     String(formData.get("skills") ?? "")
       .split(",")
@@ -174,6 +175,7 @@ export async function updateProfileAction(
       experience,
       pitch,
       why_this: why_this || null,
+      background: background || null,
       skills,
       type: profile_type,
       company_name: profile_type === "company" ? company_name : null,
