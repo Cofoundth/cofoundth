@@ -34,6 +34,8 @@ function hrefFor(n: NotifItem): string {
       return n.actor ? `/profile/${n.actor.slug ?? n.actor.id}` : "/dashboard";
     case "comment":
       return n.entityId ? `/community/${n.entityId}` : "/community";
+    case "message":
+      return n.entityId ? `/messages/${n.entityId}` : "/matches";
     case "interest":
     case "match":
       return "/matches";
@@ -227,6 +229,8 @@ export function NotificationBell({
         return tr("{name} is interested in connecting").replace("{name}", name);
       case "match":
         return tr("You and {name} are now connected").replace("{name}", name);
+      case "message":
+        return tr("{name} sent you a message").replace("{name}", name);
       default:
         return "";
     }

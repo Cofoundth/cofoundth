@@ -60,6 +60,7 @@ export const TH: Record<string, string> = {
   "{name} commented on your post": "{name} แสดงความคิดเห็นในโพสต์ของคุณ",
   "{name} is interested in connecting": "{name} สนใจอยากเชื่อมต่อกับคุณ",
   "You and {name} are now connected": "คุณกับ {name} เชื่อมต่อกันแล้ว",
+  "{name} sent you a message": "{name} ส่งข้อความหาคุณ",
   "Built by founders, for founders.": "พัฒนาโดย founder เพื่อ founder",
   "The platform for Thailand’s founders to find their co-founder.":
     "ที่รวมของ founder ไทย — หา co-founder คู่หูธุรกิจ และที่ปรึกษา",

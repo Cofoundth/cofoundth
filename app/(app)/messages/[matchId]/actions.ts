@@ -111,11 +111,21 @@ export async function markConversationRead(matchId: string) {
   } = await supabase.auth.getUser();
   if (!user) return;
 
+  const now = new Date().toISOString();
   await supabase
     .from("messages")
-    .update({ read_at: new Date().toISOString() })
+    .update({ read_at: now })
     .eq("match_id", matchId)
     .neq("sender_id", user.id)
+    .is("read_at", null);
+
+  // Also clear the bell's "new message" notification for this conversation.
+  await supabase
+    .from("notifications")
+    .update({ read_at: now })
+    .eq("recipient_id", user.id)
+    .eq("type", "message")
+    .eq("entity_id", matchId)
     .is("read_at", null);
 
   revalidatePath(`/messages/${matchId}`);
