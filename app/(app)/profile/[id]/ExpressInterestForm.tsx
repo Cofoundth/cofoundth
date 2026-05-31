@@ -118,18 +118,32 @@ export function ExpressInterestForm({
   // ── No relationship yet → express interest ─────────────────────────
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="w-full px-6 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
-      >
-        {tr("Express Interest")} <ArrowRight className="w-4 h-4" />
-      </button>
+      <div className="bg-cream border border-gold/40 p-6 text-center">
+        <div className="w-12 h-12 bg-white border border-gold/40 flex items-center justify-center mx-auto mb-3">
+          <Heart className="w-5 h-5 text-gold" strokeWidth={2} />
+        </div>
+        <div className="text-base font-medium text-navy mb-1">
+          {tr("Connect with {name}").replace("{name}", otherName)}
+        </div>
+        <p className="text-xs text-ink-muted leading-relaxed mb-4">
+          {tr("Express interest. If it's mutual, you match and messaging unlocks.")}
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="w-full px-6 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
+        >
+          {tr("Express Interest")} <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
     );
   }
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      action={formAction}
+      className="bg-white border border-line p-6 space-y-4"
+    >
       <input type="hidden" name="toId" value={toId} />
       <div>
         <label

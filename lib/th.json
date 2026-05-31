@@ -562,5 +562,7 @@
   "Work experience": "ประสบการณ์ทำงาน",
   "Education": "การศึกษา",
   "Roles, companies, what you built. One per line is fine.": "ตำแหน่ง บริษัท สิ่งที่เคยทำ — ใส่บรรทัดละอย่างก็ได้",
-  "Degrees, schools, bootcamps.": "วุฒิการศึกษา สถาบัน คอร์สที่เรียนมา"
+  "Degrees, schools, bootcamps.": "วุฒิการศึกษา สถาบัน คอร์สที่เรียนมา",
+  "Connect with {name}": "อยากรู้จัก {name}",
+  "Express interest. If it's mutual, you match and messaging unlocks.": "กดสนใจไว้ ถ้าอีกฝ่ายสนใจกลับ ก็จับคู่กันแล้วเปิดแชทให้เลย"
 }

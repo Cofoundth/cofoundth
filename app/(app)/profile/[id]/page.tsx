@@ -465,17 +465,15 @@ export default async function ProfileDetailPage({ params }: Props) {
         </div>
 
         {/* Sidebar */}
-        <aside className="lg:col-span-4 space-y-6">
+        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24 self-start">
           {!isOwnProfile && (
             <>
-              <div className="bg-white border border-line p-6">
-                <ExpressInterestForm
-                  toId={profile.id}
-                  relationship={relationship}
-                  matchId={matchId}
-                  otherName={otherName}
-                />
-              </div>
+              <ExpressInterestForm
+                toId={profile.id}
+                relationship={relationship}
+                matchId={matchId}
+                otherName={otherName}
+              />
               <div className="bg-white border border-line p-4">
                 <ReportForm targetId={profile.id} />
               </div>
