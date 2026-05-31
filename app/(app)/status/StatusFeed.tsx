@@ -5,6 +5,8 @@ import { useOptimistic, useTransition } from "react";
 import { ExternalLink, Heart, Sparkles, Trash2, Trophy } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { deleteStatusAction, toggleStatusLikeAction } from "./actions";
+import { useT } from "@/lib/i18n-client";
+import { t, type Locale } from "@/lib/i18n";
 
 export type StatusKind = "status" | "milestone" | "show_and_tell";
 
@@ -31,57 +33,48 @@ type Props = {
   emptyMessage?: string;
 };
 
-function timeAgo(iso: string, locale: string): string {
+function timeAgo(iso: string, locale: Locale): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60_000);
   const h = Math.floor(diff / 3_600_000);
   const d = Math.floor(diff / 86_400_000);
-  if (locale === "th") {
-    if (m < 1) return "เมื่อสักครู่";
-    if (m < 60) return `${m} นาทีที่แล้ว`;
-    if (h < 24) return `${h} ชั่วโมงที่แล้ว`;
-    if (d < 7) return `${d} วันที่แล้ว`;
-    return new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short" });
-  }
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  if (h < 24) return `${h}h ago`;
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  if (m < 1) return t("just now", locale);
+  if (m < 60) return t("{n}m ago", locale).replace("{n}", String(m));
+  if (h < 24) return t("{n}h ago", locale).replace("{n}", String(h));
+  if (d < 7) return t("{n}d ago", locale).replace("{n}", String(d));
+  return new Date(iso).toLocaleDateString(
+    locale === "th" ? "th-TH" : "en-GB",
+    { day: "numeric", month: "short" },
+  );
 }
 
-const KIND_META: Record<StatusKind, { icon: typeof Sparkles; en: string; th: string; tone: string; bg: string }> = {
+const KIND_META: Record<StatusKind, { icon: typeof Sparkles; en: string; tone: string; bg: string }> = {
   status: {
     icon: Sparkles,
     en: "working on",
-    th: "กำลังทำ",
     tone: "text-ink-muted",
     bg: "",
   },
   milestone: {
     icon: Trophy,
     en: "hit a milestone",
-    th: "ทำสำเร็จไปอีกขั้น",
     tone: "text-gold",
     bg: "bg-gold/5",
   },
   show_and_tell: {
     icon: ExternalLink,
     en: "shipped",
-    th: "เพิ่งปล่อย",
     tone: "text-navy",
     bg: "bg-cream",
   },
 };
 
 export function StatusFeed({ items, locale, emptyMessage }: Props) {
+  const tr = useT();
   if (items.length === 0) {
     return (
       <div className="bg-white border border-line p-6 text-center text-sm text-ink-muted">
-        {emptyMessage ??
-          (locale === "th"
-            ? "ยังไม่มีใครอัปเดต — มาเป็นคนแรกกัน"
-            : "No updates yet — be the first.")}
+        {emptyMessage ?? tr("No updates yet — be the first.")}
       </div>
     );
   }
@@ -104,6 +97,7 @@ function StatusRow({ item, locale }: { item: StatusItem; locale: "en" | "th" }) 
     }),
   );
   const [, startTransition] = useTransition();
+  const tr = useT();
   const meta = KIND_META[item.kind];
   const Icon = meta.icon;
   const authorHref = item.author
@@ -132,7 +126,7 @@ function StatusRow({ item, locale }: { item: StatusItem; locale: "en" | "th" }) 
             <span className={`inline-flex items-center gap-1 ${meta.tone}`}>
               <Icon className="w-3 h-3" strokeWidth={1.5} />
               <span className="text-ink-muted">
-                {locale === "th" ? meta.th : meta.en}
+                {tr(meta.en)}
               </span>
             </span>
             <span className="text-ink-muted">·</span>
@@ -152,8 +146,8 @@ function StatusRow({ item, locale }: { item: StatusItem; locale: "en" | "th" }) 
                 });
               }}
               className="text-ink-muted hover:text-red-700 shrink-0"
-              aria-label={locale === "th" ? "ลบ" : "Delete"}
-              title={locale === "th" ? "ลบ" : "Delete"}
+              aria-label={tr("Delete")}
+              title={tr("Delete")}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>

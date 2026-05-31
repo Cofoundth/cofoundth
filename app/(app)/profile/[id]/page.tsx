@@ -50,33 +50,25 @@ export async function generateMetadata({
 const COLUMNS =
   "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
 
-const STATUS_TAG_LABELS: Record<
-  string,
-  { en: string; th: string; tone: string }
-> = {
+const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   open_to_partnerships: {
     en: "Open to partnerships",
-    th: "เปิดรับพาร์ตเนอร์",
     tone: "border-gold/60 text-gold bg-gold/5",
   },
   open_to_cofounder: {
     en: "Open to co-founder",
-    th: "เปิดรับ co-founder",
     tone: "border-gold/60 text-gold bg-gold/5",
   },
   hiring: {
     en: "Hiring",
-    th: "กำลังจ้าง",
     tone: "border-navy text-navy bg-cream",
   },
   raising: {
     en: "Raising",
-    th: "กำลังระดมทุน",
     tone: "border-navy text-navy bg-cream",
   },
   looking_for_advisors: {
     en: "Looking for advisors",
-    th: "หาที่ปรึกษา",
     tone: "border-line text-ink-muted",
   },
 };
@@ -299,7 +291,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                     0 && (
                     <div className="text-sm text-ink mt-3">
                       <span className="text-ink-muted">
-                        {locale === "th" ? "กำลังหา: " : "Seeking: "}
+                        {await tServer("Seeking: ")}
                       </span>
                       {(
                         (profile.partnership_seeking ?? []) as string[]
@@ -308,18 +300,22 @@ export default async function ProfileDetailPage({ params }: Props) {
                   )}
                 {((profile.status_tags ?? []) as string[]).length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-1.5">
-                    {((profile.status_tags ?? []) as string[]).map((t) => {
-                      const meta = STATUS_TAG_LABELS[t];
-                      if (!meta) return null;
-                      return (
-                        <span
-                          key={t}
-                          className={`text-[10px] uppercase tracking-[0.15em] px-2 py-1 border ${meta.tone}`}
-                        >
-                          {locale === "th" ? meta.th : meta.en}
-                        </span>
-                      );
-                    })}
+                    {await Promise.all(
+                      ((profile.status_tags ?? []) as string[]).map(
+                        async (t) => {
+                          const meta = STATUS_TAG_LABELS[t];
+                          if (!meta) return null;
+                          return (
+                            <span
+                              key={t}
+                              className={`text-[10px] uppercase tracking-[0.15em] px-2 py-1 border ${meta.tone}`}
+                            >
+                              {await tServer(meta.en)}
+                            </span>
+                          );
+                        },
+                      ),
+                    )}
                   </div>
                 )}
               </div>
@@ -382,12 +378,11 @@ export default async function ProfileDetailPage({ params }: Props) {
           {(recentMilestones?.length ?? 0) > 0 && (
             <section className="bg-white border border-line p-8 lg:p-10 mb-6">
               <div className="text-xs uppercase tracking-[0.2em] text-gold mb-5">
-                {locale === "th"
-                  ? "ก้าวสำคัญและงานที่เพิ่งปล่อย"
-                  : "Recent milestones & launches"}
+                {await tServer("Recent milestones & launches")}
               </div>
               <div className="space-y-4">
-                {(recentMilestones ?? []).map((m) => {
+                {await Promise.all(
+                  (recentMilestones ?? []).map(async (m) => {
                   const isMilestone = m.kind === "milestone";
                   return (
                     <div
@@ -404,13 +399,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                             isMilestone ? "text-gold" : "text-navy"
                           }
                         >
-                          {isMilestone
-                            ? locale === "th"
-                              ? "ความสำเร็จ"
-                              : "Milestone"
-                            : locale === "th"
-                              ? "เพิ่งปล่อย"
-                              : "Shipped"}
+                          {await tServer(isMilestone ? "Milestone" : "Shipped")}
                         </span>
                         <span className="text-ink-muted ml-2">
                           {new Date(
@@ -444,7 +433,8 @@ export default async function ProfileDetailPage({ params }: Props) {
                       )}
                     </div>
                   );
-                })}
+                  }),
+                )}
               </div>
             </section>
           )}

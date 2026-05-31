@@ -930,20 +930,17 @@ function StepPitch({
               {
                 v: "open_to_cofounder" as const,
                 en: "Open to co-founder",
-                th: "เปิดรับ co-founder",
                 hideForCompany: true,
               },
               {
                 v: "open_to_partnerships" as const,
                 en: "Open to partnerships",
-                th: "เปิดรับพาร์ตเนอร์",
               },
-              { v: "hiring" as const, en: "Hiring", th: "กำลังจ้าง" },
-              { v: "raising" as const, en: "Raising", th: "กำลังระดมทุน" },
+              { v: "hiring" as const, en: "Hiring" },
+              { v: "raising" as const, en: "Raising" },
               {
                 v: "looking_for_advisors" as const,
                 en: "Looking for advisors",
-                th: "หาที่ปรึกษา",
               },
             ] as const
           )
