@@ -331,6 +331,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             rows={3}
             maxLength={1000}
             className={inputCls}
+            placeholder={tr(
+              "e.g. I ran into this problem myself, and now's finally the right time to fix it.",
+            )}
           />
         </Field>
         <Field label={tr("Background (optional)")}>
@@ -341,7 +344,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             maxLength={600}
             className={inputCls}
             placeholder={tr(
-              "What you've built, where you've worked or studied — a couple of lines.",
+              "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.",
             )}
           />
         </Field>

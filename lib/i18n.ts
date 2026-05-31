@@ -329,9 +329,13 @@ export const TH: Record<string, string> = {
   "Why this, why now (optional)": "ทำไมเรื่องนี้ ทำไมตอนนี้ (ไม่บังคับ)",
   "What drew you to this problem? Why is now the right time?":
     "อะไรที่ทำให้คุณสนใจปัญหานี้? เหตุใดตอนนี้คือเวลาที่เหมาะสม?",
+  "e.g. I ran into this problem myself, and now's finally the right time to fix it.":
+    "เช่น ผมเจอปัญหานี้กับตัวเองมาก่อน และตอนนี้คือจังหวะที่เหมาะที่สุดที่จะลงมือแก้",
   "Background (optional)": "ประสบการณ์ที่ผ่านมา (ไม่บังคับ)",
   "What you've built, where you've worked or studied — a couple of lines.":
     "เคยสร้างอะไร เคยทำงานหรือเรียนที่ไหน เขียนสั้นๆ ไม่กี่บรรทัด",
+  "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.":
+    "เช่น อดีต engineer ที่ Agoda เคยทำและขาย logistics SaaS จบ CS จากจุฬาฯ",
   "Skills (comma-separated, optional)":
     "ทักษะ (คั่นด้วยจุลภาค, ไม่บังคับ)",
   "Skills (type and press Enter)": "ทักษะ (พิมพ์แล้วกด Enter)",

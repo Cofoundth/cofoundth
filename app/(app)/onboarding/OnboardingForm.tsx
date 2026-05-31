@@ -809,7 +809,7 @@ function StepPitch({
           onChange={(e) => set("why_this", e.target.value)}
           rows={3}
           placeholder={tr(
-            "What drew you to this problem? Why is now the right time?",
+            "e.g. I ran into this problem myself, and now's finally the right time to fix it.",
           )}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />
@@ -829,7 +829,7 @@ function StepPitch({
           rows={4}
           maxLength={600}
           placeholder={tr(
-            "What you've built, where you've worked or studied — a couple of lines.",
+            "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.",
           )}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />
