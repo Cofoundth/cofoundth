@@ -508,25 +508,36 @@ function StepRole({
             : tr("I’m bringing… (select all that apply)")}
         </label>
         <div className="space-y-3">
-          {INTENTS.map((i) => (
-            <button
-              key={i.value}
-              type="button"
-              onClick={() => toggleIntent(i.value)}
-              className={`w-full text-left p-4 border transition-colors ${
-                data.intent.includes(i.value)
-                  ? "border-navy bg-cream"
-                  : "border-line bg-white hover:border-navy"
-              }`}
-            >
-              <div className="font-serif text-lg text-navy mb-1">
-                {tr(i.label)}
-              </div>
-              <div className="text-sm text-ink leading-relaxed">
-                {tr(i.description)}
-              </div>
-            </button>
-          ))}
+          {INTENTS.map((i) => {
+            const sel = data.intent.includes(i.value);
+            return (
+              <button
+                key={i.value}
+                type="button"
+                onClick={() => toggleIntent(i.value)}
+                className={`w-full text-left p-4 border transition-colors ${
+                  sel
+                    ? "border-navy bg-navy"
+                    : "border-line bg-white hover:border-navy"
+                }`}
+              >
+                <div
+                  className={`font-serif text-lg mb-1 ${
+                    sel ? "text-white" : "text-navy"
+                  }`}
+                >
+                  {tr(i.label)}
+                </div>
+                <div
+                  className={`text-sm leading-relaxed ${
+                    sel ? "text-white/80" : "text-ink"
+                  }`}
+                >
+                  {tr(i.description)}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
