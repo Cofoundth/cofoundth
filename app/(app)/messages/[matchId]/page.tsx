@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
 import { MessageComposer } from "./MessageComposer";
+import { MessageThread } from "./MessageThread";
 import { ConversationActions } from "./ConversationActions";
 import { NextStepsPanel } from "./NextStepsPanel";
 import { ReadOnMount } from "./ReadOnMount";
@@ -115,55 +116,29 @@ export default async function MessagePage({ params }: Props) {
         </header>
 
         <div className="flex-1 overflow-y-auto bg-cream px-6 py-8 space-y-4">
-          {!messages?.length ? (
-            <div className="text-center py-12">
-              <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-                Mutual interest unlocked
-              </div>
-              <p className="text-ink leading-relaxed max-w-md mx-auto">
-                You both expressed interest. This is the start of your
-                conversation &mdash; be specific, be considered.
-              </p>
-              <SuggestedOpeners />
-            </div>
-          ) : (
-            messages.map((m) => {
-              const mine = m.sender_id === user.id;
-              return (
-                <div
-                  key={m.id as string}
-                  className={`flex ${mine ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[75%] px-4 py-3 ${
-                      mine
-                        ? "bg-navy text-white"
-                        : "bg-white text-ink border border-line"
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {m.content as string}
-                    </p>
-                    <div
-                      className={`text-[10px] mt-1.5 ${
-                        mine ? "text-white/60" : "text-ink-muted"
-                      }`}
-                    >
-                      {new Date(m.created_at as string).toLocaleString(
-                        "en-GB",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          day: "numeric",
-                          month: "short",
-                        },
-                      )}
-                    </div>
-                  </div>
+          <MessageThread
+            matchId={matchId}
+            currentUserId={user.id}
+            initialMessages={(messages ?? []).map((m) => ({
+              id: m.id as string,
+              sender_id: m.sender_id as string,
+              content: m.content as string,
+              read_at: (m.read_at as string | null) ?? null,
+              created_at: m.created_at as string,
+            }))}
+            emptyState={
+              <div className="text-center py-12">
+                <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+                  Mutual interest unlocked
                 </div>
-              );
-            })
-          )}
+                <p className="text-ink leading-relaxed max-w-md mx-auto">
+                  You both expressed interest. This is the start of your
+                  conversation &mdash; be specific, be considered.
+                </p>
+                <SuggestedOpeners />
+              </div>
+            }
+          />
         </div>
 
         <MessageComposer matchId={matchId} />
