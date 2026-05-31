@@ -68,14 +68,14 @@ export const TH: Record<string, string> = {
   // Thai copy is rewritten native (short parallel phrases, no English
   // em-dash trailing clauses), not translated word-for-word.
   "Thailand's startup community": "เครือข่าย founder ไทย",
-  "Where Thai startups build together.": "ที่ที่ startup ไทย เติบโตไปด้วยกัน",
-  "Cofoundee is the bridge for Thailand's startup ecosystem — a community where founders meet, companies find partners, and investors and advisors come to you when the time is right.":
-    "ชุมชนที่ founder ไทยมาเจอกัน หาพาร์ตเนอร์ หาทุน และที่ปรึกษา ครบในที่เดียว",
+  "The home for Thailand's founders.": "บ้านของ founder ไทย",
+  "A place for Thai founders to find each other — people who are building too, who get what it's like. Come for the community; the partners, co-founders, and intros grow from there, the way they really do.":
+    "พื้นที่ให้ founder ไทยได้มาเจอกัน — คนที่กำลังสร้างอะไรอยู่เหมือนกัน คนที่เข้าใจหัวอกกัน มาเริ่มจากการเป็นส่วนหนึ่งของชุมชนก่อน แล้วพาร์ตเนอร์ co-founder และคอนเนกชันจะค่อยๆ เกิดขึ้นเอง แบบที่มันเกิดขึ้นจริง",
   "Create your profile": "สร้างโปรไฟล์",
   "Join the community": "สร้างโปรไฟล์",
   "Browse founders": "ดู founder",
   "Founding members": "สมาชิกรุ่นก่อตั้ง",
-  "Free forever": "ฟรีตลอดการใช้งาน",
+  "Free to join": "เข้าร่วมฟรี",
   "Verified profiles": "โปรไฟล์ผ่านการยืนยัน",
   "Built for Thailand": "สำหรับวงการ startup ไทย",
   "What's inside": "ในแพลตฟอร์มมีอะไรบ้าง",
@@ -90,11 +90,11 @@ export const TH: Record<string, string> = {
     "ของแถม — พบ co-founder ที่เสริมกัน เมื่อพร้อม",
 
   // ─── Landing — Pillars ────────────────────────────────────────────
-  "What we do": "บริการของเรา",
-  "Everything a Thai startup needs — in one place.":
-    "ทุกอย่างที่ startup ไทยต้องใช้ ในที่เดียว",
-  "Built in the order that actually works: community first, then partnerships and capital come on top.":
-    "สร้างตามลำดับที่เวิร์กจริง — ชุมชนมาก่อน แล้วพาร์ตเนอร์กับเงินทุนค่อยตามมา",
+  "Where we're headed": "เรากำลังมุ่งไปทางไหน",
+  "Where we want this to go — built one honest step at a time.":
+    "ที่ที่เราอยากให้มันไปถึง — ค่อยๆ สร้างทีละก้าวอย่างจริงใจ",
+  "Community comes first, because trust has to. Partnerships, advisors, and investor intros grow on top of it — and we'll build each one only when it's truly ready.":
+    "ชุมชนมาก่อน เพราะความไว้ใจต้องมาก่อนเสมอ พาร์ตเนอร์ ที่ปรึกษา และการแนะนำนักลงทุนจะค่อยๆ ต่อยอดขึ้นมา และเราจะสร้างแต่ละอย่างเมื่อมันพร้อมจริงๆ เท่านั้น",
   "Where Thai founders meet": "ที่ที่ founder ไทยมาเจอกัน",
   "Forum, content, and events for serious Thai startup builders. Ask questions, share what you're shipping, and meet the people who'll shape your journey.":
     "ฟอรัม บทความ และอีเวนต์ สำหรับคนที่จริงจังกับ startup ถามได้ แชร์ได้ และเจอคนที่ใช่",
@@ -135,8 +135,8 @@ export const TH: Record<string, string> = {
   "B2B partners, co-founders, advisors, investors — unlocked by trust.":
     "พาร์ตเนอร์ B2B, co-founder, ที่ปรึกษา และนักลงทุน — ปลดล็อกด้วยความเชื่อมั่น",
   "Grow together": "เติบโตไปด้วยกัน",
-  "The whole ecosystem compounds. Your network is the platform.":
-    "ทั้งระบบนิเวศต่อยอดกันเอง เครือข่ายของคุณคือแพลตฟอร์ม",
+  "When the community grows, everyone in it grows too. That's the whole idea.":
+    "เมื่อชุมชนเติบโต ทุกคนในนั้นก็เติบโตไปด้วย นั่นแหละคือหัวใจของมัน",
   "Declare what you are, what you bring, and what you need.":
     "บอกว่าคุณคือใคร นำเสนออะไร และกำลังหาอะไร",
   "Browse directory": "สำรวจไดเรกทอรี",
@@ -157,13 +157,13 @@ export const TH: Record<string, string> = {
   // ─── Landing — CTA ────────────────────────────────────────────────
   "Your missing piece is on the platform.":
     "คนที่คุณตามหา อยู่บนแพลตฟอร์มนี้",
-  "The Thai startup ecosystem — built together.":
-    "วงการ startup ไทย — เราสร้างไปด้วยกัน",
+  "It's still early — which is the best reason to join now.":
+    "ตอนนี้ยังเป็นช่วงเริ่มต้น — และนั่นแหละคือเหตุผลที่ดีที่สุดที่จะเข้ามาตั้งแต่วันนี้",
   "Join Thailand’s most serious community of founders looking to build together. Free during our launch phase.":
     "เข้าร่วมชุมชน founder ไทยที่จริงจังที่สุด มองหาคนสร้างธุรกิจไปด้วยกัน ใช้งานฟรีในช่วงเปิดตัว",
-  "Join the community of serious Thai founders. Free, forever — because trust takes years and we're playing the long game.":
-    "เข้าร่วมกับ founder ไทยที่จริงจัง ใช้งานฟรีตลอด เพราะเครือข่ายที่แข็งแกร่งต้องใช้เวลาสร้าง — เราเลือกที่จะเล่นเกมยาว",
-  "Join the community — Free": "สมัครสมาชิก — ฟรี",
+  "We're just getting started, and the people who join now shape what this becomes. Come be one of them — free to join.":
+    "เราเพิ่งเริ่มต้น และคนที่เข้ามาตอนนี้คือคนที่จะกำหนดว่ามันจะเป็นยังไงต่อ มาเป็นหนึ่งในนั้นด้วยกัน — เข้าร่วมฟรี",
+  "Join us — it's free": "มาร่วมกับเรา — ฟรี",
   "Create your profile — Free": "สร้างโปรไฟล์ฟรี",
 
   // ─── Auth pages ───────────────────────────────────────────────────

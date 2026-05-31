@@ -65,7 +65,7 @@ const processSteps = [
   {
     num: "IV",
     title: "Grow together",
-    body: "The whole ecosystem compounds. Your network is the platform.",
+    body: "When the community grows, everyone in it grows too. That's the whole idea.",
   },
 ];
 
@@ -174,11 +174,11 @@ export default async function LandingPage() {
                 )}
               </div>
               <h1 className="text-5xl lg:text-7xl leading-[1.05] tracking-tight mb-8">
-                {tr("Where Thai startups build together.")}
+                {tr("The home for Thailand's founders.")}
               </h1>
               <p className="text-lg text-ink leading-relaxed max-w-2xl mb-10">
                 {tr(
-                  "Cofoundee is the bridge for Thailand's startup ecosystem — a community where founders meet, companies find partners, and investors and advisors come to you when the time is right.",
+                  "A place for Thai founders to find each other — people who are building too, who get what it's like. Come for the community; the partners, co-founders, and intros grow from there, the way they really do.",
                 )}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -198,7 +198,7 @@ export default async function LandingPage() {
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-gold" /> {tr("Free forever")}
+                  <Check className="w-4 h-4 text-gold" /> {tr("Free to join")}
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-gold" />{" "}
@@ -335,14 +335,14 @@ export default async function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-20">
             <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
-              {tr("What we do")}
+              {tr("Where we're headed")}
             </div>
             <h2 className="text-4xl lg:text-5xl leading-tight">
-              {tr("Everything a Thai startup needs — in one place.")}
+              {tr("Where we want this to go — built one honest step at a time.")}
             </h2>
             <p className="mt-6 text-lg text-ink leading-relaxed">
               {tr(
-                "Built in the order that actually works: community first, then partnerships and capital come on top.",
+                "Community comes first, because trust has to. Partnerships, advisors, and investor intros grow on top of it — and we'll build each one only when it's truly ready.",
               )}
             </p>
           </div>
@@ -591,18 +591,18 @@ export default async function LandingPage() {
       <section className="py-24 bg-cream border-t border-line">
         <div className="max-w-4xl mx-auto px-6 lg:px-10 text-center">
           <h2 className="text-4xl lg:text-5xl mb-6 leading-tight">
-            {tr("The Thai startup ecosystem — built together.")}
+            {tr("It's still early — which is the best reason to join now.")}
           </h2>
           <p className="text-lg text-ink mb-10 max-w-2xl mx-auto">
             {tr(
-              "Join the community of serious Thai founders. Free, forever — because trust takes years and we're playing the long game.",
+              "We're just getting started, and the people who join now shape what this becomes. Come be one of them — free to join.",
             )}
           </p>
           <Link
             href="/signup"
             className="inline-block px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
           >
-            {tr("Join the community — Free")}
+            {tr("Join us — it's free")}
           </Link>
         </div>
       </section>
