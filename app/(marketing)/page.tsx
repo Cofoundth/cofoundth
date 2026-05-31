@@ -174,11 +174,11 @@ export default async function LandingPage() {
                 )}
               </div>
               <h1 className="text-5xl lg:text-7xl leading-[1.05] tracking-tight mb-8">
-                {tr("The home for Thailand's founders.")}
+                {tr("A community for Thailand's startup founders.")}
               </h1>
               <p className="text-lg text-ink leading-relaxed max-w-2xl mb-10">
                 {tr(
-                  "A place for Thai founders to find each other — people who are building too, who get what it's like. Come for the community; the partners, co-founders, and intros grow from there, the way they really do.",
+                  "Meet other Thai founders, share what you're building, and find the partners, co-founders, and advisors you need — starting from real community, not cold matching.",
                 )}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">

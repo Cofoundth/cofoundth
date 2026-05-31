@@ -68,9 +68,10 @@ export const TH: Record<string, string> = {
   // Thai copy is rewritten native (short parallel phrases, no English
   // em-dash trailing clauses), not translated word-for-word.
   "Thailand's startup community": "เครือข่าย founder ไทย",
-  "The home for Thailand's founders.": "บ้านของ founder ไทย",
-  "A place for Thai founders to find each other — people who are building too, who get what it's like. Come for the community; the partners, co-founders, and intros grow from there, the way they really do.":
-    "พื้นที่ให้ founder ไทยได้มาเจอกัน — คนที่กำลังสร้างอะไรอยู่เหมือนกัน คนที่เข้าใจหัวอกกัน มาเริ่มจากการเป็นส่วนหนึ่งของชุมชนก่อน แล้วพาร์ตเนอร์ co-founder และคอนเนกชันจะค่อยๆ เกิดขึ้นเอง แบบที่มันเกิดขึ้นจริง",
+  "A community for Thailand's startup founders.":
+    "ชุมชนของ founder สตาร์ทอัพไทย",
+  "Meet other Thai founders, share what you're building, and find the partners, co-founders, and advisors you need — starting from real community, not cold matching.":
+    "มาเจอ founder ไทยคนอื่นๆ แชร์สิ่งที่คุณกำลังสร้าง แล้วค่อยหาพาร์ตเนอร์ co-founder และที่ปรึกษาที่ต้องการ — เริ่มจากการเป็นชุมชนจริงๆ ไม่ใช่การจับคู่แบบเย็นชา",
   "Create your profile": "สร้างโปรไฟล์",
   "Join the community": "สร้างโปรไฟล์",
   "Browse founders": "ดู founder",
