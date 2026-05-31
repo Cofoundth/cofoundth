@@ -1,7 +1,17 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Link2, Rocket, Send, Sparkles, Tag, Trophy, Type } from "lucide-react";
+import {
+  ImagePlus,
+  Link2,
+  Rocket,
+  Send,
+  Sparkles,
+  Tag,
+  Trophy,
+  Type,
+  X,
+} from "lucide-react";
 import {
   createPostAction,
   type PostFormState,
@@ -30,6 +40,8 @@ export function PostComposer() {
   const [showTitle, setShowTitle] = useState(false);
   const [showLink, setShowLink] = useState(false);
   const [showTags, setShowTags] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isPending && !state?.error && formRef.current) {
@@ -39,8 +51,18 @@ export function PostComposer() {
       setShowTitle(false);
       setShowLink(false);
       setShowTags(false);
+      setImagePreview(null);
     }
   }, [isPending, state]);
+
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    setImagePreview(f ? URL.createObjectURL(f) : null);
+  }
+  function removeImage() {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setImagePreview(null);
+  }
 
   const remaining = 5000 - content.length;
   const tooLong = remaining < 0;
@@ -64,6 +86,14 @@ export function PostComposer() {
       className="bg-white border border-line p-4"
     >
       <input type="hidden" name="kind" value={kind} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        name="image"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={onFile}
+      />
 
       {/* Kind tabs */}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -128,6 +158,25 @@ export function PostComposer() {
         />
       )}
 
+      {imagePreview && (
+        <div className="mt-2 relative inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imagePreview}
+            alt=""
+            className="max-h-48 w-auto border border-line"
+          />
+          <button
+            type="button"
+            onClick={removeImage}
+            className="absolute top-1 right-1 bg-navy/80 hover:bg-navy text-white p-1"
+            aria-label={tr("Remove")}
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
       {state?.error && (
         <div className="mt-2 text-xs text-red-700">{state.error}</div>
       )}
@@ -157,6 +206,14 @@ export function PostComposer() {
           >
             <Tag className="w-3.5 h-3.5" strokeWidth={1.5} />
             {tr("Tags")}
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className={toggleCls(!!imagePreview)}
+          >
+            <ImagePlus className="w-3.5 h-3.5" strokeWidth={1.5} />
+            {tr("Photo")}
           </button>
           <span
             className={`tabular-nums ${tooLong ? "text-red-700" : "text-ink-muted"}`}

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { PostComment } from "@/lib/post-types";
 
 export type PostFormState = { error?: string } | null;
@@ -33,6 +34,37 @@ function parseTags(raw: string): string[] | { error: string } {
   return tags;
 }
 
+const IMG_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+const MAX_IMG_BYTES = 5 * 1024 * 1024;
+
+async function uploadPostImage(
+  userId: string,
+  file: File,
+): Promise<{ url?: string; error?: string }> {
+  const ext = IMG_EXT[file.type];
+  if (!ext) return { error: "Please upload a JPG, PNG, WebP, or GIF." };
+  if (file.size > MAX_IMG_BYTES) return { error: "Max image size is 5MB." };
+  const admin = createAdminClient();
+  const path = `${userId}/post-${Date.now()}.${ext}`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const { error } = await admin.storage
+    .from("post-images")
+    .upload(path, bytes, {
+      upsert: false,
+      cacheControl: "3600",
+      contentType: file.type,
+    });
+  if (error) return { error: error.message };
+  return {
+    url: admin.storage.from("post-images").getPublicUrl(path).data.publicUrl,
+  };
+}
+
 export async function createPostAction(
   _prev: PostFormState,
   formData: FormData,
@@ -41,7 +73,6 @@ export async function createPostAction(
   const title = String(formData.get("title") ?? "").trim();
   const kind = String(formData.get("kind") ?? "post");
   const linkUrl = String(formData.get("link_url") ?? "").trim();
-  const imageUrl = String(formData.get("image_url") ?? "").trim();
   const tagsRaw = String(formData.get("tags") ?? "").trim();
 
   if (!content) return { error: "Say something." };
@@ -51,8 +82,6 @@ export async function createPostAction(
   if (!KINDS.includes(kind)) return { error: "Bad kind." };
   if (linkUrl && !/^https?:\/\/.+/.test(linkUrl))
     return { error: "Link must start with http:// or https://" };
-  if (imageUrl && !/^https?:\/\/.+/.test(imageUrl))
-    return { error: "Bad image." };
 
   const parsed = parseTags(tagsRaw);
   if (!Array.isArray(parsed)) return parsed;
@@ -63,13 +92,21 @@ export async function createPostAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
+  let imageUrl: string | null = null;
+  const imageFile = formData.get("image");
+  if (imageFile instanceof File && imageFile.size > 0) {
+    const up = await uploadPostImage(user.id, imageFile);
+    if (up.error) return { error: up.error };
+    imageUrl = up.url ?? null;
+  }
+
   const { error } = await supabase.from("forum_posts").insert({
     author_id: user.id,
     content,
     title: title || null,
     kind,
     link_url: linkUrl || null,
-    image_url: imageUrl || null,
+    image_url: imageUrl,
     tags: parsed,
   });
 
