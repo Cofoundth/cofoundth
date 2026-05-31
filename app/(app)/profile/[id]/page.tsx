@@ -148,14 +148,48 @@ export default async function ProfileDetailPage({ params }: Props) {
     .order("created_at", { ascending: false })
     .limit(4);
 
-  const { data: existingInterest } = isOwnProfile
-    ? { data: null }
-    : await supabase
-        .from("interests")
+  // Relationship state with this founder, for the sidebar CTA:
+  //   matched  → already connected, show "Message them"
+  //   incoming → they expressed interest in me → show "Accept & connect"
+  //   outgoing → I expressed interest, waiting → show "Interest sent"
+  //   none     → show "Express interest"
+  let relationship: "none" | "outgoing" | "incoming" | "matched" = "none";
+  let matchId: string | null = null;
+  if (!isOwnProfile && user) {
+    const a = user.id < profile.id ? user.id : profile.id;
+    const b = user.id < profile.id ? profile.id : user.id;
+    const [{ data: match }, { data: interestRows }] = await Promise.all([
+      supabase
+        .from("matches")
         .select("id")
-        .eq("from_profile_id", user.id)
-        .eq("to_profile_id", profile.id)
-        .maybeSingle();
+        .eq("profile_a_id", a)
+        .eq("profile_b_id", b)
+        .maybeSingle(),
+      supabase
+        .from("interests")
+        .select("from_profile_id")
+        .or(
+          `and(from_profile_id.eq.${user.id},to_profile_id.eq.${profile.id}),and(from_profile_id.eq.${profile.id},to_profile_id.eq.${user.id})`,
+        ),
+    ]);
+    if (match) {
+      relationship = "matched";
+      matchId = match.id as string;
+    } else if (
+      (interestRows ?? []).some((r) => r.from_profile_id === profile.id)
+    ) {
+      relationship = "incoming";
+    } else if (
+      (interestRows ?? []).some((r) => r.from_profile_id === user.id)
+    ) {
+      relationship = "outgoing";
+    }
+  }
+
+  const otherName =
+    profile.type === "company" && profile.company_name
+      ? (profile.company_name as string)
+      : (profile.full_name as string);
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
@@ -423,7 +457,9 @@ export default async function ProfileDetailPage({ params }: Props) {
               <div className="bg-white border border-line p-6">
                 <ExpressInterestForm
                   toId={profile.id}
-                  alreadySent={!!existingInterest}
+                  relationship={relationship}
+                  matchId={matchId}
+                  otherName={otherName}
                 />
               </div>
               <div className="bg-white border border-line p-4">

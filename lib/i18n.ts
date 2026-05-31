@@ -397,6 +397,20 @@ export const TH: Record<string, string> = {
   "Express Interest": "แสดงความสนใจ",
   "When interest is mutual, messaging unlocks automatically.":
     "เมื่อความสนใจตรงกัน ระบบจะเปิดให้สนทนาได้อัตโนมัติ",
+  Cancel: "ยกเลิก",
+  "Personal note (optional)": "ข้อความส่วนตัว (ไม่บังคับ)",
+  "A short intro: who you are, why you connected with their pitch.":
+    "แนะนำตัวสั้นๆ: คุณเป็นใคร ทำไมถึงสนใจ pitch ของเขา",
+  "You'll be notified if they also express interest. Messaging unlocks on mutual interest.":
+    "ระบบจะแจ้งเตือนถ้าอีกฝ่ายสนใจกลับ — แชทจะเปิดเมื่อสนใจตรงกัน",
+  "Accept & connect": "ตอบรับและเชื่อมต่อ",
+  "Connecting…": "กำลังเชื่อมต่อ…",
+  "Accept to connect — messaging unlocks for both of you.":
+    "กดตอบรับเพื่อเชื่อมต่อ — แชทจะเปิดให้ทั้งสองฝ่าย",
+  "You're connected": "เชื่อมต่อกันแล้ว",
+  "Messaging is unlocked — start the conversation.":
+    "แชทเปิดแล้ว — เริ่มบทสนทนาได้เลย",
+  "Message {name}": "ส่งข้อความหา {name}",
   Received: "ได้รับ",
   Sent: "ส่งแล้ว",
   "No one has expressed interest yet. Make sure your profile is complete.":
