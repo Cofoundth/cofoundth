@@ -89,6 +89,16 @@ export default async function ConnectionsPage() {
     }
   }
 
+  // Newest conversation on top — by last message time, falling back to the
+  // match-created date for matches that haven't exchanged a message yet.
+  const sortedMatches = [...(matches ?? [])].sort((a, b) => {
+    const aAt =
+      messagesByMatch.get(a.id as string)?.last_at ?? (a.created_at as string);
+    const bAt =
+      messagesByMatch.get(b.id as string)?.last_at ?? (b.created_at as string);
+    return new Date(bAt).getTime() - new Date(aAt).getTime();
+  });
+
   const roleLine = (p: ReturnType<typeof profiles.get>) =>
     ((p?.i_am as string[] | null) ?? []).map((r) => ROLE_LABELS[r]).join(" · ");
   const profileHref = (p: ReturnType<typeof profiles.get>, id: string) =>
@@ -255,7 +265,7 @@ export default async function ConnectionsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {matches.map((m) => {
+            {sortedMatches.map((m) => {
               const otherId =
                 m.profile_a_id === user.id
                   ? (m.profile_b_id as string)

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Copy, FileText, MessageSquareQuote, Check } from "lucide-react";
+import { Check, FileText, MessageSquareQuote, Plus } from "lucide-react";
+import { QUICK_REPLY_EVENT } from "./MessageComposer";
 
 const TEMPLATES = [
   {
@@ -30,14 +31,10 @@ const TEMPLATES = [
 export function NextStepsPanel() {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
-  async function copy(idx: number, text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedIdx(idx);
-      setTimeout(() => setCopiedIdx(null), 2000);
-    } catch {
-      // Fallback or no-op
-    }
+  function insert(idx: number, text: string) {
+    window.dispatchEvent(new CustomEvent(QUICK_REPLY_EVENT, { detail: text }));
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 1500);
   }
 
   return (
@@ -112,14 +109,14 @@ export function NextStepsPanel() {
           </div>
         </div>
         <p className="text-xs text-ink-muted mb-4">
-          Tap to copy. Paste into the message box and edit before sending.
+          Tap to drop it into your message box — edit before sending.
         </p>
         <ul className="space-y-2">
           {TEMPLATES.map((t, idx) => (
             <li key={t.label}>
               <button
                 type="button"
-                onClick={() => copy(idx, t.body)}
+                onClick={() => insert(idx, t.body)}
                 className="w-full text-left p-3 border border-line bg-white hover:border-navy transition-colors flex items-start gap-3 group"
               >
                 <div className="flex-1 min-w-0">
@@ -133,7 +130,7 @@ export function NextStepsPanel() {
                 {copiedIdx === idx ? (
                   <Check className="w-3.5 h-3.5 text-gold shrink-0 mt-0.5" />
                 ) : (
-                  <Copy className="w-3.5 h-3.5 text-ink-muted group-hover:text-navy shrink-0 mt-0.5" />
+                  <Plus className="w-3.5 h-3.5 text-ink-muted group-hover:text-navy shrink-0 mt-0.5" />
                 )}
               </button>
             </li>

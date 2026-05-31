@@ -1,26 +1,50 @@
 "use client";
 
-import { useActionState, useRef, useEffect } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { sendMessageAction, type SendMessageState } from "./actions";
+import { useT } from "@/lib/i18n-client";
 
 const INITIAL: SendMessageState = null;
 
+export const QUICK_REPLY_EVENT = "cofoundee:quick-reply";
+
 export function MessageComposer({ matchId }: { matchId: string }) {
+  const tr = useT();
   const [state, formAction, isPending] = useActionState<
     SendMessageState,
     FormData
   >(sendMessageAction, INITIAL);
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [draft, setDraft] = useState("");
 
-  // Reset form after successful send (no error, was pending)
+  // Reset after a successful send.
   useEffect(() => {
-    if (!isPending && !state?.error && formRef.current) {
-      formRef.current.reset();
+    if (!isPending && !state?.error) {
+      setDraft("");
       textareaRef.current?.focus();
     }
   }, [isPending, state]);
+
+  // A quick-reply button elsewhere on the page asks us to drop its text into
+  // the box (without sending). Append to whatever's already typed.
+  useEffect(() => {
+    function onQuickReply(e: Event) {
+      const text = (e as CustomEvent<string>).detail;
+      if (!text) return;
+      setDraft((prev) => (prev.trim() ? `${prev}\n\n${text}` : text));
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (el) {
+          el.focus();
+          el.setSelectionRange(el.value.length, el.value.length);
+        }
+      });
+    }
+    window.addEventListener(QUICK_REPLY_EVENT, onQuickReply);
+    return () => window.removeEventListener(QUICK_REPLY_EVENT, onQuickReply);
+  }, []);
 
   return (
     <form
@@ -36,7 +60,9 @@ export function MessageComposer({ matchId }: { matchId: string }) {
           rows={2}
           maxLength={4000}
           required
-          placeholder="Write a message…"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={tr("Write a message…")}
           className="flex-1 px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
           onKeyDown={(e) => {
             // Enter sends; Shift+Enter inserts a newline.
@@ -53,18 +79,18 @@ export function MessageComposer({ matchId }: { matchId: string }) {
         />
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || draft.trim().length === 0}
           className="px-5 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2 shrink-0"
         >
           <Send className="w-4 h-4" />
-          {isPending ? "Sending…" : "Send"}
+          {isPending ? tr("Sending…") : tr("Send")}
         </button>
       </div>
       {state?.error && (
         <div className="mt-2 text-xs text-red-700">{state.error}</div>
       )}
       <div className="text-[11px] text-ink-muted mt-2">
-        Enter to send &middot; Shift+Enter for new line
+        {tr("Enter to send · Shift+Enter for new line")}
       </div>
     </form>
   );
