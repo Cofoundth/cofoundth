@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { saveOnboardingAction } from "./actions";
 import { useT } from "@/lib/i18n-client";
 import { THAI_PROVINCES } from "@/lib/provinces";
+import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
 
@@ -639,20 +640,13 @@ function StepContext({
         >
           {tr("Location (optional)")}
         </label>
-        <input
+        <Combobox
           id="location"
-          type="text"
-          list="thai-provinces"
+          options={THAI_PROVINCES}
           value={data.location}
-          onChange={(e) => set("location", e.target.value)}
+          onChange={(v) => set("location", v)}
           placeholder={tr("Bangkok, Chiang Mai, Remote, etc.")}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
         />
-        <datalist id="thai-provinces">
-          {THAI_PROVINCES.map((p) => (
-            <option key={p} value={p} />
-          ))}
-        </datalist>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { Check, Loader2 } from "lucide-react";
 import { updateProfileAction } from "./actions";
 import { useT } from "@/lib/i18n-client";
 import { THAI_PROVINCES } from "@/lib/provinces";
+import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
 
@@ -106,6 +107,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
   );
   const [pitch, setPitch] = useState(initial.pitch ?? "");
   const [skills, setSkills] = useState<string[]>(initial.skills ?? []);
+  const [location, setLocation] = useState(initial.location ?? "");
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -142,18 +144,14 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             />
           </Field>
           <Field label={tr("Location (optional)")}>
-            <input
+            <Combobox
               name="location"
-              list="thai-provinces"
-              defaultValue={initial.location ?? ""}
+              options={THAI_PROVINCES}
+              value={location}
+              onChange={setLocation}
               placeholder="Bangkok, Remote, etc."
               className={inputCls}
             />
-            <datalist id="thai-provinces">
-              {THAI_PROVINCES.map((p) => (
-                <option key={p} value={p} />
-              ))}
-            </datalist>
           </Field>
         </div>
         <Field label={tr("LinkedIn (optional)")}>
