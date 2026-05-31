@@ -21,7 +21,7 @@ export async function signupAction(
   formData: FormData,
 ): Promise<SignupState> {
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
 
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "")
@@ -175,7 +175,7 @@ export async function resetPasswordAction(
   formData: FormData,
 ): Promise<ResetState> {
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
 
   if (prev.step === "email") {
     const email = String(formData.get("email") ?? "")

@@ -8,7 +8,7 @@ import { Resend } from "resend";
 const FROM =
   process.env.RESEND_FROM_EMAIL ?? "Cofoundee <onboarding@resend.dev>";
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
 
 function client() {
   const key = process.env.RESEND_API_KEY;
