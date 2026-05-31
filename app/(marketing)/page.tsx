@@ -100,7 +100,7 @@ export default async function LandingPage() {
       .order("created_at", { ascending: false })
       .limit(6),
     admin
-      .from("status_updates")
+      .from("forum_posts")
       .select("id, author_id, content, kind, created_at")
       .in("kind", ["milestone", "show_and_tell"])
       .gte("created_at", thirtyDaysAgo)

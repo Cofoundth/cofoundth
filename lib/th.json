@@ -544,5 +544,15 @@
   "working on": "กำลังทำ",
   "hit a milestone": "ทำสำเร็จไปอีกขั้น",
   "shipped": "เพิ่งปล่อย",
-  "No updates yet — be the first.": "ยังไม่มีใครอัปเดต — มาเป็นคนแรกกัน"
+  "No updates yet — be the first.": "ยังไม่มีใครอัปเดต — มาเป็นคนแรกกัน",
+  "A founder": "ผู้ก่อตั้ง",
+  "Add a title (optional)": "ใส่หัวข้อ (ไม่ใส่ก็ได้)",
+  "Latest from the community": "อัปเดตล่าสุดจากคอมมูนิตี้",
+  "Link": "ลิงก์",
+  "Loading…": "กำลังโหลด…",
+  "No comments yet.": "ยังไม่มีคอมเมนต์",
+  "No posts yet — be the first.": "ยังไม่มีโพสต์ — มาเป็นคนแรกเลย",
+  "Tags": "แท็ก",
+  "Write a comment…": "เขียนคอมเมนต์…",
+  "tags: fundraising, hiring, thai-market": "แท็ก: fundraising, hiring, thai-market"
 }

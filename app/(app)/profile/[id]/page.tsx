@@ -133,7 +133,7 @@ export default async function ProfileDetailPage({ params }: Props) {
   // Recent milestones / shipped posts from this profile — surfaces life
   // and credibility on the profile page itself.
   const { data: recentMilestones } = await supabase
-    .from("status_updates")
+    .from("forum_posts")
     .select("id, content, kind, link_url, created_at")
     .eq("author_id", profile.id)
     .in("kind", ["milestone", "show_and_tell"])

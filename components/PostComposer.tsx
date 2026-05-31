@@ -1,42 +1,61 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Link2, Send, Sparkles, Trophy } from "lucide-react";
-import { createStatusAction, type StatusState } from "./actions";
+import { Link2, Rocket, Send, Sparkles, Tag, Trophy, Type } from "lucide-react";
+import {
+  createPostAction,
+  type PostFormState,
+} from "@/lib/post-actions";
 import { useT } from "@/lib/i18n-client";
 
-const INITIAL: StatusState = null;
+const INITIAL: PostFormState = null;
 
-type Kind = "status" | "milestone" | "show_and_tell";
+type Kind = "post" | "milestone" | "show_and_tell";
 
 const KIND_OPTIONS: { value: Kind; en: string; icon: typeof Sparkles }[] = [
-  { value: "status", en: "Working on", icon: Sparkles },
+  { value: "post", en: "Post", icon: Sparkles },
   { value: "milestone", en: "Milestone", icon: Trophy },
-  { value: "show_and_tell", en: "Show & tell", icon: Link2 },
+  { value: "show_and_tell", en: "Show & tell", icon: Rocket },
 ];
 
-export function StatusComposer() {
+export function PostComposer() {
   const tr = useT();
-  const [state, formAction, isPending] = useActionState<StatusState, FormData>(
-    createStatusAction,
-    INITIAL,
-  );
+  const [state, formAction, isPending] = useActionState<
+    PostFormState,
+    FormData
+  >(createPostAction, INITIAL);
   const formRef = useRef<HTMLFormElement>(null);
-  const [kind, setKind] = useState<Kind>("status");
+  const [kind, setKind] = useState<Kind>("post");
   const [content, setContent] = useState("");
+  const [showTitle, setShowTitle] = useState(false);
   const [showLink, setShowLink] = useState(false);
+  const [showTags, setShowTags] = useState(false);
 
   useEffect(() => {
     if (!isPending && !state?.error && formRef.current) {
       formRef.current.reset();
       setContent("");
-      setKind("status");
+      setKind("post");
+      setShowTitle(false);
       setShowLink(false);
+      setShowTags(false);
     }
   }, [isPending, state]);
 
-  const remaining = 280 - content.length;
+  const remaining = 5000 - content.length;
   const tooLong = remaining < 0;
+
+  const toggleCls = (on: boolean) =>
+    `inline-flex items-center gap-1 transition-colors ${
+      on ? "text-navy" : "text-ink-muted hover:text-navy"
+    }`;
+
+  const placeholder =
+    kind === "milestone"
+      ? tr("What did you just hit? (revenue, customers, fundraise…)")
+      : kind === "show_and_tell"
+        ? tr("What did you just ship?")
+        : tr("What are you working on?");
 
   return (
     <form
@@ -69,20 +88,24 @@ export function StatusComposer() {
         })}
       </div>
 
+      {showTitle && (
+        <input
+          name="title"
+          type="text"
+          maxLength={200}
+          placeholder={tr("Add a title (optional)")}
+          className="mb-2 w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy"
+        />
+      )}
+
       <textarea
         name="content"
-        rows={2}
-        maxLength={320}
+        rows={3}
+        maxLength={5200}
         required
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder={
-          kind === "milestone"
-            ? tr("What did you just hit? (revenue, customers, fundraise…)")
-            : kind === "show_and_tell"
-              ? tr("What did you just ship?")
-              : tr("What are you working on?")
-        }
+        placeholder={placeholder}
         className="w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy resize-none"
       />
 
@@ -95,26 +118,48 @@ export function StatusComposer() {
         />
       )}
 
+      {showTags && (
+        <input
+          name="tags"
+          type="text"
+          maxLength={200}
+          placeholder={tr("tags: fundraising, hiring, thai-market")}
+          className="mt-2 w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy"
+        />
+      )}
+
       {state?.error && (
         <div className="mt-2 text-xs text-red-700">{state.error}</div>
       )}
 
       <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 text-xs flex-wrap">
+          <button
+            type="button"
+            onClick={() => setShowTitle((v) => !v)}
+            className={toggleCls(showTitle)}
+          >
+            <Type className="w-3.5 h-3.5" strokeWidth={1.5} />
+            {tr("Title")}
+          </button>
           <button
             type="button"
             onClick={() => setShowLink((v) => !v)}
-            className={`inline-flex items-center gap-1 text-xs ${
-              showLink ? "text-navy" : "text-ink-muted hover:text-navy"
-            }`}
+            className={toggleCls(showLink)}
           >
             <Link2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-            {showLink ? tr("Remove link") : tr("Add link")}
+            {tr("Link")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowTags((v) => !v)}
+            className={toggleCls(showTags)}
+          >
+            <Tag className="w-3.5 h-3.5" strokeWidth={1.5} />
+            {tr("Tags")}
           </button>
           <span
-            className={`text-xs tabular-nums ${
-              tooLong ? "text-red-700" : "text-ink-muted"
-            }`}
+            className={`tabular-nums ${tooLong ? "text-red-700" : "text-ink-muted"}`}
           >
             {remaining}
           </span>

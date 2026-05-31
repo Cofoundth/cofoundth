@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { ArrowRight, Heart, MapPin, MessageCircle } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
-import { StatusComposer } from "../status/StatusComposer";
-import { StatusFeed, type StatusItem } from "../status/StatusFeed";
+import { PostComposer } from "@/components/PostComposer";
+import { PostFeed } from "@/components/PostFeed";
+import { RealtimeRefresh } from "@/components/RealtimeRefresh";
+import { getFeedPosts } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
 
@@ -48,26 +50,16 @@ export default async function DashboardPage() {
     .single();
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
-  // ---- Platform-wide activity (the heartbeat) ----------------------
+  // ---- Merged post feed (the heartbeat) ----------------------------
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
   const [
-    { data: recentPosts },
-    { data: recentStatuses },
+    feed,
     { data: newFounders },
     { count: totalFounders },
     { count: postsThisWeek },
     { count: foundersThisWeek },
   ] = await Promise.all([
-    supabase
-      .from("forum_posts")
-      .select("id, author_id, title, created_at")
-      .order("created_at", { ascending: false })
-      .limit(3),
-    supabase
-      .from("status_updates")
-      .select("id, author_id, content, kind, link_url, created_at")
-      .order("created_at", { ascending: false })
-      .limit(6),
+    getFeedPosts(supabase, { limit: 15, userId: user.id }),
     supabase
       .from("profiles")
       .select("id, full_name, photo_url, i_am, intent, slug, created_at")
@@ -89,96 +81,6 @@ export default async function DashboardPage() {
       .eq("onboarded", true)
       .gte("created_at", sevenDaysAgo),
   ]);
-
-  // Hydrate authors for posts + statuses
-  const authorIds = Array.from(
-    new Set([
-      ...(recentPosts ?? []).map((p) => p.author_id as string),
-      ...(recentStatuses ?? []).map((s) => s.author_id as string),
-    ]),
-  );
-  const { data: postAuthors } = authorIds.length
-    ? await supabase
-        .from("profiles")
-        .select("id, full_name, photo_url, slug")
-        .in("id", authorIds)
-    : { data: [] };
-  const authorMap = new Map(
-    (postAuthors ?? []).map((a) => [a.id as string, a]),
-  );
-
-  // Status likes (count + my likes)
-  const statusIds = (recentStatuses ?? []).map((s) => s.id as string);
-  const [{ data: statusLikeRows }, { data: myStatusLikes }] = await Promise.all([
-    statusIds.length
-      ? supabase
-          .from("status_likes")
-          .select("status_id")
-          .in("status_id", statusIds)
-      : Promise.resolve({ data: [] }),
-    statusIds.length
-      ? supabase
-          .from("status_likes")
-          .select("status_id")
-          .in("status_id", statusIds)
-          .eq("user_id", user.id)
-      : Promise.resolve({ data: [] }),
-  ]);
-  const statusLikeCount = new Map<string, number>();
-  (statusLikeRows ?? []).forEach((l) => {
-    const k = l.status_id as string;
-    statusLikeCount.set(k, (statusLikeCount.get(k) ?? 0) + 1);
-  });
-  const myLiked = new Set(
-    (myStatusLikes ?? []).map((l) => l.status_id as string),
-  );
-
-  const statusItems: StatusItem[] = (recentStatuses ?? []).map((s) => {
-    const a = authorMap.get(s.author_id as string);
-    return {
-      id: s.id as string,
-      content: s.content as string,
-      kind: s.kind as StatusItem["kind"],
-      link_url: (s.link_url as string | null) ?? null,
-      created_at: s.created_at as string,
-      author: a
-        ? {
-            id: a.id as string,
-            full_name: (a.full_name as string) ?? null,
-            photo_url: (a.photo_url as string | null) ?? null,
-            slug: (a.slug as string | null) ?? null,
-          }
-        : null,
-      isOwn: s.author_id === user.id,
-      likeCount: statusLikeCount.get(s.id as string) ?? 0,
-      myLike: myLiked.has(s.id as string),
-    };
-  });
-
-  // Comment counts for those posts
-  const postIds = (recentPosts ?? []).map((p) => p.id as string);
-  const { data: commentRows } = postIds.length
-    ? await supabase
-        .from("forum_comments")
-        .select("post_id")
-        .in("post_id", postIds)
-    : { data: [] };
-  const commentCount = new Map<string, number>();
-  (commentRows ?? []).forEach((c) => {
-    const k = c.post_id as string;
-    commentCount.set(k, (commentCount.get(k) ?? 0) + 1);
-  });
-  const { data: likeRows } = postIds.length
-    ? await supabase
-        .from("forum_likes")
-        .select("post_id")
-        .in("post_id", postIds)
-    : { data: [] };
-  const likeCount = new Map<string, number>();
-  (likeRows ?? []).forEach((l) => {
-    const k = l.post_id as string;
-    likeCount.set(k, (likeCount.get(k) ?? 0) + 1);
-  });
 
   // ---- Personal stats (still computed, surfaced subtly) -------------
   const [
@@ -222,8 +124,6 @@ export default async function DashboardPage() {
   const locale = (await import("@/lib/i18n-server").then((m) =>
     m.getLocale(),
   )) as "en" | "th";
-  // Resolved here so the synchronous recentPosts.map() callback stays sync.
-  const newLabel = await tServer("new");
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
@@ -365,27 +265,20 @@ export default async function DashboardPage() {
           </div>
         </aside>
 
-        {/* CENTER — the feed */}
-        <section className="lg:col-span-6 space-y-6">
-          {/* Status composer — what are you working on? */}
-          {profile?.onboarded && <StatusComposer />}
+        {/* CENTER — the merged feed */}
+        <section className="lg:col-span-6 space-y-4">
+          {profile?.onboarded && <PostComposer />}
 
-          {/* Status feed */}
-          {statusItems.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
-                  {await tServer("Latest updates")}
-                </h2>
-              </div>
-              <StatusFeed items={statusItems} locale={locale} />
-            </div>
-          )}
+          <RealtimeRefresh
+            table="forum_posts"
+            currentUserId={user.id}
+            senderColumn="author_id"
+            kind="posts"
+          />
 
-          {/* Forum posts */}
-          <div className="flex items-center justify-between mb-3 mt-2">
+          <div className="flex items-center justify-between">
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
-              {await tServer("Live in the community")}
+              {await tServer("Latest from the community")}
             </h2>
             <Link
               href="/community"
@@ -396,83 +289,11 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          {!recentPosts?.length ? (
-            <div className="bg-white border border-line p-8 text-center">
-              <p className="text-sm text-ink-muted mb-4">
-                {await tServer("No conversations yet. Start the first one.")}
-              </p>
-              <Link
-                href="/community/new"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm"
-              >
-                {await tServer("Write the first post")}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          ) : (
-            <div className="bg-white border border-line divide-y divide-line">
-              {recentPosts.map((p) => {
-                const author = authorMap.get(p.author_id as string);
-                const authorHref = `/profile/${(author?.slug as string | undefined) ?? p.author_id}`;
-                const fresh =
-                  Date.now() - new Date(p.created_at as string).getTime() <
-                  24 * 3600_000;
-                return (
-                  <div key={p.id as string} className="p-5">
-                    <div className="flex items-start gap-3">
-                      <Link href={authorHref} className="shrink-0">
-                        <Avatar
-                          name={author?.full_name as string}
-                          url={author?.photo_url as string | null}
-                          size="sm"
-                        />
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs text-ink-muted mb-1 flex items-center gap-2">
-                          <Link
-                            href={authorHref}
-                            className="text-navy hover:text-gold font-medium"
-                          >
-                            {(author?.full_name as string) ?? "A founder"}
-                          </Link>
-                          <span>·</span>
-                          <span>
-                            {timeAgo(p.created_at as string, locale)}
-                          </span>
-                          {fresh && (
-                            <span className="text-[9px] uppercase tracking-[0.15em] text-gold border border-gold px-1.5 py-0.5">
-                              {newLabel}
-                            </span>
-                          )}
-                        </div>
-                        <Link
-                          href={`/community/${p.id}`}
-                          className="block group"
-                        >
-                          <h3 className="font-serif text-lg text-navy leading-tight group-hover:text-gold transition-colors">
-                            {p.title as string}
-                          </h3>
-                        </Link>
-                        <div className="mt-2 flex items-center gap-4 text-xs text-ink-muted">
-                          <span className="inline-flex items-center gap-1">
-                            <Heart className="w-3 h-3" strokeWidth={1.5} />
-                            {likeCount.get(p.id as string) ?? 0}
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <MessageCircle
-                              className="w-3 h-3"
-                              strokeWidth={1.5}
-                            />
-                            {commentCount.get(p.id as string) ?? 0}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <PostFeed
+            items={feed}
+            locale={locale}
+            emptyMessage={await tServer("No posts yet — be the first.")}
+          />
         </section>
 
         {/* RIGHT — new founders */}
