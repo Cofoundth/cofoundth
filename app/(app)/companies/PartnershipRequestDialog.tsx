@@ -5,68 +5,56 @@ import { Check, HandshakeIcon, X } from "lucide-react";
 import { sendPartnershipRequestAction, type RequestState } from "./actions";
 import type { CompanyProfile } from "./CompaniesClient";
 import { Avatar } from "@/components/Avatar";
+import { useT } from "@/lib/i18n-client";
 
 const INITIAL: RequestState = null;
 
+// en / hintEN are dictionary keys; Thai comes from tr() at render.
 const REQUEST_TYPES: {
   value: string;
   en: string;
-  th: string;
   hintEN: string;
-  hintTH: string;
 }[] = [
   {
     value: "integration",
     en: "Integration",
-    th: "Integration",
     hintEN: "API, SDK, or platform integration",
-    hintTH: "ต่อ API, SDK หรือเชื่อมระบบกัน",
   },
   {
     value: "distribution",
     en: "Distribution",
-    th: "การจัดจำหน่าย",
     hintEN: "Selling, channel, or market access",
-    hintTH: "ช่องทางขาย หรือพาเข้าตลาด",
   },
   {
     value: "white_label",
     en: "White label",
-    th: "White-label",
     hintEN: "Use their product under your brand",
-    hintTH: "เอาของเขามาขายในแบรนด์เรา",
   },
   {
     value: "co_marketing",
     en: "Co-marketing",
-    th: "Co-marketing",
     hintEN: "Joint campaigns, content, events",
-    hintTH: "ทำแคมเปญ คอนเทนต์ อีเวนต์ร่วมกัน",
   },
   {
     value: "vendor_supplier",
     en: "Vendor / supplier",
-    th: "ผู้จัดหา (vendor)",
     hintEN: "Buying their service for your operation",
-    hintTH: "ซื้อบริการเขามาใช้ในงานเรา",
   },
-  { value: "other", en: "Other", th: "อื่นๆ", hintEN: "Custom partnership", hintTH: "ความร่วมมือแบบอื่น" },
+  { value: "other", en: "Other", hintEN: "Custom partnership" },
 ];
 
 type Props = {
   target: CompanyProfile;
   fromCompanyName: string | null;
   onClose: () => void;
-  locale: "en" | "th";
 };
 
 export function PartnershipRequestDialog({
   target,
   fromCompanyName,
   onClose,
-  locale,
 }: Props) {
-  const isTH = locale === "th";
+  const tr = useT();
   const action = sendPartnershipRequestAction.bind(null, target.id);
   const [state, formAction, isPending] = useActionState<RequestState, FormData>(
     action,
@@ -103,13 +91,11 @@ export function PartnershipRequestDialog({
           <div className="w-12 h-12 mx-auto mb-4 bg-gold/10 border border-gold/40 inline-flex items-center justify-center">
             <Check className="w-6 h-6 text-gold" strokeWidth={1.5} />
           </div>
-          <h2 className="text-2xl mb-2">
-            {isTH ? "ส่งคำขอแล้ว" : "Request sent"}
-          </h2>
+          <h2 className="text-2xl mb-2">{tr("Request sent")}</h2>
           <p className="text-sm text-ink-muted leading-relaxed max-w-sm mx-auto">
-            {isTH
-              ? `เราส่งอีเมลแจ้ง ${target.company_name} แล้ว พอเขาตอบกลับจะรีบบอกเลย`
-              : `${target.company_name} will get an email notification. We'll let you know when they respond.`}
+            {tr(
+              "{name} will get an email notification. We'll let you know when they respond.",
+            ).replace("{name}", target.company_name)}
           </p>
         </div>
       </DialogShell>
@@ -128,14 +114,14 @@ export function PartnershipRequestDialog({
           <div className="min-w-0">
             <div className="text-xs uppercase tracking-[0.2em] text-gold mb-1 inline-flex items-center gap-1.5">
               <HandshakeIcon className="w-3 h-3" />
-              {isTH ? "คำขอความร่วมมือ" : "Partnership request"}
+              {tr("Partnership request")}
             </div>
             <div className="font-serif text-xl text-navy truncate">
               → {target.company_name}
             </div>
             {fromCompanyName && (
               <div className="text-xs text-ink-muted mt-0.5">
-                {isTH ? "ในนาม" : "From"}{" "}
+                {tr("From")}{" "}
                 <span className="text-navy font-medium">{fromCompanyName}</span>
               </div>
             )}
@@ -145,7 +131,7 @@ export function PartnershipRequestDialog({
           type="button"
           onClick={onClose}
           className="text-ink-muted hover:text-navy shrink-0"
-          aria-label={isTH ? "ปิด" : "Close"}
+          aria-label={tr("Close")}
         >
           <X className="w-5 h-5" />
         </button>
@@ -156,7 +142,7 @@ export function PartnershipRequestDialog({
 
         <div>
           <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
-            {isTH ? "ประเภทคำขอ" : "Request type"}
+            {tr("Request type")}
           </label>
           <div className="grid sm:grid-cols-2 gap-2">
             {REQUEST_TYPES.map((rt) => (
@@ -171,10 +157,10 @@ export function PartnershipRequestDialog({
                 }`}
               >
                 <div className="text-sm text-navy font-medium">
-                  {isTH ? rt.th : rt.en}
+                  {tr(rt.en)}
                 </div>
                 <div className="text-xs text-ink-muted mt-0.5">
-                  {isTH ? rt.hintTH : rt.hintEN}
+                  {tr(rt.hintEN)}
                 </div>
               </button>
             ))}
@@ -186,7 +172,7 @@ export function PartnershipRequestDialog({
             htmlFor="subject"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
           >
-            {isTH ? "หัวข้อ" : "Subject"}
+            {tr("Subject")}
           </label>
           <input
             id="subject"
@@ -195,11 +181,7 @@ export function PartnershipRequestDialog({
             required
             minLength={5}
             maxLength={200}
-            placeholder={
-              isTH
-                ? "เช่น \"หา partner logistics ในกรุงเทพ\""
-                : 'e.g. "Looking for logistics partner in Bangkok"'
-            }
+            placeholder={tr('e.g. "Looking for logistics partner in Bangkok"')}
             className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
           />
         </div>
@@ -210,7 +192,7 @@ export function PartnershipRequestDialog({
               htmlFor="context"
               className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
             >
-              {isTH ? "รายละเอียด" : "Context"}
+              {tr("Context")}
             </label>
             <span
               className={`text-xs tabular-nums ${
@@ -231,18 +213,17 @@ export function PartnershipRequestDialog({
             maxLength={2000}
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            placeholder={
-              isTH
-                ? "เล่าหน่อยว่ากำลังหาอะไร ทำไมถึงคิดว่าบริษัทนี้น่าจะเหมาะ และอยากร่วมงานกันแบบไหน"
-                : "What you're looking for, why this company fits, and what you'd ideally agree on."
-            }
+            placeholder={tr(
+              "What you're looking for, why this company fits, and what you'd ideally agree on.",
+            )}
             className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y"
           />
           {contextTooShort && context.length > 0 && (
             <p className="text-xs text-ink-muted mt-1">
-              {isTH
-                ? `เพิ่มอีก ${50 - context.length} ตัวอักษร (ขั้นต่ำ 50)`
-                : `${50 - context.length} more chars needed (50 min)`}
+              {tr("{n} more chars needed (50 min)").replace(
+                "{n}",
+                String(50 - context.length),
+              )}
             </p>
           )}
         </div>
@@ -252,7 +233,7 @@ export function PartnershipRequestDialog({
             htmlFor="deadline_at"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
           >
-            {isTH ? "กำหนดเส้นตาย (ไม่บังคับ)" : "Deadline (optional)"}
+            {tr("Deadline (optional)")}
           </label>
           <input
             id="deadline_at"
@@ -275,7 +256,7 @@ export function PartnershipRequestDialog({
             onClick={onClose}
             className="px-5 py-3 text-ink hover:text-navy text-sm tracking-wide"
           >
-            {isTH ? "ยกเลิก" : "Cancel"}
+            {tr("Cancel")}
           </button>
           <button
             type="submit"
@@ -285,13 +266,7 @@ export function PartnershipRequestDialog({
             className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm tracking-wide transition-colors"
           >
             <HandshakeIcon className="w-4 h-4" />
-            {isPending
-              ? isTH
-                ? "กำลังส่ง…"
-                : "Sending…"
-              : isTH
-                ? "ส่งคำขอ"
-                : "Send request"}
+            {isPending ? tr("Sending…") : tr("Send request")}
           </button>
         </div>
       </form>

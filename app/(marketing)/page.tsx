@@ -81,7 +81,6 @@ const ROLE_LABEL_EN: Record<string, string> = {
 export default async function LandingPage() {
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);
-  const isTH = locale === "th";
 
   // Live platform data — service-role to read past RLS
   const admin = createAdminClient();
@@ -159,7 +158,7 @@ export default async function LandingPage() {
                     <span className="text-line">·</span>
                     <span className="normal-case tracking-normal text-gold text-xs">
                       +{foundersThisWeek}{" "}
-                      {isTH ? "ใหม่สัปดาห์นี้" : "joined this week"}
+                      {tr("joined this week")}
                     </span>
                   </>
                 )}
@@ -168,7 +167,7 @@ export default async function LandingPage() {
                     <span className="text-line">·</span>
                     <span className="normal-case tracking-normal text-ink-muted text-xs">
                       {postsThisWeek}{" "}
-                      {isTH ? "โพสต์ใหม่ 7 วัน" : "new posts in 7d"}
+                      {tr("new posts in 7d")}
                     </span>
                   </>
                 )}
@@ -217,17 +216,15 @@ export default async function LandingPage() {
                 <div className="bg-white border border-line p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-xs uppercase tracking-[0.2em] text-gold">
-                      {isTH ? "ในชุมชนตอนนี้" : "In the community now"}
+                      {tr("In the community now")}
                     </div>
                     <div className="text-xs text-ink-muted">
-                      {totalFounders ?? 0} {isTH ? "คน" : "total"}
+                      {totalFounders ?? 0} {tr("total")}
                     </div>
                   </div>
                   {!featured?.length ? (
                     <div className="py-8 text-center text-sm text-ink-muted">
-                      {isTH
-                        ? "เป็นคนแรกที่เข้าร่วม"
-                        : "Be the first to join."}
+                      {tr("Be the first to join.")}
                     </div>
                   ) : (
                     <div className="divide-y divide-line">
@@ -263,7 +260,7 @@ export default async function LandingPage() {
                     href="/browse"
                     className="mt-4 pt-3 border-t border-line text-xs text-navy hover:text-gold inline-flex items-center gap-1 transition-colors"
                   >
-                    {isTH ? "ดู founder ทั้งหมด" : "Browse all founders"}
+                    {tr("Browse all founders")}
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -285,12 +282,10 @@ export default async function LandingPage() {
               <div>
                 <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-                  {isTH ? "ความสำเร็จล่าสุดในชุมชน" : "Recent wins"}
+                  {tr("Recent wins")}
                 </div>
                 <h2 className="text-2xl lg:text-3xl leading-tight">
-                  {isTH
-                    ? "ล่าสุด founder ในชุมชนเพิ่งปล่อยอะไรกันมาบ้าง"
-                    : "What founders in the community just shipped."}
+                  {tr("What founders in the community just shipped.")}
                 </h2>
               </div>
             </div>
@@ -308,13 +303,7 @@ export default async function LandingPage() {
                     }`}
                   >
                     <div className="text-[10px] uppercase tracking-[0.2em] text-gold mb-2 inline-flex items-center gap-1.5">
-                      {isMilestone
-                        ? isTH
-                          ? "ความสำเร็จ"
-                          : "Milestone"
-                        : isTH
-                          ? "เพิ่งปล่อย"
-                          : "Shipped"}
+                      {isMilestone ? tr("Milestone") : tr("Shipped")}
                     </div>
                     <p className="text-sm text-ink leading-relaxed mb-3 line-clamp-3">
                       {m.content as string}
@@ -382,12 +371,10 @@ export default async function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-16">
             <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
-              {isTH ? "เหมาะกับใคร" : "Who it's for"}
+              {tr("Who it's for")}
             </div>
             <h2 className="text-4xl lg:text-5xl leading-tight">
-              {isTH
-                ? "ถ้ากำลังสร้างอะไรสักอย่างอยู่ในไทย ที่นี่มีที่ให้คุณ"
-                : "If you're building something in Thailand, you belong here."}
+              {tr("If you're building something in Thailand, you belong here.")}
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
@@ -396,12 +383,12 @@ export default async function LandingPage() {
                 I
               </div>
               <h3 className="text-xl mb-3">
-                {isTH ? "คุณสร้างได้" : "You can build"}
+                {tr("You can build")}
               </h3>
               <p className="text-ink leading-relaxed text-sm">
-                {isTH
-                  ? "เป็น technical founder ที่อยากได้คนมาช่วยดูฝั่งธุรกิจ การขาย หรือการเติบโต ไปด้วยกัน"
-                  : "A technical founder looking for someone to own the business, sales, or growth alongside you."}
+                {tr(
+                  "A technical founder looking for someone to own the business, sales, or growth alongside you.",
+                )}
               </p>
             </div>
             <div className="bg-white border border-line p-8">
@@ -409,12 +396,12 @@ export default async function LandingPage() {
                 II
               </div>
               <h3 className="text-xl mb-3">
-                {isTH ? "คุณมีวิสัยทัศน์" : "You have the vision"}
+                {tr("You have the vision")}
               </h3>
               <p className="text-ink leading-relaxed text-sm">
-                {isTH
-                  ? "มีไอเดียแล้วก็เข้าใจตลาด แต่ยังขาดคนที่มาลงมือสร้างโปรดักต์จริงๆ"
-                  : "You've got the idea and the market — you need a partner to actually build the product."}
+                {tr(
+                  "You've got the idea and the market — you need a partner to actually build the product.",
+                )}
               </p>
             </div>
             <div className="bg-white border border-line p-8">
@@ -422,12 +409,12 @@ export default async function LandingPage() {
                 III
               </div>
               <h3 className="text-xl mb-3">
-                {isTH ? "คุณกำลังมองหา" : "You're exploring"}
+                {tr("You're exploring")}
               </h3>
               <p className="text-ink leading-relaxed text-sm">
-                {isTH
-                  ? "ยังไม่รู้ว่าจะทำอะไรดี แต่อยากอยู่กับ founder คนอื่นๆ แล้วค่อยๆ หาทางที่ใช่ไปด้วยกัน"
-                  : "Not sure what to build yet — but you want to be around other founders and find the right thing together."}
+                {tr(
+                  "Not sure what to build yet — but you want to be around other founders and find the right thing together.",
+                )}
               </p>
             </div>
           </div>
@@ -469,62 +456,27 @@ export default async function LandingPage() {
             strokeWidth={1}
           />
           <div className="text-xs uppercase tracking-[0.25em] text-gold mb-8">
-            {isTH ? "จากผู้ก่อตั้ง" : "A note from the founder"}
+            {tr("A note from the founder")}
           </div>
           <div className="font-serif text-2xl lg:text-3xl leading-relaxed space-y-6">
-            {isTH ? (
-              <>
-                <p>
-                  ตอนแรกผมตั้งใจจะทำแอปหา co-founder แต่ยิ่งคิดยิ่งเห็นว่า
-                  เราแมตช์ co-founder ผ่านโปรไฟล์ไม่ได้จริงๆ การมี co-founder
-                  คือความสัมพันธ์ห้าปีสิบปีที่แบ่งหุ้นแบ่งความเสี่ยงกัน
-                  ไม่มีใครมอบสิ่งนั้นให้คนที่เพิ่งเจอกันบนเว็บไม่กี่สัปดาห์ได้
-                  ยิ่งในไทยด้วยแล้ว เราสร้างกันจากความไว้ใจและความสัมพันธ์
-                  ไม่ใช่จากอัลกอริทึมที่ไล่จัดอันดับคนแปลกหน้า
-                </p>
-                <p>
-                  ผมเลยเลิกพยายามบังคับให้เกิดการแมตช์ Cofoundee
-                  เริ่มจากการเป็นชุมชนก่อน ที่ที่ founder ไทยได้มาเจอกัน
-                  แชร์สิ่งที่กำลังทำ แล้วค่อยๆ รู้จักกันเมื่อเวลาผ่านไป
-                  ความไว้ใจเกิดตรงนั้น แล้วทุกอย่างก็ต่อยอดขึ้นมาเอง ทั้งพาร์ตเนอร์
-                  ที่ปรึกษา การแนะนำนักลงทุน และใช่ — co-founder —
-                  แบบที่มันเกิดขึ้นจริงในชีวิต
-                </p>
-                <p>
-                  ยังเป็นช่วงเริ่มต้นมากๆ ผมตั้งใจค่อยๆ สร้างมันอย่างใจเย็น
-                  เพราะเชื่อว่า founder ไทยควรมีพื้นที่แบบนี้
-                  และเพราะผมเองก็อยากให้มันมีตั้งแต่ตอนที่ผมเริ่มต้น
-                </p>
-              </>
-            ) : (
-              <>
-                <p>
-                  I set out to build a co-founder matching app. The more I
-                  looked at it, the clearer it got: you can&apos;t match
-                  co-founders through a profile. A co-founder is a five-,
-                  ten-year relationship with shared equity and shared risk — no
-                  one hands that to someone they met on a website three weeks
-                  ago. Especially here: Thai founders build from trust and
-                  relationships, not from an algorithm ranking strangers.
-                </p>
-                <p>
-                  So I stopped trying to force the match. Cofoundee starts as a
-                  community instead — a place where Thai founders show up, share
-                  what they&apos;re building, and get to know each other over
-                  time. Trust forms there. And once it does, everything else
-                  compounds on top: partners, advisors, investor intros, and yes
-                  — co-founders — the way it actually happens in real life.
-                </p>
-                <p>
-                  It&apos;s early. I&apos;m building this patiently, because
-                  Thailand&apos;s founders deserve a home like this — and because
-                  I wished it existed when I started out.
-                </p>
-              </>
-            )}
+            <p>
+              {tr(
+                "I set out to build a co-founder matching app. The more I looked at it, the clearer it got: you can't match co-founders through a profile. A co-founder is a five-, ten-year relationship with shared equity and shared risk — no one hands that to someone they met on a website three weeks ago. Especially here: Thai founders build from trust and relationships, not from an algorithm ranking strangers.",
+              )}
+            </p>
+            <p>
+              {tr(
+                "So I stopped trying to force the match. Cofoundee starts as a community instead — a place where Thai founders show up, share what they're building, and get to know each other over time. Trust forms there. And once it does, everything else compounds on top: partners, advisors, investor intros, and yes — co-founders — the way it actually happens in real life.",
+              )}
+            </p>
+            <p>
+              {tr(
+                "It's early. I'm building this patiently, because Thailand's founders deserve a home like this — and because I wished it existed when I started out.",
+              )}
+            </p>
           </div>
           <div className="mt-8 text-sm tracking-wide text-slate-300">
-            — Chayanon, {isTH ? "ผู้ก่อตั้ง Cofoundee" : "founder of Cofoundee"}
+            — Chayanon, {tr("founder of Cofoundee")}
           </div>
         </div>
       </section>
@@ -533,53 +485,43 @@ export default async function LandingPage() {
       <section className="py-24 bg-white border-t border-line">
         <div className="max-w-3xl mx-auto px-6 lg:px-10">
           <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
-            {isTH ? "คำถามที่พบบ่อย" : "Questions"}
+            {tr("Questions")}
           </div>
           <h2 className="text-4xl lg:text-5xl leading-tight mb-12">
-            {isTH ? "เรื่องที่ founder มักถาม" : "What founders usually ask."}
+            {tr("What founders usually ask.")}
           </h2>
           <dl className="border-t border-line">
             {[
               {
-                q_en: "Is it really free?",
-                q_th: "ฟรีจริงไหม?",
-                a_en: "Yes — free for founders, and it stays that way in this phase. We'll earn from partners and services later, never from charging founders to meet each other.",
-                a_th: "ฟรีสำหรับ founder จริงๆ และจะเป็นแบบนี้ตลอดช่วงนี้ รายได้ในอนาคตมาจากพาร์ตเนอร์กับบริการต่างๆ ไม่ใช่จากการเก็บเงิน founder ให้มาเจอกัน",
+                q: "Is it really free?",
+                a: "Yes — free for founders, and it stays that way in this phase. We'll earn from partners and services later, never from charging founders to meet each other.",
               },
               {
-                q_en: "Do I need a co-founder or an idea already?",
-                q_th: "ต้องมี co-founder หรือไอเดียก่อนไหม?",
-                a_en: "No. Come for the community first. Plenty of people arrive just exploring — the connections come from being around, not from having everything figured out.",
-                a_th: "ไม่ต้อง มาเป็นส่วนหนึ่งของชุมชนก่อน หลายคนเริ่มจากแค่เข้ามาดูๆ คอนเนกชันเกิดจากการได้อยู่ในชุมชน ไม่ใช่จากการมีทุกอย่างพร้อม",
+                q: "Do I need a co-founder or an idea already?",
+                a: "No. Come for the community first. Plenty of people arrive just exploring — the connections come from being around, not from having everything figured out.",
               },
               {
-                q_en: "Who is Cofoundee for?",
-                q_th: "Cofoundee เหมาะกับใคร?",
-                a_en: "Thai startup founders — technical, business, solo, or just starting to explore what to build.",
-                a_th: "founder สตาร์ทอัพไทย ทั้งสาย technical สายธุรกิจ คนที่ทำอยู่คนเดียว หรือเพิ่งเริ่มมองหาว่าจะทำอะไรดี",
+                q: "Who is Cofoundee for?",
+                a: "Thai startup founders — technical, business, solo, or just starting to explore what to build.",
               },
               {
-                q_en: "Thai or English?",
-                q_th: "ใช้ภาษาไทยหรืออังกฤษ?",
-                a_en: "Both — use whichever you're comfortable with. The whole platform works in Thai and English.",
-                a_th: "ได้ทั้งสองภาษา ใช้ภาษาที่คุณถนัดได้เลย ทั้งแพลตฟอร์มรองรับทั้งไทยและอังกฤษ",
+                q: "Thai or English?",
+                a: "Both — use whichever you're comfortable with. The whole platform works in Thai and English.",
               },
               {
-                q_en: "How is this different from LinkedIn or co-founder matching apps?",
-                q_th: "ต่างจาก LinkedIn หรือแอปหา co-founder ยังไง?",
-                a_en: "Those start with a transaction. We start with a community. Trust comes first — matching, intros, and partnerships grow on top of it, not the other way around.",
-                a_th: "พวกนั้นเริ่มจากการจับคู่ แต่เราเริ่มจากชุมชน ความไว้ใจมาก่อน แล้วการแมตช์ การแนะนำ และพาร์ตเนอร์จึงค่อยตามมา ไม่ใช่กลับกัน",
+                q: "How is this different from LinkedIn or co-founder matching apps?",
+                a: "Those start with a transaction. We start with a community. Trust comes first — matching, intros, and partnerships grow on top of it, not the other way around.",
               },
             ].map((f) => (
               <div
-                key={f.q_en}
+                key={f.q}
                 className="border-b border-line py-6"
               >
                 <dt className="font-serif text-xl text-navy mb-2">
-                  {isTH ? f.q_th : f.q_en}
+                  {tr(f.q)}
                 </dt>
                 <dd className="text-ink leading-relaxed">
-                  {isTH ? f.a_th : f.a_en}
+                  {tr(f.a)}
                 </dd>
               </div>
             ))}

@@ -3,6 +3,7 @@ import { ArrowRight, Heart, MapPin, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
+import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { StatusComposer } from "../status/StatusComposer";
@@ -24,23 +25,16 @@ function timeOfDayGreeting(): string {
   return "Burning the midnight oil";
 }
 
-function timeAgo(iso: string, locale: string): string {
+function timeAgo(iso: string, locale: Locale): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60_000);
   const h = Math.floor(diff / 3_600_000);
   const d = Math.floor(diff / 86_400_000);
-  if (locale === "th") {
-    if (m < 1) return "เมื่อสักครู่";
-    if (m < 60) return `${m} นาทีที่แล้ว`;
-    if (h < 24) return `${h} ชั่วโมงที่แล้ว`;
-    if (d < 7) return `${d} วันที่แล้ว`;
-    return new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short" });
-  }
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  if (h < 24) return `${h}h ago`;
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  if (m < 1) return t("just now", locale);
+  if (m < 60) return t("{n}m ago", locale).replace("{n}", String(m));
+  if (h < 24) return t("{n}h ago", locale).replace("{n}", String(h));
+  if (d < 7) return t("{n}d ago", locale).replace("{n}", String(d));
+  return new Date(iso).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB", { day: "numeric", month: "short" });
 }
 
 export default async function DashboardPage() {
@@ -228,7 +222,8 @@ export default async function DashboardPage() {
   const locale = (await import("@/lib/i18n-server").then((m) =>
     m.getLocale(),
   )) as "en" | "th";
-  const isTH = locale === "th";
+  // Resolved here so the synchronous recentPosts.map() callback stays sync.
+  const newLabel = await tServer("new");
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
@@ -249,16 +244,16 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
             <span className="text-ink-muted">
-              {totalFounders ?? 0} {isTH ? "founder" : "founders"}
+              {totalFounders ?? 0} {await tServer("founders")}
             </span>
           </div>
           <div className="text-ink-muted">
             +{foundersThisWeek ?? 0}{" "}
-            {isTH ? "ใหม่สัปดาห์นี้" : "this week"}
+            {await tServer("this week")}
           </div>
           <div className="text-ink-muted">
             {postsThisWeek ?? 0}{" "}
-            {isTH ? "โพสต์ใน 7 วัน" : "posts in 7d"}
+            {await tServer("posts in 7d")}
           </div>
         </div>
       </div>
@@ -321,7 +316,7 @@ export default async function DashboardPage() {
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-ink-muted">
-                  {isTH ? "ผู้เข้าชมโปรไฟล์" : "Profile views"}
+                  {await tServer("Profile views")}
                 </span>
                 <span className="text-navy font-medium">
                   {profileViewsCount ?? 0}
@@ -332,7 +327,7 @@ export default async function DashboardPage() {
                 className="flex items-center justify-between group"
               >
                 <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
-                  {isTH ? "ความสนใจ" : "Interests"}
+                  {await tServer("Interests")}
                 </span>
                 <span className="text-navy font-medium">
                   {pendingReceivedCount ?? 0}
@@ -343,7 +338,7 @@ export default async function DashboardPage() {
                 className="flex items-center justify-between group"
               >
                 <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
-                  {isTH ? "แมตช์" : "Matches"}
+                  {await tServer("Matches")}
                 </span>
                 <span className="text-navy font-medium">
                   {matchesCount ?? 0}
@@ -358,13 +353,13 @@ export default async function DashboardPage() {
                 href={myProfileHref}
                 className="block bg-navy hover:bg-navy-dark text-white text-center py-2.5 text-sm transition-colors"
               >
-                {isTH ? "ดูโปรไฟล์" : "View profile"}
+                {await tServer("View profile")}
               </Link>
               <Link
                 href="/settings"
                 className="block border border-line hover:border-navy text-ink hover:text-navy text-center py-2.5 text-sm transition-colors"
               >
-                {isTH ? "แก้ไขโปรไฟล์" : "Edit profile"}
+                {await tServer("Edit profile")}
               </Link>
             </div>
           </div>
@@ -380,7 +375,7 @@ export default async function DashboardPage() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
-                  {isTH ? "อัปเดตล่าสุด" : "Latest updates"}
+                  {await tServer("Latest updates")}
                 </h2>
               </div>
               <StatusFeed items={statusItems} locale={locale} />
@@ -390,13 +385,13 @@ export default async function DashboardPage() {
           {/* Forum posts */}
           <div className="flex items-center justify-between mb-3 mt-2">
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
-              {isTH ? "กำลังคุยกันในชุมชน" : "Live in the community"}
+              {await tServer("Live in the community")}
             </h2>
             <Link
               href="/community"
               className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
             >
-              {isTH ? "ดูทั้งหมด" : "See all"}
+              {await tServer("See all")}
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -404,15 +399,13 @@ export default async function DashboardPage() {
           {!recentPosts?.length ? (
             <div className="bg-white border border-line p-8 text-center">
               <p className="text-sm text-ink-muted mb-4">
-                {isTH
-                  ? "ยังไม่มีใครเปิดโพสต์เลย เริ่มบทสนทนาแรกได้เลยนะ"
-                  : "No conversations yet. Start the first one."}
+                {await tServer("No conversations yet. Start the first one.")}
               </p>
               <Link
                 href="/community/new"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm"
               >
-                {isTH ? "เขียนโพสต์แรก" : "Write the first post"}
+                {await tServer("Write the first post")}
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -448,7 +441,7 @@ export default async function DashboardPage() {
                           </span>
                           {fresh && (
                             <span className="text-[9px] uppercase tracking-[0.15em] text-gold border border-gold px-1.5 py-0.5">
-                              {isTH ? "ใหม่" : "new"}
+                              {newLabel}
                             </span>
                           )}
                         </div>
@@ -486,13 +479,13 @@ export default async function DashboardPage() {
         <aside className="lg:col-span-3 lg:sticky lg:top-24 self-start">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
-              {isTH ? "Founder ใหม่" : "New founders"}
+              {await tServer("New founders")}
             </h2>
             <Link
               href="/browse"
               className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
             >
-              {isTH ? "สำรวจ" : "Browse"}
+              {await tServer("Browse")}
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -500,9 +493,7 @@ export default async function DashboardPage() {
           {!newFounders?.length ? (
             <div className="bg-white border border-line p-6 text-center">
               <p className="text-sm text-ink-muted">
-                {isTH
-                  ? "คุณมาเป็นคนแรกเลย ชวนเพื่อนมาด้วยกันสิ"
-                  : "You're the first. Invite a friend."}
+                {await tServer("You're the first. Invite a friend.")}
               </p>
             </div>
           ) : (
@@ -553,7 +544,7 @@ export default async function DashboardPage() {
             href="/community/new"
             className="mt-6 block bg-navy hover:bg-navy-dark text-white text-sm text-center py-3 transition-colors"
           >
-            {isTH ? "+ เขียนโพสต์ในชุมชน" : "+ Write a community post"}
+            {await tServer("+ Write a community post")}
           </Link>
         </aside>
       </div>

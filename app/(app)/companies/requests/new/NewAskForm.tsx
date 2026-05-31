@@ -3,62 +3,50 @@
 import { useActionState, useState } from "react";
 import { HandshakeIcon } from "lucide-react";
 import { createAskAction, type AskState } from "../actions";
+import { useT } from "@/lib/i18n-client";
 
 const INITIAL: AskState = null;
 
+// en / hintEN are dictionary keys; Thai comes from tr() at render.
 const REQUEST_TYPES: {
   value: string;
   en: string;
-  th: string;
   hintEN: string;
-  hintTH: string;
 }[] = [
   {
     value: "integration",
     en: "Integration",
-    th: "Integration",
     hintEN: "API, SDK, or platform integration",
-    hintTH: "ต่อ API, SDK หรือเชื่อมระบบกัน",
   },
   {
     value: "distribution",
     en: "Distribution",
-    th: "การจัดจำหน่าย",
     hintEN: "Selling, channel, or market access",
-    hintTH: "ช่องทางขาย หรือพาเข้าตลาด",
   },
   {
     value: "white_label",
     en: "White label",
-    th: "White-label",
     hintEN: "Using your product under their brand (or vice versa)",
-    hintTH: "เอาของเรามาขายในแบรนด์เขา หรือกลับกัน",
   },
   {
     value: "co_marketing",
     en: "Co-marketing",
-    th: "Co-marketing",
     hintEN: "Joint campaigns, content, events",
-    hintTH: "ทำแคมเปญ คอนเทนต์ อีเวนต์ร่วมกัน",
   },
   {
     value: "vendor_supplier",
     en: "Vendor / supplier",
-    th: "ผู้จัดหา",
     hintEN: "Looking for a service provider",
-    hintTH: "หาคนให้บริการ",
   },
   {
     value: "other",
     en: "Other",
-    th: "อื่นๆ",
     hintEN: "Custom partnership",
-    hintTH: "ความร่วมมือแบบอื่น",
   },
 ];
 
-export function NewAskForm({ locale }: { locale: "en" | "th" }) {
-  const isTH = locale === "th";
+export function NewAskForm() {
+  const tr = useT();
   const [state, formAction, isPending] = useActionState<AskState, FormData>(
     createAskAction,
     INITIAL,
@@ -76,7 +64,7 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
-          {isTH ? "ประเภทพาร์ตเนอร์ที่หา" : "Partner type"}
+          {tr("Partner type")}
         </label>
         <div className="grid sm:grid-cols-2 gap-2">
           {REQUEST_TYPES.map((rt) => (
@@ -91,10 +79,10 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
               }`}
             >
               <div className="text-sm text-navy font-medium">
-                {isTH ? rt.th : rt.en}
+                {tr(rt.en)}
               </div>
               <div className="text-xs text-ink-muted mt-0.5">
-                {isTH ? rt.hintTH : rt.hintEN}
+                {tr(rt.hintEN)}
               </div>
             </button>
           ))}
@@ -106,7 +94,7 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
           htmlFor="subject"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          {isTH ? "หัวข้อ" : "Subject"}
+          {tr("Subject")}
         </label>
         <input
           id="subject"
@@ -115,11 +103,7 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
           required
           minLength={5}
           maxLength={200}
-          placeholder={
-            isTH
-              ? "เช่น \"หา partner logistics ครอบคลุมภาคเหนือ\""
-              : 'e.g. "Logistics partner covering Northern Thailand"'
-          }
+          placeholder={tr('e.g. "Logistics partner covering Northern Thailand"')}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
         />
       </div>
@@ -130,7 +114,7 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
             htmlFor="context"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
           >
-            {isTH ? "รายละเอียด" : "Context"}
+            {tr("Context")}
           </label>
           <span
             className={`text-xs tabular-nums ${
@@ -149,18 +133,17 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
           maxLength={2000}
           value={context}
           onChange={(e) => setContext(e.target.value)}
-          placeholder={
-            isTH
-              ? "เล่าหน่อยว่าธุรกิจทำอะไร ทำไมถึงอยากได้ partner แบบนี้ งานมีประมาณไหน timeline เป็นยังไง และมีเงื่อนไขอะไรที่สำคัญ"
-              : "Describe your business, why you need this kind of partner, expected volume, timeline, and any key conditions."
-          }
+          placeholder={tr(
+            "Describe your business, why you need this kind of partner, expected volume, timeline, and any key conditions.",
+          )}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y"
         />
         {tooShort && context.length > 0 && (
           <p className="text-xs text-ink-muted mt-1">
-            {isTH
-              ? `เพิ่มอีก ${50 - context.length} ตัวอักษร (ขั้นต่ำ 50)`
-              : `${50 - context.length} more chars needed (50 min)`}
+            {tr("{n} more chars needed (50 min)").replace(
+              "{n}",
+              String(50 - context.length),
+            )}
           </p>
         )}
       </div>
@@ -170,7 +153,7 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
           htmlFor="deadline_at"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          {isTH ? "กำหนดเส้นตาย (ไม่บังคับ)" : "Deadline (optional)"}
+          {tr("Deadline (optional)")}
         </label>
         <input
           id="deadline_at"
@@ -194,13 +177,7 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
           className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm tracking-wide transition-colors"
         >
           <HandshakeIcon className="w-4 h-4" />
-          {isPending
-            ? isTH
-              ? "กำลังโพสต์…"
-              : "Posting…"
-            : isTH
-              ? "โพสต์คำขอ"
-              : "Post ask"}
+          {isPending ? tr("Posting…") : tr("Post ask")}
         </button>
       </div>
     </form>

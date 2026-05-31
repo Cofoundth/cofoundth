@@ -11,32 +11,31 @@ import {
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
+import { useT } from "@/lib/i18n-client";
 import {
   acceptPartnershipAction,
   declinePartnershipAction,
   withdrawPartnershipAction,
 } from "./partnership-actions";
 
-const TYPE_LABEL: Record<string, { en: string; th: string }> = {
-  integration: { en: "Integration", th: "Integration" },
-  distribution: { en: "Distribution", th: "การจัดจำหน่าย" },
-  white_label: { en: "White label", th: "White-label" },
-  co_marketing: { en: "Co-marketing", th: "Co-marketing" },
-  vendor_supplier: { en: "Vendor", th: "Vendor" },
-  other: { en: "Other", th: "อื่นๆ" },
+const TYPE_LABEL: Record<string, { en: string }> = {
+  integration: { en: "Integration" },
+  distribution: { en: "Distribution" },
+  white_label: { en: "White label" },
+  co_marketing: { en: "Co-marketing" },
+  vendor_supplier: { en: "Vendor" },
+  other: { en: "Other" },
 };
 
-const STATUS_LABEL: Record<string, { en: string; th: string; tone: string }> = {
-  open: { en: "Open", th: "รอตอบ", tone: "border-gold text-gold" },
+const STATUS_LABEL: Record<string, { en: string; tone: string }> = {
+  open: { en: "Open", tone: "border-gold text-gold" },
   accepted: {
     en: "Accepted",
-    th: "ตอบรับแล้ว",
     tone: "border-gold bg-gold text-white",
   },
-  declined: { en: "Declined", th: "ปฏิเสธ", tone: "border-line text-ink-muted" },
+  declined: { en: "Declined", tone: "border-line text-ink-muted" },
   withdrawn: {
     en: "Withdrawn",
-    th: "ยกเลิกแล้ว",
     tone: "border-line text-ink-muted",
   },
 };
@@ -68,6 +67,7 @@ type Props = {
 
 export function PartnershipCard({ row, locale }: Props) {
   const isTH = locale === "th";
+  const tr = useT();
   const [responseNote, setResponseNote] = useState("");
   const [showResponse, setShowResponse] = useState(false);
   const [, startTransition] = useTransition();
@@ -103,17 +103,11 @@ export function PartnershipCard({ row, locale }: Props) {
               <div className="flex items-center gap-2 text-xs text-ink-muted flex-wrap mb-1">
                 <span className="inline-flex items-center gap-1 text-gold">
                   <HandshakeIcon className="w-3 h-3" strokeWidth={1.5} />
-                  {type[isTH ? "th" : "en"]}
+                  {tr(type.en)}
                 </span>
                 <span>·</span>
                 <span>
-                  {row.direction === "received"
-                    ? isTH
-                      ? "จาก"
-                      : "from"
-                    : isTH
-                      ? "ส่งถึง"
-                      : "to"}{" "}
+                  {row.direction === "received" ? tr("from") : tr("to")}{" "}
                   <Link
                     href={profileHref}
                     className="text-navy hover:text-gold font-medium"
@@ -136,7 +130,7 @@ export function PartnershipCard({ row, locale }: Props) {
             <span
               className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border shrink-0 ${status.tone}`}
             >
-              {status[isTH ? "th" : "en"]}
+              {tr(status.en)}
             </span>
           </div>
 
@@ -147,7 +141,7 @@ export function PartnershipCard({ row, locale }: Props) {
           {row.deadline_at && (
             <div className="text-xs text-ink-muted mb-3 inline-flex items-center gap-1.5">
               <Clock className="w-3 h-3" strokeWidth={1.5} />
-              {isTH ? "กำหนดเส้นตาย" : "Deadline"}:{" "}
+              {tr("Deadline")}:{" "}
               {new Date(row.deadline_at).toLocaleDateString(
                 isTH ? "th-TH" : "en-GB",
                 { day: "numeric", month: "short", year: "numeric" },
@@ -158,7 +152,7 @@ export function PartnershipCard({ row, locale }: Props) {
           {row.response_note && (
             <div className="mt-3 mb-3 p-3 bg-cream border-l-2 border-line">
               <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-1">
-                {isTH ? "ข้อความตอบกลับ" : "Response"}
+                {tr("Response")}
               </div>
               <p className="text-sm text-ink leading-relaxed italic">
                 &ldquo;{row.response_note}&rdquo;
@@ -176,11 +170,9 @@ export function PartnershipCard({ row, locale }: Props) {
                     maxLength={1000}
                     value={responseNote}
                     onChange={(e) => setResponseNote(e.target.value)}
-                    placeholder={
-                      isTH
-                        ? "ฝากข้อความได้ (ไม่บังคับ) — บอกเหตุผลที่ตอบรับหรือปฏิเสธก็ได้"
-                        : "Optional note — let them know why you're accepting or declining."
-                    }
+                    placeholder={tr(
+                      "Optional note — let them know why you're accepting or declining.",
+                    )}
                     className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
                   />
                   <div className="flex flex-wrap items-center gap-2">
@@ -197,7 +189,7 @@ export function PartnershipCard({ row, locale }: Props) {
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide"
                       >
                         <Check className="w-3.5 h-3.5" />
-                        {isTH ? "ตอบรับและเปิดแชต" : "Accept & open chat"}
+                        {tr("Accept & open chat")}
                       </button>
                     </form>
                     <form
@@ -213,7 +205,7 @@ export function PartnershipCard({ row, locale }: Props) {
                         className="inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy text-ink hover:text-navy text-sm tracking-wide"
                       >
                         <X className="w-3.5 h-3.5" />
-                        {isTH ? "ปฏิเสธ" : "Decline"}
+                        {tr("Decline")}
                       </button>
                     </form>
                     <button
@@ -224,7 +216,7 @@ export function PartnershipCard({ row, locale }: Props) {
                       }}
                       className="text-xs text-ink-muted hover:text-navy ml-1"
                     >
-                      {isTH ? "ยกเลิก" : "Cancel"}
+                      {tr("Cancel")}
                     </button>
                   </div>
                 </div>
@@ -236,7 +228,7 @@ export function PartnershipCard({ row, locale }: Props) {
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    {isTH ? "ตอบกลับ" : "Respond"}
+                    {tr("Respond")}
                   </button>
                 </div>
               )}
@@ -256,7 +248,7 @@ export function PartnershipCard({ row, locale }: Props) {
                 type="submit"
                 className="text-xs text-ink-muted hover:text-red-700"
               >
-                {isTH ? "ยกเลิกคำขอ" : "Withdraw request"}
+                {tr("Withdraw request")}
               </button>
             </form>
           )}
@@ -267,7 +259,7 @@ export function PartnershipCard({ row, locale }: Props) {
               className="mt-4 pt-3 border-t border-line inline-flex items-center gap-1.5 text-sm text-navy hover:text-gold transition-colors"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              {isTH ? "เปิดการสนทนา" : "Open conversation"}
+              {tr("Open conversation")}
               <ExternalLink className="w-3 h-3" />
             </Link>
           )}

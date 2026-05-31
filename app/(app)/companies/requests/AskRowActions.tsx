@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { updateAskStatusAction } from "./actions";
+import { useT } from "@/lib/i18n-client";
 
 type Props = {
   askId: string;
@@ -9,8 +10,8 @@ type Props = {
   locale: "en" | "th";
 };
 
-export function AskRowActions({ askId, status, locale }: Props) {
-  const isTH = locale === "th";
+export function AskRowActions({ askId, status }: Props) {
+  const tr = useT();
   const [, startTransition] = useTransition();
 
   if (status === "open") {
@@ -25,7 +26,7 @@ export function AskRowActions({ askId, status, locale }: Props) {
           }}
           className="text-xs px-3 py-1.5 border border-gold text-gold hover:bg-gold/10 transition-colors"
         >
-          {isTH ? "เจอพาร์ตเนอร์แล้ว" : "Mark as filled"}
+          {tr("Mark as filled")}
         </button>
         <button
           type="button"
@@ -36,7 +37,7 @@ export function AskRowActions({ askId, status, locale }: Props) {
           }}
           className="text-xs text-ink-muted hover:text-red-700"
         >
-          {isTH ? "ปิด" : "Close"}
+          {tr("Close")}
         </button>
       </div>
     );
@@ -52,7 +53,7 @@ export function AskRowActions({ askId, status, locale }: Props) {
       }}
       className="text-xs text-ink-muted hover:text-navy"
     >
-      {isTH ? "เปิดอีกครั้ง" : "Reopen"}
+      {tr("Reopen")}
     </button>
   );
 }

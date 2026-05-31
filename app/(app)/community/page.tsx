@@ -2,31 +2,22 @@ import Link from "next/link";
 import { ArrowRight, Heart, MessageCircle, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { tServer, getLocale } from "@/lib/i18n-server";
+import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 
 export const dynamic = "force-dynamic";
 
-function timeAgo(iso: string, locale: string): string {
+function timeAgo(iso: string, locale: Locale): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60_000);
   const h = Math.floor(diff / 3_600_000);
   const d = Math.floor(diff / 86_400_000);
-  if (locale === "th") {
-    if (m < 1) return "เมื่อสักครู่";
-    if (m < 60) return `${m} นาทีที่แล้ว`;
-    if (h < 24) return `${h} ชั่วโมงที่แล้ว`;
-    if (d < 7) return `${d} วันที่แล้ว`;
-    return new Date(iso).toLocaleDateString("th-TH", {
-      day: "numeric",
-      month: "short",
-    });
-  }
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  if (h < 24) return `${h}h ago`;
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString("en-GB", {
+  if (m < 1) return t("just now", locale);
+  if (m < 60) return t("{n}m ago", locale).replace("{n}", String(m));
+  if (h < 24) return t("{n}h ago", locale).replace("{n}", String(h));
+  if (d < 7) return t("{n}d ago", locale).replace("{n}", String(d));
+  return new Date(iso).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB", {
     day: "numeric",
     month: "short",
   });
@@ -38,7 +29,6 @@ export default async function CommunityPage() {
     data: { user },
   } = await supabase.auth.getUser();
   const locale = await getLocale();
-  const isTH = locale === "th";
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
 
   // Posts feed (may fail gracefully if forum table not yet migrated)
@@ -93,6 +83,12 @@ export default async function CommunityPage() {
     commentCount.set(k, (commentCount.get(k) ?? 0) + 1);
   });
 
+  // Labels used inside the synchronous posts.map() — resolved here so the
+  // map callback stays sync (await is only valid in this async function body).
+  const newLabel = await tServer("new");
+  const replyLabel = await tServer("reply");
+  const repliesLabel = await tServer("replies");
+
   return (
     <div className="max-w-4xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-10 pb-8 border-b border-line flex items-start justify-between gap-6 flex-wrap">
@@ -105,7 +101,7 @@ export default async function CommunityPage() {
                 <span className="text-line">·</span>
                 <span className="normal-case tracking-normal text-ink-muted">
                   {postsThisWeek}{" "}
-                  {isTH ? "โพสต์ใหม่ใน 7 วัน" : "new posts in 7d"}
+                  {await tServer("new posts in 7d")}
                 </span>
               </>
             )}
@@ -190,7 +186,7 @@ export default async function CommunityPage() {
                       </h3>
                       {fresh && (
                         <span className="text-[9px] uppercase tracking-[0.15em] text-gold border border-gold px-1.5 py-0.5 shrink-0">
-                          {isTH ? "ใหม่" : "new"}
+                          {newLabel}
                         </span>
                       )}
                     </div>
@@ -238,13 +234,7 @@ export default async function CommunityPage() {
                         />
                         {commentN}{" "}
                         {commentN > 0 &&
-                          (isTH
-                            ? commentN === 1
-                              ? "ความคิดเห็น"
-                              : "ความคิดเห็น"
-                            : commentN === 1
-                              ? "reply"
-                              : "replies")}
+                          (commentN === 1 ? replyLabel : repliesLabel)}
                       </span>
                     </div>
                   </div>

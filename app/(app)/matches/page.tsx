@@ -3,7 +3,7 @@ import { ArrowRight, MessageCircle, Inbox, Send, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
-import { tServer, getLocale } from "@/lib/i18n-server";
+import { tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,6 @@ export const dynamic = "force-dynamic";
 export default async function ConnectionsPage() {
   const supabase = await createClient();
   const user = await requireUser();
-  const locale = await getLocale();
-  const isTH = locale === "th";
 
   // ---- Matches (mutual) + last message / unread -------------------------
   const { data: matches } = await supabase
@@ -102,6 +100,13 @@ export default async function ConnectionsPage() {
 
   const hasRequests = received.length > 0 || sent.length > 0;
 
+  // Labels used inside synchronous .map() callbacks — resolved here so those
+  // callbacks stay sync (await is only valid in this async function body).
+  const respondLabel = await tServer("Respond");
+  const pendingLabel = await tServer("pending");
+  const newLabel = await tServer("new");
+  const mutualLabel = await tServer("Mutual interest! Start the conversation.");
+
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-10 pb-8 border-b border-line">
@@ -112,9 +117,9 @@ export default async function ConnectionsPage() {
           {await tServer("Connections")}
         </h1>
         <p className="text-ink">
-          {isTH
-            ? "ความสนใจ แมตช์ และแชต รวมไว้ที่เดียว"
-            : "Interest, matches, and conversations — all in one place."}
+          {await tServer(
+            "Interest, matches, and conversations — all in one place.",
+          )}
         </p>
       </div>
 
@@ -122,16 +127,18 @@ export default async function ConnectionsPage() {
       {hasRequests && (
         <section className="mb-12">
           <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
-            {isTH ? "คำขอ" : "Requests"}
+            {await tServer("Requests")}
           </h2>
 
           {received.length > 0 && (
             <div className="mb-6">
               <div className="flex items-center gap-2 text-sm text-ink-muted mb-3">
                 <Inbox className="w-4 h-4" strokeWidth={1.5} />
-                {isTH
-                  ? `มี ${received.length} คนสนใจคุณ — เปิดโปรไฟล์เขาแล้วตอบรับได้เลย`
-                  : `${received.length} interested in you — open their profile to respond`}
+                {(
+                  await tServer(
+                    "{n} interested in you — open their profile to respond",
+                  )
+                ).replace("{n}", String(received.length))}
               </div>
               <div className="bg-white border border-line divide-y divide-line">
                 {received.map((r) => {
@@ -161,7 +168,7 @@ export default async function ConnectionsPage() {
                         ) : null}
                       </div>
                       <span className="text-xs text-navy inline-flex items-center gap-1 shrink-0 mt-1">
-                        {isTH ? "ตอบรับ" : "Respond"}
+                        {respondLabel}
                         <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </Link>
@@ -175,9 +182,10 @@ export default async function ConnectionsPage() {
             <div>
               <div className="flex items-center gap-2 text-sm text-ink-muted mb-3">
                 <Send className="w-4 h-4" strokeWidth={1.5} />
-                {isTH
-                  ? `รอการตอบรับ (${sent.length})`
-                  : `Waiting to hear back (${sent.length})`}
+                {(await tServer("Waiting to hear back ({n})")).replace(
+                  "{n}",
+                  String(sent.length),
+                )}
               </div>
               <div className="bg-white border border-line divide-y divide-line">
                 {sent.map((s) => {
@@ -202,7 +210,7 @@ export default async function ConnectionsPage() {
                         </div>
                       </div>
                       <span className="text-[11px] uppercase tracking-[0.15em] text-ink-muted inline-flex items-center gap-1 shrink-0">
-                        <Clock className="w-3 h-3" /> {isTH ? "รอ" : "pending"}
+                        <Clock className="w-3 h-3" /> {pendingLabel}
                       </span>
                     </Link>
                   );
@@ -217,12 +225,12 @@ export default async function ConnectionsPage() {
       <section>
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
-            {isTH ? "บทสนทนา" : "Conversations"}
+            {await tServer("Conversations")}
           </h2>
           {(matches?.length ?? 0) > 0 && (
             <span className="text-xs text-ink-muted">
               {matches?.length}{" "}
-              {isTH ? "แมตช์" : "match(es) · messaging unlocked"}
+              {await tServer("match(es) · messaging unlocked")}
             </span>
           )}
         </div>
@@ -273,7 +281,7 @@ export default async function ConnectionsPage() {
                         </div>
                         {msg?.unread ? (
                           <span className="text-[10px] uppercase tracking-[0.2em] bg-gold text-white px-2 py-0.5 shrink-0">
-                            {msg.unread} {isTH ? "ใหม่" : "new"}
+                            {msg.unread} {newLabel}
                           </span>
                         ) : null}
                       </div>
@@ -295,9 +303,7 @@ export default async function ConnectionsPage() {
                       <p className="text-sm text-ink truncate">
                         {msg?.last_content ?? (
                           <span className="text-ink-muted italic">
-                            {isTH
-                              ? "แมตช์แล้ว! ทักไปคุยได้เลย"
-                              : "Mutual interest! Start the conversation."}
+                            {mutualLabel}
                           </span>
                         )}
                       </p>

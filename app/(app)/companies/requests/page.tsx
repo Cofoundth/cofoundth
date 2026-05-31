@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { getLocale } from "@/lib/i18n-server";
+import { getLocale, tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 import { AskRowActions } from "./AskRowActions";
 
@@ -16,42 +16,36 @@ export const dynamic = "force-dynamic";
 
 type AskStatus = "open" | "filled" | "closed";
 
-const TYPE_LABEL: Record<string, { en: string; th: string }> = {
-  integration: { en: "Integration", th: "Integration" },
-  distribution: { en: "Distribution", th: "การจัดจำหน่าย" },
-  white_label: { en: "White label", th: "White-label" },
-  co_marketing: { en: "Co-marketing", th: "Co-marketing" },
-  vendor_supplier: { en: "Vendor", th: "Vendor" },
-  other: { en: "Other", th: "อื่นๆ" },
+// English label is the dictionary key; Thai comes from tServer() at render.
+const TYPE_LABEL: Record<string, string> = {
+  integration: "Integration",
+  distribution: "Distribution",
+  white_label: "White label",
+  co_marketing: "Co-marketing",
+  vendor_supplier: "Vendor",
+  other: "Other",
 };
 
-const STATUS_LABEL: Record<AskStatus, { en: string; th: string; tone: string }> = {
-  open: { en: "Open", th: "เปิดรับ", tone: "border-gold text-gold" },
-  filled: {
-    en: "Filled",
-    th: "ปิดรับ — เจอแล้ว",
-    tone: "border-gold bg-gold text-white",
-  },
-  closed: { en: "Closed", th: "ปิด", tone: "border-line text-ink-muted" },
+const STATUS_LABEL: Record<AskStatus, { en: string; tone: string }> = {
+  open: { en: "Open", tone: "border-gold text-gold" },
+  filled: { en: "Filled", tone: "border-gold bg-gold text-white" },
+  closed: { en: "Closed", tone: "border-line text-ink-muted" },
 };
 
-function timeAgo(iso: string, locale: string): string {
+type TimeAgoLabels = {
+  justNow: string;
+  hoursAgo: string; // contains {n}
+  daysAgo: string; // contains {n}
+};
+
+function timeAgo(iso: string, locale: string, labels: TimeAgoLabels): string {
   const diff = Date.now() - new Date(iso).getTime();
   const h = Math.floor(diff / 3_600_000);
   const d = Math.floor(diff / 86_400_000);
-  if (locale === "th") {
-    if (h < 1) return "เมื่อสักครู่";
-    if (h < 24) return `${h} ชั่วโมงที่แล้ว`;
-    if (d < 7) return `${d} วันที่แล้ว`;
-    return new Date(iso).toLocaleDateString("th-TH", {
-      day: "numeric",
-      month: "short",
-    });
-  }
-  if (h < 1) return "just now";
-  if (h < 24) return `${h}h ago`;
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString("en-GB", {
+  if (h < 1) return labels.justNow;
+  if (h < 24) return labels.hoursAgo.replace("{n}", String(h));
+  if (d < 7) return labels.daysAgo.replace("{n}", String(d));
+  return new Date(iso).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB", {
     day: "numeric",
     month: "short",
   });
@@ -106,6 +100,35 @@ export default async function PartnershipRequestsBoardPage() {
     (authors ?? []).map((a) => [a.id as string, a]),
   );
 
+  // Pre-resolve strings used inside the (synchronous) ask map.
+  const timeLabels: TimeAgoLabels = {
+    justNow: await tServer("just now"),
+    hoursAgo: await tServer("{n}h ago"),
+    daysAgo: await tServer("{n}d ago"),
+  };
+  const typeLabel: Record<string, string> = Object.fromEntries(
+    await Promise.all(
+      Object.entries(TYPE_LABEL).map(
+        async ([k, en]) => [k, await tServer(en)] as const,
+      ),
+    ),
+  );
+  const statusLabel = Object.fromEntries(
+    await Promise.all(
+      (Object.keys(STATUS_LABEL) as AskStatus[]).map(
+        async (k) => [k, await tServer(STATUS_LABEL[k].en)] as const,
+      ),
+    ),
+  ) as Record<AskStatus, string>;
+  const labels = {
+    deadline: await tServer("Deadline"),
+    respondHint: await tServer(
+      "View their profile to respond with a partnership request",
+    ),
+    respond: await tServer("Respond"),
+    viewProfile: await tServer("View profile"),
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       {/* Header */}
@@ -113,21 +136,19 @@ export default async function PartnershipRequestsBoardPage() {
         <div>
           <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-            {isTH ? "บอร์ดความร่วมมือ B2B" : "Partnership board"}
+            {await tServer("B2B Partnership board")}
             <span className="text-line">·</span>
             <span className="normal-case tracking-normal text-ink-muted">
               Beta
             </span>
           </div>
           <h1 className="text-4xl lg:text-5xl mb-2">
-            {isTH
-              ? "บริษัทกำลังหาพาร์ตเนอร์แบบไหน"
-              : "What companies are looking for"}
+            {await tServer("What companies are looking for")}
           </h1>
           <p className="text-ink max-w-2xl">
-            {isTH
-              ? "พื้นที่กลางให้บริษัทโพสต์หา partner — ลงว่ากำลังมองหาอะไร หรือเข้ามาดูว่าคนอื่นหาอะไรกันอยู่"
-              : "Public board of B2B partnership asks. Post what your company needs, or browse what others are looking for."}
+            {await tServer(
+              "Public board of B2B partnership asks. Post what your company needs, or browse what others are looking for.",
+            )}
           </p>
         </div>
         {canPost ? (
@@ -136,19 +157,19 @@ export default async function PartnershipRequestsBoardPage() {
             className="px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2 shrink-0"
           >
             <Plus className="w-4 h-4" />
-            {isTH ? "โพสต์คำขอใหม่" : "Post an ask"}
+            {await tServer("Post an ask")}
           </Link>
         ) : (
           <div className="bg-cream border-l-2 border-gold p-4 text-sm text-ink max-w-md">
-            {isTH
-              ? "ตั้งโปรไฟล์เป็นแบบบริษัทก่อน ถึงจะโพสต์หา partner ได้"
-              : "Switch your profile type to Company to post partnership asks."}
+            {await tServer(
+              "Switch your profile type to Company to post partnership asks.",
+            )}
             <br />
             <Link
               href="/onboarding"
               className="text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 mt-1 inline-block"
             >
-              {isTH ? "แก้ไขโปรไฟล์ →" : "Edit profile →"}
+              {await tServer("Edit profile →")}
             </Link>
           </div>
         )}
@@ -160,13 +181,11 @@ export default async function PartnershipRequestsBoardPage() {
             className="w-8 h-8 text-ink-muted mx-auto mb-4"
             strokeWidth={1}
           />
-          <h3 className="text-2xl mb-2">
-            {isTH ? "ยังไม่มีคำขอ" : "No asks yet"}
-          </h3>
+          <h3 className="text-2xl mb-2">{await tServer("No asks yet")}</h3>
           <p className="text-ink-muted leading-relaxed max-w-md mx-auto mb-6">
-            {isTH
-              ? "มาเป็นคนแรกที่โพสต์กัน บอกหน่อยว่ากำลังหา partner แบบไหน — เดี๋ยวบริษัทอื่นเห็นแล้วทักมาเอง"
-              : "Be the first to post. Describe the partner you need — other companies will see it and reach out."}
+            {await tServer(
+              "Be the first to post. Describe the partner you need — other companies will see it and reach out.",
+            )}
           </p>
           {canPost && (
             <Link
@@ -174,7 +193,7 @@ export default async function PartnershipRequestsBoardPage() {
               className="inline-flex items-center gap-2 px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm"
             >
               <Plus className="w-4 h-4" />
-              {isTH ? "โพสต์คำขอแรก" : "Post the first ask"}
+              {await tServer("Post the first ask")}
             </Link>
           )}
         </div>
@@ -182,8 +201,11 @@ export default async function PartnershipRequestsBoardPage() {
         <div className="space-y-4">
           {allAsks.map((ask) => {
             const author = authorMap.get(ask.author_id as string);
-            const status = STATUS_LABEL[ask.status as AskStatus];
-            const type = TYPE_LABEL[ask.request_type as string] ?? TYPE_LABEL.other;
+            const askStatus = ask.status as AskStatus;
+            const statusTone = STATUS_LABEL[askStatus].tone;
+            const statusText = statusLabel[askStatus];
+            const typeText =
+              typeLabel[ask.request_type as string] ?? typeLabel.other;
             const authorHref = `/profile/${(author?.slug as string | undefined) ?? ask.author_id}`;
             const fresh =
               ask.status === "open" &&
@@ -222,7 +244,7 @@ export default async function PartnershipRequestsBoardPage() {
                               className="w-3 h-3"
                               strokeWidth={1.5}
                             />
-                            {type[isTH ? "th" : "en"]}
+                            {typeText}
                           </span>
                           <span className="text-ink-muted">·</span>
                           <Link
@@ -235,7 +257,11 @@ export default async function PartnershipRequestsBoardPage() {
                           </Link>
                           <span className="text-ink-muted">·</span>
                           <span className="text-ink-muted">
-                            {timeAgo(ask.created_at as string, locale)}
+                            {timeAgo(
+                              ask.created_at as string,
+                              locale,
+                              timeLabels,
+                            )}
                           </span>
                           {fresh && (
                             <span className="w-1.5 h-1.5 rounded-full bg-gold inline-block" />
@@ -246,9 +272,9 @@ export default async function PartnershipRequestsBoardPage() {
                         </h3>
                       </div>
                       <span
-                        className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border shrink-0 ${status.tone}`}
+                        className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border shrink-0 ${statusTone}`}
                       >
-                        {status[isTH ? "th" : "en"]}
+                        {statusText}
                       </span>
                     </div>
 
@@ -259,7 +285,7 @@ export default async function PartnershipRequestsBoardPage() {
                     {ask.deadline_at && (
                       <div className="text-xs text-ink-muted mb-3 inline-flex items-center gap-1.5">
                         <Clock className="w-3 h-3" strokeWidth={1.5} />
-                        {isTH ? "กำหนดเส้นตาย" : "Deadline"}:{" "}
+                        {labels.deadline}:{" "}
                         {new Date(
                           ask.deadline_at as string,
                         ).toLocaleDateString(isTH ? "th-TH" : "en-GB", {
@@ -273,9 +299,7 @@ export default async function PartnershipRequestsBoardPage() {
                     <div className="pt-3 border-t border-line flex items-center justify-between gap-3 flex-wrap">
                       <div className="text-xs text-ink-muted flex items-center gap-1.5">
                         <Sparkles className="w-3 h-3 text-gold" strokeWidth={1.5} />
-                        {isTH
-                          ? "เปิดดูโปรไฟล์ แล้วตอบกลับด้วยคำขอ partner ได้เลย"
-                          : "View their profile to respond with a partnership request"}
+                        {labels.respondHint}
                       </div>
                       <div className="flex items-center gap-3">
                         {isMine && (
@@ -290,7 +314,7 @@ export default async function PartnershipRequestsBoardPage() {
                             href={`/companies?focus=${ask.author_id}`}
                             className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
                           >
-                            {isTH ? "ตอบกลับ" : "Respond"}
+                            {labels.respond}
                             <ArrowRight className="w-3.5 h-3.5" />
                           </Link>
                         )}
@@ -299,7 +323,7 @@ export default async function PartnershipRequestsBoardPage() {
                             href={authorHref}
                             className="text-sm text-navy hover:text-gold inline-flex items-center gap-1"
                           >
-                            {isTH ? "ดูโปรไฟล์" : "View profile"}
+                            {labels.viewProfile}
                             <ArrowRight className="w-3.5 h-3.5" />
                           </Link>
                         )}

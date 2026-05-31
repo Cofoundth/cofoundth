@@ -31,15 +31,13 @@ export type CompanyProfile = {
   created_at: string;
 };
 
-const STATUS_TAG_LABEL: Record<string, { en: string; th: string }> = {
-  open_to_partnerships: {
-    en: "Open to partnerships",
-    th: "เปิดรับพาร์ตเนอร์",
-  },
-  open_to_cofounder: { en: "Open to co-founder", th: "เปิดรับ co-founder" },
-  hiring: { en: "Hiring", th: "กำลังจ้าง" },
-  raising: { en: "Raising", th: "กำลังระดมทุน" },
-  looking_for_advisors: { en: "Looking for advisors", th: "หาที่ปรึกษา" },
+// English label is the dictionary key; Thai comes from tr() at render.
+const STATUS_TAG_LABEL: Record<string, string> = {
+  open_to_partnerships: "Open to partnerships",
+  open_to_cofounder: "Open to co-founder",
+  hiring: "Hiring",
+  raising: "Raising",
+  looking_for_advisors: "Looking for advisors",
 };
 
 type Props = {
@@ -56,13 +54,11 @@ export function CompaniesClient({
   companies,
   capabilities,
   seeking,
-  locale,
   currentUserIsCompany,
   currentUserCompanyName,
   focusId,
 }: Props) {
   const tr = useT();
-  const isTH = locale === "th";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [capabilityFilters, setCapabilityFilters] = useState<string[]>([]);
@@ -132,19 +128,19 @@ export function CompaniesClient({
           <div>
             <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
               <Building2 className="w-3 h-3" strokeWidth={1.5} />
-              {isTH ? "เครือข่าย B2B" : "B2B Network"}
+              {tr("B2B Network")}
               <span className="text-line">·</span>
               <span className="normal-case tracking-normal text-ink-muted">
                 Beta
               </span>
             </div>
             <h1 className="text-4xl lg:text-5xl mb-2">
-              {isTH ? "บริษัทในชุมชน" : "Companies in the community"}
+              {tr("Companies in the community")}
             </h1>
             <p className="text-ink max-w-2xl">
-              {isTH
-                ? "หาพาร์ตเนอร์ที่ใช่ กรองดูได้ว่าใครทำอะไรเป็น หรือใครกำลังมองหาอะไรอยู่"
-                : "Find the right business partner. Filter by capabilities offered or partnerships sought."}
+              {tr(
+                "Find the right business partner. Filter by capabilities offered or partnerships sought.",
+              )}
             </p>
           </div>
           <div className="flex items-center gap-6">
@@ -153,14 +149,14 @@ export function CompaniesClient({
               className="text-sm text-navy hover:text-gold inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors"
             >
               <HandshakeIcon className="w-4 h-4" strokeWidth={1.5} />
-              {isTH ? "บอร์ดความร่วมมือ" : "Partnership board"}
+              {tr("Partnership board")}
             </Link>
             <div className="text-right">
               <div className="font-serif text-3xl text-navy leading-none">
                 {companies.length}
               </div>
               <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mt-1">
-                {isTH ? "บริษัท" : "Companies"}
+                {tr("Companies")}
               </div>
             </div>
           </div>
@@ -169,14 +165,14 @@ export function CompaniesClient({
         {!currentUserIsCompany && (
           <div className="mt-6 bg-cream border-l-2 border-gold p-4">
             <p className="text-sm text-ink leading-relaxed">
-              {isTH
-                ? "อยากส่งคำขอ partner? ต้องตั้งโปรไฟล์เป็นแบบบริษัทก่อนนะ "
-                : "Want to send partnership requests? Your profile must be a Company type first. "}
+              {tr(
+                "Want to send partnership requests? Your profile must be a Company type first. ",
+              )}
               <Link
                 href="/onboarding"
                 className="text-navy hover:text-gold underline underline-offset-4 decoration-gold/30"
               >
-                {isTH ? "แก้ไขโปรไฟล์" : "Edit profile"}
+                {tr("Edit profile")}
               </Link>
             </p>
           </div>
@@ -204,9 +200,7 @@ export function CompaniesClient({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={
-                    isTH ? "ชื่อบริษัท สิ่งที่ทำ พื้นที่…" : "Name, capability…"
-                  }
+                  placeholder={tr("Name, capability…")}
                   className="w-full pl-9 pr-3 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
                 />
               </div>
@@ -215,7 +209,7 @@ export function CompaniesClient({
             {capabilities.length > 0 && (
               <div>
                 <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
-                  {isTH ? "นำเสนอ" : "Offers"}
+                  {tr("Offers")}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {capabilities.map((cap) => (
@@ -234,7 +228,7 @@ export function CompaniesClient({
             {seeking.length > 0 && (
               <div>
                 <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
-                  {isTH ? "กำลังหา" : "Seeking"}
+                  {tr("Seeking")}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {seeking.map((s) => (
@@ -260,9 +254,7 @@ export function CompaniesClient({
                 }}
                 className="text-xs text-ink-muted hover:text-navy"
               >
-                {isTH
-                  ? `ล้างตัวกรอง (${activeFilters})`
-                  : `Clear filters (${activeFilters})`}
+                {tr("Clear filters ({n})").replace("{n}", String(activeFilters))}
               </button>
             )}
           </div>
@@ -278,21 +270,15 @@ export function CompaniesClient({
               />
               <h3 className="text-2xl mb-2">
                 {companies.length === 0
-                  ? isTH
-                    ? "ยังไม่มีบริษัทในชุมชน"
-                    : "No companies yet"
-                  : isTH
-                    ? "ไม่พบผลลัพธ์"
-                    : "Nothing matches"}
+                  ? tr("No companies yet")
+                  : tr("Nothing matches")}
               </h3>
               <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
                 {companies.length === 0
-                  ? isTH
-                    ? "ยังไม่มีใครเลย — มาเป็นบริษัทแรกกัน ตั้งโปรไฟล์เป็นแบบบริษัทไว้ เดี๋ยวคนอื่นก็เจอเอง"
-                    : "Be the first company to list. Switch your profile type to Company in onboarding so others can find you."
-                  : isTH
-                    ? "ลองเอาตัวกรองออกบ้าง หรือเปลี่ยนคำค้นดู"
-                    : "Try clearing some filters or changing your search."}
+                  ? tr(
+                      "Be the first company to list. Switch your profile type to Company in onboarding so others can find you.",
+                    )
+                  : tr("Try clearing some filters or changing your search.")}
               </p>
             </div>
           ) : (
@@ -301,7 +287,6 @@ export function CompaniesClient({
                 <CompanyCard
                   key={c.id}
                   c={c}
-                  locale={locale}
                   canRequest={currentUserIsCompany}
                   onRequest={() => setRequestTarget(c)}
                 />
@@ -316,7 +301,6 @@ export function CompaniesClient({
           target={requestTarget}
           fromCompanyName={currentUserCompanyName}
           onClose={() => setRequestTarget(null)}
-          locale={locale}
         />
       )}
     </div>
@@ -351,16 +335,14 @@ function FilterChip({
 
 function CompanyCard({
   c,
-  locale,
   canRequest,
   onRequest,
 }: {
   c: CompanyProfile;
-  locale: "en" | "th";
   canRequest: boolean;
   onRequest: () => void;
 }) {
-  const isTH = locale === "th";
+  const tr = useT();
   const fresh = Date.now() - new Date(c.created_at).getTime() < 7 * 86400_000;
 
   return (
@@ -388,12 +370,12 @@ function CompanyCard({
                 {fresh && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold">
                     <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-                    {isTH ? "ใหม่" : "New"}
+                    {tr("New")}
                   </span>
                 )}
               </Link>
               <div className="text-xs text-ink-muted mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                {isTH ? "ตัวแทน" : "Rep"}: {c.representative}
+                {tr("Rep")}: {c.representative}
                 {c.location && (
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> {c.location}
@@ -406,14 +388,14 @@ function CompanyCard({
           {c.status_tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {c.status_tags.map((t) => {
-                const meta = STATUS_TAG_LABEL[t];
-                if (!meta) return null;
+                const label = STATUS_TAG_LABEL[t];
+                if (!label) return null;
                 return (
                   <span
                     key={t}
                     className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border border-gold/60 text-gold bg-gold/5"
                   >
-                    {isTH ? meta.th : meta.en}
+                    {tr(label)}
                   </span>
                 );
               })}
@@ -429,7 +411,7 @@ function CompanyCard({
           {c.capabilities.length > 0 && (
             <div className="mb-3">
               <div className="text-[10px] uppercase tracking-[0.2em] text-gold mb-1.5">
-                {isTH ? "นำเสนอ" : "Offers"}
+                {tr("Offers")}
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {c.capabilities.slice(0, 8).map((cap) => (
@@ -452,7 +434,7 @@ function CompanyCard({
           {c.partnership_seeking.length > 0 && (
             <div className="mb-4">
               <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-1.5">
-                {isTH ? "กำลังหา" : "Seeking"}
+                {tr("Seeking")}
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {c.partnership_seeking.slice(0, 8).map((s) => (
@@ -472,7 +454,7 @@ function CompanyCard({
               href={`/profile/${c.slug}`}
               className="text-sm text-navy hover:text-gold inline-flex items-center gap-1"
             >
-              {isTH ? "ดูโปรไฟล์เต็ม" : "Full profile"}
+              {tr("Full profile")}
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             {canRequest && (
@@ -482,7 +464,7 @@ function CompanyCard({
                 className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
               >
                 <HandshakeIcon className="w-3.5 h-3.5" />
-                {isTH ? "ส่งคำขอความร่วมมือ" : "Send partnership request"}
+                {tr("Send partnership request")}
               </button>
             )}
           </div>
