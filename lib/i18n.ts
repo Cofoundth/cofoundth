@@ -71,7 +71,7 @@ export const TH: Record<string, string> = {
   "A community for Thailand's startup founders.":
     "ชุมชนของ founder สตาร์ทอัพไทย",
   "Meet other Thai founders, share what you're building, and find the partners, co-founders, and advisors you need — starting from real community, not cold matching.":
-    "มาเจอ founder ไทยคนอื่นๆ แชร์สิ่งที่คุณกำลังสร้าง แล้วค่อยหาพาร์ตเนอร์ co-founder และที่ปรึกษาที่ต้องการ — เริ่มจากการเป็นชุมชนจริงๆ ไม่ใช่การจับคู่แบบเย็นชา",
+    "มาเจอ founder ไทยคนอื่นๆ มาเล่าว่ากำลังทำอะไรอยู่ แล้วค่อยเจอพาร์ตเนอร์ co-founder หรือที่ปรึกษาที่ใช่ — เริ่มจากการได้รู้จักกันจริงๆ ไม่ใช่แค่จับคู่กันแบบสุ่มๆ",
   "Create your profile": "สร้างโปรไฟล์",
   "Join the community": "สร้างโปรไฟล์",
   "Browse founders": "ดู founder",
@@ -91,11 +91,11 @@ export const TH: Record<string, string> = {
     "ของแถม — พบ co-founder ที่เสริมกัน เมื่อพร้อม",
 
   // ─── Landing — Pillars ────────────────────────────────────────────
-  "Where we're headed": "เรากำลังมุ่งไปทางไหน",
+  "Where we're headed": "ทิศทางของเรา",
   "Where we want this to go — built one honest step at a time.":
-    "ที่ที่เราอยากให้มันไปถึง — ค่อยๆ สร้างทีละก้าวอย่างจริงใจ",
+    "เป้าหมายของเรา — ค่อยๆ ไปทีละขั้น",
   "Community comes first, because trust has to. Partnerships, advisors, and investor intros grow on top of it — and we'll build each one only when it's truly ready.":
-    "ชุมชนมาก่อน เพราะความไว้ใจต้องมาก่อนเสมอ พาร์ตเนอร์ ที่ปรึกษา และการแนะนำนักลงทุนจะค่อยๆ ต่อยอดขึ้นมา และเราจะสร้างแต่ละอย่างเมื่อมันพร้อมจริงๆ เท่านั้น",
+    "ชุมชนต้องมาก่อน เพราะทุกอย่างเริ่มจากความไว้ใจ ส่วนพาร์ตเนอร์ ที่ปรึกษา หรือการแนะนำนักลงทุน เดี๋ยวค่อยตามมา — เราจะทำแต่ละอย่างตอนที่มันพร้อมจริงๆ",
   "Where Thai founders meet": "ที่ที่ founder ไทยมาเจอกัน",
   "Forum, content, and events for serious Thai startup builders. Ask questions, share what you're shipping, and meet the people who'll shape your journey.":
     "ฟอรัม บทความ และอีเวนต์ สำหรับคนที่จริงจังกับ startup ถามได้ แชร์ได้ และเจอคนที่ใช่",
@@ -159,11 +159,11 @@ export const TH: Record<string, string> = {
   "Your missing piece is on the platform.":
     "คนที่คุณตามหา อยู่บนแพลตฟอร์มนี้",
   "It's still early — which is the best reason to join now.":
-    "ตอนนี้ยังเป็นช่วงเริ่มต้น — และนั่นแหละคือเหตุผลที่ดีที่สุดที่จะเข้ามาตั้งแต่วันนี้",
+    "ตอนนี้ยังเพิ่งเริ่ม — นี่แหละคือจังหวะที่ดีที่สุดที่จะเข้ามา",
   "Join Thailand’s most serious community of founders looking to build together. Free during our launch phase.":
     "เข้าร่วมชุมชน founder ไทยที่จริงจังที่สุด มองหาคนสร้างธุรกิจไปด้วยกัน ใช้งานฟรีในช่วงเปิดตัว",
   "We're just getting started, and the people who join now shape what this becomes. Come be one of them — free to join.":
-    "เราเพิ่งเริ่มต้น และคนที่เข้ามาตอนนี้คือคนที่จะกำหนดว่ามันจะเป็นยังไงต่อ มาเป็นหนึ่งในนั้นด้วยกัน — เข้าร่วมฟรี",
+    "เราเพิ่งเริ่มได้ไม่นาน คนที่เข้ามาช่วงนี้แหละคือคนที่จะช่วยกำหนดทิศทางของมัน มาเป็นหนึ่งในนั้นกัน — เข้าร่วมฟรี",
   "Join us — it's free": "มาร่วมกับเรา — ฟรี",
   "Create your profile — Free": "สร้างโปรไฟล์ฟรี",
 
