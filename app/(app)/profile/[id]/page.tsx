@@ -48,7 +48,7 @@ export async function generateMetadata({
 }
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
 
 const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   open_to_partnerships: {
@@ -352,6 +352,30 @@ export default async function ProfileDetailPage({ params }: Props) {
               </div>
               <p className="text-ink leading-relaxed whitespace-pre-line">
                 {profile.background}
+              </p>
+            </section>
+          )}
+
+          {/* Work experience */}
+          {profile.work_experience && (
+            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
+              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-3">
+                {await tServer("Work experience")}
+              </div>
+              <p className="text-ink leading-relaxed whitespace-pre-line">
+                {profile.work_experience as string}
+              </p>
+            </section>
+          )}
+
+          {/* Education */}
+          {profile.education && (
+            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
+              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-3">
+                {await tServer("Education")}
+              </div>
+              <p className="text-ink leading-relaxed whitespace-pre-line">
+                {profile.education as string}
               </p>
             </section>
           )}

@@ -75,6 +75,12 @@ export async function updateProfileAction(
   const pitch = String(formData.get("pitch") ?? "").trim();
   const why_this = String(formData.get("why_this") ?? "").trim().slice(0, 1000);
   const background = String(formData.get("background") ?? "").trim().slice(0, 600);
+  const work_experience = String(formData.get("work_experience") ?? "")
+    .trim()
+    .slice(0, 800);
+  const education = String(formData.get("education") ?? "")
+    .trim()
+    .slice(0, 400);
   const skills = cap(
     formData
       .getAll("skills")
@@ -177,6 +183,8 @@ export async function updateProfileAction(
       pitch,
       why_this: why_this || null,
       background: background || null,
+      work_experience: work_experience || null,
+      education: education || null,
       skills,
       type: profile_type,
       company_name: profile_type === "company" ? company_name : null,

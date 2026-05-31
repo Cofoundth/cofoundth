@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, slug, full_name, age, location, linkedin_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, skills, onboarded",
+      "id, slug, full_name, age, location, linkedin_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, onboarded",
     )
     .eq("id", user.id)
     .single();
@@ -52,6 +52,8 @@ export default async function SettingsPage() {
     pitch: profile.pitch ?? "",
     why_this: profile.why_this ?? "",
     background: profile.background ?? "",
+    work_experience: profile.work_experience ?? "",
+    education: profile.education ?? "",
     skills: arr(profile.skills),
   };
 

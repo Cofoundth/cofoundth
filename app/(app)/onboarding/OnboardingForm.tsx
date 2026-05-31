@@ -113,6 +113,8 @@ type FormState = {
   pitch: string;
   why_this: string;
   background: string;
+  work_experience: string;
+  education: string;
   skills: string[];
 };
 
@@ -151,6 +153,8 @@ export function OnboardingForm({ initial }: Props) {
     pitch: "",
     why_this: "",
     background: "",
+    work_experience: "",
+    education: "",
     skills: [],
     ...initial,
   });
@@ -242,6 +246,8 @@ export function OnboardingForm({ initial }: Props) {
     fd.append("pitch", data.pitch);
     fd.append("why_this", data.why_this);
     fd.append("background", data.background);
+    fd.append("work_experience", data.work_experience);
+    fd.append("education", data.education);
     data.skills.forEach((s) => fd.append("skills", s));
 
     startTransition(async () => {
@@ -825,6 +831,44 @@ function StepPitch({
           placeholder={tr(
             "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.",
           )}
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="work_experience"
+          className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+        >
+          {tr("Work experience (optional)")}
+        </label>
+        <textarea
+          id="work_experience"
+          value={data.work_experience}
+          onChange={(e) => set("work_experience", e.target.value)}
+          rows={4}
+          maxLength={800}
+          placeholder={tr(
+            "Roles, companies, what you built. One per line is fine.",
+          )}
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="education"
+          className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+        >
+          {tr("Education (optional)")}
+        </label>
+        <textarea
+          id="education"
+          value={data.education}
+          onChange={(e) => set("education", e.target.value)}
+          rows={2}
+          maxLength={400}
+          placeholder={tr("Degrees, schools, bootcamps.")}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />
       </div>

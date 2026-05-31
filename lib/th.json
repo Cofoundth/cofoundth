@@ -556,5 +556,11 @@
   "Write a comment…": "เขียนคอมเมนต์…",
   "tags: fundraising, hiring, thai-market": "แท็ก: fundraising, hiring, thai-market",
   "Photo": "รูปภาพ",
-  "Remove": "เอาออก"
+  "Remove": "เอาออก",
+  "Work experience (optional)": "ประสบการณ์ทำงาน (ไม่ใส่ก็ได้)",
+  "Education (optional)": "การศึกษา (ไม่ใส่ก็ได้)",
+  "Work experience": "ประสบการณ์ทำงาน",
+  "Education": "การศึกษา",
+  "Roles, companies, what you built. One per line is fine.": "ตำแหน่ง บริษัท สิ่งที่เคยทำ — ใส่บรรทัดละอย่างก็ได้",
+  "Degrees, schools, bootcamps.": "วุฒิการศึกษา สถาบัน คอร์สที่เรียนมา"
 }
