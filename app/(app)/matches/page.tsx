@@ -113,7 +113,7 @@ export default async function ConnectionsPage() {
         </h1>
         <p className="text-ink">
           {isTH
-            ? "ความสนใจ แมตช์ และบทสนทนา รวมไว้ที่เดียว"
+            ? "ความสนใจ แมตช์ และแชต รวมไว้ที่เดียว"
             : "Interest, matches, and conversations — all in one place."}
         </p>
       </div>
@@ -130,7 +130,7 @@ export default async function ConnectionsPage() {
               <div className="flex items-center gap-2 text-sm text-ink-muted mb-3">
                 <Inbox className="w-4 h-4" strokeWidth={1.5} />
                 {isTH
-                  ? `${received.length} คนสนใจคุณ — เปิดโปรไฟล์เพื่อตอบรับ`
+                  ? `มี ${received.length} คนสนใจคุณ — เปิดโปรไฟล์เขาแล้วตอบรับได้เลย`
                   : `${received.length} interested in you — open their profile to respond`}
               </div>
               <div className="bg-white border border-line divide-y divide-line">
@@ -296,7 +296,7 @@ export default async function ConnectionsPage() {
                         {msg?.last_content ?? (
                           <span className="text-ink-muted italic">
                             {isTH
-                              ? "แมตช์แล้ว! เริ่มบทสนทนาได้เลย"
+                              ? "แมตช์แล้ว! ทักไปคุยได้เลย"
                               : "Mutual interest! Start the conversation."}
                           </span>
                         )}

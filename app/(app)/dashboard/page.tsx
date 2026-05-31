@@ -258,7 +258,7 @@ export default async function DashboardPage() {
           </div>
           <div className="text-ink-muted">
             {postsThisWeek ?? 0}{" "}
-            {isTH ? "โพสต์ 7 วัน" : "posts in 7d"}
+            {isTH ? "โพสต์ใน 7 วัน" : "posts in 7d"}
           </div>
         </div>
       </div>
@@ -390,7 +390,7 @@ export default async function DashboardPage() {
           {/* Forum posts */}
           <div className="flex items-center justify-between mb-3 mt-2">
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
-              {isTH ? "ในชุมชน · ล่าสุด" : "Live in the community"}
+              {isTH ? "กำลังคุยกันในชุมชน" : "Live in the community"}
             </h2>
             <Link
               href="/community"
@@ -405,7 +405,7 @@ export default async function DashboardPage() {
             <div className="bg-white border border-line p-8 text-center">
               <p className="text-sm text-ink-muted mb-4">
                 {isTH
-                  ? "ยังไม่มีโพสต์ในชุมชน เริ่มต้นบทสนทนาแรกได้เลย"
+                  ? "ยังไม่มีใครเปิดโพสต์เลย เริ่มบทสนทนาแรกได้เลยนะ"
                   : "No conversations yet. Start the first one."}
               </p>
               <Link
@@ -501,7 +501,7 @@ export default async function DashboardPage() {
             <div className="bg-white border border-line p-6 text-center">
               <p className="text-sm text-ink-muted">
                 {isTH
-                  ? "คุณเป็นคนแรก ชวนเพื่อนมาสมัครกัน"
+                  ? "คุณมาเป็นคนแรกเลย ชวนเพื่อนมาด้วยกันสิ"
                   : "You're the first. Invite a friend."}
               </p>
             </div>

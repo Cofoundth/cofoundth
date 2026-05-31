@@ -61,7 +61,7 @@ const KIND_META: Record<StatusKind, { icon: typeof Sparkles; en: string; th: str
   milestone: {
     icon: Trophy,
     en: "hit a milestone",
-    th: "ประสบความสำเร็จ",
+    th: "ทำสำเร็จไปอีกขั้น",
     tone: "text-gold",
     bg: "bg-gold/5",
   },
@@ -80,7 +80,7 @@ export function StatusFeed({ items, locale, emptyMessage }: Props) {
       <div className="bg-white border border-line p-6 text-center text-sm text-ink-muted">
         {emptyMessage ??
           (locale === "th"
-            ? "ยังไม่มีอัปเดต — เป็นคนแรก"
+            ? "ยังไม่มีใครอัปเดต — มาเป็นคนแรกกัน"
             : "No updates yet — be the first.")}
       </div>
     );

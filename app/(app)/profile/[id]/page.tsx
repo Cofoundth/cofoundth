@@ -383,7 +383,7 @@ export default async function ProfileDetailPage({ params }: Props) {
             <section className="bg-white border border-line p-8 lg:p-10 mb-6">
               <div className="text-xs uppercase tracking-[0.2em] text-gold mb-5">
                 {locale === "th"
-                  ? "ความสำเร็จและงานที่ปล่อยล่าสุด"
+                  ? "ก้าวสำคัญและงานที่เพิ่งปล่อย"
                   : "Recent milestones & launches"}
               </div>
               <div className="space-y-4">

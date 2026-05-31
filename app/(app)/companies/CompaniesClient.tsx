@@ -143,7 +143,7 @@ export function CompaniesClient({
             </h1>
             <p className="text-ink max-w-2xl">
               {isTH
-                ? "ค้นหาพาร์ตเนอร์ธุรกิจที่เหมาะสม กรองตามความสามารถหรือสิ่งที่บริษัทกำลังหา"
+                ? "หาพาร์ตเนอร์ที่ใช่ กรองดูได้ว่าใครทำอะไรเป็น หรือใครกำลังมองหาอะไรอยู่"
                 : "Find the right business partner. Filter by capabilities offered or partnerships sought."}
             </p>
           </div>
@@ -170,7 +170,7 @@ export function CompaniesClient({
           <div className="mt-6 bg-cream border-l-2 border-gold p-4">
             <p className="text-sm text-ink leading-relaxed">
               {isTH
-                ? "อยากส่งคำขอความร่วมมือ? โปรไฟล์ของคุณต้องเป็นแบบบริษัทก่อน "
+                ? "อยากส่งคำขอ partner? ต้องตั้งโปรไฟล์เป็นแบบบริษัทก่อนนะ "
                 : "Want to send partnership requests? Your profile must be a Company type first. "}
               <Link
                 href="/onboarding"
@@ -205,7 +205,7 @@ export function CompaniesClient({
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={
-                    isTH ? "ชื่อ ความสามารถ พื้นที่…" : "Name, capability…"
+                    isTH ? "ชื่อบริษัท สิ่งที่ทำ พื้นที่…" : "Name, capability…"
                   }
                   className="w-full pl-9 pr-3 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
                 />
@@ -288,10 +288,10 @@ export function CompaniesClient({
               <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
                 {companies.length === 0
                   ? isTH
-                    ? "เป็นบริษัทแรกที่เข้าร่วม — แก้ไขโปรไฟล์เป็นแบบบริษัทเพื่อเปิดให้บริษัทอื่นค้นพบคุณ"
+                    ? "ยังไม่มีใครเลย — มาเป็นบริษัทแรกกัน ตั้งโปรไฟล์เป็นแบบบริษัทไว้ เดี๋ยวคนอื่นก็เจอเอง"
                     : "Be the first company to list. Switch your profile type to Company in onboarding so others can find you."
                   : isTH
-                    ? "ลองล้างตัวกรองหรือเปลี่ยนคำค้นหา"
+                    ? "ลองเอาตัวกรองออกบ้าง หรือเปลี่ยนคำค้นดู"
                     : "Try clearing some filters or changing your search."}
               </p>
             </div>

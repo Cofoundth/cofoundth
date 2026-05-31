@@ -126,7 +126,7 @@ export default async function PartnershipRequestsBoardPage() {
           </h1>
           <p className="text-ink max-w-2xl">
             {isTH
-              ? "บอร์ดสาธารณะของคำขอความร่วมมือ B2B โพสต์สิ่งที่บริษัทคุณกำลังหา หรือสำรวจสิ่งที่คนอื่นกำลังหา"
+              ? "พื้นที่กลางให้บริษัทโพสต์หา partner — ลงว่ากำลังมองหาอะไร หรือเข้ามาดูว่าคนอื่นหาอะไรกันอยู่"
               : "Public board of B2B partnership asks. Post what your company needs, or browse what others are looking for."}
           </p>
         </div>
@@ -141,7 +141,7 @@ export default async function PartnershipRequestsBoardPage() {
         ) : (
           <div className="bg-cream border-l-2 border-gold p-4 text-sm text-ink max-w-md">
             {isTH
-              ? "เปลี่ยนโปรไฟล์เป็นบริษัทเพื่อโพสต์คำขอความร่วมมือ"
+              ? "ตั้งโปรไฟล์เป็นแบบบริษัทก่อน ถึงจะโพสต์หา partner ได้"
               : "Switch your profile type to Company to post partnership asks."}
             <br />
             <Link
@@ -165,7 +165,7 @@ export default async function PartnershipRequestsBoardPage() {
           </h3>
           <p className="text-ink-muted leading-relaxed max-w-md mx-auto mb-6">
             {isTH
-              ? "เป็นคนแรกที่โพสต์คำขอความร่วมมือ บอกว่าคุณกำลังหาพาร์ตเนอร์แบบไหน — บริษัทอื่นจะเห็นและติดต่อกลับ"
+              ? "มาเป็นคนแรกที่โพสต์กัน บอกหน่อยว่ากำลังหา partner แบบไหน — เดี๋ยวบริษัทอื่นเห็นแล้วทักมาเอง"
               : "Be the first to post. Describe the partner you need — other companies will see it and reach out."}
           </p>
           {canPost && (
@@ -274,7 +274,7 @@ export default async function PartnershipRequestsBoardPage() {
                       <div className="text-xs text-ink-muted flex items-center gap-1.5">
                         <Sparkles className="w-3 h-3 text-gold" strokeWidth={1.5} />
                         {isTH
-                          ? "ดูโปรไฟล์เพื่อตอบกลับด้วยคำขอความร่วมมือ"
+                          ? "เปิดดูโปรไฟล์ แล้วตอบกลับด้วยคำขอ partner ได้เลย"
                           : "View their profile to respond with a partnership request"}
                       </div>
                       <div className="flex items-center gap-3">

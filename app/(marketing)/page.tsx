@@ -289,7 +289,7 @@ export default async function LandingPage() {
                 </div>
                 <h2 className="text-2xl lg:text-3xl leading-tight">
                   {isTH
-                    ? "ผลงานล่าสุดจาก founder ในชุมชน"
+                    ? "ล่าสุด founder ในชุมชนเพิ่งปล่อยอะไรกันมาบ้าง"
                     : "What founders in the community just shipped."}
                 </h2>
               </div>
@@ -386,7 +386,7 @@ export default async function LandingPage() {
             </div>
             <h2 className="text-4xl lg:text-5xl leading-tight">
               {isTH
-                ? "ถ้าคุณกำลังสร้างอะไรสักอย่างในไทย ที่นี่มีที่สำหรับคุณ"
+                ? "ถ้ากำลังสร้างอะไรสักอย่างอยู่ในไทย ที่นี่มีที่ให้คุณ"
                 : "If you're building something in Thailand, you belong here."}
             </h2>
           </div>
@@ -400,7 +400,7 @@ export default async function LandingPage() {
               </h3>
               <p className="text-ink leading-relaxed text-sm">
                 {isTH
-                  ? "Technical founder ที่อยากเจอคนมาดูแลธุรกิจ การขาย หรือการเติบโต เพื่อไปด้วยกัน"
+                  ? "เป็น technical founder ที่อยากได้คนมาช่วยดูฝั่งธุรกิจ การขาย หรือการเติบโต ไปด้วยกัน"
                   : "A technical founder looking for someone to own the business, sales, or growth alongside you."}
               </p>
             </div>
@@ -413,7 +413,7 @@ export default async function LandingPage() {
               </h3>
               <p className="text-ink leading-relaxed text-sm">
                 {isTH
-                  ? "มีไอเดียและเข้าใจตลาด แต่ต้องการพาร์ตเนอร์ที่ลงมือสร้างผลิตภัณฑ์จริง"
+                  ? "มีไอเดียแล้วก็เข้าใจตลาด แต่ยังขาดคนที่มาลงมือสร้างโปรดักต์จริงๆ"
                   : "You've got the idea and the market — you need a partner to actually build the product."}
               </p>
             </div>
@@ -426,7 +426,7 @@ export default async function LandingPage() {
               </h3>
               <p className="text-ink leading-relaxed text-sm">
                 {isTH
-                  ? "ยังไม่แน่ใจว่าจะทำอะไร แต่อยากอยู่ท่ามกลาง founder คนอื่น แล้วหาทางที่ใช่ไปด้วยกัน"
+                  ? "ยังไม่รู้ว่าจะทำอะไรดี แต่อยากอยู่กับ founder คนอื่นๆ แล้วค่อยๆ หาทางที่ใช่ไปด้วยกัน"
                   : "Not sure what to build yet — but you want to be around other founders and find the right thing together."}
               </p>
             </div>
@@ -544,7 +544,7 @@ export default async function LandingPage() {
                 q_en: "Is it really free?",
                 q_th: "ฟรีจริงไหม?",
                 a_en: "Yes — free for founders, and it stays that way in this phase. We'll earn from partners and services later, never from charging founders to meet each other.",
-                a_th: "ฟรีสำหรับ founder จริงๆ และจะเป็นแบบนี้ตลอดช่วงนี้ รายได้ในอนาคตมาจากพาร์ตเนอร์และบริการ ไม่ใช่การเก็บเงิน founder เพื่อให้ได้มาเจอกัน",
+                a_th: "ฟรีสำหรับ founder จริงๆ และจะเป็นแบบนี้ตลอดช่วงนี้ รายได้ในอนาคตมาจากพาร์ตเนอร์กับบริการต่างๆ ไม่ใช่จากการเก็บเงิน founder ให้มาเจอกัน",
               },
               {
                 q_en: "Do I need a co-founder or an idea already?",

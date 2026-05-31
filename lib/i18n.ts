@@ -3,15 +3,16 @@
 // Anything that touches `next/headers` (cookies) lives in `i18n-server.ts`
 // so this module doesn't drag server APIs into the client bundle.
 //
-// Thai voice — calibrated to TechSauce editorial / SCB corporate register:
-//   - Professional but not bureaucratic
-//   - `พบ` over `เจอ`, `สำรวจ` over `ดู`, `เหมาะสม` over `ที่ใช่` for business contexts
-//   - `เครือข่าย` / `แพลตฟอร์ม`, not `บ้าน`
-//   - Drop sentence-ending particles `เลย` / `สิ`
-//   - Drop casual `มา + verb` invitations; prefer declarative
-//   - Keep English loanwords: founder, co-founder, pitch, startup, MVP,
-//     B2B, VC, angel, Complement Score, Markdown, feedback, traction, runway
-//   - Brand bylines, dates, location marks stay English
+// Thai voice — native, conversational, founder-to-founder (NOT translation-Thai):
+//   - Write like you're chatting with a fellow Thai founder — sincere, warm, peer.
+//   - Match the MEANING of the English, not its words. Rewrite freely.
+//   - Use natural particles: แหละ, นะ, เลย, กัน, เดี๋ยว, ค่อยๆ, ก็.
+//   - Short, punchy phrases; drop subjects (you/we/it) when natural.
+//   - Avoid translation-Thai: no "ที่ที่...", no tacked-on "อย่างจริงใจ", no
+//     over-literal words ("cold" ≠ "เย็นชา").
+//   - Keep English loanwords founders use: founder, co-founder, startup, pitch,
+//     profile, post, comment, partner, B2B, VC, angel, MVP, Markdown.
+//   - Brand bylines, dates, location marks stay English.
 
 export const LOCALES = ["en", "th"] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -61,7 +62,7 @@ export const TH: Record<string, string> = {
   "You and {name} are now connected": "คุณกับ {name} เชื่อมต่อกันแล้ว",
   "Built by founders, for founders.": "พัฒนาโดย founder เพื่อ founder",
   "The platform for Thailand’s founders to find their co-founder.":
-    "เครือข่าย ที่ปรึกษา และคู่หูธุรกิจ ของ startup ไทย",
+    "ที่รวมของ founder ไทย — หา co-founder คู่หูธุรกิจ และที่ปรึกษา",
   "Legal templates": "เทมเพลตเอกสารกฎหมาย",
 
   // ─── Landing — hero ───────────────────────────────────────────────
@@ -69,7 +70,7 @@ export const TH: Record<string, string> = {
   // em-dash trailing clauses), not translated word-for-word.
   "Thailand's startup community": "เครือข่าย founder ไทย",
   "A community for Thailand's startup founders.":
-    "ชุมชนของ founder สตาร์ทอัพไทย",
+    "ชุมชนของ founder ไทย",
   "Meet other Thai founders, share what you're building, and find the partners, co-founders, and advisors you need — starting from real community, not cold matching.":
     "มาเจอ founder ไทยคนอื่นๆ มาเล่าว่ากำลังทำอะไรอยู่ แล้วค่อยเจอพาร์ตเนอร์ co-founder หรือที่ปรึกษาที่ใช่ — เริ่มจากการได้รู้จักกันจริงๆ ไม่ใช่แค่จับคู่กันแบบสุ่มๆ",
   "Create your profile": "สร้างโปรไฟล์",
@@ -88,7 +89,7 @@ export const TH: Record<string, string> = {
     "เครือข่าย B2B ที่ปรึกษากฎหมาย/การเงิน และการแนะนำนักลงทุน",
   "Co-founder matching": "ค้นหา co-founder",
   "Cherry on top — find complementary partners when you're ready":
-    "ของแถม — พบ co-founder ที่เสริมกัน เมื่อพร้อม",
+    "ของแถม — พร้อมเมื่อไหร่ค่อยหา co-founder ที่เสริมกัน",
 
   // ─── Landing — Pillars ────────────────────────────────────────────
   "Where we're headed": "ทิศทางของเรา",
@@ -96,63 +97,63 @@ export const TH: Record<string, string> = {
     "เป้าหมายของเรา — ค่อยๆ ไปทีละขั้น",
   "Community comes first, because trust has to. Partnerships, advisors, and investor intros grow on top of it — and we'll build each one only when it's truly ready.":
     "ชุมชนต้องมาก่อน เพราะทุกอย่างเริ่มจากความไว้ใจ ส่วนพาร์ตเนอร์ ที่ปรึกษา หรือการแนะนำนักลงทุน เดี๋ยวค่อยตามมา — เราจะทำแต่ละอย่างตอนที่มันพร้อมจริงๆ",
-  "Where Thai founders meet": "ที่ที่ founder ไทยมาเจอกัน",
+  "Where Thai founders meet": "จุดนัดพบของ founder ไทย",
   "Forum, content, and events for serious Thai startup builders. Ask questions, share what you're shipping, and meet the people who'll shape your journey.":
-    "ฟอรัม บทความ และอีเวนต์ สำหรับคนที่จริงจังกับ startup ถามได้ แชร์ได้ และเจอคนที่ใช่",
+    "ฟอรัม บทความ และอีเวนต์ สำหรับคนที่จริงจังกับ startup ถามได้ แชร์สิ่งที่กำลังทำ แล้วเจอคนที่จะมาร่วมเดินทางไปด้วยกัน",
   "B2B Network": "เครือข่าย B2B",
   "Companies finding companies": "หาพาร์ตเนอร์ธุรกิจที่ใช่",
   "Advisor Partners": "พาร์ตเนอร์ที่ปรึกษา",
   "Legal + finance, on demand": "กฎหมายและการเงิน เมื่อจำเป็น",
   "Partnered with vetted Thai law firms and accountants. Get advice on incorporation, contracts, fundraising structure — without paying for a full retainer.":
-    "ร่วมมือกับสำนักงานกฎหมายและนักบัญชีไทยที่ผ่านการคัดสรร ขอคำแนะนำเรื่องการจดทะเบียนบริษัท สัญญา และโครงสร้างการระดมทุน — โดยไม่ต้องจ้างประจำ",
+    "เราจับมือกับสำนักงานกฎหมายและนักบัญชีไทยที่คัดมาแล้ว ปรึกษาเรื่องจดทะเบียนบริษัท สัญญา หรือโครงสร้างการระดมทุนได้ โดยไม่ต้องจ้างประจำ",
   "Capital Bridge": "เชื่อมต่อกับเงินทุน",
-  "Warm intros to investors": "เชื่อมคุณกับนักลงทุนที่เหมาะสม",
+  "Warm intros to investors": "แนะนำให้รู้จักนักลงทุนที่ใช่",
   "Not cold algorithmic matching. Once you're active in the community, we make warm introductions to angel networks and VCs that fit your stage.":
-    "ไม่ใช่การจับคู่ด้วย algorithm เมื่อคุณมีส่วนร่วมในชุมชน เราจะแนะนำคุณกับเครือข่าย angel และ VC ที่เหมาะกับช่วงของคุณ",
+    "ไม่ใช่การจับคู่ด้วย algorithm แบบสุ่มๆ พอคุณเริ่มมีส่วนร่วมในชุมชน เราจะแนะนำให้รู้จักเครือข่าย angel และ VC ที่เหมาะกับช่วงของคุณ",
   Live: "เปิดใช้งานแล้ว",
   Beta: "Beta",
   "Coming soon": "เร็วๆ นี้",
   "Startups partner with startups — vendors, integrations, distribution, co-marketing. Send a partnership request, get a response, unlock messaging. No mutual-interest gate.":
-    "Startup จับมือกัน — vendor, integration, การจัดจำหน่าย, co-marketing ส่งคำขอความร่วมมือ รอตอบกลับ แล้วเปิดให้สนทนา ไม่ต้องสนใจตรงกันสองทาง",
+    "Startup จับมือกับ startup — เป็น vendor, ทำ integration, ช่วยกระจายสินค้า, co-marketing ส่งคำขอจับมือ พอเขาตอบกลับก็คุยกันได้เลย ไม่ต้องรอให้สนใจตรงกันทั้งสองฝ่าย",
 
   // ─── Onboarding — partnership seeking (B2B) ───────────────────────
   "Partners you're seeking (comma-separated, optional)":
     "พาร์ตเนอร์ที่กำลังหา (คั่นด้วยจุลภาค, ไม่บังคับ)",
   "What capabilities you're looking for in a partner. Companies offering these will see you in their matches.":
-    "ความสามารถที่คุณกำลังมองหาในพาร์ตเนอร์ บริษัทที่นำเสนอสิ่งเหล่านี้จะเห็นคุณในผลลัพธ์",
+    "อยากได้พาร์ตเนอร์ที่ทำอะไรได้บ้าง บริษัทที่ทำสิ่งเหล่านี้จะเห็นคุณในผลการค้นหา",
 
   // ─── Landing — Process ────────────────────────────────────────────
   "The process": "ขั้นตอน",
   "Considered. Mutual. Serious.":
-    "ใคร่ครวญ · ตอบรับร่วมกัน · จริงจัง",
+    "คิดมาดี · ตรงกันทั้งคู่ · จริงจัง",
   "Trust first. Everything else follows.":
-    "ความเชื่อมั่นมาก่อน ที่เหลือตามมาเอง",
+    "เริ่มจากความไว้ใจก่อน ที่เหลือตามมาเอง",
   "Free. Build your profile, see who's here, follow the conversations.":
-    "ฟรี สร้างโปรไฟล์ สำรวจว่ามีใครอยู่บ้าง ติดตามบทสนทนา",
-  "Contribute + connect": "มีส่วนร่วมและเชื่อมต่อ",
+    "ฟรี สร้างโปรไฟล์ ดูว่ามีใครอยู่บ้าง ตามอ่านบทสนทนา",
+  "Contribute + connect": "ร่วมวงแล้วต่อสาย",
   "Post, comment, attend events. Get known for what you build.":
-    "โพสต์ แสดงความคิดเห็น ร่วมอีเวนต์ ให้ผู้คนรู้จักคุณจากสิ่งที่คุณสร้าง",
+    "โพสต์ คอมเมนต์ มาร่วมอีเวนต์ ให้คนรู้จักคุณจากสิ่งที่คุณทำ",
   "Find what you need": "พบสิ่งที่คุณต้องการ",
   "B2B partners, co-founders, advisors, investors — unlocked by trust.":
-    "พาร์ตเนอร์ B2B, co-founder, ที่ปรึกษา และนักลงทุน — ปลดล็อกด้วยความเชื่อมั่น",
-  "Grow together": "เติบโตไปด้วยกัน",
+    "พาร์ตเนอร์ B2B, co-founder, ที่ปรึกษา, นักลงทุน — ความไว้ใจปลดล็อกให้เอง",
+  "Grow together": "โตไปด้วยกัน",
   "When the community grows, everyone in it grows too. That's the whole idea.":
-    "เมื่อชุมชนเติบโต ทุกคนในนั้นก็เติบโตไปด้วย นั่นแหละคือหัวใจของมัน",
+    "พอชุมชนโต ทุกคนในนั้นก็โตตาม นี่แหละคือหัวใจของมัน",
   "Declare what you are, what you bring, and what you need.":
-    "บอกว่าคุณคือใคร นำเสนออะไร และกำลังหาอะไร",
+    "บอกว่าคุณเป็นใคร มีอะไรมาเสนอ และกำลังหาอะไร",
   "Browse directory": "สำรวจไดเรกทอรี",
   "Filter by role, industry, and intent. Read full pitches.":
-    "กรองตามบทบาท อุตสาหกรรม และเป้าหมาย พร้อมอ่าน pitch แบบเต็ม",
+    "กรองตามบทบาท อุตสาหกรรม และเป้าหมาย อ่าน pitch ได้เต็มๆ",
   "Express interest": "แสดงความสนใจ",
   "Send a thoughtful note. No spam, no swipes.":
-    "ส่งข้อความที่ผ่านการไตร่ตรอง ไม่มีสแปม ไม่มีการปัดสุ่ม",
-  "Mutual unlock": "ปลดล็อกร่วมกัน",
+    "ส่งข้อความที่คิดมาดี ไม่มีสแปม ไม่มีปัดซ้ายขวา",
+  "Mutual unlock": "ปลดล็อกเมื่อตรงกัน",
   "When both express interest, messaging opens.":
-    "เมื่อความสนใจตรงกัน ระบบจะเปิดให้สนทนาได้",
+    "พอสนใจตรงกันทั้งคู่ ก็เปิดให้คุยกันได้เลย",
 
   // ─── Landing — Testimonial ────────────────────────────────────────
   "I joined for the community, stayed for the conversations, and ended up finding our first enterprise customer through someone I met in the forum. That's the kind of compounding you don't get from cold outreach.":
-    "ผมเข้ามาเพราะชุมชน อยู่ต่อเพราะบทสนทนา และในที่สุดก็ได้ลูกค้า enterprise รายแรกผ่านคนที่พบในฟอรัม นี่คือการต่อยอดที่ cold outreach ให้ไม่ได้",
+    "ผมเข้ามาเพราะชุมชน อยู่ต่อเพราะบทสนทนา สุดท้ายได้ลูกค้า enterprise รายแรกจากคนที่รู้จักกันในฟอรัม การต่อยอดแบบนี้ cold outreach ให้ไม่ได้หรอก",
   "Co-founder, FlexPay Thailand": "Co-founder, FlexPay Thailand",
 
   // ─── Landing — CTA ────────────────────────────────────────────────
@@ -161,7 +162,7 @@ export const TH: Record<string, string> = {
   "It's still early — which is the best reason to join now.":
     "ตอนนี้ยังเพิ่งเริ่ม — นี่แหละคือจังหวะที่ดีที่สุดที่จะเข้ามา",
   "Join Thailand’s most serious community of founders looking to build together. Free during our launch phase.":
-    "เข้าร่วมชุมชน founder ไทยที่จริงจังที่สุด มองหาคนสร้างธุรกิจไปด้วยกัน ใช้งานฟรีในช่วงเปิดตัว",
+    "มาร่วมชุมชน founder ไทยที่จริงจังที่สุด ที่ตามหาคนมาสร้างธุรกิจไปด้วยกัน ช่วงเปิดตัวใช้ฟรี",
   "We're just getting started, and the people who join now shape what this becomes. Come be one of them — free to join.":
     "เราเพิ่งเริ่มได้ไม่นาน คนที่เข้ามาช่วงนี้แหละคือคนที่จะช่วยกำหนดทิศทางของมัน มาเป็นหนึ่งในนั้นกัน — เข้าร่วมฟรี",
   "Join us — it's free": "มาร่วมกับเรา — ฟรี",
@@ -170,11 +171,11 @@ export const TH: Record<string, string> = {
   // ─── Auth pages ───────────────────────────────────────────────────
   "Welcome back": "ยินดีต้อนรับกลับ",
   "Continue building with your co-founder community.":
-    "กลับมาสานต่อกับชุมชน co-founder ของคุณ",
+    "กลับมาลุยต่อกับชุมชน co-founder ของคุณ",
   "Phase I · Free for all founders":
     "เฟส 1 · ฟรีสำหรับ founder ทุกคน",
   "Join Thailand’s most serious community of co-founders.":
-    "เข้าร่วมชุมชน co-founder ที่จริงจังที่สุดในประเทศไทย",
+    "มาร่วมชุมชน co-founder ที่จริงจังที่สุดในไทย",
   Email: "อีเมล",
   Password: "รหัสผ่าน",
   "Confirm password": "ยืนยันรหัสผ่าน",
@@ -188,7 +189,7 @@ export const TH: Record<string, string> = {
   "New to Cofoundee?": "ยังไม่มีบัญชี Cofoundee?",
   "Already on Cofoundee?": "มีบัญชีอยู่แล้ว?",
   "By continuing, you agree to our Terms and acknowledge our PDPA privacy policy.":
-    "เมื่อดำเนินการต่อ คุณยอมรับเงื่อนไขการใช้งานและรับทราบนโยบายความเป็นส่วนตัว (PDPA) ของเรา",
+    "การกดดำเนินการต่อ ถือว่าคุณยอมรับเงื่อนไขการใช้งานและรับทราบนโยบายความเป็นส่วนตัว (PDPA) ของเรา",
   "PDPA compliant": "เป็นไปตาม PDPA",
   Continue: "ดำเนินการต่อ",
   "Creating account…": "กำลังสร้างบัญชี…",
@@ -201,9 +202,9 @@ export const TH: Record<string, string> = {
   "Passwords don’t match": "รหัสผ่านไม่ตรงกัน",
   "Check your email": "ตรวจสอบอีเมลของคุณ",
   "We sent a confirmation link to": "เราได้ส่งลิงก์ยืนยันไปที่",
-  "Click it to activate your account.": "คลิกลิงก์เพื่อเปิดใช้งานบัญชีของคุณ",
+  "Click it to activate your account.": "คลิกเพื่อเปิดใช้งานบัญชี",
   "Didn’t arrive? Check your spam folder. The link expires in 24 hours.":
-    "ไม่ได้รับอีเมล? โปรดตรวจสอบในโฟลเดอร์สแปม ลิงก์จะหมดอายุภายใน 24 ชั่วโมง",
+    "ไม่ได้รับอีเมล? ลองเช็กในโฟลเดอร์สแปมดู ลิงก์จะหมดอายุใน 24 ชั่วโมง",
 
   // ─── Dashboard ───────────────────────────────────────────────────
   "Good morning": "อรุณสวัสดิ์",
@@ -213,28 +214,28 @@ export const TH: Record<string, string> = {
   "Burning the midnight oil": "ทำงานยันเช้า",
   "Hello,": "สวัสดี,",
   "Finish your profile to start receiving interest from co-founders.":
-    "ทำโปรไฟล์ให้สมบูรณ์ เพื่อเริ่มรับความสนใจจาก co-founder",
+    "ทำโปรไฟล์ให้เสร็จ แล้วเริ่มรับความสนใจจาก co-founder ได้เลย",
   "founder(s) expressed interest in you. Take a look —":
-    "founder แสดงความสนใจในตัวคุณ — ลองดู",
+    "founder สนใจในตัวคุณ ไปดูกันที่",
   "your inbox": "กล่องข้อความของคุณ",
   "mutual match(es) so far. Keep the conversations going.":
-    "แมตช์ในตอนนี้ — สานต่อบทสนทนา",
+    "แมตช์แล้ว คุยกันต่อได้เลย",
   "Browse the directory and express interest in founders whose profiles complement yours.":
-    "สำรวจไดเรกทอรีและแสดงความสนใจใน founder ที่โปรไฟล์เสริมกับคุณ",
-  "Finish your founder profile": "ทำโปรไฟล์ founder ให้สมบูรณ์",
+    "ลองดูไดเรกทอรี แล้วแสดงความสนใจใน founder ที่โปรไฟล์เสริมกับคุณ",
+  "Finish your founder profile": "ทำโปรไฟล์ founder ให้เสร็จ",
   "Declare what you are, what you bring, and what you’re looking for. The more your profile says, the better the matches.":
-    "บอกว่าคุณคือใคร นำเสนออะไร และกำลังหาอะไร ยิ่งโปรไฟล์ละเอียด ยิ่งแมตช์แม่นยำ",
+    "บอกว่าคุณเป็นใคร มีอะไรมาเสนอ และกำลังหาอะไร ยิ่งโปรไฟล์บอกอะไรเยอะ ยิ่งแมตช์แม่น",
   "Start onboarding": "เริ่มต้น",
   "Interests received": "ความสนใจที่ได้รับ",
   "Mutual matches": "แมตช์ทั้งหมด",
   "Profile views": "ผู้เข้าชมโปรไฟล์",
   "Founder directory": "ไดเรกทอรี founder",
   "Filter by role, industry, and stage. Read full pitches before you express interest.":
-    "กรองตามบทบาท อุตสาหกรรม และช่วง — อ่าน pitch แบบเต็มก่อนแสดงความสนใจ",
+    "กรองตามบทบาท อุตสาหกรรม และช่วง อ่าน pitch ให้จบก่อนแสดงความสนใจ",
   "Open directory": "เปิดไดเรกทอรี",
   "Update your pitch": "อัปเดต pitch",
   "Refine your pitch and details. Better signal — better matches.":
-    "ปรับ pitch และรายละเอียดให้ดีขึ้น — สัญญาณดีขึ้น แมตช์แม่นยำขึ้น",
+    "เกลา pitch และรายละเอียดให้คมขึ้น สัญญาณชัด แมตช์ก็แม่น",
   "Edit profile": "แก้ไขโปรไฟล์",
 
   // ─── Browse / directory ──────────────────────────────────────────
@@ -244,9 +245,9 @@ export const TH: Record<string, string> = {
     "ทำโปรไฟล์ให้สมบูรณ์ เพื่อดู Complement Score",
   founders: "founder",
   "A 0–100 score measuring how well two founders fit:":
-    "คะแนน 0–100 ที่บ่งบอกว่า founder สองคนเข้ากันได้แค่ไหน:",
+    "คะแนน 0–100 บอกว่า founder สองคนเข้ากันได้แค่ไหน:",
   "Higher = better starting point for a conversation.":
-    "ยิ่งสูง ยิ่งเป็นจุดเริ่มต้นที่ดีของการสนทนา",
+    "ยิ่งสูง ยิ่งเริ่มบทสนทนาได้ง่าย",
   "About the Complement Score": "เกี่ยวกับ Complement Score",
   "role complementarity 40%": "บทบาทเสริมกัน 40%",
   "intent 30%": "เป้าหมาย 30%",
@@ -264,7 +265,7 @@ export const TH: Record<string, string> = {
   Commitment: "ความทุ่มเท",
   "No matches yet": "ยังไม่มีผลลัพธ์",
   "Try widening your filters, or check back as more founders onboard.":
-    "ลองขยายตัวกรอง หรือกลับมาตรวจสอบใหม่ เมื่อมี founder เข้าร่วมเพิ่มขึ้น",
+    "ลองขยายตัวกรองดู หรือแวะกลับมาใหม่ตอนมี founder เข้ามาเพิ่ม",
   Complement: "Complement",
   "View profile": "ดูโปรไฟล์",
   "Verified founder": "Founder ที่ผ่านการยืนยัน",
@@ -300,7 +301,7 @@ export const TH: Record<string, string> = {
   Conviction: "ความมุ่งมั่น",
   Pitch: "Pitch",
   "Your name": "ชื่อของคุณ",
-  "How you'll appear to other founders": "ชื่อที่ founder คนอื่นจะเห็น",
+  "How you'll appear to other founders": "ชื่อที่จะแสดงให้ founder คนอื่นเห็น",
   "Joining as…": "เข้าร่วมในฐานะ…",
   Individual: "บุคคล",
   "Company name": "ชื่อบริษัท",
@@ -309,12 +310,12 @@ export const TH: Record<string, string> = {
   "We’re bringing…": "เรานำเสนอ…",
   "I’m bringing…": "ฉันนำเสนอ…",
   "I have a clear vision and need someone to execute it with me.":
-    "มีวิสัยทัศน์ที่ชัดเจน กำลังหาคนมาร่วมลงมือทำ",
+    "มีภาพชัดเจนอยู่แล้ว กำลังหาคนมาลงมือทำด้วยกัน",
   "I can build, sell, or design — open to joining a strong vision.":
-    "สร้างได้ ขายเก่ง หรือออกแบบดี เปิดรับการเข้าร่วมวิสัยทัศน์ที่แข็งแกร่ง",
+    "สร้างได้ ขายเป็น ออกแบบดี เปิดรับถ้ามีวิสัยทัศน์ที่ใช่",
   "I want to brainstorm and find the right opportunity with a partner.":
-    "ต้องการระดมไอเดียและค้นหาโอกาสที่เหมาะสม ร่วมกับคู่หู",
-  "Let's explore": "ค้นหาร่วมกัน",
+    "อยากหาคู่หูมาช่วยกันคิด แล้วหาโอกาสที่ใช่ไปด้วยกัน",
+  "Let's explore": "หาไปด้วยกัน",
   "I’m looking for… (select all that apply)":
     "ฉันกำลังหา… (เลือกได้หลายข้อ)",
   "Industry focus (select all that apply)":
@@ -334,30 +335,30 @@ export const TH: Record<string, string> = {
     "ไม่รู้จะเริ่มยังไง? ลองเลือกจากนี้:",
   "Still exploring": "ยังมองหาอยู่",
   "I'm building [what] for [who]. The problem is [problem]. I've already [traction so far], and I'm looking for a co-founder who can [what they bring].":
-    "ผมกำลังสร้าง [อะไร] สำหรับ [ใคร] ปัญหาคือ [ปัญหา] ตอนนี้ทำไปแล้ว [ความคืบหน้า] กำลังมองหา co-founder ที่ช่วย [สิ่งที่อีกฝ่ายนำมา] ได้",
+    "กำลังสร้าง [อะไร] ให้ [ใคร] ปัญหาที่แก้คือ [ปัญหา] ตอนนี้ทำไปถึง [ความคืบหน้า] แล้ว กำลังหา co-founder ที่ [สิ่งที่อีกฝ่ายนำมา] ได้",
   "I'm a [your role] with [N] years in [domain]. I've built [notable work]. I want to join a founder with a strong vision in [industry] and own [what you'd own].":
-    "ผมเป็น [บทบาท] มีประสบการณ์ [N] ปีใน [สายงาน] เคยสร้าง [ผลงานเด่น] อยากร่วมงานกับ founder ที่มีวิสัยทัศน์ชัดใน [อุตสาหกรรม] และดูแล [สิ่งที่จะรับผิดชอบ]",
+    "ผมเป็น [บทบาท] อยู่ในวงการ [สายงาน] มา [N] ปี เคยสร้าง [ผลงานเด่น] อยากไปร่วมกับ founder ที่มีวิสัยทัศน์ชัดในสาย [อุตสาหกรรม] และขอดูแล [สิ่งที่จะรับผิดชอบ]",
   "My background is [background]. I'm drawn to problems in [areas]. I'm looking for someone to explore ideas with and figure out what to build together.":
-    "พื้นเพของผมคือ [พื้นเพ] สนใจปัญหาในด้าน [ด้านที่สนใจ] กำลังมองหาคนมาระดมไอเดียและหาคำตอบไปด้วยกันว่าจะสร้างอะไร",
+    "ผมมาจากสาย [พื้นเพ] สนใจปัญหาเรื่อง [ด้านที่สนใจ] กำลังหาคนมาช่วยกันคิดไอเดีย แล้วหาคำตอบไปด้วยกันว่าจะสร้างอะไรดี",
   "Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests.":
-    "เจ้าของไอเดีย: อธิบายไอเดียของคุณ ผู้เชี่ยวชาญ: อธิบายสิ่งที่นำเสนอ ผู้ค้นหา: อธิบายความสนใจ",
+    "มีไอเดียอยู่แล้ว: เล่าไอเดียมาเลย มีของมาเสนอ: บอกว่าคุณทำอะไรได้ ยังหาอยู่: บอกว่าสนใจเรื่องไหน",
   "Why this, why now (optional)": "ทำไมเรื่องนี้ ทำไมตอนนี้ (ไม่บังคับ)",
   "What drew you to this problem? Why is now the right time?":
-    "อะไรที่ทำให้คุณสนใจปัญหานี้? เหตุใดตอนนี้คือเวลาที่เหมาะสม?",
+    "อะไรทำให้คุณอินกับปัญหานี้? แล้วทำไมต้องเป็นตอนนี้?",
   "e.g. I ran into this problem myself, and now's finally the right time to fix it.":
-    "เช่น ผมเจอปัญหานี้กับตัวเองมาก่อน และตอนนี้คือจังหวะที่เหมาะที่สุดที่จะลงมือแก้",
+    "เช่น ผมเจอปัญหานี้มากับตัว และตอนนี้แหละคือจังหวะที่จะลงมือแก้",
   "Background (optional)": "ประสบการณ์ที่ผ่านมา (ไม่บังคับ)",
   "What you've built, where you've worked or studied — a couple of lines.":
-    "เคยสร้างอะไร เคยทำงานหรือเรียนที่ไหน เขียนสั้นๆ ไม่กี่บรรทัด",
+    "เคยสร้างอะไรมา เคยทำงานหรือเรียนที่ไหน เขียนสั้นๆ สองสามบรรทัดพอ",
   "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.":
-    "เช่น อดีต engineer ที่ Agoda เคยทำและขาย logistics SaaS จบ CS จากจุฬาฯ",
+    "เช่น อดีต engineer ที่ Agoda เคยทำ logistics SaaS แล้วขายไป จบ CS จุฬาฯ",
   "Skills (comma-separated, optional)":
     "ทักษะ (คั่นด้วยจุลภาค, ไม่บังคับ)",
   "Skills (type and press Enter)": "ทักษะ (พิมพ์แล้วกด Enter)",
   "Capabilities (comma-separated, optional)":
     "ความสามารถของบริษัท (คั่นด้วยจุลภาค, ไม่บังคับ)",
   "What your company offers to potential partners. Used by other companies to find you.":
-    "สิ่งที่บริษัทคุณนำเสนอให้พาร์ตเนอร์ ใช้เพื่อให้บริษัทอื่นค้นหาคุณเจอ",
+    "บริษัทคุณมีอะไรเสนอให้พาร์ตเนอร์บ้าง บริษัทอื่นจะใช้ตรงนี้หาคุณเจอ",
   Back: "ย้อนกลับ",
   "Complete profile": "ยืนยันโปรไฟล์",
   "Saving…": "กำลังบันทึก…",
@@ -388,12 +389,12 @@ export const TH: Record<string, string> = {
   "Express interest in this founder": "แสดงความสนใจใน founder คนนี้",
   "Your note (optional)": "ข้อความจากคุณ (ไม่บังคับ)",
   "What caught your eye? What would a first chat cover?":
-    "อะไรที่ทำให้คุณสนใจ? การสนทนาครั้งแรกอยากครอบคลุมเรื่องอะไร?",
+    "อะไรที่สะดุดตาคุณ? คุยกันครั้งแรกอยากคุยเรื่องอะไร?",
   "Send interest": "ส่งความสนใจ",
   "Sending…": "กำลังส่ง…",
   "Interest sent": "ส่งความสนใจแล้ว",
   "You’ll be notified when they respond.":
-    "ระบบจะแจ้งเตือนเมื่ออีกฝ่ายตอบกลับ",
+    "อีกฝ่ายตอบกลับเมื่อไหร่ เราจะแจ้งให้รู้",
   "Report this profile": "รายงานโปรไฟล์นี้",
   "Why are you reporting?": "เหตุผลในการรายงาน",
   "Send report": "ส่งรายงาน",
@@ -402,36 +403,36 @@ export const TH: Record<string, string> = {
   // ─── Interests ───────────────────────────────────────────────────
   "Express Interest": "แสดงความสนใจ",
   "When interest is mutual, messaging unlocks automatically.":
-    "เมื่อความสนใจตรงกัน ระบบจะเปิดให้สนทนาได้อัตโนมัติ",
+    "พอสนใจตรงกัน ระบบจะเปิดแชทให้เองอัตโนมัติ",
   Cancel: "ยกเลิก",
   "Personal note (optional)": "ข้อความส่วนตัว (ไม่บังคับ)",
   "A short intro: who you are, why you connected with their pitch.":
-    "แนะนำตัวสั้นๆ: คุณเป็นใคร ทำไมถึงสนใจ pitch ของเขา",
+    "แนะนำตัวสั้นๆ: คุณเป็นใคร ทำไมถึงโดน pitch ของเขา",
   "You'll be notified if they also express interest. Messaging unlocks on mutual interest.":
-    "ระบบจะแจ้งเตือนถ้าอีกฝ่ายสนใจกลับ — แชทจะเปิดเมื่อสนใจตรงกัน",
+    "ถ้าอีกฝ่ายสนใจกลับ เราจะแจ้งให้รู้ พอสนใจตรงกันแชทก็เปิด",
   "Accept & connect": "ตอบรับและเชื่อมต่อ",
   "Connecting…": "กำลังเชื่อมต่อ…",
   "Accept to connect — messaging unlocks for both of you.":
-    "กดตอบรับเพื่อเชื่อมต่อ — แชทจะเปิดให้ทั้งสองฝ่าย",
-  "You're connected": "เชื่อมต่อกันแล้ว",
+    "กดตอบรับเพื่อต่อสาย แล้วแชทจะเปิดให้ทั้งคู่",
+  "You're connected": "ต่อสายกันแล้ว",
   "Messaging is unlocked — start the conversation.":
-    "แชทเปิดแล้ว — เริ่มบทสนทนาได้เลย",
+    "แชทเปิดแล้ว เริ่มคุยกันได้เลย",
   "Message {name}": "ส่งข้อความหา {name}",
   Received: "ได้รับ",
   Sent: "ส่งแล้ว",
   "No one has expressed interest yet. Make sure your profile is complete.":
-    "ยังไม่มีใครแสดงความสนใจ — โปรดตรวจสอบว่าโปรไฟล์สมบูรณ์แล้ว",
+    "ยังไม่มีใครแสดงความสนใจ ลองเช็กว่าโปรไฟล์ครบหรือยัง",
   "You haven't expressed interest in anyone yet. Browse the directory.":
-    "คุณยังไม่ได้แสดงความสนใจในใคร — ลองสำรวจไดเรกทอรี",
+    "คุณยังไม่ได้แสดงความสนใจใคร ลองไปดูไดเรกทอรีกัน",
   "Open conversation": "เปิดการสนทนา",
   Waiting: "รอตอบกลับ",
   Mutual: "สนใจตรงกัน",
   "Founders who expressed interest in you": "Founder ที่สนใจในตัวคุณ",
   "Express interest back to unlock messaging":
-    "แสดงความสนใจกลับเพื่อปลดล็อกการสนทนา",
+    "แสดงความสนใจกลับเพื่อเปิดแชท",
   "No interests yet": "ยังไม่มีความสนใจ",
   "When other founders express interest in your profile, they’ll show up here.":
-    "เมื่อ founder คนอื่นแสดงความสนใจในโปรไฟล์ของคุณ จะปรากฏที่นี่",
+    "ถ้า founder คนอื่นสนใจโปรไฟล์ของคุณ จะมาโผล่ตรงนี้",
   Accept: "ตอบรับ",
   Decline: "ปฏิเสธ",
 
@@ -441,18 +442,18 @@ export const TH: Record<string, string> = {
   "match(es) so far · messaging is unlocked.":
     "แมตช์ · เปิดให้สนทนาได้แล้ว",
   "Mutual interest creates a match. Browse the directory, express interest in founders whose profiles align, and matches will appear here when they reciprocate.":
-    "เมื่อความสนใจตรงกัน จะกลายเป็นแมตช์ สำรวจไดเรกทอรี แสดงความสนใจใน founder ที่ตรงกับคุณ — แมตช์จะปรากฏที่นี่เมื่ออีกฝ่ายตอบรับ",
+    "พอสนใจตรงกันก็กลายเป็นแมตช์ ลองดูไดเรกทอรี แสดงความสนใจใน founder ที่เข้ากับคุณ พออีกฝ่ายตอบรับ แมตช์จะมาโผล่ตรงนี้",
   "All matches": "แมตช์ทั้งหมด",
-  "Mutual interest unlocked": "ปลดล็อกความสนใจร่วมกันแล้ว",
+  "Mutual interest unlocked": "สนใจตรงกันแล้ว",
   "You both expressed interest. This is the start of your conversation — be specific, be considered.":
-    "ทั้งสองฝ่ายแสดงความสนใจ นี่คือจุดเริ่มต้นของการสนทนา — เจาะจง คิดมาดี",
+    "สนใจตรงกันทั้งคู่แล้ว นี่คือจุดเริ่มของบทสนทนา คุยให้เจาะจง คิดมาให้ดี",
   "First-call questions": "คำถามสำหรับการสนทนาครั้งแรก",
   "What problem are you most excited to solve right now?":
-    "ปัญหาใดที่คุณอยากแก้มากที่สุดในตอนนี้?",
+    "ตอนนี้ปัญหาไหนที่คุณอยากแก้มากที่สุด?",
   "What does your ideal co-founder look like?":
-    "Co-founder ในอุดมคติของคุณเป็นอย่างไร?",
+    "co-founder ในฝันของคุณเป็นแบบไหน?",
   "What have you tried that didn’t work?":
-    "เคยลองอะไรมาแล้วบ้างที่ไม่ได้ผล?",
+    "เคยลองอะไรมาแล้วบ้างที่ไม่เวิร์ก?",
   "Write a message…": "พิมพ์ข้อความ…",
   Send: "ส่ง",
   "Enter to send · Shift+Enter for new line":
@@ -460,30 +461,30 @@ export const TH: Record<string, string> = {
   new: "ใหม่",
   "No matches yet ": "ยังไม่มีแมตช์",
   "Browse the directory and express interest in founders who fit.":
-    "สำรวจไดเรกทอรีและแสดงความสนใจใน founder ที่เหมาะสม",
+    "ลองดูไดเรกทอรี แล้วแสดงความสนใจใน founder ที่ใช่",
   "Browse the directory": "สำรวจไดเรกทอรี",
 
   // ─── Community ───────────────────────────────────────────────────
   "The community": "ชุมชน",
   "Ask, share, and learn from other Thai founders.":
-    "ตั้งคำถาม แบ่งปัน และเรียนรู้จาก founder ไทยคนอื่น",
+    "ถาม แชร์ และเรียนรู้จาก founder ไทยคนอื่นๆ",
   "New post": "โพสต์ใหม่",
   "Nothing here yet": "ยังไม่มีโพสต์",
   "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.":
-    "เริ่มต้นเป็นคนแรก แบ่งปันสิ่งที่กำลังสร้าง ขอ feedback หรือเข้ามาทักทาย",
+    "มาเปิดวงเป็นคนแรก เล่าสิ่งที่กำลังสร้าง ขอ feedback หรือแค่เข้ามาทักทายก็ได้",
   "Write the first post": "เขียนโพสต์แรก",
   "Back to community": "กลับสู่ชุมชน",
   Title: "หัวข้อ",
   Content: "เนื้อหา",
   "Ask a question, share a milestone, request feedback…":
-    "ตั้งคำถาม แบ่งปันความสำเร็จ ขอ feedback…",
+    "ถามคำถาม เล่าความคืบหน้า ขอ feedback…",
   "Markdown welcome. Be specific — better questions get better answers.":
-    "รองรับ Markdown — ยิ่งเจาะจง ยิ่งได้คำตอบที่ดี",
+    "ใช้ Markdown ได้ ยิ่งถามเจาะจง ยิ่งได้คำตอบดีๆ",
   "Publish post": "เผยแพร่โพสต์",
   "Publishing…": "กำลังเผยแพร่…",
   Comments: "ความคิดเห็น",
   "No comments yet. Be the first.":
-    "ยังไม่มีความคิดเห็น — เริ่มเป็นคนแรก",
+    "ยังไม่มีคอมเมนต์ มาเป็นคนแรกกัน",
   "Add your comment…": "เพิ่มความคิดเห็น…",
   Comment: "ส่ง",
   "Posting…": "กำลังส่ง…",
@@ -493,13 +494,13 @@ export const TH: Record<string, string> = {
   // ─── Insights / blog ──────────────────────────────────────────────
   "Founder guides & perspectives": "บทความและมุมมองสำหรับ founder",
   "Practical writing on co-founder selection, team building, and building serious startups in Thailand.":
-    "บทความเชิงปฏิบัติ ว่าด้วยการเลือก co-founder การสร้างทีม และการสร้าง startup อย่างจริงจังในประเทศไทย",
+    "บทความใช้ได้จริง เรื่องการเลือก co-founder สร้างทีม และทำ startup แบบจริงจังในไทย",
   "Read insight": "อ่านบทความ",
   "All insights": "บทความทั้งหมด",
   "min read": "นาทีในการอ่าน",
   "Join Cofoundee · Free": "สมัครสมาชิก Cofoundee · ฟรี",
   "No insights yet — check back soon.":
-    "ยังไม่มีบทความ — โปรดกลับมาตรวจสอบอีกครั้ง",
+    "ยังไม่มีบทความ เดี๋ยวแวะกลับมาใหม่นะ",
 
   // ─── Admin · insights editor ──────────────────────────────────────
   "New insight": "เพิ่มบทความใหม่",
@@ -519,7 +520,7 @@ export const TH: Record<string, string> = {
   "Reading time (minutes)": "เวลาในการอ่าน (นาที)",
   "Locale (en or th)": "ภาษา (en หรือ th)",
   "Markdown supported — paragraphs separated by blank lines, **bold** for emphasis.":
-    "รองรับ Markdown — ขึ้นย่อหน้าใหม่ด้วยการเว้นบรรทัด ใช้ **ตัวหนา** เพื่อเน้นข้อความ",
+    "ใช้ Markdown ได้ เว้นบรรทัดเพื่อขึ้นย่อหน้าใหม่ ใส่ **ตัวหนา** เพื่อเน้นคำ",
 };
 
 export function t(en: string, locale: Locale): string {

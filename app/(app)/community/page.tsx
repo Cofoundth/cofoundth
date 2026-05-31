@@ -105,7 +105,7 @@ export default async function CommunityPage() {
                 <span className="text-line">·</span>
                 <span className="normal-case tracking-normal text-ink-muted">
                   {postsThisWeek}{" "}
-                  {isTH ? "โพสต์ใหม่ 7 วัน" : "new posts in 7d"}
+                  {isTH ? "โพสต์ใหม่ใน 7 วัน" : "new posts in 7d"}
                 </span>
               </>
             )}

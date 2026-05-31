@@ -20,35 +20,35 @@ const REQUEST_TYPES: {
     en: "Integration",
     th: "Integration",
     hintEN: "API, SDK, or platform integration",
-    hintTH: "เชื่อมต่อ API, SDK หรือแพลตฟอร์ม",
+    hintTH: "ต่อ API, SDK หรือเชื่อมระบบกัน",
   },
   {
     value: "distribution",
     en: "Distribution",
     th: "การจัดจำหน่าย",
     hintEN: "Selling, channel, or market access",
-    hintTH: "ช่องทางขาย หรือเข้าถึงตลาด",
+    hintTH: "ช่องทางขาย หรือพาเข้าตลาด",
   },
   {
     value: "white_label",
     en: "White label",
     th: "White-label",
     hintEN: "Use their product under your brand",
-    hintTH: "ใช้สินค้าของอีกฝ่ายภายใต้แบรนด์ของคุณ",
+    hintTH: "เอาของเขามาขายในแบรนด์เรา",
   },
   {
     value: "co_marketing",
     en: "Co-marketing",
     th: "Co-marketing",
     hintEN: "Joint campaigns, content, events",
-    hintTH: "แคมเปญร่วม, คอนเทนต์, อีเวนต์",
+    hintTH: "ทำแคมเปญ คอนเทนต์ อีเวนต์ร่วมกัน",
   },
   {
     value: "vendor_supplier",
     en: "Vendor / supplier",
     th: "ผู้จัดหา (vendor)",
     hintEN: "Buying their service for your operation",
-    hintTH: "ซื้อบริการของอีกฝ่ายเพื่อใช้งาน",
+    hintTH: "ซื้อบริการเขามาใช้ในงานเรา",
   },
   { value: "other", en: "Other", th: "อื่นๆ", hintEN: "Custom partnership", hintTH: "ความร่วมมือแบบอื่น" },
 ];
@@ -108,7 +108,7 @@ export function PartnershipRequestDialog({
           </h2>
           <p className="text-sm text-ink-muted leading-relaxed max-w-sm mx-auto">
             {isTH
-              ? `${target.company_name} จะได้รับอีเมลแจ้งเตือน ระบบจะแจ้งคุณเมื่อพวกเขาตอบกลับ`
+              ? `เราส่งอีเมลแจ้ง ${target.company_name} แล้ว พอเขาตอบกลับจะรีบบอกเลย`
               : `${target.company_name} will get an email notification. We'll let you know when they respond.`}
           </p>
         </div>
@@ -197,7 +197,7 @@ export function PartnershipRequestDialog({
             maxLength={200}
             placeholder={
               isTH
-                ? "เช่น \"กำลังหาพาร์ตเนอร์ logistics ในกรุงเทพ\""
+                ? "เช่น \"หา partner logistics ในกรุงเทพ\""
                 : 'e.g. "Looking for logistics partner in Bangkok"'
             }
             className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
@@ -233,7 +233,7 @@ export function PartnershipRequestDialog({
             onChange={(e) => setContext(e.target.value)}
             placeholder={
               isTH
-                ? "อธิบายว่ากำลังหาอะไร ทำไมบริษัทนี้น่าจะเหมาะ และคุณคาดหวังอะไรจากความร่วมมือ"
+                ? "เล่าหน่อยว่ากำลังหาอะไร ทำไมถึงคิดว่าบริษัทนี้น่าจะเหมาะ และอยากร่วมงานกันแบบไหน"
                 : "What you're looking for, why this company fits, and what you'd ideally agree on."
             }
             className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y"

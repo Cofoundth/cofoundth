@@ -79,11 +79,11 @@ export function StatusComposer() {
         placeholder={
           kind === "milestone"
             ? isTH
-              ? "บอกความสำเร็จล่าสุดของคุณ…"
+              ? "เพิ่งทำอะไรสำเร็จ? (รายได้ ลูกค้า ระดมทุน…)"
               : "What did you just hit? (revenue, customers, fundraise…)"
             : kind === "show_and_tell"
               ? isTH
-                ? "บอกสิ่งที่คุณเพิ่งปล่อย…"
+                ? "เพิ่งปล่อยอะไรมา?"
                 : "What did you just ship?"
               : isTH
                 ? "กำลังทำอะไรอยู่?"

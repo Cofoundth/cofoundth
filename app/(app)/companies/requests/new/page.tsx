@@ -42,7 +42,7 @@ export default async function NewAskPage() {
         </h1>
         <p className="text-ink">
           {isTH
-            ? `บอกว่า ${me?.company_name ?? "บริษัทคุณ"} กำลังหาพาร์ตเนอร์แบบไหน บริษัทอื่นจะเห็นและติดต่อกลับด้วยข้อเสนอ`
+            ? `บอกหน่อยว่า ${me?.company_name ?? "บริษัทคุณ"} กำลังหา partner แบบไหน เดี๋ยวบริษัทอื่นเห็นแล้วทักมาพร้อมข้อเสนอ`
             : `Describe the partner ${me?.company_name ?? "your company"} needs. Other companies will see it and respond with offers.`}
         </p>
       </div>

@@ -18,35 +18,35 @@ const REQUEST_TYPES: {
     en: "Integration",
     th: "Integration",
     hintEN: "API, SDK, or platform integration",
-    hintTH: "เชื่อมต่อ API, SDK หรือแพลตฟอร์ม",
+    hintTH: "ต่อ API, SDK หรือเชื่อมระบบกัน",
   },
   {
     value: "distribution",
     en: "Distribution",
     th: "การจัดจำหน่าย",
     hintEN: "Selling, channel, or market access",
-    hintTH: "ช่องทางขาย หรือเข้าถึงตลาด",
+    hintTH: "ช่องทางขาย หรือพาเข้าตลาด",
   },
   {
     value: "white_label",
     en: "White label",
     th: "White-label",
     hintEN: "Using your product under their brand (or vice versa)",
-    hintTH: "ใช้สินค้าภายใต้แบรนด์อีกฝ่าย หรือกลับกัน",
+    hintTH: "เอาของเรามาขายในแบรนด์เขา หรือกลับกัน",
   },
   {
     value: "co_marketing",
     en: "Co-marketing",
     th: "Co-marketing",
     hintEN: "Joint campaigns, content, events",
-    hintTH: "แคมเปญร่วม, คอนเทนต์, อีเวนต์",
+    hintTH: "ทำแคมเปญ คอนเทนต์ อีเวนต์ร่วมกัน",
   },
   {
     value: "vendor_supplier",
     en: "Vendor / supplier",
     th: "ผู้จัดหา",
     hintEN: "Looking for a service provider",
-    hintTH: "หาผู้ให้บริการ",
+    hintTH: "หาคนให้บริการ",
   },
   {
     value: "other",
@@ -117,7 +117,7 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
           maxLength={200}
           placeholder={
             isTH
-              ? "เช่น \"หาพาร์ตเนอร์ logistics ครอบคลุมภาคเหนือ\""
+              ? "เช่น \"หา partner logistics ครอบคลุมภาคเหนือ\""
               : 'e.g. "Logistics partner covering Northern Thailand"'
           }
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
@@ -151,7 +151,7 @@ export function NewAskForm({ locale }: { locale: "en" | "th" }) {
           onChange={(e) => setContext(e.target.value)}
           placeholder={
             isTH
-              ? "อธิบายว่าธุรกิจคุณทำอะไร ทำไมต้องการพาร์ตเนอร์ประเภทนี้ ปริมาณงาน timeline และเงื่อนไขที่สำคัญ"
+              ? "เล่าหน่อยว่าธุรกิจทำอะไร ทำไมถึงอยากได้ partner แบบนี้ งานมีประมาณไหน timeline เป็นยังไง และมีเงื่อนไขอะไรที่สำคัญ"
               : "Describe your business, why you need this kind of partner, expected volume, timeline, and any key conditions."
           }
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y"

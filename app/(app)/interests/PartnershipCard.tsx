@@ -178,7 +178,7 @@ export function PartnershipCard({ row, locale }: Props) {
                     onChange={(e) => setResponseNote(e.target.value)}
                     placeholder={
                       isTH
-                        ? "ข้อความตอบกลับ (ไม่บังคับ) — บอกว่าทำไมตอบรับหรือปฏิเสธ"
+                        ? "ฝากข้อความได้ (ไม่บังคับ) — บอกเหตุผลที่ตอบรับหรือปฏิเสธก็ได้"
                         : "Optional note — let them know why you're accepting or declining."
                     }
                     className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
