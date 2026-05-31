@@ -8,6 +8,7 @@ import { signOutAction } from "../(auth)/actions";
 import { Avatar } from "@/components/Avatar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
+import { NotificationBell, type NotifItem } from "@/components/NotificationBell";
 
 export default async function AppLayout({
   children,
@@ -27,20 +28,74 @@ export default async function AppLayout({
     .single();
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
-  // Notification dots (best-effort, exact counts not shown)
-  const [{ count: receivedPending }, { count: unreadMessages }] =
-    await Promise.all([
-      supabase
-        .from("interests")
-        .select("id", { count: "exact", head: true })
-        .eq("to_profile_id", user.id)
-        .eq("status", "pending"),
-      supabase
-        .from("messages")
-        .select("id", { count: "exact", head: true })
-        .neq("sender_id", user.id)
-        .is("read_at", null),
-    ]);
+  // Connections dot (best-effort, exact counts not shown) + notification feed.
+  const [
+    { count: receivedPending },
+    { count: unreadMessages },
+    { count: unreadNotifs },
+    { data: notifRows },
+  ] = await Promise.all([
+    supabase
+      .from("interests")
+      .select("id", { count: "exact", head: true })
+      .eq("to_profile_id", user.id)
+      .eq("status", "pending"),
+    supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .neq("sender_id", user.id)
+      .is("read_at", null),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", user.id)
+      .is("read_at", null),
+    supabase
+      .from("notifications")
+      .select("id, type, entity_id, data, read_at, created_at, actor_id")
+      .eq("recipient_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(12),
+  ]);
+
+  // Hydrate actor profiles (avatar / name / slug) for the notification list.
+  const actorIds = [
+    ...new Set(
+      (notifRows ?? [])
+        .map((n) => n.actor_id as string | null)
+        .filter((x): x is string => Boolean(x)),
+    ),
+  ];
+  const { data: actorRows } = actorIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, slug, photo_url, full_name")
+        .in("id", actorIds)
+    : { data: [] as { id: string }[] };
+  const actorMap = new Map(
+    (actorRows ?? []).map((a) => [a.id as string, a]),
+  );
+  const notifItems: NotifItem[] = (notifRows ?? []).map((n) => {
+    const actor = n.actor_id
+      ? (actorMap.get(n.actor_id as string) as
+          | {
+              id: string;
+              slug: string | null;
+              photo_url: string | null;
+              full_name: string | null;
+            }
+          | undefined) ?? null
+      : null;
+    return {
+      id: n.id as string,
+      type: n.type as string,
+      entityId: (n.entity_id as string | null) ?? null,
+      data: (n.data as { actor_name?: string; post_title?: string }) ?? null,
+      readAt: (n.read_at as string | null) ?? null,
+      createdAt: n.created_at as string,
+      actor,
+    };
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
@@ -80,6 +135,10 @@ export default async function AppLayout({
 
             <div className="flex items-center gap-4">
               <LanguageSwitcher />
+              <NotificationBell
+                items={notifItems}
+                unreadCount={unreadNotifs ?? 0}
+              />
               <Link
                 href={myProfileHref}
                 title={await tServer("Your profile")}

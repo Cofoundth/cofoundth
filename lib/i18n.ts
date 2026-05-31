@@ -45,6 +45,15 @@ export const TH: Record<string, string> = {
   Admin: "ผู้ดูแลระบบ",
   "Sign out": "ออกจากระบบ",
   "Your profile": "โปรไฟล์ของคุณ",
+
+  // ─── Notifications ────────────────────────────────────────────────
+  Notifications: "การแจ้งเตือน",
+  "No notifications yet": "ยังไม่มีการแจ้งเตือน",
+  Someone: "มีคน",
+  "{name} viewed your profile": "{name} ดูโปรไฟล์ของคุณ",
+  "{name} commented on your post": "{name} แสดงความคิดเห็นในโพสต์ของคุณ",
+  "{name} is interested in connecting": "{name} สนใจอยากเชื่อมต่อกับคุณ",
+  "You and {name} are now connected": "คุณกับ {name} เชื่อมต่อกันแล้ว",
   "Built by founders, for founders.": "พัฒนาโดย founder เพื่อ founder",
   "The platform for Thailand’s founders to find their co-founder.":
     "เครือข่าย ที่ปรึกษา และคู่หูธุรกิจ ของ startup ไทย",
