@@ -76,8 +76,9 @@ export async function updateProfileAction(
   const why_this = String(formData.get("why_this") ?? "").trim().slice(0, 1000);
   const background = String(formData.get("background") ?? "").trim().slice(0, 600);
   const skills = cap(
-    String(formData.get("skills") ?? "")
-      .split(",")
+    formData
+      .getAll("skills")
+      .map(String)
       .map((s) => s.trim())
       .filter(Boolean),
     MAX_SKILLS,

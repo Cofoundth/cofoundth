@@ -48,7 +48,7 @@ export default async function OnboardingPage() {
         pitch: profile.pitch ?? "",
         why_this: profile.why_this ?? "",
         background: (profile.background as string | null) ?? "",
-        skills: (profile.skills ?? []).join(", "),
+        skills: (profile.skills as string[] | null) ?? [],
       }
     : {};
 

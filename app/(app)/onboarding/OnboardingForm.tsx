@@ -6,6 +6,7 @@ import { saveOnboardingAction } from "./actions";
 import { useT } from "@/lib/i18n-client";
 import { THAI_PROVINCES } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
+import { COMMON_SKILLS } from "@/lib/skills";
 
 // ---- Option lists ---------------------------------------------------
 
@@ -111,7 +112,7 @@ type FormState = {
   pitch: string;
   why_this: string;
   background: string;
-  skills: string;
+  skills: string[];
 };
 
 type Props = {
@@ -149,7 +150,7 @@ export function OnboardingForm({ initial }: Props) {
     pitch: "",
     why_this: "",
     background: "",
-    skills: "",
+    skills: [],
     ...initial,
   });
   const [error, setError] = useState<string | null>(null);
@@ -160,7 +161,7 @@ export function OnboardingForm({ initial }: Props) {
   }
 
   function toggle(
-    key: "looking_for" | "industry" | "i_am" | "intent",
+    key: "looking_for" | "industry" | "i_am" | "intent" | "skills",
     value: string,
   ) {
     setData((d) => {
@@ -240,7 +241,7 @@ export function OnboardingForm({ initial }: Props) {
     fd.append("pitch", data.pitch);
     fd.append("why_this", data.why_this);
     fd.append("background", data.background);
-    fd.append("skills", data.skills);
+    data.skills.forEach((s) => fd.append("skills", s));
 
     startTransition(async () => {
       const result = await saveOnboardingAction(null, fd);
@@ -277,7 +278,14 @@ export function OnboardingForm({ initial }: Props) {
           />
         )}
         {step === 2 && <StepConviction data={data} set={set} tr={tr} />}
-        {step === 3 && <StepPitch data={data} set={set} tr={tr} />}
+        {step === 3 && (
+          <StepPitch
+            data={data}
+            set={set}
+            toggleSkill={(v) => toggle("skills", v)}
+            tr={tr}
+          />
+        )}
 
         {error && (
           <div className="mt-6 px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
@@ -725,10 +733,12 @@ function StepConviction({
 function StepPitch({
   data,
   set,
+  toggleSkill,
   tr,
 }: {
   data: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  toggleSkill: (v: string) => void;
   tr: TR;
 }) {
   const pitchLen = data.pitch.length;
@@ -830,16 +840,42 @@ function StepPitch({
           htmlFor="skills"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          {tr("Skills (comma-separated, optional)")}
+          {tr("Skills (type and press Enter)")}
         </label>
+        {data.skills.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {data.skills.map((s) => (
+              <ChoiceButton
+                key={s}
+                selected
+                compact
+                onClick={() => toggleSkill(s)}
+              >
+                {s} ✕
+              </ChoiceButton>
+            ))}
+          </div>
+        )}
         <input
           id="skills"
           type="text"
-          value={data.skills}
-          onChange={(e) => set("skills", e.target.value)}
-          placeholder="React, B2B Sales, ML/AI, Fundraising"
+          list="common-skills"
+          placeholder="React, Sales, Fundraising…"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              const v = e.currentTarget.value.trim().replace(/,$/, "").trim();
+              if (v && !data.skills.includes(v)) toggleSkill(v);
+              e.currentTarget.value = "";
+            }
+          }}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
         />
+        <datalist id="common-skills">
+          {COMMON_SKILLS.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
       </div>
 
       {data.profile_type === "company" && (

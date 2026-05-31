@@ -334,6 +334,7 @@ export const TH: Record<string, string> = {
     "เคยสร้างอะไร เคยทำงานหรือเรียนที่ไหน เขียนสั้นๆ ไม่กี่บรรทัด",
   "Skills (comma-separated, optional)":
     "ทักษะ (คั่นด้วยจุลภาค, ไม่บังคับ)",
+  "Skills (type and press Enter)": "ทักษะ (พิมพ์แล้วกด Enter)",
   "Capabilities (comma-separated, optional)":
     "ความสามารถของบริษัท (คั่นด้วยจุลภาค, ไม่บังคับ)",
   "What your company offers to potential partners. Used by other companies to find you.":

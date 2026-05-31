@@ -6,6 +6,7 @@ import { updateProfileAction } from "./actions";
 import { useT } from "@/lib/i18n-client";
 import { THAI_PROVINCES } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
+import { COMMON_SKILLS } from "@/lib/skills";
 
 type SaveResult = { error?: string; ok?: boolean } | null;
 
@@ -104,6 +105,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
     initial.status_tags ?? [],
   );
   const [pitch, setPitch] = useState(initial.pitch ?? "");
+  const [skills, setSkills] = useState<string[]>(initial.skills ?? []);
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -343,13 +345,44 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             )}
           />
         </Field>
-        <Field label={tr("Skills (comma-separated, optional)")}>
+        <Field label={tr("Skills (type and press Enter)")}>
+          {skills.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {skills.map((sk) => (
+                <Chip
+                  key={sk}
+                  on
+                  onClick={() => setSkills((s) => s.filter((x) => x !== sk))}
+                >
+                  {sk} ✕
+                </Chip>
+              ))}
+            </div>
+          )}
           <input
-            name="skills"
-            defaultValue={(initial.skills ?? []).join(", ")}
-            placeholder="React, B2B Sales, Fundraising"
+            list="common-skills"
+            placeholder="React, Sales, Fundraising…"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === ",") {
+                e.preventDefault();
+                const v = e.currentTarget.value
+                  .trim()
+                  .replace(/,$/, "")
+                  .trim();
+                if (v) setSkills((s) => (s.includes(v) ? s : [...s, v]));
+                e.currentTarget.value = "";
+              }
+            }}
             className={inputCls}
           />
+          <datalist id="common-skills">
+            {COMMON_SKILLS.map((s) => (
+              <option key={s} value={s} />
+            ))}
+          </datalist>
+          {skills.map((s) => (
+            <input key={s} type="hidden" name="skills" value={s} />
+          ))}
         </Field>
       </Section>
 
