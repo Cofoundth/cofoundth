@@ -3,6 +3,7 @@ import { ArrowRight, Heart, MessageCircle, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
+import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,9 @@ function timeAgo(iso: string, locale: string): string {
 
 export default async function CommunityPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const locale = await getLocale();
   const isTH = locale === "th";
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
@@ -120,6 +124,13 @@ export default async function CommunityPage() {
           <Plus className="w-4 h-4" /> {await tServer("New post")}
         </Link>
       </div>
+
+      <RealtimeRefresh
+        table="forum_posts"
+        currentUserId={user?.id ?? ""}
+        senderColumn="author_id"
+        kind="posts"
+      />
 
       {error?.message?.includes("forum_posts") ? (
         <div className="bg-white border border-gold/40 p-8 text-center">

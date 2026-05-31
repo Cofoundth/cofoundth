@@ -7,6 +7,7 @@ import { ROLE_LABELS } from "@/lib/matching";
 import { LikeButton } from "./LikeButton";
 import { CommentComposer } from "./CommentComposer";
 import { CommentItem } from "./CommentItem";
+import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -157,6 +158,14 @@ export default async function PostPage({ params }: Props) {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
           Comments
         </div>
+
+        <RealtimeRefresh
+          table="forum_comments"
+          filter={`post_id=eq.${id}`}
+          currentUserId={user?.id ?? ""}
+          senderColumn="author_id"
+          kind="comments"
+        />
 
         {comments?.length ? (
           <div className="bg-white border border-line divide-y divide-line px-6 mb-6">

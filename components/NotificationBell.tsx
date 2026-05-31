@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { X } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { timeAgo } from "@/lib/time";
-import { markAllNotificationsRead } from "@/app/(app)/notifications/actions";
+import { createClient } from "@/lib/supabase/client";
+import {
+  markAllNotificationsRead,
+  dismissNotification,
+  clearAllNotifications,
+} from "@/app/(app)/notifications/actions";
 
 export type NotifItem = {
   id: string;
@@ -37,18 +43,91 @@ function hrefFor(n: NotifItem): string {
 }
 
 export function NotificationBell({
-  items,
+  items: initialItems,
   unreadCount,
+  currentUserId,
 }: {
   items: NotifItem[];
   unreadCount: number;
+  currentUserId: string;
 }) {
   const tr = useT();
   const locale = useLocale();
   const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<NotifItem[]>(initialItems);
   const [unread, setUnread] = useState(unreadCount);
-  const [, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
+
+  // Server is the source of truth on navigation (it already includes any
+  // realtime-delivered rows, which persist).
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
+  useEffect(() => {
+    setUnread(unreadCount);
+  }, [unreadCount]);
+
+  // Live: prepend new notifications as they arrive. RLS-scoped to me; the
+  // socket needs the access token set BEFORE subscribing or it gets nothing.
+  useEffect(() => {
+    const supabase = createClient();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (session?.access_token) supabase.realtime.setAuth(session.access_token);
+      channel = supabase
+        .channel(`notifications:${currentUserId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `recipient_id=eq.${currentUserId}`,
+          },
+          (payload) => {
+            const n = payload.new as Record<string, unknown>;
+            const data =
+              (n.data as { actor_name?: string; post_title?: string }) ?? null;
+            const item: NotifItem = {
+              id: n.id as string,
+              type: n.type as string,
+              entityId: (n.entity_id as string | null) ?? null,
+              data,
+              readAt: (n.read_at as string | null) ?? null,
+              createdAt: n.created_at as string,
+              actor: n.actor_id
+                ? {
+                    id: n.actor_id as string,
+                    slug: null,
+                    photo_url: null,
+                    full_name: data?.actor_name ?? null,
+                  }
+                : null,
+            };
+            setItems((prev) =>
+              prev.some((p) => p.id === item.id) ? prev : [item, ...prev],
+            );
+            if (!openRef.current) setUnread((u) => u + 1);
+          },
+        )
+        .subscribe((status) => {
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            console.error("[realtime notifications] status:", status);
+          }
+        });
+    })();
+    return () => {
+      cancelled = true;
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }, [currentUserId]);
 
   useEffect(() => {
     if (!open) return;
@@ -64,10 +143,26 @@ export function NotificationBell({
     setOpen(next);
     if (next && unread > 0) {
       setUnread(0);
-      startTransition(() => {
-        markAllNotificationsRead();
-      });
+      startMarkRead();
     }
+  }
+  function startMarkRead() {
+    void markAllNotificationsRead();
+  }
+
+  async function handleDismiss(e: React.MouseEvent, id: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    const wasUnread = !items.find((i) => i.id === id)?.readAt;
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    if (wasUnread) setUnread((u) => Math.max(0, u - 1));
+    await dismissNotification(id);
+  }
+
+  async function handleClearAll() {
+    setItems([]);
+    setUnread(0);
+    await clearAllNotifications();
   }
 
   function textFor(n: NotifItem): string {
@@ -116,10 +211,19 @@ export function NotificationBell({
 
       {open && (
         <div className="absolute right-0 mt-2 w-80 sm:w-96 max-h-[28rem] overflow-y-auto bg-white border border-line shadow-lg z-50">
-          <div className="px-4 py-3 border-b border-line">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-line">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted">
               {tr("Notifications")}
             </div>
+            {items.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="text-xs text-ink-muted hover:text-navy transition-colors"
+              >
+                {tr("Clear all")}
+              </button>
+            )}
           </div>
 
           {items.length === 0 ? (
@@ -129,11 +233,11 @@ export function NotificationBell({
           ) : (
             <ul>
               {items.map((n) => (
-                <li key={n.id}>
+                <li key={n.id} className="relative group/item">
                   <Link
                     href={hrefFor(n)}
                     onClick={() => setOpen(false)}
-                    className={`flex items-start gap-3 px-4 py-3 border-b border-line last:border-b-0 hover:bg-cream transition-colors ${
+                    className={`flex items-start gap-3 px-4 py-3 pr-9 border-b border-line last:border-b-0 hover:bg-cream transition-colors ${
                       n.readAt ? "" : "bg-cream/60"
                     }`}
                   >
@@ -155,10 +259,15 @@ export function NotificationBell({
                         {timeAgo(n.createdAt, locale)}
                       </p>
                     </div>
-                    {!n.readAt && (
-                      <span className="mt-1.5 w-2 h-2 bg-gold shrink-0" />
-                    )}
                   </Link>
+                  <button
+                    type="button"
+                    onClick={(e) => handleDismiss(e, n.id)}
+                    aria-label={tr("Dismiss")}
+                    className="absolute top-2.5 right-2 p-1 text-ink-muted hover:text-navy opacity-0 group-hover/item:opacity-100 focus:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </li>
               ))}
             </ul>

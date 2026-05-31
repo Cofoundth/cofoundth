@@ -49,6 +49,11 @@ export const TH: Record<string, string> = {
   // ─── Notifications ────────────────────────────────────────────────
   Notifications: "การแจ้งเตือน",
   "No notifications yet": "ยังไม่มีการแจ้งเตือน",
+  "Clear all": "ล้างทั้งหมด",
+  Dismiss: "ปิด",
+  "{n} new posts — tap to refresh": "โพสต์ใหม่ {n} รายการ — แตะเพื่อรีเฟรช",
+  "{n} new comments — tap to refresh":
+    "ความคิดเห็นใหม่ {n} รายการ — แตะเพื่อรีเฟรช",
   Someone: "มีคน",
   "{name} viewed your profile": "{name} ดูโปรไฟล์ของคุณ",
   "{name} commented on your post": "{name} แสดงความคิดเห็นในโพสต์ของคุณ",
