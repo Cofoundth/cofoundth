@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { markConversationRead } from "./actions";
 
@@ -34,6 +35,7 @@ export function MessageThread({
 }) {
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Merge server-provided messages (from revalidation after a send or
   // read-receipt) into local state without dropping realtime-delivered ones.
@@ -85,6 +87,19 @@ export function MessageThread({
       if (channel) void supabase.removeChannel(channel);
     };
   }, [matchId, currentUserId]);
+
+  // Polling fallback — the realtime WebSocket is unreliable for this
+  // low-traffic app (the tenant sleeps and the socket often won't reconnect).
+  // router.refresh() re-runs the force-dynamic page on the server (the proven
+  // always-fresh path) every few seconds; the new server messages flow back in
+  // via the initialMessages effect above, and mergeById dedupes against any
+  // realtime-delivered ones. Realtime stays the instant path when it works.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [router]);
 
   // Keep the newest message in view.
   useEffect(() => {
