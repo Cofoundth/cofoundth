@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Building2, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ROLE_LABELS,
   INTENT_LABELS,
@@ -121,12 +122,20 @@ export default async function ProfileDetailPage({ params }: Props) {
   // insert is silently ignored, so repeat visits within the same day don't
   // bloat the table.
   if (!isOwnProfile && user) {
-    await supabase
+    // View tracking runs during Server Component *render*, where the
+    // cookie-scoped client can't supply a PostgREST-valid token — auth.uid()
+    // comes back NULL, so the RLS INSERT (auth.uid() = viewer_id) is rejected
+    // with 42501. (Same ES256/RSC-auth limitation that forced the avatar
+    // upload through service-role.) The viewer is already authenticated via
+    // getUser(), so writing through the admin client is safe.
+    const admin = createAdminClient();
+    const { error: pvErr } = await admin
       .from("profile_views")
       .upsert(
         { viewer_id: user.id, viewed_id: profile.id },
         { onConflict: "viewer_id,viewed_id,viewed_day", ignoreDuplicates: true },
       );
+    if (pvErr) console.error("[profile_views.upsert]", JSON.stringify(pvErr));
   }
 
   // Recent milestones / shipped posts from this profile — surfaces life
