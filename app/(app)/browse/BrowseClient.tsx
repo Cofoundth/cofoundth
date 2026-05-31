@@ -12,6 +12,7 @@ import {
 } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/lib/i18n-client";
+import { INDUSTRIES } from "@/lib/industries";
 
 type Profile = ProfileLike & {
   id: string;
@@ -37,21 +38,7 @@ type Props = {
 const ROLE_OPTIONS = Object.entries(ROLE_LABELS);
 const STAGE_OPTIONS = Object.entries(STAGE_LABELS);
 const COMMITMENT_OPTIONS = Object.entries(COMMITMENT_LABELS);
-const INDUSTRY_OPTIONS = [
-  "FinTech",
-  "HealthTech",
-  "E-commerce",
-  "SaaS",
-  "AI / ML",
-  "PropTech",
-  "Consumer",
-  "EdTech",
-  "Logistics",
-  "Sustainability",
-  "Media / Content",
-  "Travel",
-  "Food & Beverage",
-];
+const INDUSTRY_OPTIONS = INDUSTRIES;
 
 export function BrowseClient({ others }: Props) {
   const tr = useT();

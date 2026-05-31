@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { saveOnboardingAction } from "./actions";
 import { useT } from "@/lib/i18n-client";
 import { THAI_PROVINCES } from "@/lib/provinces";
+import { INDUSTRIES } from "@/lib/industries";
 
 // ---- Option lists ---------------------------------------------------
 
@@ -33,22 +34,6 @@ const INTENTS = [
     label: "Let's explore",
     description: "I want to brainstorm and find the right opportunity with a partner.",
   },
-];
-
-const INDUSTRIES = [
-  "FinTech",
-  "HealthTech",
-  "E-commerce",
-  "SaaS",
-  "AI / ML",
-  "PropTech",
-  "Consumer",
-  "EdTech",
-  "Logistics",
-  "Sustainability",
-  "Media / Content",
-  "Travel",
-  "Food & Beverage",
 ];
 
 const STAGES = [
@@ -591,7 +576,32 @@ function StepContext({
               {i}
             </ChoiceButton>
           ))}
+          {data.industry
+            .filter((i) => !INDUSTRIES.includes(i))
+            .map((i) => (
+              <ChoiceButton
+                key={i}
+                selected
+                compact
+                onClick={() => toggleIndustry(i)}
+              >
+                {i} ✕
+              </ChoiceButton>
+            ))}
         </div>
+        <input
+          type="text"
+          placeholder={tr("Other — type and press Enter")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const v = e.currentTarget.value.trim();
+              if (v && !data.industry.includes(v)) toggleIndustry(v);
+              e.currentTarget.value = "";
+            }
+          }}
+          className="mt-3 w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:border-navy"
+        />
       </div>
 
       <div>

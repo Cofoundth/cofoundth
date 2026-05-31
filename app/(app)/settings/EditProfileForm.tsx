@@ -5,6 +5,7 @@ import { Check, Loader2 } from "lucide-react";
 import { updateProfileAction } from "./actions";
 import { useT } from "@/lib/i18n-client";
 import { THAI_PROVINCES } from "@/lib/provinces";
+import { INDUSTRIES } from "@/lib/industries";
 
 type SaveResult = { error?: string; ok?: boolean } | null;
 
@@ -20,11 +21,6 @@ const INTENTS = [
   { value: "idea", label: "I have an idea" },
   { value: "open", label: "I have skills" },
   { value: "explore", label: "Let's explore" },
-];
-const INDUSTRIES = [
-  "FinTech", "HealthTech", "E-commerce", "SaaS", "AI / ML", "PropTech",
-  "Consumer", "EdTech", "Logistics", "Sustainability", "Media / Content",
-  "Travel", "Food & Beverage",
 ];
 const STAGES = [
   { value: "exploring", label: "Just exploring" },
@@ -241,6 +237,32 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         {industry.map((v) => (
           <input key={v} type="hidden" name="industry" value={v} />
         ))}
+        <div className="flex flex-wrap gap-2 mt-2">
+          {industry
+            .filter((i) => !INDUSTRIES.includes(i))
+            .map((i) => (
+              <Chip
+                key={i}
+                on
+                onClick={() => setIndustry((s) => s.filter((x) => x !== i))}
+              >
+                {i} ✕
+              </Chip>
+            ))}
+        </div>
+        <input
+          type="text"
+          placeholder={tr("Other — type and press Enter")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const v = e.currentTarget.value.trim();
+              if (v) setIndustry((s) => (s.includes(v) ? s : [...s, v]));
+              e.currentTarget.value = "";
+            }
+          }}
+          className="mt-2 w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:border-navy"
+        />
 
         <Label>{tr("Your stage")}</Label>
         <Pills options={STAGES} selected={[stage]} onPick={setStage} tr={tr} />

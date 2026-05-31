@@ -304,6 +304,7 @@ export const TH: Record<string, string> = {
     "ฉันกำลังหา… (เลือกได้หลายข้อ)",
   "Industry focus (select all that apply)":
     "อุตสาหกรรมที่สนใจ (เลือกได้หลายข้อ)",
+  "Other — type and press Enter": "อื่นๆ — พิมพ์แล้วกด Enter",
   "Your stage": "ช่วงของคุณ",
   "Location (optional)": "พื้นที่/เมือง (ไม่บังคับ)",
   "Bangkok, Chiang Mai, Remote, etc.": "กรุงเทพฯ เชียงใหม่ Remote ฯลฯ",
