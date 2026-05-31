@@ -129,6 +129,57 @@ export function NotificationBell({
     };
   }, [currentUserId]);
 
+  // Polling fallback — the realtime socket is unreliable, so the bell also
+  // re-checks every 15s straight from the browser client (no Next cache, RLS
+  // scoped to me). This keeps the badge live on EVERY page, not just inside a
+  // chat, so you actually know when something arrives. Pauses when the tab is
+  // hidden to avoid needless load.
+  useEffect(() => {
+    const supabase = createClient();
+    let stopped = false;
+    const interval = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
+      const { data } = await supabase
+        .from("notifications")
+        .select("id, type, entity_id, data, read_at, created_at, actor_id")
+        .eq("recipient_id", currentUserId)
+        .order("created_at", { ascending: false })
+        .limit(12);
+      if (stopped || !data) return;
+      const polled: NotifItem[] = data.map((n) => {
+        const d =
+          (n.data as { actor_name?: string; post_title?: string } | null) ??
+          null;
+        return {
+          id: n.id as string,
+          type: n.type as string,
+          entityId: (n.entity_id as string | null) ?? null,
+          data: d,
+          readAt: (n.read_at as string | null) ?? null,
+          createdAt: n.created_at as string,
+          actor: n.actor_id
+            ? {
+                id: n.actor_id as string,
+                slug: null,
+                photo_url: null,
+                full_name: d?.actor_name ?? null,
+              }
+            : null,
+        };
+      });
+      setItems((prev) => {
+        const known = new Set(prev.map((i) => i.id));
+        const fresh = polled.filter((p) => !known.has(p.id));
+        return fresh.length ? [...fresh, ...prev] : prev;
+      });
+      if (!openRef.current) setUnread(polled.filter((p) => !p.readAt).length);
+    }, 15000);
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+    };
+  }, [currentUserId]);
+
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
