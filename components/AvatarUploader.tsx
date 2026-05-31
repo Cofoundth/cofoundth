@@ -12,6 +12,56 @@ type Props = {
   name?: string | null;
 };
 
+// Downscale + re-encode in the browser before upload. An avatar renders at
+// 80px, so a multi-MB original is wasteful and also trips the Server Action
+// body limit. Returns the original file on any failure (the server re-validates
+// type/size regardless). GIFs pass through to preserve animation.
+async function downscaleImage(
+  file: File,
+  maxDim = 512,
+  quality = 0.85,
+): Promise<File> {
+  if (file.type === "image/gif") return file;
+  try {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("decode failed"));
+      i.src = dataUrl;
+    });
+
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    // Already small in both dimensions and bytes — keep the original.
+    if (scale === 1 && file.size <= 512 * 1024) return file;
+
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    // Flatten any transparency onto white so PNGs don't go black as JPEG.
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", quality),
+    );
+    if (!blob) return file;
+    return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 export function AvatarUploader({ initialUrl, name }: Props) {
   const [url, setUrl] = useState<string | null>(initialUrl ?? null);
   const [uploading, setUploading] = useState(false);
@@ -31,8 +81,9 @@ export function AvatarUploader({ initialUrl, name }: Props) {
     setError(null);
 
     try {
+      const optimized = await downscaleImage(file);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", optimized);
       const res = await uploadAvatarAction(fd);
       if (res.error || !res.url) throw new Error(res.error ?? "Upload failed.");
       setUrl(res.url);
