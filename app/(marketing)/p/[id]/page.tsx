@@ -213,7 +213,12 @@ export default async function PublicPostPage({ params }: Props) {
             likeCount={likeCount ?? 0}
             commentCount={(comments ?? []).length}
           />
-          <ShareButton />
+          <ShareButton
+            title={
+              (post.title as string | null) ??
+              (post.content as string).slice(0, 80)
+            }
+          />
         </div>
       </article>
 

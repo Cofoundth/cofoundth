@@ -270,6 +270,7 @@ export function PostCard({
               </button>
               <ShareButton
                 path={`/p/${post.id}`}
+                title={post.title ?? post.content.slice(0, 80)}
                 className="inline-flex items-center gap-1 text-ink-muted hover:text-navy transition-colors ml-auto"
               />
             </div>
