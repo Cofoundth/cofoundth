@@ -317,7 +317,8 @@ export default async function LandingPage() {
         </section>
       )}
 
-      {/* Four pillars */}
+      {/* Four pillars — hidden for now */}
+      {false && (
       <section className="py-24 lg:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-20">
@@ -363,6 +364,7 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Who it's for */}
       <section className="py-24 bg-white border-t border-line">
@@ -465,11 +467,6 @@ export default async function LandingPage() {
             <p>
               {tr(
                 "So I stopped trying to force the match. Cofoundee starts as a community instead — a place where Thai founders show up, share what they're building, and get to know each other over time. Trust forms there. And once it does, everything else compounds on top: partners, advisors, investor intros, and yes — co-founders — the way it actually happens in real life.",
-              )}
-            </p>
-            <p>
-              {tr(
-                "It's early. I'm building this patiently, because Thailand's founders deserve a home like this — and because I wished it existed when I started out.",
               )}
             </p>
           </div>

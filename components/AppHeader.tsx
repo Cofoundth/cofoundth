@@ -99,8 +99,9 @@ export async function AppHeader() {
       label: await tServer("Connections"),
       badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
     },
-    { href: "/insights", label: await tServer("Insights") },
-    { href: "/legal-templates", label: await tServer("Legal") },
+    // Insights + Legal hidden for now.
+    // { href: "/insights", label: await tServer("Insights") },
+    // { href: "/legal-templates", label: await tServer("Legal") },
   ];
   if (isAdminEmail(user.email)) {
     navItems.push({ href: "/admin/insights", label: await tServer("Admin") });

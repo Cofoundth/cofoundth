@@ -11,14 +11,14 @@ const columns = [
       { label: "Create profile", href: "/signup" },
     ],
   },
-  {
-    title: "Resources",
-    items: [
-      { label: "Insights", href: "/insights" },
-      { label: "Legal templates", href: "/legal-templates" },
-      // { label: "Events", href: "/events" }, // hidden until events are real
-    ],
-  },
+  // Resources (Insights + Legal templates) hidden for now.
+  // {
+  //   title: "Resources",
+  //   items: [
+  //     { label: "Insights", href: "/insights" },
+  //     { label: "Legal templates", href: "/legal-templates" },
+  //   ],
+  // },
   {
     title: "Legal",
     items: [

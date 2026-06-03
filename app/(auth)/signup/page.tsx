@@ -9,13 +9,7 @@ export default async function SignupPage() {
   const tr = (en: string) => tServer(en);
   return (
     <div className="bg-white border border-line p-8 lg:p-10">
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
-        {await tr("Phase I · Free for all founders")}
-      </div>
-      <h1 className="text-3xl mb-2">{await tr("Create your profile")}</h1>
-      <p className="text-sm text-ink-muted mb-8">
-        {await tr("Join Thailand’s most serious community of co-founders.")}
-      </p>
+      <h1 className="text-3xl mb-8">{await tr("Create your profile")}</h1>
 
       <SignupForm />
 
