@@ -164,6 +164,28 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             className={inputCls}
           />
         </Field>
+        <Field label={tr("Work experience (optional)")}>
+          <textarea
+            name="work_experience"
+            defaultValue={initial.work_experience ?? ""}
+            rows={4}
+            maxLength={800}
+            className={inputCls}
+            placeholder={tr(
+              "Roles, companies, what you built. One per line is fine.",
+            )}
+          />
+        </Field>
+        <Field label={tr("Education (optional)")}>
+          <textarea
+            name="education"
+            defaultValue={initial.education ?? ""}
+            rows={2}
+            maxLength={400}
+            className={inputCls}
+            placeholder={tr("Degrees, schools, bootcamps.")}
+          />
+        </Field>
       </Section>
 
       {/* Identity */}
@@ -346,28 +368,6 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             placeholder={tr(
               "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.",
             )}
-          />
-        </Field>
-        <Field label={tr("Work experience (optional)")}>
-          <textarea
-            name="work_experience"
-            defaultValue={initial.work_experience ?? ""}
-            rows={4}
-            maxLength={800}
-            className={inputCls}
-            placeholder={tr(
-              "Roles, companies, what you built. One per line is fine.",
-            )}
-          />
-        </Field>
-        <Field label={tr("Education (optional)")}>
-          <textarea
-            name="education"
-            defaultValue={initial.education ?? ""}
-            rows={2}
-            maxLength={400}
-            className={inputCls}
-            placeholder={tr("Degrees, schools, bootcamps.")}
           />
         </Field>
         <Field label={tr("Skills (type and press Enter)")}>
