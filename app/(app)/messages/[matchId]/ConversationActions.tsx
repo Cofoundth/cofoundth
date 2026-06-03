@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Calendar, Video, X } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 import { postScheduleNoticeAction } from "./scheduleNoticeAction";
 
 type Props = {
@@ -17,6 +18,7 @@ export function ConversationActions({
   otherName,
   otherEmail,
 }: Props) {
+  const tr = useT();
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
   return (
@@ -29,7 +31,7 @@ export function ConversationActions({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy text-xs text-ink tracking-wide transition-colors"
         >
           <Video className="w-3.5 h-3.5" strokeWidth={1.5} />
-          Start Meet
+          {tr("Start Meet")}
         </a>
         <button
           type="button"
@@ -37,7 +39,7 @@ export function ConversationActions({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy text-xs text-ink tracking-wide transition-colors"
         >
           <Calendar className="w-3.5 h-3.5" strokeWidth={1.5} />
-          Schedule call
+          {tr("Schedule call")}
         </button>
       </div>
 
@@ -67,6 +69,7 @@ function ScheduleDialog({
   otherEmail: string | null;
   onClose: () => void;
 }) {
+  const tr = useT();
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(16, 0, 0, 0);
@@ -132,16 +135,18 @@ function ScheduleDialog({
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-xs uppercase tracking-[0.25em] text-gold mb-2">
-              Schedule
+              {tr("Schedule")}
             </div>
-            <h2 className="text-2xl">Co-founder intro call</h2>
-            <p className="text-sm text-ink-muted mt-1">with {otherName}</p>
+            <h2 className="text-2xl">{tr("Co-founder intro call")}</h2>
+            <p className="text-sm text-ink-muted mt-1">
+              {tr("with")} {otherName}
+            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="text-ink-muted hover:text-navy p-1 -m-1"
-            aria-label="Close"
+            aria-label={tr("Close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -154,7 +159,7 @@ function ScheduleDialog({
                 htmlFor="date"
                 className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
               >
-                Date
+                {tr("Date")}
               </label>
               <input
                 id="date"
@@ -171,7 +176,7 @@ function ScheduleDialog({
                 htmlFor="time"
                 className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
               >
-                Time (Bangkok)
+                {tr("Time (Bangkok)")}
               </label>
               <input
                 id="time"
@@ -189,7 +194,7 @@ function ScheduleDialog({
               htmlFor="duration"
               className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
             >
-              Duration
+              {tr("Duration")}
             </label>
             <select
               id="duration"
@@ -197,22 +202,25 @@ function ScheduleDialog({
               onChange={(e) => setDuration(e.target.value)}
               className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
             >
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
-              <option value="45">45 minutes</option>
-              <option value="60">1 hour</option>
-              <option value="90">1.5 hours</option>
+              <option value="15">{tr("15 minutes")}</option>
+              <option value="30">{tr("30 minutes")}</option>
+              <option value="45">{tr("45 minutes")}</option>
+              <option value="60">{tr("1 hour")}</option>
+              <option value="90">{tr("1.5 hours")}</option>
             </select>
           </div>
 
           <div className="bg-cream border-l-2 border-gold p-3 text-xs text-ink leading-relaxed">
-            Opens Google Calendar with the event pre-filled.{" "}
-            {otherEmail ? `${otherName} will be added as an invitee. ` : null}
+            {tr("Opens Google Calendar with the event pre-filled.")}{" "}
+            {otherEmail
+              ? `${otherName} ${tr("will be added as an invitee.")} `
+              : null}
             <strong className="text-navy">
-              Tick &ldquo;Google Meet&rdquo; conferencing
+              {tr('Tick "Google Meet" conferencing')}
             </strong>{" "}
-            inside Google Calendar before saving &mdash; Google generates the
-            link automatically.
+            {tr(
+              "inside Google Calendar before saving — Google generates the link automatically.",
+            )}
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -222,14 +230,14 @@ function ScheduleDialog({
               disabled={isPending}
               className="flex-1 px-4 py-3 border border-line bg-white hover:border-navy disabled:opacity-60 text-ink text-sm tracking-wide transition-colors"
             >
-              Cancel
+              {tr("Cancel")}
             </button>
             <button
               type="submit"
               disabled={isPending}
               className="flex-1 px-4 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors"
             >
-              {isPending ? "Posting…" : "Open Google Calendar"}
+              {isPending ? tr("Posting…") : tr("Open Google Calendar")}
             </button>
           </div>
         </form>

@@ -74,7 +74,7 @@ export default async function MessagePage({ params }: Props) {
             href="/matches"
             className="text-xs text-ink-muted hover:text-navy mb-3 inline-flex items-center gap-1.5"
           >
-            <ArrowLeft className="w-3 h-3" /> All matches
+            <ArrowLeft className="w-3 h-3" /> {t("All matches", locale)}
           </Link>
           <div className="flex items-center justify-between gap-4">
             <Link

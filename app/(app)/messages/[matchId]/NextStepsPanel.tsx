@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Check, FileText, MessageSquareQuote, Plus } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 import { QUICK_REPLY_EVENT } from "./MessageComposer";
 
 const TEMPLATES = [
@@ -29,6 +30,7 @@ const TEMPLATES = [
 ];
 
 export function NextStepsPanel() {
+  const tr = useT();
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
   function insert(idx: number, text: string) {
@@ -42,16 +44,16 @@ export function NextStepsPanel() {
       {/* Conversation guide */}
       <div className="bg-white border border-line p-5">
         <div className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
-          After mutual interest
+          {tr("After mutual interest")}
         </div>
-        <h3 className="font-serif text-lg text-navy mb-4">The path</h3>
+        <h3 className="font-serif text-lg text-navy mb-4">{tr("The path")}</h3>
         <ol className="space-y-3 text-sm text-ink">
           <li className="flex gap-3">
             <span className="font-serif text-base text-gold leading-none">
               I
             </span>
             <span className="leading-relaxed">
-              Chat here. Use the prompts in the empty state as a guide.
+              {tr("Chat here. Use the prompts in the empty state as a guide.")}
             </span>
           </li>
           <li className="flex gap-3">
@@ -59,8 +61,9 @@ export function NextStepsPanel() {
               II
             </span>
             <span className="leading-relaxed">
-              First 30-min intro call. Start Meet or schedule via Google
-              Calendar (buttons above).
+              {tr(
+                "First 30-min intro call. Start Meet or schedule via Google Calendar (buttons above).",
+              )}
             </span>
           </li>
           <li className="flex gap-3">
@@ -68,8 +71,9 @@ export function NextStepsPanel() {
               III
             </span>
             <span className="leading-relaxed">
-              2–3 more calls. Discuss vision, values, working style, equity
-              expectations.
+              {tr(
+                "2–3 more calls. Discuss vision, values, working style, equity expectations.",
+              )}
             </span>
           </li>
           <li className="flex gap-3">
@@ -77,7 +81,7 @@ export function NextStepsPanel() {
               IV
             </span>
             <span className="leading-relaxed">
-              Trial period (2–4 weeks): build something small together.
+              {tr("Trial period (2–4 weeks): build something small together.")}
             </span>
           </li>
           <li className="flex gap-3">
@@ -85,12 +89,12 @@ export function NextStepsPanel() {
               V
             </span>
             <span className="leading-relaxed">
-              Ready to formalize?{" "}
+              {tr("Ready to formalize?")}{" "}
               <Link
                 href="/legal-templates"
                 className="text-navy hover:text-gold inline-flex items-center gap-1"
               >
-                <FileText className="w-3 h-3" /> Legal templates
+                <FileText className="w-3 h-3" /> {tr("Legal templates")}
               </Link>
             </span>
           </li>
@@ -105,26 +109,26 @@ export function NextStepsPanel() {
             strokeWidth={1.5}
           />
           <div className="text-xs uppercase tracking-[0.2em] text-gold">
-            Quick replies
+            {tr("Quick replies")}
           </div>
         </div>
         <p className="text-xs text-ink-muted mb-4">
-          Tap to drop it into your message box — edit before sending.
+          {tr("Tap to drop it into your message box — edit before sending.")}
         </p>
         <ul className="space-y-2">
           {TEMPLATES.map((t, idx) => (
             <li key={t.label}>
               <button
                 type="button"
-                onClick={() => insert(idx, t.body)}
+                onClick={() => insert(idx, tr(t.body))}
                 className="w-full text-left p-3 border border-line bg-white hover:border-navy transition-colors flex items-start gap-3 group"
               >
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-navy mb-1">
-                    {t.label}
+                    {tr(t.label)}
                   </div>
                   <div className="text-[11px] text-ink-muted leading-relaxed line-clamp-2">
-                    {t.body}
+                    {tr(t.body)}
                   </div>
                 </div>
                 {copiedIdx === idx ? (
