@@ -39,21 +39,21 @@ export function NextStepsPanel({ social }: { social?: Social }) {
   // Build the quick-reply cards. Each is { label, body } already in the active
   // language. The "share my socials" card is only added when the user actually
   // has links, and pastes their REAL URLs (no placeholder).
-  const socialUrls = [
-    social?.linkedin,
-    social?.x,
-    social?.instagram,
-    social?.facebook,
+  const socialLines = [
+    social?.linkedin && `LinkedIn: ${social.linkedin}`,
+    social?.x && `X: ${social.x}`,
+    social?.instagram && `IG: ${social.instagram}`,
+    social?.facebook && `Facebook: ${social.facebook}`,
   ].filter(Boolean) as string[];
 
   const cards: { label: string; body: string }[] = TEMPLATES.map((t) => ({
     label: tr(t.label),
     body: tr(t.body),
   }));
-  if (socialUrls.length) {
+  if (socialLines.length) {
     cards.splice(1, 0, {
       label: tr("Share my socials"),
-      body: `${tr("Here are my socials:")} ${socialUrls.join(" ")}`,
+      body: `${tr("Here are my socials:")}\n${socialLines.join("\n")}`,
     });
   }
 
