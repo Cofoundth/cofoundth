@@ -492,12 +492,17 @@ export default async function LandingPage() {
           <div className="font-serif text-2xl lg:text-3xl leading-relaxed space-y-6">
             <p>
               {tr(
-                "I set out to build a co-founder matching app. The more I looked at it, the clearer it got: you can't match co-founders through a profile. A co-founder is a five-, ten-year relationship with shared equity and shared risk — no one hands that to someone they met on a website three weeks ago. Especially here: Thai founders build from trust and relationships, not from an algorithm ranking strangers.",
+                "Building a startup feels so much easier these days — AI helps, you need less capital, two or three people can just start. The harder part now is finding the right people to build it with.",
               )}
             </p>
             <p>
               {tr(
-                "So I stopped trying to force the match. Cofoundee starts as a community instead — a place where Thai founders show up, share what they're building, and get to know each other over time. Trust forms there. And once it does, everything else compounds on top: partners, advisors, investor intros, and yes — co-founders — the way it actually happens in real life.",
+                "Take me: I'm in a circle of people with skills a lot like mine, so we all end up lacking the same things. It made me think the person who fills in what you're missing probably isn't in your circle to begin with.",
+              )}
+            </p>
+            <p>
+              {tr(
+                "So I wanted to build a place where people who have a dream and want to build something similar can find each other. That's where Cofoundee came from.",
               )}
             </p>
           </div>
