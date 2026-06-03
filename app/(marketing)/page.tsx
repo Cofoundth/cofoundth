@@ -147,12 +147,14 @@ export default async function LandingPage() {
                   <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
                   {tr("Thailand's startup community")}
                 </span>
-                <span className="text-line">·</span>
-                <span className="normal-case tracking-normal text-ink-muted text-xs">
-                  {(totalFounders ?? 0) >= 25
-                    ? `${totalFounders} ${tr("founders")}`
-                    : tr("Founding members")}
-                </span>
+                {(totalFounders ?? 0) >= 25 && (
+                  <>
+                    <span className="text-line">·</span>
+                    <span className="normal-case tracking-normal text-ink-muted text-xs">
+                      {totalFounders} {tr("founders")}
+                    </span>
+                  </>
+                )}
                 {(foundersThisWeek ?? 0) > 0 && (
                   <>
                     <span className="text-line">·</span>
