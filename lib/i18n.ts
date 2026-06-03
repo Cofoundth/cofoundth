@@ -1,8 +1,8 @@
 // Cofoundee — i18n dictionary loader + pure t() helper. CLIENT-SAFE.
 //
-// Thai translations live in ./th.json — edit copy THERE, not here.
+// Thai translations live in ./translations.json — edit copy THERE, not here.
 // English is the source language: the dictionary KEY *is* the English string,
-// so t() returns the key unchanged for "en" and looks up th.json for "th".
+// so t() returns the key unchanged for "en" and looks up translations.json for "th".
 //
 // Anything that touches `next/headers` (cookies) lives in `i18n-server.ts`
 // so this module doesn't drag server APIs into the client bundle.
@@ -18,14 +18,14 @@
 //     profile, post, comment, partner, B2B, VC, angel, MVP, Markdown.
 //   - Brand bylines, dates, location marks stay English.
 
-import thMessages from "./th.json";
+import translations from "./translations.json";
 
 export const LOCALES = ["en", "th"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 export const LOCALE_COOKIE = "locale";
 
-export const TH: Record<string, string> = thMessages;
+export const TH: Record<string, string> = translations;
 
 export function t(en: string, locale: Locale): string {
   if (locale === "en") return en;
