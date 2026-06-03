@@ -16,7 +16,7 @@ const columns = [
     items: [
       { label: "Insights", href: "/insights" },
       { label: "Legal templates", href: "/legal-templates" },
-      { label: "Events", href: "/events" },
+      // { label: "Events", href: "/events" }, // hidden until events are real
     ],
   },
   {

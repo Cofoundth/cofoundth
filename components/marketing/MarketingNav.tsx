@@ -7,7 +7,7 @@ import { BrandMark, Wordmark } from "@/components/Brand";
 const navLinks = [
   { href: "/browse", label: "Community" },
   { href: "/insights", label: "Insights" },
-  { href: "/events", label: "Events" },
+  // { href: "/events", label: "Events" }, // hidden until events are real
   { href: "/legal-templates", label: "Legal" },
 ];
 
