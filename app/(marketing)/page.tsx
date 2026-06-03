@@ -303,9 +303,6 @@ export default async function LandingPage() {
                         : "bg-cream border-line"
                     }`}
                   >
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-gold mb-2 inline-flex items-center gap-1.5">
-                      {isMilestone ? tr("Milestone") : tr("Shipped")}
-                    </div>
                     <p className="text-sm text-ink leading-relaxed mb-3 whitespace-pre-wrap">
                       {m.content as string}
                     </p>
