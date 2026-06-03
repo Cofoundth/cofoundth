@@ -18,31 +18,12 @@ export default async function CommunityPage({
   } = await supabase.auth.getUser();
   const locale = await getLocale();
   const { q } = await searchParams;
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
 
-  const [feed, { count: postsThisWeek }] = await Promise.all([
-    getFeedPosts(supabase, { limit: 50, userId: user?.id }),
-    supabase
-      .from("forum_posts")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", sevenDaysAgo),
-  ]);
+  const feed = await getFeedPosts(supabase, { limit: 50, userId: user?.id });
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-8 pb-8 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-          {await tServer("The community")}
-          {(postsThisWeek ?? 0) > 0 && (
-            <>
-              <span className="text-line">·</span>
-              <span className="normal-case tracking-normal text-ink-muted">
-                {postsThisWeek} {await tServer("new posts in 7d")}
-              </span>
-            </>
-          )}
-        </div>
         <h1 className="text-4xl lg:text-5xl mb-2">
           {await tServer("Community")}
         </h1>

@@ -131,12 +131,7 @@ export function BrowseClient({ others }: Props) {
       <div className="mb-10 pb-8 border-b border-line">
         <div className="flex items-end justify-between">
           <div>
-            <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-              {tr("The directory")}
-            </div>
-            <h1 className="text-4xl lg:text-5xl mb-2">
-              {tr("Founder directory")}
-            </h1>
+            <h1 className="text-4xl lg:text-5xl mb-2">{tr("Founders")}</h1>
             <p className="text-ink">
               {filtered.length} {tr("founders")}
             </p>

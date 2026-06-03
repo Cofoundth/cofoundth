@@ -137,9 +137,6 @@ export default async function ConnectionsPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-10 pb-8 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          {await tServer("Your founders")}
-        </div>
         <h1 className="text-4xl lg:text-5xl mb-2">
           {await tServer("Connections")}
         </h1>
