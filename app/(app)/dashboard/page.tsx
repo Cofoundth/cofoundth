@@ -276,10 +276,13 @@ export default async function DashboardPage() {
                           {f.full_name as string}
                         </div>
                         <div className="text-xs text-ink-muted mt-0.5 truncate">
-                          {((f.i_am as string[] | null) ?? []).join(" · ") ||
-                            "—"}
+                          {((f.i_am as string[] | null) ?? [])
+                            .map((r) => ROLE_LABELS[r] ?? r)
+                            .join(" · ") || "—"}
                           {((f.intent as string[] | null) ?? []).length > 0
-                            ? ` · ${((f.intent as string[] | null) ?? []).join(" · ")}`
+                            ? ` · ${((f.intent as string[] | null) ?? [])
+                                .map((x) => INTENT_LABELS[x] ?? x)
+                                .join(" · ")}`
                             : ""}
                         </div>
                         <div className="text-[10px] text-ink-muted mt-1 inline-flex items-center gap-2">
@@ -296,12 +299,6 @@ export default async function DashboardPage() {
             </div>
           )}
 
-          <Link
-            href="/community/new"
-            className="mt-6 block bg-navy hover:bg-navy-dark text-white text-sm text-center py-3 transition-colors"
-          >
-            {await tServer("+ Write a community post")}
-          </Link>
         </aside>
       </div>
     </div>

@@ -53,7 +53,13 @@ export async function saveOnboardingAction(
     arr.map((s) => s.slice(0, MAX_ITEM_LEN)).slice(0, max);
 
   // ---- Read form values
-  const full_name = String(formData.get("full_name") ?? "").trim().slice(0, 80);
+  const first_name = String(formData.get("first_name") ?? "")
+    .trim()
+    .slice(0, 40);
+  const last_name = String(formData.get("last_name") ?? "")
+    .trim()
+    .slice(0, 40);
+  const full_name = `${first_name} ${last_name}`.trim();
   const i_am = cap(formData.getAll("i_am").map(String), ROLE_VALUES.length);
   const intent = cap(
     formData.getAll("intent").map(String),
@@ -146,6 +152,8 @@ export async function saveOnboardingAction(
     .from("profiles")
     .update({
       full_name,
+      first_name: first_name || null,
+      last_name: last_name || null,
       i_am,
       intent,
       looking_for,

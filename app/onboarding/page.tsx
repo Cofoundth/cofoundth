@@ -17,14 +17,15 @@ export default async function OnboardingPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, location, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills",
+      "full_name, first_name, last_name, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, location, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills",
     )
     .eq("id", user.id)
     .single();
 
   const initial = profile
     ? {
-        full_name: (profile.full_name as string | null) ?? "",
+        first_name: (profile.first_name as string | null) ?? "",
+        last_name: (profile.last_name as string | null) ?? "",
         profile_type: ((profile.type as string) ?? "individual") as
           | "individual"
           | "company",

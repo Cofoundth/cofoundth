@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, slug, full_name, age, location, linkedin_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, onboarded",
+      "id, slug, full_name, first_name, last_name, age, location, linkedin_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, onboarded",
     )
     .eq("id", user.id)
     .single();
@@ -33,6 +33,8 @@ export default async function SettingsPage() {
   const arr = (v: unknown) => [...((v as string[] | null) ?? [])].map(String);
   const initial = {
     full_name: profile.full_name ?? "",
+    first_name: profile.first_name ?? "",
+    last_name: profile.last_name ?? "",
     age: profile.age ?? null,
     location: profile.location ?? "",
     linkedin_url: profile.linkedin_url ?? "",

@@ -56,6 +56,8 @@ const STATUS_TAGS = [
 
 export type ProfileInitial = {
   full_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   age?: number | null;
   location?: string | null;
   linkedin_url?: string | null;
@@ -125,15 +127,25 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
     >
       {/* Personal */}
       <Section title={tr("Personal information")}>
-        <Field label={tr("Full name")}>
-          <input
-            name="full_name"
-            defaultValue={initial.full_name ?? ""}
-            required
-            maxLength={80}
-            className={inputCls}
-          />
-        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label={tr("First name")}>
+            <input
+              name="first_name"
+              defaultValue={initial.first_name ?? ""}
+              required
+              maxLength={40}
+              className={inputCls}
+            />
+          </Field>
+          <Field label={tr("Last name")}>
+            <input
+              name="last_name"
+              defaultValue={initial.last_name ?? ""}
+              maxLength={40}
+              className={inputCls}
+            />
+          </Field>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <Field label={tr("Age (optional)")}>
             <input

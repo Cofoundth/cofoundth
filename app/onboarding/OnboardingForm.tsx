@@ -95,7 +95,8 @@ type StatusTag =
   | "looking_for_advisors";
 
 type FormState = {
-  full_name: string;
+  first_name: string;
+  last_name: string;
   profile_type: "individual" | "company";
   company_name: string;
   capabilities: string;
@@ -135,7 +136,8 @@ export function OnboardingForm({ initial }: Props) {
   const tr = useT();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormState>({
-    full_name: "",
+    first_name: "",
+    last_name: "",
     profile_type: "individual",
     company_name: "",
     capabilities: "",
@@ -183,7 +185,7 @@ export function OnboardingForm({ initial }: Props) {
   function stepValid(): boolean {
     switch (step) {
       case 0:
-        if (data.full_name.trim().length < 2) return false;
+        if (data.first_name.trim().length < 1) return false;
         if (data.profile_type === "company" && !data.company_name.trim())
           return false;
         return (
@@ -220,7 +222,8 @@ export function OnboardingForm({ initial }: Props) {
 
   function submit() {
     const fd = new FormData();
-    fd.append("full_name", data.full_name);
+    fd.append("first_name", data.first_name);
+    fd.append("last_name", data.last_name);
     fd.append("profile_type", data.profile_type);
     fd.append("company_name", data.company_name);
     data.capabilities
@@ -432,18 +435,31 @@ function StepRole({
 }) {
   return (
     <div className="space-y-10">
-      <div>
-        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
-          {tr("Your name")}
-        </label>
-        <input
-          type="text"
-          value={data.full_name}
-          onChange={(e) => set("full_name", e.target.value)}
-          maxLength={80}
-          placeholder={tr("How you'll appear to other founders")}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+            {tr("First name")}
+          </label>
+          <input
+            type="text"
+            value={data.first_name}
+            onChange={(e) => set("first_name", e.target.value)}
+            maxLength={40}
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+            {tr("Last name")}
+          </label>
+          <input
+            type="text"
+            value={data.last_name}
+            onChange={(e) => set("last_name", e.target.value)}
+            maxLength={40}
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          />
+        </div>
       </div>
 
       {/* B2B company profile type parked until Phase 3 — community-first focus.

@@ -50,7 +50,13 @@ export async function updateProfileAction(
   if (!user) return { error: "Not authenticated. Please sign in again." };
 
   // ---- Personal
-  const full_name = String(formData.get("full_name") ?? "").trim();
+  const first_name = String(formData.get("first_name") ?? "")
+    .trim()
+    .slice(0, 40);
+  const last_name = String(formData.get("last_name") ?? "")
+    .trim()
+    .slice(0, 40);
+  const full_name = `${first_name} ${last_name}`.trim();
   const ageRaw = String(formData.get("age") ?? "").trim();
   const location = String(formData.get("location") ?? "").trim().slice(0, 100);
   const linkedinRaw = String(formData.get("linkedin_url") ?? "")
@@ -169,6 +175,8 @@ export async function updateProfileAction(
     .from("profiles")
     .update({
       full_name,
+      first_name: first_name || null,
+      last_name: last_name || null,
       age,
       location: location || null,
       linkedin_url,
