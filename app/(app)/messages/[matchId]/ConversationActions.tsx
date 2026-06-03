@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { Calendar, Video, X } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
-import { postMeetLinkAction } from "./actions";
 import { postScheduleNoticeAction } from "./scheduleNoticeAction";
 
 type Props = {
@@ -21,33 +20,19 @@ export function ConversationActions({
 }: Props) {
   const tr = useT();
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [starting, startMeet] = useTransition();
-
-  function startInstantMeet() {
-    // Generate the room URL on the client so window.open runs inside the click
-    // gesture (no popup blocker), then post the same link into the chat.
-    const room = `cofoundee-${matchId.slice(0, 8)}-${Math.random()
-      .toString(36)
-      .slice(2, 8)}`;
-    const url = `https://meet.jit.si/${room}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-    startMeet(async () => {
-      await postMeetLinkAction(matchId, url);
-    });
-  }
 
   return (
     <>
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={startInstantMeet}
-          disabled={starting}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy disabled:opacity-60 text-xs text-ink tracking-wide transition-colors"
+        <a
+          href="https://meet.google.com/new"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy text-xs text-ink tracking-wide transition-colors"
         >
           <Video className="w-3.5 h-3.5" strokeWidth={1.5} />
-          {starting ? tr("Starting…") : tr("Start call")}
-        </button>
+          {tr("Start Meet")}
+        </a>
         <button
           type="button"
           onClick={() => setScheduleOpen(true)}

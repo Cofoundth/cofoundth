@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LinkedText } from "@/components/LinkedText";
+import { useLocale } from "@/lib/i18n-client";
 import { markConversationRead } from "./actions";
 
 export type Msg = {
@@ -33,6 +34,7 @@ export function MessageThread({
   initialMessages: Msg[];
   emptyState: React.ReactNode;
 }) {
+  const locale = useLocale();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -149,12 +151,15 @@ export function MessageThread({
                   mine ? "text-white/60" : "text-ink-muted"
                 }`}
               >
-                {new Date(m.created_at).toLocaleString("en-GB", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  day: "numeric",
-                  month: "short",
-                })}
+                {new Date(m.created_at).toLocaleString(
+                  locale === "th" ? "th-TH" : "en-GB",
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    day: "numeric",
+                    month: "short",
+                  },
+                )}
               </div>
             </div>
           </div>
