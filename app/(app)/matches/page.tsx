@@ -265,7 +265,7 @@ export default async function ConnectionsPage() {
         {!matches?.length ? (
           <div className="bg-white border border-line p-12 text-center">
             <h3 className="text-2xl mb-2">
-              {await tServer("No matches yet")}
+              {await tServer("No conversations yet")}
             </h3>
             <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
               {await tServer(

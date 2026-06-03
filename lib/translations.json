@@ -150,7 +150,7 @@
   "Profile views": "ผู้เข้าชมโปรไฟล์",
   "Founder directory": "ไดเรกทอรี founder",
   "Filter by role, industry, and stage. Read full pitches before you express interest.": "กรองตามบทบาท อุตสาหกรรม และช่วง อ่าน pitch ให้จบก่อนแสดงความสนใจ",
-  "Open directory": "เปิดไดเรกทอรี",
+  "Open directory": "เปิด Founders",
   "Update your pitch": "อัปเดต pitch",
   "Refine your pitch and details. Better signal — better matches.": "เกลา pitch และรายละเอียดให้คมขึ้น สัญญาณชัด แมตช์ก็แม่น",
   "Edit profile": "แก้ไขโปรไฟล์",
@@ -310,7 +310,7 @@
   "Matches": "แชท",
   "Mutual interest": "ความสนใจร่วมกัน",
   "match(es) so far · messaging is unlocked.": "แมตช์ · เปิดให้สนทนาได้แล้ว",
-  "Mutual interest creates a match. Browse the directory, express interest in founders whose profiles align, and matches will appear here when they reciprocate.": "พอสนใจตรงกันก็กลายเป็นแมตช์ ลองดูไดเรกทอรี แสดงความสนใจใน founder ที่เข้ากับคุณ พออีกฝ่ายตอบรับ แมตช์จะมาโผล่ตรงนี้",
+  "Mutual interest creates a match. Browse the directory, express interest in founders whose profiles align, and matches will appear here when they reciprocate.": "หลังทั้งคู่สนใจกัน จะสามารถแชทหากันได้ ลองสำรวจคนที่คุณอาจสนใจได้ที่ Founders",
   "All matches": "แมตช์ทั้งหมด",
   "Mutual interest unlocked": "สนใจตรงกันแล้ว",
   "You both expressed interest. This is the start of your conversation — be specific, be considered.": "สนใจตรงกันทั้งคู่แล้ว นี่คือจุดเริ่มของบทสนทนา คุยให้เจาะจง คิดมาให้ดี",
@@ -611,5 +611,6 @@
   "Optional. JPG/PNG, up to 5MB.": "ไม่บังคับ · JPG/PNG ไม่เกิน 5MB",
   "Please pick an image file.": "กรุณาเลือกไฟล์รูปภาพ",
   "Max image size is 5MB.": "ขนาดรูปต้องไม่เกิน 5MB",
-  "Upload failed.": "อัปโหลดไม่สำเร็จ"
+  "Upload failed.": "อัปโหลดไม่สำเร็จ",
+  "No conversations yet": "ยังไม่มีแชท"
 }
