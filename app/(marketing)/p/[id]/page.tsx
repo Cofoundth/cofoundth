@@ -128,9 +128,10 @@ export default async function PublicPostPage({ params }: Props) {
   const aFounder = await tServer("A founder");
   const authorName = (author?.full_name as string | null) ?? aFounder;
   const tags = (post.tags as string[] | null) ?? [];
+  const commentsGated = (comments ?? []).length > 2;
 
   return (
-    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-12">
+    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-12 pb-28">
       <article className="bg-white border border-line p-8 lg:p-10">
         {/* Author */}
         <div className="flex items-center gap-3 mb-5">
@@ -222,32 +223,51 @@ export default async function PublicPostPage({ params }: Props) {
           <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-5">
             {await tServer("Comments")}
           </h2>
-          <ul className="space-y-4">
-            {(comments ?? []).map((c) => {
-              const a = cAuthorMap.get(c.author_id as string);
-              return (
-                <li key={c.id as string} className="flex items-start gap-2.5">
-                  <Avatar
-                    name={a?.full_name as string | null}
-                    url={a?.photo_url as string | null}
-                    size="sm"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-ink-muted">
-                      <span className="text-navy font-medium">
-                        {(a?.full_name as string | null) ?? aFounder}
-                      </span>
-                      {" · "}
-                      {timeAgo(c.created_at as string, locale)}
+          <div className="relative">
+            <ul
+              className={`space-y-4 ${
+                commentsGated ? "max-h-44 overflow-hidden" : ""
+              }`}
+            >
+              {(comments ?? []).map((c) => {
+                const a = cAuthorMap.get(c.author_id as string);
+                return (
+                  <li key={c.id as string} className="flex items-start gap-2.5">
+                    <Avatar
+                      name={a?.full_name as string | null}
+                      url={a?.photo_url as string | null}
+                      size="sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-ink-muted">
+                        <span className="text-navy font-medium">
+                          {(a?.full_name as string | null) ?? aFounder}
+                        </span>
+                        {" · "}
+                        {timeAgo(c.created_at as string, locale)}
+                      </div>
+                      <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap mt-0.5">
+                        {c.content as string}
+                      </p>
                     </div>
-                    <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap mt-0.5">
-                      {c.content as string}
-                    </p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+            {commentsGated && (
+              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white via-white to-transparent flex items-end justify-center">
+                <Link
+                  href="/signup"
+                  className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+                >
+                  {(await tServer("Sign in to see all {n} comments")).replace(
+                    "{n}",
+                    String((comments ?? []).length),
+                  )}
+                </Link>
+              </div>
+            )}
+          </div>
         </section>
       )}
 
@@ -267,6 +287,33 @@ export default async function PublicPostPage({ params }: Props) {
         >
           {await tServer("Create your profile")}
         </Link>
+      </div>
+
+      {/* Persistent sign-in gate — LinkedIn-style, always visible */}
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(10,31,68,0.08)]">
+        <div className="max-w-2xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+          <p className="text-sm text-ink min-w-0 truncate">
+            {(
+              await tServer(
+                "{name} is on Cofoundee — sign in to connect and see more.",
+              )
+            ).replace("{name}", authorName)}
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/login"
+              className="px-3 py-2 text-sm text-ink-muted hover:text-navy"
+            >
+              {await tServer("Sign in")}
+            </Link>
+            <Link
+              href="/signup"
+              className="px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors whitespace-nowrap"
+            >
+              {await tServer("Join free")}
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

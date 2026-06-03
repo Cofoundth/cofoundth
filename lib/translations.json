@@ -570,5 +570,8 @@
   "Community, partners, and co-founders — in one place. Free to join.": "คอมมูนิตี้ พาร์ตเนอร์ และ co-founder ครบในที่เดียว เข้าร่วมฟรี",
   "Share": "แชร์",
   "Copied": "คัดลอกแล้ว",
-  "Connect": "เชื่อมต่อ"
+  "Connect": "เชื่อมต่อ",
+  "Sign in to see all {n} comments": "เข้าสู่ระบบเพื่อดูคอมเมนต์ทั้งหมด {n} อัน",
+  "{name} is on Cofoundee — sign in to connect and see more.": "{name} อยู่บน Cofoundee — เข้าสู่ระบบเพื่อ connect และดูเพิ่ม",
+  "Join free": "เข้าร่วมฟรี"
 }
