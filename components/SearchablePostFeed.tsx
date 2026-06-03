@@ -14,14 +14,16 @@ export function SearchablePostFeed({
   locale,
   emptyMessage,
   composer,
+  initialQuery,
 }: {
   items: PostItem[];
   locale: Locale;
   emptyMessage?: string;
   composer?: React.ReactNode;
+  initialQuery?: string;
 }) {
   const tr = useT();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery ?? "");
   const query = q.trim().toLowerCase();
 
   const filtered = query

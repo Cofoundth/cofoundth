@@ -7,12 +7,17 @@ import { getFeedPosts } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
 
-export default async function CommunityPage() {
+export default async function CommunityPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   const locale = await getLocale();
+  const { q } = await searchParams;
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
 
   const [feed, { count: postsThisWeek }] = await Promise.all([
@@ -56,6 +61,7 @@ export default async function CommunityPage() {
       <SearchablePostFeed
         items={feed}
         locale={locale}
+        initialQuery={q ?? ""}
         composer={user ? <PostComposer /> : null}
         emptyMessage={await tServer(
           "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",

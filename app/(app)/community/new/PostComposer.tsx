@@ -67,7 +67,7 @@ export function PostComposer() {
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
         />
         <p className="text-xs text-ink-muted mt-2">
-          Lowercase letters, digits, and hyphens only. Helps others find your post.
+          Letters, digits, and hyphens — Thai works too. Helps others find your post.
         </p>
       </div>
 

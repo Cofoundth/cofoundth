@@ -225,12 +225,13 @@ export function PostCard({
             {post.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {post.tags.slice(0, 5).map((tag) => (
-                  <span
+                  <Link
                     key={tag}
-                    className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted"
+                    href={`/community?q=${encodeURIComponent(tag)}`}
+                    className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted hover:border-navy hover:text-navy transition-colors"
                   >
                     #{tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}
