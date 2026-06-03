@@ -42,6 +42,7 @@ export default async function CommunityPage({
       <SearchablePostFeed
         items={feed}
         locale={locale}
+        canLoadMore={feed.length >= 50}
         initialQuery={q ?? ""}
         composer={user ? <PostComposer /> : null}
         emptyMessage={await tServer(

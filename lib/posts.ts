@@ -6,19 +6,18 @@ import type { PostItem, PostKind } from "./post-types";
 
 type DB = Awaited<ReturnType<typeof createClient>>;
 
-export async function getFeedPosts(
-  supabase: DB,
-  { limit = 30, userId }: { limit?: number; userId?: string | null },
-): Promise<PostItem[]> {
-  const { data: posts } = await supabase
-    .from("forum_posts")
-    .select(
-      "id, author_id, title, content, kind, link_url, image_url, tags, created_at",
-    )
-    .order("created_at", { ascending: false })
-    .limit(limit);
+const POST_COLS =
+  "id, author_id, title, content, kind, link_url, image_url, tags, created_at";
 
-  if (!posts?.length) return [];
+type PostRow = Record<string, unknown>;
+
+// Turn raw forum_posts rows into PostItems (authors, like + comment counts).
+async function shapePosts(
+  supabase: DB,
+  posts: PostRow[],
+  userId?: string | null,
+): Promise<PostItem[]> {
+  if (!posts.length) return [];
 
   const ids = posts.map((p) => p.id as string);
   const authorIds = Array.from(
@@ -76,4 +75,75 @@ export async function getFeedPosts(
       commentCount: commentCount.get(p.id as string) ?? 0,
     };
   });
+}
+
+export async function getFeedPosts(
+  supabase: DB,
+  {
+    limit = 30,
+    userId,
+    before,
+  }: { limit?: number; userId?: string | null; before?: string | null },
+): Promise<PostItem[]> {
+  let q = supabase
+    .from("forum_posts")
+    .select(POST_COLS)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  // Cursor pagination: fetch the page strictly older than `before`.
+  if (before) q = q.lt("created_at", before);
+
+  const { data: posts } = await q;
+  return shapePosts(supabase, posts ?? [], userId);
+}
+
+// Full-DB search across title, content, tags, and author name. Unlike the old
+// client-side filter, this looks beyond the loaded page.
+export async function searchPosts(
+  supabase: DB,
+  rawQuery: string,
+  userId?: string | null,
+  limit = 40,
+): Promise<PostItem[]> {
+  const q = rawQuery.trim();
+  if (q.length < 2) return [];
+  const like = `%${q}%`;
+
+  const { data: namedAuthors } = await supabase
+    .from("profiles")
+    .select("id")
+    .ilike("full_name", like)
+    .limit(50);
+  const authorIds = (namedAuthors ?? []).map((a) => a.id as string);
+
+  const base = () =>
+    supabase
+      .from("forum_posts")
+      .select(POST_COLS)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+  const [byContent, byTitle, byTag, byAuthor] = await Promise.all([
+    base().ilike("content", like),
+    base().ilike("title", like),
+    base().contains("tags", [q.toLowerCase()]),
+    authorIds.length
+      ? base().in("author_id", authorIds)
+      : Promise.resolve({ data: [] as PostRow[] }),
+  ]);
+
+  // Merge unique by id, keep newest first.
+  const seen = new Map<string, PostRow>();
+  for (const set of [byContent, byTitle, byTag, byAuthor]) {
+    for (const p of (set.data ?? []) as PostRow[]) {
+      if (!seen.has(p.id as string)) seen.set(p.id as string, p);
+    }
+  }
+  const merged = Array.from(seen.values())
+    .sort((a, b) =>
+      (b.created_at as string).localeCompare(a.created_at as string),
+    )
+    .slice(0, limit);
+
+  return shapePosts(supabase, merged, userId);
 }

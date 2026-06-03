@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
+import { TagText } from "@/components/TagText";
 import { useT } from "@/lib/i18n-client";
 import { t, type Locale } from "@/lib/i18n";
 import type { PostComment, PostItem, PostKind } from "@/lib/post-types";
@@ -75,6 +76,7 @@ export function PostCard({
   const [open, setOpen] = useState(false);
   const [comments, setComments] = useState<PostComment[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [visibleComments, setVisibleComments] = useState(5);
   const [commentCount, setCommentCount] = useState(post.commentCount);
   const [draft, setDraft] = useState("");
   const [submitting, startSubmit] = useTransition();
@@ -188,7 +190,7 @@ export function PostCard({
             )}
 
             <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap mt-1">
-              {post.content}
+              <TagText text={post.content} />
             </p>
 
             {post.image_url && (
@@ -314,7 +316,7 @@ export function PostCard({
             <p className="text-xs text-ink-muted">{tr("Loading…")}</p>
           ) : comments && comments.length > 0 ? (
             <ul className="space-y-3">
-              {comments.map((c) => {
+              {comments.slice(0, visibleComments).map((c) => {
                 const cHref = c.author
                   ? `/profile/${c.author.slug ?? c.author.id}`
                   : "#";
@@ -352,12 +354,24 @@ export function PostCard({
                         )}
                       </div>
                       <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap mt-0.5">
-                        {c.content}
+                        <TagText text={c.content} />
                       </p>
                     </div>
                   </li>
                 );
               })}
+              {comments.length > visibleComments && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setVisibleComments((n) => n + 10)}
+                    className="text-xs text-navy hover:text-gold tracking-wide"
+                  >
+                    {tr("Show more comments")} (
+                    {comments.length - visibleComments})
+                  </button>
+                </li>
+              )}
             </ul>
           ) : (
             <p className="text-xs text-ink-muted">{tr("No comments yet.")}</p>

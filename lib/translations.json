@@ -654,5 +654,8 @@
   "will be added as an invitee.": "จะถูกเพิ่มเป็นผู้รับเชิญ",
   "Tick \"Google Meet\" conferencing": "ติ๊กเลือก \"Google Meet\"",
   "inside Google Calendar before saving — Google generates the link automatically.": "ใน Google Calendar ก่อนบันทึก แล้ว Google จะสร้างลิงก์ให้อัตโนมัติ",
-  "Open Google Calendar": "เปิด Google Calendar"
+  "Open Google Calendar": "เปิด Google Calendar",
+  "Searching…": "กำลังค้นหา…",
+  "Load more": "ดูเพิ่ม",
+  "Show more comments": "ดูความคิดเห็นเพิ่ม"
 }

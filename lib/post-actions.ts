@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { PostComment } from "@/lib/post-types";
+import { getFeedPosts, searchPosts } from "@/lib/posts";
+import type { PostComment, PostItem } from "@/lib/post-types";
 
 export type PostFormState = { error?: string } | null;
 
@@ -118,6 +119,24 @@ export async function createPostAction(
 
   revalidateFeeds();
   return null;
+}
+
+// Full-DB search (title / content / tags / author) — beyond the loaded page.
+export async function searchFeedAction(q: string): Promise<PostItem[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return searchPosts(supabase, q, user?.id ?? null);
+}
+
+// Cursor pagination: next page of the feed, older than `before` (created_at).
+export async function loadMoreFeedAction(before: string): Promise<PostItem[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return getFeedPosts(supabase, { limit: 20, userId: user?.id ?? null, before });
 }
 
 export async function deletePostAction(id: string) {
