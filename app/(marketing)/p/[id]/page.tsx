@@ -38,22 +38,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select("title, content, image_url")
     .eq("id", id)
     .maybeSingle();
-  if (!post) return { title: "Post · Cofoundee" };
+  if (!post) return { title: "Post" };
   const title =
     (post.title as string | null) ?? (post.content as string).slice(0, 70);
   const description = (post.content as string).slice(0, 160);
-  const images = post.image_url ? [post.image_url as string] : undefined;
+  const SITE_URL =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
+  // Always emit an image so the social card is rich — the post's own image,
+  // or the branded site image as a fallback.
+  const images = [(post.image_url as string | null) ?? `${SITE_URL}/og-image.png`];
   return {
-    title: `${title} · Cofoundee`,
+    // Bare title — the root layout's "%s · Cofoundee" template adds the suffix.
+    title,
     description,
     openGraph: {
       title,
       description,
       type: "article",
+      url: `${SITE_URL}/p/${id}`,
       images,
     },
     twitter: {
-      card: images ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
       images,
