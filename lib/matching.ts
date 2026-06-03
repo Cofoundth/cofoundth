@@ -19,7 +19,7 @@ export const ROLE_LABELS: Record<string, string> = {
   product: "Product",
   marketing: "Marketing",
   finance: "Finance",
-  domain_expert: "Domain Expert",
+  legal: "Legal",
 };
 
 export const INTENT_LABELS: Record<string, string> = {

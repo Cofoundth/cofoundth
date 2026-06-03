@@ -75,7 +75,7 @@ const ROLE_LABEL_EN: Record<string, string> = {
   product: "Product",
   marketing: "Marketing",
   finance: "Finance",
-  domain_expert: "Domain Expert",
+  legal: "Legal",
 };
 
 export default async function LandingPage() {

@@ -1,10 +1,10 @@
 "use client";
 
-import { Fragment, useState, useTransition } from "react";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { useState, useTransition } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { saveOnboardingAction } from "./actions";
-import { useT } from "@/lib/i18n-client";
-import { THAI_PROVINCES } from "@/lib/provinces";
+import { useT, useLocale } from "@/lib/i18n-client";
+import { provinceOptions } from "@/lib/provinces";
 import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
@@ -17,7 +17,7 @@ const ROLES = [
   { value: "product", label: "Product" },
   { value: "marketing", label: "Marketing" },
   { value: "finance", label: "Finance" },
-  { value: "domain_expert", label: "Domain Expert" },
+  { value: "legal", label: "Legal" },
 ];
 
 const INTENTS = [
@@ -261,12 +261,7 @@ export function OnboardingForm({ initial }: Props) {
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-12">
-      <StepIndicator current={step} />
-
       <div className="bg-white border border-line p-8 lg:p-12">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          {tr("Step {n} of IV").replace("{n}", STEPS[step].num)}
-        </div>
         <h1 className="text-3xl mb-8">{tr(STEPS[step].title)}</h1>
 
         {step === 0 && (
@@ -362,56 +357,6 @@ function stepMissing(step: number, d: FormState): string {
     default:
       return "";
   }
-}
-
-// ---- Step indicator -------------------------------------------------
-
-function StepIndicator({ current }: { current: number }) {
-  return (
-    <div className="mb-10 max-w-xl mx-auto">
-      {/* Icons + connecting lines */}
-      <div className="flex items-center">
-        {STEPS.map((s, i) => (
-          <Fragment key={s.num}>
-            <div
-              className={`w-10 h-10 border flex items-center justify-center font-serif text-base transition-colors shrink-0 ${
-                i < current
-                  ? "bg-gold border-gold text-white"
-                  : i === current
-                    ? "border-gold text-gold"
-                    : "border-line text-ink-muted"
-              }`}
-            >
-              {i < current ? <Check className="w-4 h-4" /> : s.num}
-            </div>
-            {i < STEPS.length - 1 && (
-              <div
-                className={`flex-1 h-px mx-2 ${
-                  i < current ? "bg-gold" : "bg-line"
-                }`}
-              />
-            )}
-          </Fragment>
-        ))}
-      </div>
-
-      {/* Labels — fixed-width columns aligned under each icon */}
-      <div className="flex items-start mt-3">
-        {STEPS.map((s, i) => (
-          <Fragment key={s.num}>
-            <div
-              className={`text-[10px] uppercase tracking-[0.2em] whitespace-nowrap w-10 text-center shrink-0 ${
-                i === current ? "text-navy font-medium" : "text-ink-muted"
-              }`}
-            >
-              {s.title}
-            </div>
-            {i < STEPS.length - 1 && <div className="flex-1 mx-2" />}
-          </Fragment>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 // ---- Step 1: Role ---------------------------------------------------
@@ -593,6 +538,7 @@ function StepContext({
   toggleIndustry: (v: string) => void;
   tr: TR;
 }) {
+  const locale = useLocale();
   return (
     <div className="space-y-10">
       <div>
@@ -664,7 +610,7 @@ function StepContext({
         </label>
         <Combobox
           id="location"
-          options={THAI_PROVINCES}
+          options={provinceOptions(locale)}
           value={data.location}
           onChange={(v) => set("location", v)}
           placeholder={tr("Bangkok, Chiang Mai, Remote, etc.")}

@@ -3,8 +3,8 @@
 import { useRef, useState, useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { updateProfileAction } from "./actions";
-import { useT } from "@/lib/i18n-client";
-import { THAI_PROVINCES } from "@/lib/provinces";
+import { useT, useLocale } from "@/lib/i18n-client";
+import { provinceOptions } from "@/lib/provinces";
 import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
@@ -17,7 +17,7 @@ const ROLES = [
   { value: "product", label: "Product" },
   { value: "marketing", label: "Marketing" },
   { value: "finance", label: "Finance" },
-  { value: "domain_expert", label: "Domain Expert" },
+  { value: "legal", label: "Legal" },
 ];
 const INTENTS = [
   { value: "idea", label: "I have an idea" },
@@ -84,6 +84,7 @@ export type ProfileInitial = {
 
 export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
   const tr = useT();
+  const locale = useLocale();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, setState] = useState<SaveResult>(null);
   const [isPending, startTransition] = useTransition();
@@ -160,7 +161,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           <Field label={tr("Location (optional)")}>
             <Combobox
               name="location"
-              options={THAI_PROVINCES}
+              options={provinceOptions(locale)}
               value={location}
               onChange={setLocation}
               placeholder="Bangkok, Remote, etc."

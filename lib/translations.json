@@ -185,7 +185,6 @@
   "Product": "Product",
   "Marketing": "การตลาด",
   "Finance": "การเงิน",
-  "Domain Expert": "ผู้เชี่ยวชาญเฉพาะด้าน",
   "Has an idea": "มีไอเดียอยู่",
   "Open to ideas": "เปิดรับไอเดีย",
   "Exploring": "กำลังสำรวจ",
@@ -219,7 +218,6 @@
   "I have a clear vision and need someone to execute it with me.": "มีภาพชัดเจนอยู่แล้ว กำลังหาคนมาลงมือทำด้วยกัน",
   "I can build, sell, or design — open to joining a strong vision.": "สร้างได้ ขายเป็น ออกแบบดี เปิดรับถ้ามีวิสัยทัศน์ที่ใช่",
   "I want to brainstorm and find the right opportunity with a partner.": "อยากหาคู่หูมาช่วยกันคิด แล้วหาโอกาสที่ใช่ไปด้วยกัน",
-  "Let's explore": "หาไปด้วยกัน",
   "I’m looking for… (select all that apply)": "ฉันกำลังหา… (เลือกได้หลายข้อ)",
   "Industry focus (select all that apply)": "อุตสาหกรรมที่สนใจ (เลือกได้หลายข้อ)",
   "Other — type and press Enter": "อื่นๆ — พิมพ์แล้วกด Enter",
@@ -606,5 +604,6 @@
   "First name": "ชื่อจริง",
   "Last name": "นามสกุล",
   "Type to add": "พิมพ์เพื่อเพิ่ม",
-  "Community of co-founders": "ชุมชนของ Co-founder"
+  "Community of co-founders": "ชุมชนของ Co-founder",
+  "Just exploring": "ยังแค่สำรวจ"
 }

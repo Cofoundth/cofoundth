@@ -11,7 +11,7 @@ const ROLE_VALUES = [
   "product",
   "marketing",
   "finance",
-  "domain_expert",
+  "legal",
 ] as const;
 const INTENT_VALUES = ["idea", "open", "explore"] as const;
 const STAGE_VALUES = ["exploring", "building", "traction", "raising"] as const;
