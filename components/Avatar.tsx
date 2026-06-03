@@ -23,6 +23,28 @@ export function getInitials(name: string | null | undefined): string {
   ).toUpperCase();
 }
 
+// Muted, editorial palette (all dark enough for white text). A name always
+// maps to the same colour — like Google's letter avatars, but on-brand.
+const AVATAR_COLORS = [
+  "#0A1F44", // navy
+  "#1F4E4A", // deep teal
+  "#6B2737", // burgundy
+  "#2E4A34", // forest
+  "#3A4A5A", // slate
+  "#4A2E4A", // plum
+  "#5A4632", // bronze
+  "#2E2E5A", // indigo
+  "#7A5A1F", // dark ochre
+  "#43455C", // muted purple-gray
+];
+
+function colorFor(name: string | null | undefined): string {
+  const s = (name ?? "").trim() || "?";
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
 export function Avatar({ name, url, size = "md" }: Props) {
   const cls = SIZE_CLASSES[size];
 
@@ -41,7 +63,8 @@ export function Avatar({ name, url, size = "md" }: Props) {
 
   return (
     <div
-      className={`${cls} bg-navy flex items-center justify-center text-white font-serif tracking-wide shrink-0`}
+      className={`${cls} flex items-center justify-center text-white font-serif tracking-wide shrink-0`}
+      style={{ backgroundColor: colorFor(name) }}
     >
       {getInitials(name)}
     </div>
