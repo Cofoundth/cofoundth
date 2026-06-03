@@ -74,17 +74,6 @@ const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   },
 };
 
-function cohortLabel(createdAt: string, locale: string): string {
-  const d = new Date(createdAt);
-  if (locale === "th") {
-    const monthTh = d.toLocaleDateString("th-TH", { month: "short" });
-    return `รุ่น ${monthTh} ${d.getFullYear() + 543}`;
-  }
-  const monthEn = d.toLocaleDateString("en-US", { month: "short" });
-  const yearShort = d.getFullYear().toString().slice(-2);
-  return `Class of ${monthEn} '${yearShort}`;
-}
-
 export default async function ProfileDetailPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
@@ -224,11 +213,6 @@ export default async function ProfileDetailPage({ params }: Props) {
                     <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold font-sans">
                       <Building2 className="w-3 h-3" strokeWidth={2} />
                       Company
-                    </span>
-                  )}
-                  {profile.created_at && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-line text-ink-muted font-sans">
-                      {cohortLabel(profile.created_at as string, locale)}
                     </span>
                   )}
                   {profile.age && profile.type !== "company" && (
