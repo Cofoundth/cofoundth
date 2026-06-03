@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { uploadAvatarAction } from "@/components/avatar-actions";
 import { getInitials } from "@/components/Avatar";
+import { useT } from "@/lib/i18n-client";
 
 type Props = {
   /** Accepted for call-site compatibility; the server action derives the user from the session. */
@@ -63,6 +64,7 @@ async function downscaleImage(
 }
 
 export function AvatarUploader({ initialUrl, name }: Props) {
+  const tr = useT();
   const [url, setUrl] = useState<string | null>(initialUrl ?? null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,11 +72,11 @@ export function AvatarUploader({ initialUrl, name }: Props) {
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setError("Please pick an image file.");
+      setError(tr("Please pick an image file."));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError("Max image size is 5MB.");
+      setError(tr("Max image size is 5MB."));
       return;
     }
     setUploading(true);
@@ -85,10 +87,10 @@ export function AvatarUploader({ initialUrl, name }: Props) {
       const fd = new FormData();
       fd.append("file", optimized);
       const res = await uploadAvatarAction(fd);
-      if (res.error || !res.url) throw new Error(res.error ?? "Upload failed.");
+      if (res.error || !res.url) throw new Error(res.error ?? tr("Upload failed."));
       setUrl(res.url);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed.");
+      setError(e instanceof Error ? e.message : tr("Upload failed."));
     } finally {
       setUploading(false);
     }
@@ -122,10 +124,10 @@ export function AvatarUploader({ initialUrl, name }: Props) {
           className="inline-flex items-center gap-2 px-4 py-2 border border-line bg-white hover:border-navy text-ink text-sm tracking-wide transition-colors disabled:opacity-60"
         >
           <Camera className="w-4 h-4" />
-          {url ? "Change photo" : "Add photo"}
+          {url ? tr("Change photo") : tr("Add photo")}
         </button>
         <p className="text-xs text-ink-muted mt-2">
-          Optional. JPG/PNG, up to 5MB.
+          {tr("Optional. JPG/PNG, up to 5MB.")}
         </p>
         {error && <p className="text-xs text-red-700 mt-1">{error}</p>}
 

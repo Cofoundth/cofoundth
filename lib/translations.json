@@ -605,5 +605,11 @@
   "Last name": "นามสกุล",
   "Type to add": "พิมพ์เพื่อเพิ่ม",
   "Community of co-founders": "ชุมชนของ Co-founder",
-  "Just exploring": "ยังแค่สำรวจ"
+  "Just exploring": "ยังแค่สำรวจ",
+  "Add photo": "เพิ่มรูป",
+  "Change photo": "เปลี่ยนรูป",
+  "Optional. JPG/PNG, up to 5MB.": "ไม่บังคับ · JPG/PNG ไม่เกิน 5MB",
+  "Please pick an image file.": "กรุณาเลือกไฟล์รูปภาพ",
+  "Max image size is 5MB.": "ขนาดรูปต้องไม่เกิน 5MB",
+  "Upload failed.": "อัปโหลดไม่สำเร็จ"
 }

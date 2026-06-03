@@ -83,7 +83,7 @@ export default async function OnboardingPage() {
       <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-10">
         <div className="bg-white border border-line p-6 lg:p-8 mb-6">
           <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-            Profile photo
+            {await tServer("Profile photo")}
           </div>
           <AvatarUploader
             userId={user.id}

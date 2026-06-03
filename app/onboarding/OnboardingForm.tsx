@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Fragment, useState, useTransition } from "react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { saveOnboardingAction } from "./actions";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceOptions } from "@/lib/provinces";
@@ -261,6 +261,8 @@ export function OnboardingForm({ initial }: Props) {
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-12">
+      <StepIndicator current={step} tr={tr} />
+
       <div className="bg-white border border-line p-8 lg:p-12">
         <h1 className="text-3xl mb-8">{tr(STEPS[step].title)}</h1>
 
@@ -357,6 +359,56 @@ function stepMissing(step: number, d: FormState): string {
     default:
       return "";
   }
+}
+
+// ---- Step indicator -------------------------------------------------
+
+function StepIndicator({ current, tr }: { current: number; tr: TR }) {
+  return (
+    <div className="mb-10 max-w-xl mx-auto">
+      {/* Icons + connecting lines */}
+      <div className="flex items-center">
+        {STEPS.map((s, i) => (
+          <Fragment key={s.num}>
+            <div
+              className={`w-10 h-10 border flex items-center justify-center font-serif text-base transition-colors shrink-0 ${
+                i < current
+                  ? "bg-gold border-gold text-white"
+                  : i === current
+                    ? "border-gold text-gold"
+                    : "border-line text-ink-muted"
+              }`}
+            >
+              {i < current ? <Check className="w-4 h-4" /> : s.num}
+            </div>
+            {i < STEPS.length - 1 && (
+              <div
+                className={`flex-1 h-px mx-2 ${
+                  i < current ? "bg-gold" : "bg-line"
+                }`}
+              />
+            )}
+          </Fragment>
+        ))}
+      </div>
+
+      {/* Labels — fixed-width columns aligned under each icon */}
+      <div className="flex items-start mt-3">
+        {STEPS.map((s, i) => (
+          <Fragment key={s.num}>
+            <div
+              className={`text-[10px] uppercase tracking-[0.2em] whitespace-nowrap w-10 text-center shrink-0 ${
+                i === current ? "text-navy font-medium" : "text-ink-muted"
+              }`}
+            >
+              {tr(s.title)}
+            </div>
+            {i < STEPS.length - 1 && <div className="flex-1 mx-2" />}
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ---- Step 1: Role ---------------------------------------------------
