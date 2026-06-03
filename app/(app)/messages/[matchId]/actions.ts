@@ -52,6 +52,50 @@ export async function sendMessageAction(
   return null;
 }
 
+// Start an instant video room: the client generates a unique Jitsi room URL
+// (so it can open it synchronously, dodging popup blockers) and we post that
+// link into the chat so the other founder can tap and join the same room.
+export async function postMeetLinkAction(
+  matchId: string,
+  url: string,
+): Promise<{ error?: string } | null> {
+  if (!/^https:\/\/meet\.jit\.si\/cofoundee-[a-z0-9-]+$/i.test(url)) {
+    return { error: "Bad room link." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: match } = await supabase
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`)
+    .maybeSingle();
+  if (!match) return { error: "Conversation not found." };
+
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("locale")
+    .eq("id", user.id)
+    .maybeSingle();
+  const label = prof?.locale === "en" ? "Video call" : "ห้องประชุม";
+
+  const { error } = await supabase
+    .from("messages")
+    .insert({ match_id: matchId, sender_id: user.id, content: `📹 ${label}: ${url}` });
+  if (error) {
+    console.error("[postMeetLink] insert failed", error);
+    return { error: "Couldn't start the call. Try again." };
+  }
+
+  revalidatePath(`/messages/${matchId}`);
+  return null;
+}
+
 // Fire-and-forget: client mounts the conversation and calls this to mark
 // the other party's messages as read. Decoupled from the page render so
 // browser prefetch (which doesn't run client effects) can't accidentally

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { LinkedText } from "@/components/LinkedText";
 import { markConversationRead } from "./actions";
 
 export type Msg = {
@@ -141,7 +142,7 @@ export function MessageThread({
               }`}
             >
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {m.content}
+                <LinkedText text={m.content} />
               </p>
               <div
                 className={`text-[10px] mt-1.5 ${
