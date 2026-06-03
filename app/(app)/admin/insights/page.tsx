@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Plus, Edit3 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
+import { AdminTabs } from "@/components/AdminTabs";
 import { adminListAll } from "@/lib/insights";
 import { togglePublishAction, deleteInsightAction } from "./actions";
 
@@ -25,6 +26,7 @@ export default async function AdminInsightsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+      <AdminTabs />
       <div className="mb-10 pb-8 border-b border-line flex items-end justify-between gap-4">
         <div>
           <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">

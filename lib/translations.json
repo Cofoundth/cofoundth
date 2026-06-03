@@ -666,5 +666,11 @@
   "Share my socials": "แชร์โซเชียล",
   "Here are my socials:": "นี่คือ social ของฉันไว้ดูข้อมูลเพิ่มเติม",
   "Reply": "ตอบกลับ",
-  "{name} mentioned you in a comment": "{name} กล่าวถึงคุณในคอมเมนต์"
+  "{name} mentioned you in a comment": "{name} กล่าวถึงคุณในคอมเมนต์",
+  "Report submitted. Thank you.": "ส่งรายงานแล้ว ขอบคุณ",
+  "Report profile": "รายงานโปรไฟล์",
+  "Why are you reporting this profile?": "รายงานโปรไฟล์นี้เพราะอะไร?",
+  "Spam, fake profile, harassment, etc.": "สแปม โปรไฟล์ปลอม คุกคาม ฯลฯ",
+  "Submitting…": "กำลังส่ง…",
+  "Submit report": "ส่งรายงาน"
 }

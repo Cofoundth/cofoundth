@@ -4,6 +4,7 @@ import { BadgeCheck, Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminEmail } from "@/lib/admin";
+import { AdminTabs } from "@/components/AdminTabs";
 import { Avatar } from "@/components/Avatar";
 import { VerifyToggle } from "./VerifyToggle";
 
@@ -32,6 +33,7 @@ export default async function AdminVerificationsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+      <AdminTabs />
       <div className="mb-10 pb-8 border-b border-line">
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
           Admin
