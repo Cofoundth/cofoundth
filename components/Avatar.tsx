@@ -38,7 +38,7 @@ const AVATAR_COLORS = [
   "#43455C", // muted purple-gray
 ];
 
-function colorFor(name: string | null | undefined): string {
+export function colorFor(name: string | null | undefined): string {
   const s = (name ?? "").trim() || "?";
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;

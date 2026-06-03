@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { uploadAvatarAction } from "@/components/avatar-actions";
-import { getInitials } from "@/components/Avatar";
+import { getInitials, colorFor } from "@/components/Avatar";
 import { useT } from "@/lib/i18n-client";
 
 type Props = {
@@ -98,7 +98,10 @@ export function AvatarUploader({ initialUrl, name }: Props) {
 
   return (
     <div className="flex items-center gap-5">
-      <div className="relative w-20 h-20 bg-navy flex items-center justify-center text-white font-serif text-3xl shrink-0 overflow-hidden">
+      <div
+        className="relative w-20 h-20 flex items-center justify-center text-white font-serif text-3xl shrink-0 overflow-hidden"
+        style={{ backgroundColor: colorFor(name) }}
+      >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
