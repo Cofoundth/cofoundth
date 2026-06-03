@@ -24,9 +24,15 @@ export default async function AppLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, photo_url, slug")
+    .select("full_name, photo_url, slug, onboarded")
     .eq("id", user.id)
     .single();
+
+  // New users must finish their profile before using the app.
+  if (!profile?.onboarded) {
+    redirect("/onboarding");
+  }
+
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
   // Connections dot (best-effort, exact counts not shown) + notification feed.

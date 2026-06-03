@@ -2,6 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingForm } from "./OnboardingForm";
 import { AvatarUploader } from "@/components/AvatarUploader";
+import { tServer } from "@/lib/i18n-server";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { BrandMark, Wordmark } from "@/components/Brand";
+import { signOutAction } from "../(auth)/actions";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -56,6 +60,25 @@ export default async function OnboardingPage() {
 
   return (
     <>
+      <header className="bg-white border-b border-line">
+        <div className="max-w-3xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <BrandMark size="sm" />
+            <Wordmark className="text-base" />
+          </div>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="text-sm text-ink-muted hover:text-navy tracking-wide"
+              >
+                {await tServer("Sign out")}
+              </button>
+            </form>
+          </div>
+        </div>
+      </header>
       <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-10">
         <div className="bg-white border border-line p-6 lg:p-8 mb-6">
           <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
