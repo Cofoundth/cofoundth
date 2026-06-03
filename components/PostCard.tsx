@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useOptimistic, useState, useTransition } from "react";
+import { useOptimistic, useRef, useState, useTransition } from "react";
 import {
   ExternalLink,
   Heart,
@@ -80,6 +80,13 @@ export function PostCard({
   const [commentCount, setCommentCount] = useState(post.commentCount);
   const [draft, setDraft] = useState("");
   const [submitting, startSubmit] = useTransition();
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+
+  function replyTo(name: string | null | undefined) {
+    const first = (name ?? "").trim().split(/\s+/)[0] || "founder";
+    setDraft(`@${first} `);
+    composerRef.current?.focus();
+  }
 
   const meta = KIND_META[post.kind];
   const KindIcon = meta?.icon;
@@ -286,6 +293,7 @@ export function PostCard({
         <div className="border-t border-line bg-cream/40 px-5 py-4">
           <form onSubmit={submitComment} className="flex items-start gap-2 mb-4">
             <textarea
+              ref={composerRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={1}
@@ -356,6 +364,13 @@ export function PostCard({
                       <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap mt-0.5">
                         <TagText text={c.content} />
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => replyTo(c.author?.full_name)}
+                        className="mt-1 text-[11px] text-ink-muted hover:text-navy tracking-wide"
+                      >
+                        {tr("Reply")}
+                      </button>
                     </div>
                   </li>
                 );
