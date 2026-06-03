@@ -174,9 +174,12 @@ export default async function LandingPage() {
                   </>
                 )}
               </div>
-              <h1 className="text-5xl lg:text-7xl leading-[1.05] tracking-tight mb-8">
-                {tr("A community for Thailand's startup founders.")}
+              <h1 className="text-5xl lg:text-7xl leading-[1.05] tracking-tight mb-3">
+                Cofoundee<span className="text-gold">.</span>
               </h1>
+              <div className="font-serif text-2xl lg:text-4xl text-navy/80 tracking-tight mb-8">
+                {tr("Community of co-founders")}
+              </div>
               <p className="text-lg text-ink leading-relaxed max-w-2xl mb-10">
                 {tr(
                   "Meet other Thai founders, share what you're building, and find the partners, co-founders, and advisors you need — starting from real community, not cold matching.",
