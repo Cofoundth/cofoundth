@@ -54,6 +54,14 @@
     font-weight: 600;
   }
 
+  /* Thai script must never be letter-spaced. The editorial tracking-*
+     utilities (uppercase eyebrows, buttons, labels) spread Thai vowel/tone
+     marks apart and hurt readability. Force it off everywhere in the Thai
+     locale — the !important overrides Tailwind's inline tracking utilities. */
+  html[lang="th"] * {
+    letter-spacing: normal !important;
+  }
+
   /* Tailwind v4 removed the default `cursor: pointer` on buttons —
      restore it for enabled buttons and add `not-allowed` for disabled. */
   button:not(:disabled):not([aria-disabled="true"]),
