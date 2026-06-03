@@ -23,26 +23,16 @@ export function getInitials(name: string | null | undefined): string {
   ).toUpperCase();
 }
 
-// Muted, editorial palette (all dark enough for white text). A name always
-// maps to the same colour — like Google's letter avatars, but on-brand.
-const AVATAR_COLORS = [
-  "#0A1F44", // navy
-  "#1F4E4A", // deep teal
-  "#6B2737", // burgundy
-  "#2E4A34", // forest
-  "#3A4A5A", // slate
-  "#4A2E4A", // plum
-  "#5A4632", // bronze
-  "#2E2E5A", // indigo
-  "#7A5A1F", // dark ochre
-  "#43455C", // muted purple-gray
-];
-
+// Deterministic per-name colour — a name always maps to the same one. Derived
+// across the full hue range instead of a fixed ~10-swatch palette (which
+// collided constantly: with 10 colours, ~5 users already share one). Saturation
+// + lightness stay muted and dark so white initials are readable and it reads
+// on-brand/editorial rather than neon.
 export function colorFor(name: string | null | undefined): string {
   const s = (name ?? "").trim() || "?";
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+  return `hsl(${h % 360} 38% 30%)`;
 }
 
 export function Avatar({ name, url, size = "md" }: Props) {
