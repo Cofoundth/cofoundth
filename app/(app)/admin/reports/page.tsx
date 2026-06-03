@@ -4,14 +4,29 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminEmail } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
+import { tServer, getLocale } from "@/lib/i18n-server";
 
 export default async function AdminReportsPage() {
   const supabase = await createClient();
+  const locale = await getLocale();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!isAdminEmail(user?.email)) notFound();
+
+  const KIND_LABEL: Record<string, string> = {
+    profile: await tServer("Profile"),
+    post: await tServer("Post"),
+    message: await tServer("Message"),
+  };
+  const STATUS_LABEL: Record<string, string> = {
+    open: await tServer("Open"),
+    resolved: await tServer("Resolved"),
+    dismissed: await tServer("Dismissed"),
+  };
+  const reporterLabel = await tServer("Reporter:");
+  const targetLabel = await tServer("Target:");
 
   // Use the service-role client to bypass the reports RLS policy, which only
   // exposes rows to the reporter themselves. Admin auth was already verified
@@ -28,11 +43,14 @@ export default async function AdminReportsPage() {
       <AdminTabs />
       <div className="mb-10 pb-8 border-b border-line">
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Admin
+          {await tServer("Admin")}
         </div>
-        <h1 className="text-4xl mb-2">Reports</h1>
+        <h1 className="text-4xl mb-2">{await tServer("Reports")}</h1>
         <p className="text-ink">
-          {reports?.length ?? 0} report{reports?.length === 1 ? "" : "s"} total.
+          {(await tServer("{n} reports total")).replace(
+            "{n}",
+            String(reports?.length ?? 0),
+          )}
         </p>
       </div>
 
@@ -44,8 +62,10 @@ export default async function AdminReportsPage() {
         </div>
       ) : !reports?.length ? (
         <div className="bg-white border border-line p-12 text-center">
-          <h3 className="text-2xl mb-2">No reports</h3>
-          <p className="text-ink-muted">Everyone&rsquo;s behaving. For now.</p>
+          <h3 className="text-2xl mb-2">{await tServer("No reports")}</h3>
+          <p className="text-ink-muted">
+            {await tServer("Everyone’s behaving. For now.")}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -57,7 +77,8 @@ export default async function AdminReportsPage() {
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div className="flex items-center gap-3">
                   <span className="text-[10px] uppercase tracking-[0.2em] text-gold border border-gold px-2 py-0.5">
-                    {r.target_kind as string}
+                    {KIND_LABEL[r.target_kind as string] ??
+                      (r.target_kind as string)}
                   </span>
                   <span
                     className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
@@ -66,11 +87,13 @@ export default async function AdminReportsPage() {
                         : "border-line text-ink-muted"
                     }`}
                   >
-                    {r.status as string}
+                    {STATUS_LABEL[r.status as string] ?? (r.status as string)}
                   </span>
                 </div>
                 <div className="text-xs text-ink-muted">
-                  {new Date(r.created_at as string).toLocaleString("en-GB")}
+                  {new Date(r.created_at as string).toLocaleString(
+                    locale === "th" ? "th-TH" : "en-GB",
+                  )}
                 </div>
               </div>
               <p className="text-sm text-ink leading-relaxed mb-3">
@@ -78,7 +101,7 @@ export default async function AdminReportsPage() {
               </p>
               <div className="text-xs text-ink-muted flex gap-4">
                 <span>
-                  Reporter:{" "}
+                  {reporterLabel}{" "}
                   <Link
                     href={`/profile/${r.reporter_id}`}
                     className="text-navy hover:text-gold"
@@ -87,7 +110,7 @@ export default async function AdminReportsPage() {
                   </Link>
                 </span>
                 <span>
-                  Target:{" "}
+                  {targetLabel}{" "}
                   {r.target_kind === "profile" ? (
                     <Link
                       href={`/profile/${r.target_id}`}

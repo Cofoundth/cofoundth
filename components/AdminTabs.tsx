@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT } from "@/lib/i18n-client";
 
 const TABS = [
   { href: "/admin/insights", label: "Insights" },
@@ -11,6 +12,7 @@ const TABS = [
 
 export function AdminTabs() {
   const pathname = usePathname();
+  const tr = useT();
   return (
     <nav className="flex items-center gap-1 mb-8 border-b border-line">
       {TABS.map((t) => {
@@ -25,7 +27,7 @@ export function AdminTabs() {
                 : "border-transparent text-ink-muted hover:text-navy"
             }`}
           >
-            {t.label}
+            {tr(t.label)}
           </Link>
         );
       })}

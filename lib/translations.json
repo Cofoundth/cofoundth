@@ -672,5 +672,16 @@
   "Why are you reporting this profile?": "รายงานโปรไฟล์นี้เพราะอะไร?",
   "Spam, fake profile, harassment, etc.": "สแปม โปรไฟล์ปลอม คุกคาม ฯลฯ",
   "Submitting…": "กำลังส่ง…",
-  "Submit report": "ส่งรายงาน"
+  "Submit report": "ส่งรายงาน",
+  "Reports": "รายงาน",
+  "Verifications": "การยืนยัน",
+  "{n} reports total": "รายงานทั้งหมด {n} รายการ",
+  "No reports": "ยังไม่มีรายงาน",
+  "Everyone’s behaving. For now.": "ทุกคนยังประพฤติดีอยู่ ตอนนี้นะ",
+  "Reporter:": "ผู้รายงาน:",
+  "Target:": "เป้าหมาย:",
+  "Profile": "โปรไฟล์",
+  "Message": "ข้อความ",
+  "Resolved": "แก้ไขแล้ว",
+  "Dismissed": "ปิดเรื่อง"
 }
