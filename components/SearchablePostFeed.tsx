@@ -13,10 +13,12 @@ export function SearchablePostFeed({
   items,
   locale,
   emptyMessage,
+  composer,
 }: {
   items: PostItem[];
   locale: Locale;
   emptyMessage?: string;
+  composer?: React.ReactNode;
 }) {
   const tr = useT();
   const [q, setQ] = useState("");
@@ -33,7 +35,7 @@ export function SearchablePostFeed({
     : items;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="relative">
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none"
@@ -47,6 +49,8 @@ export function SearchablePostFeed({
           className="w-full pl-10 pr-4 py-2.5 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
         />
       </div>
+
+      {!query && composer}
 
       {filtered.length === 0 ? (
         <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted">

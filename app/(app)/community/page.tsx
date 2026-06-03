@@ -53,15 +53,10 @@ export default async function CommunityPage() {
         kind="posts"
       />
 
-      {user && (
-        <div className="mb-6">
-          <PostComposer />
-        </div>
-      )}
-
       <SearchablePostFeed
         items={feed}
         locale={locale}
+        composer={user ? <PostComposer /> : null}
         emptyMessage={await tServer(
           "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
         )}
