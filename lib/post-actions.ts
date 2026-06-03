@@ -25,8 +25,8 @@ function parseTags(raw: string): string[] | { error: string } {
     ),
   ).slice(0, 5);
   for (const tag of tags) {
-    // Letters (any language, incl. Thai), digits, hyphen-separated.
-    if (!/^[\p{L}\p{N}]+(-[\p{L}\p{N}]+)*$/u.test(tag) || tag.length > 30) {
+    // Letters + marks (Thai tone/vowel signs are \p{M}) + digits, hyphen-sep.
+    if (!/^[\p{L}\p{N}\p{M}]+(-[\p{L}\p{N}\p{M}]+)*$/u.test(tag) || tag.length > 30) {
       return {
         error: `Bad tag "${tag}" — letters, digits, and hyphens only.`,
       };

@@ -29,7 +29,7 @@ export async function createPostAction(
     ),
   ).slice(0, 5);
   for (const tag of tags) {
-    if (!/^[\p{L}\p{N}]+(-[\p{L}\p{N}]+)*$/u.test(tag) || tag.length > 30) {
+    if (!/^[\p{L}\p{N}\p{M}]+(-[\p{L}\p{N}\p{M}]+)*$/u.test(tag) || tag.length > 30) {
       return {
         error: `Bad tag "${tag}" — letters, digits, and hyphens only, max 30 chars.`,
       };
