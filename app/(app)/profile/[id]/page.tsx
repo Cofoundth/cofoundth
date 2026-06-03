@@ -17,6 +17,7 @@ import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
 import { ExpressInterestForm } from "./ExpressInterestForm";
+import { IncomingInterestBanner } from "./IncomingInterestBanner";
 import { ReportForm } from "./ReportForm";
 
 type Props = {
@@ -191,6 +192,10 @@ export default async function ProfileDetailPage({ params }: Props) {
       >
         <ArrowLeft className="w-4 h-4" /> {await tServer("Back to directory")}
       </Link>
+
+      {relationship === "incoming" && !isOwnProfile && (
+        <IncomingInterestBanner toId={profile.id} otherName={otherName} />
+      )}
 
       <div className="grid lg:grid-cols-12 gap-10">
         {/* Main column */}
@@ -468,12 +473,14 @@ export default async function ProfileDetailPage({ params }: Props) {
         <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24 self-start">
           {!isOwnProfile && (
             <>
-              <ExpressInterestForm
-                toId={profile.id}
-                relationship={relationship}
-                matchId={matchId}
-                otherName={otherName}
-              />
+              {relationship !== "incoming" && (
+                <ExpressInterestForm
+                  toId={profile.id}
+                  relationship={relationship}
+                  matchId={matchId}
+                  otherName={otherName}
+                />
+              )}
               <div className="bg-white border border-line p-4">
                 <ReportForm targetId={profile.id} />
               </div>

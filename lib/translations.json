@@ -573,5 +573,6 @@
   "Connect": "เชื่อมต่อ",
   "Sign in to see all {n} comments": "เข้าสู่ระบบเพื่อดูคอมเมนต์ทั้งหมด {n} อัน",
   "{name} is on Cofoundee — sign in to connect and see more.": "{name} อยู่บน Cofoundee — เข้าสู่ระบบเพื่อ connect และดูเพิ่ม",
-  "Join free": "เข้าร่วมฟรี"
+  "Join free": "เข้าร่วมฟรี",
+  "{name} wants to connect with you": "{name} อยากเชื่อมต่อกับคุณ"
 }
