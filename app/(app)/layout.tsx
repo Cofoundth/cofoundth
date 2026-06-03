@@ -9,6 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
 import { NotificationBell, type NotifItem } from "@/components/NotificationBell";
+import { MobileMenu } from "@/components/MobileMenu";
 
 export default async function AppLayout({
   children,
@@ -97,12 +98,40 @@ export default async function AppLayout({
     };
   });
 
+  const navItems: { href: string; label: string; badge?: number }[] = [
+    { href: "/dashboard", label: await tServer("Dashboard") },
+    { href: "/community", label: await tServer("Community") },
+    { href: "/browse", label: await tServer("Founders") },
+    {
+      href: "/matches",
+      label: await tServer("Connections"),
+      badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
+    },
+  ];
+  if (isAdminEmail(user.email)) {
+    navItems.push({ href: "/admin/insights", label: await tServer("Admin") });
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-cream">
-      <header className="bg-white border-b border-line">
+      <header className="bg-white border-b border-line relative">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3 md:gap-8">
+              <MobileMenu
+                className="md:hidden"
+                links={navItems}
+                footer={
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      className="w-full text-center py-2.5 border border-line text-ink hover:border-navy tracking-wide text-sm"
+                    >
+                      {await tServer("Sign out")}
+                    </button>
+                  </form>
+                }
+              />
               <Link href="/dashboard" className="flex items-center gap-2.5">
                 <BrandMark size="sm" />
                 <Wordmark className="text-base" />
@@ -151,7 +180,7 @@ export default async function AppLayout({
                   size="sm"
                 />
               </Link>
-              <form action={signOutAction}>
+              <form action={signOutAction} className="hidden md:block">
                 <button
                   type="submit"
                   className="text-sm text-ink-muted hover:text-navy tracking-wide"

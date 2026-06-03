@@ -3,6 +3,7 @@ import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
+import { MobileMenu } from "@/components/MobileMenu";
 
 const navLinks = [
   { href: "/browse", label: "Community" },
@@ -16,7 +17,7 @@ export async function MarketingNav() {
   const tr = (en: string) => t(en, locale);
 
   return (
-    <nav className="bg-white border-b border-line">
+    <nav className="bg-white border-b border-line relative">
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-3">
@@ -41,20 +42,45 @@ export async function MarketingNav() {
             ))}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 lg:gap-4">
             <LanguageSwitcher />
-            <Link
-              href="/login"
-              className="text-sm text-ink hover:text-navy tracking-wide"
-            >
-              {tr("Sign in")}
-            </Link>
-            <Link
-              href="/signup"
-              className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
-            >
-              {tr("Join Cofoundee")}
-            </Link>
+            <div className="hidden lg:flex items-center gap-4">
+              <Link
+                href="/login"
+                className="text-sm text-ink hover:text-navy tracking-wide"
+              >
+                {tr("Sign in")}
+              </Link>
+              <Link
+                href="/signup"
+                className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+              >
+                {tr("Join Cofoundee")}
+              </Link>
+            </div>
+            <MobileMenu
+              className="lg:hidden"
+              links={navLinks.map((l) => ({
+                href: l.href,
+                label: tr(l.label),
+              }))}
+              footer={
+                <>
+                  <Link
+                    href="/login"
+                    className="block text-center py-2.5 border border-line text-ink hover:border-navy tracking-wide text-sm"
+                  >
+                    {tr("Sign in")}
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="block text-center py-2.5 bg-navy hover:bg-navy-dark text-white tracking-wide text-sm"
+                  >
+                    {tr("Join Cofoundee")}
+                  </Link>
+                </>
+              }
+            />
           </div>
         </div>
       </div>
