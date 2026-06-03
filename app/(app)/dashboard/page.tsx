@@ -51,14 +51,7 @@ export default async function DashboardPage() {
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
   // ---- Merged post feed (the heartbeat) ----------------------------
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
-  const [
-    feed,
-    { data: newFounders },
-    { count: totalFounders },
-    { count: postsThisWeek },
-    { count: foundersThisWeek },
-  ] = await Promise.all([
+  const [feed, { data: newFounders }] = await Promise.all([
     getFeedPosts(supabase, { limit: 15, userId: user.id }),
     supabase
       .from("profiles")
@@ -67,19 +60,6 @@ export default async function DashboardPage() {
       .neq("id", user.id)
       .order("created_at", { ascending: false })
       .limit(4),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("onboarded", true),
-    supabase
-      .from("forum_posts")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", sevenDaysAgo),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("onboarded", true)
-      .gte("created_at", sevenDaysAgo),
   ]);
 
   // ---- Personal stats (still computed, surfaced subtly) -------------
@@ -127,35 +107,15 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
-      {/* Greeting + live pulse */}
-      <div className="mb-8 pb-5 border-b border-line flex items-end justify-between gap-6 flex-wrap">
-        <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-1.5">
-            {await tServer(timeOfDayGreeting())}
-          </div>
-          <h1 className="text-2xl lg:text-3xl leading-tight">
-            {await tServer("Hello,")}{" "}
-            <span className="text-navy">{firstName}</span>.
-          </h1>
+      {/* Greeting */}
+      <div className="mb-8 pb-5 border-b border-line">
+        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-1.5">
+          {await tServer(timeOfDayGreeting())}
         </div>
-
-        {/* Pulse stats — community heartbeat */}
-        <div className="flex items-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
-            <span className="text-ink-muted">
-              {totalFounders ?? 0} {await tServer("founders")}
-            </span>
-          </div>
-          <div className="text-ink-muted">
-            +{foundersThisWeek ?? 0}{" "}
-            {await tServer("this week")}
-          </div>
-          <div className="text-ink-muted">
-            {postsThisWeek ?? 0}{" "}
-            {await tServer("posts in 7d")}
-          </div>
-        </div>
+        <h1 className="text-2xl lg:text-3xl leading-tight">
+          {await tServer("Hello,")}{" "}
+          <span className="text-navy">{firstName}</span>.
+        </h1>
       </div>
 
       {/* Onboarding prompt — only if not onboarded */}
