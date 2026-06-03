@@ -393,7 +393,8 @@ export default async function LandingPage() {
       </section>
       )}
 
-      {/* Who it's for */}
+      {/* Who it's for — hidden for now */}
+      {false && (
       <section className="py-24 bg-white border-t border-line">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-16">
@@ -447,8 +448,10 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+      )}
 
-      {/* Process */}
+      {/* Process — hidden for now */}
+      {false && (
       <section className="py-24 bg-cream border-y border-line">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-20">
@@ -474,6 +477,7 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* A note from the founder — authentic, not a fabricated testimonial */}
       <section className="py-24 lg:py-28 bg-navy text-white">
