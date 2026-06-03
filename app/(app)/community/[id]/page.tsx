@@ -4,6 +4,8 @@ import { ArrowLeft, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/Avatar";
 import { ROLE_LABELS } from "@/lib/matching";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { LikeButton } from "./LikeButton";
 import { CommentComposer } from "./CommentComposer";
 import { CommentItem } from "./CommentItem";
@@ -16,6 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function PostPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
+  const locale = await getLocale();
 
   const {
     data: { user },
@@ -115,7 +118,7 @@ export default async function PostPage({ params }: Props) {
             </Link>
             <div className="text-xs text-ink-muted">
               {((author?.i_am as string[] | null) ?? [])
-                .map((r) => ROLE_LABELS[r])
+                .map((r) => t(ROLE_LABELS[r], locale))
                 .join(" · ")}
               {" · "}
               {new Date(post.created_at as string).toLocaleDateString("en-GB", {

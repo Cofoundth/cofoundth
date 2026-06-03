@@ -613,5 +613,9 @@
   "Max image size is 5MB.": "ขนาดรูปต้องไม่เกิน 5MB",
   "Upload failed.": "อัปโหลดไม่สำเร็จ",
   "No conversations yet": "ยังไม่มีแชท",
-  "founder": "founder"
+  "founder": "founder",
+  "All founders": "Founder ทั้งหมด",
+  "Runway": "เงินทุนสำรอง",
+  "Experience": "ประสบการณ์",
+  "Industries": "อุตสาหกรรม"
 }

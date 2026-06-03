@@ -118,7 +118,9 @@ export default async function ConnectionsPage() {
   });
 
   const roleLine = (p: ReturnType<typeof profiles.get>) =>
-    ((p?.i_am as string[] | null) ?? []).map((r) => ROLE_LABELS[r]).join(" · ");
+    ((p?.i_am as string[] | null) ?? [])
+      .map((r) => t(ROLE_LABELS[r], locale))
+      .join(" · ");
   const profileHref = (p: ReturnType<typeof profiles.get>, id: string) =>
     `/profile/${(p?.slug as string | undefined) ?? id}`;
   const displayName = (p: ReturnType<typeof profiles.get>) =>
@@ -325,7 +327,7 @@ export default async function ConnectionsPage() {
                             &middot;{" "}
                             <span className="text-gold">
                               {((p?.intent as string[] | null) ?? [])
-                                .map((x) => INTENT_LABELS[x])
+                                .map((x) => t(INTENT_LABELS[x], locale))
                                 .join(" · ")}
                             </span>
                           </>

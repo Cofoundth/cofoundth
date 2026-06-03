@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 import { MessageComposer } from "./MessageComposer";
 import { MessageThread } from "./MessageThread";
@@ -20,6 +22,7 @@ type Props = { params: Promise<{ matchId: string }> };
 export default async function MessagePage({ params }: Props) {
   const { matchId } = await params;
   const supabase = await createClient();
+  const locale = await getLocale();
 
   const user = await requireUser();
 
@@ -90,7 +93,7 @@ export default async function MessagePage({ params }: Props) {
                 <div className="text-xs text-ink-muted truncate">
                   {((other?.i_am as string[] | null) ?? []).length > 0 &&
                     ((other?.i_am as string[] | null) ?? [])
-                      .map((r) => ROLE_LABELS[r])
+                      .map((r) => t(ROLE_LABELS[r], locale))
                       .join(" · ")}
                   {((other?.intent as string[] | null) ?? []).length > 0 && (
                     <>
@@ -98,7 +101,7 @@ export default async function MessagePage({ params }: Props) {
                       &middot;{" "}
                       <span className="text-gold">
                         {((other?.intent as string[] | null) ?? [])
-                          .map((x) => INTENT_LABELS[x])
+                          .map((x) => t(INTENT_LABELS[x], locale))
                           .join(" · ")}
                       </span>
                     </>

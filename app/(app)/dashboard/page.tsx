@@ -75,22 +75,22 @@ export default async function DashboardPage() {
     user?.email?.split("@")[0] ||
     "founder";
 
+  const locale = (await import("@/lib/i18n-server").then((m) =>
+    m.getLocale(),
+  )) as "en" | "th";
+
   // Identity-card derived labels (i_am / intent are string[])
   const rolesLabel = ((profile?.i_am as string[] | null) ?? [])
-    .map((r) => ROLE_LABELS[r] ?? r)
+    .map((r) => t(ROLE_LABELS[r] ?? r, locale))
     .filter(Boolean)
     .join(" · ");
   const intentsLabel = ((profile?.intent as string[] | null) ?? [])
-    .map((i) => INTENT_LABELS[i] ?? i)
+    .map((i) => t(INTENT_LABELS[i] ?? i, locale))
     .filter(Boolean)
     .join(" · ");
   const identityLine = [rolesLabel, intentsLabel]
     .filter(Boolean)
     .join(" · ");
-
-  const locale = (await import("@/lib/i18n-server").then((m) =>
-    m.getLocale(),
-  )) as "en" | "th";
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
@@ -278,11 +278,11 @@ export default async function DashboardPage() {
                         </div>
                         <div className="text-xs text-ink-muted mt-0.5 truncate">
                           {((f.i_am as string[] | null) ?? [])
-                            .map((r) => ROLE_LABELS[r] ?? r)
+                            .map((r) => t(ROLE_LABELS[r] ?? r, locale))
                             .join(" · ") || "—"}
                           {((f.intent as string[] | null) ?? []).length > 0
                             ? ` · ${((f.intent as string[] | null) ?? [])
-                                .map((x) => INTENT_LABELS[x] ?? x)
+                                .map((x) => t(INTENT_LABELS[x] ?? x, locale))
                                 .join(" · ")}`
                             : ""}
                         </div>

@@ -13,6 +13,7 @@ import {
   EXPERIENCE_LABELS,
 } from "@/lib/matching";
 import { tServer, getLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/i18n";
 import { provinceLabel } from "@/lib/provinces";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
@@ -234,7 +235,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                   {(profile.i_am ?? []).length > 0 && (
                     <span className="text-navy font-medium">
                       {(profile.i_am ?? [])
-                        .map((r: string) => ROLE_LABELS[r])
+                        .map((r: string) => t(ROLE_LABELS[r], locale))
                         .join(" · ")}
                     </span>
                   )}
@@ -242,7 +243,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                     <span className="text-gold">
                       &middot;{" "}
                       {(profile.intent ?? [])
-                        .map((x: string) => INTENT_LABELS[x])
+                        .map((x: string) => t(INTENT_LABELS[x], locale))
                         .join(" · ")}
                     </span>
                   )}
@@ -498,21 +499,42 @@ export default async function ProfileDetailPage({ params }: Props) {
             <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-2">
               {await tServer("Founder facts")}
             </div>
-            <Fact label="Stage" value={profile.stage && STAGE_LABELS[profile.stage]} />
             <Fact
-              label="Commitment"
-              value={profile.commitment && COMMITMENT_LABELS[profile.commitment]}
+              label={t("Stage", locale)}
+              value={
+                profile.stage &&
+                t(STAGE_LABELS[profile.stage] ?? profile.stage, locale)
+              }
             />
             <Fact
-              label="Runway"
-              value={profile.runway && RUNWAY_LABELS[profile.runway]}
+              label={t("Commitment", locale)}
+              value={
+                profile.commitment &&
+                t(
+                  COMMITMENT_LABELS[profile.commitment] ?? profile.commitment,
+                  locale,
+                )
+              }
             />
             <Fact
-              label="Experience"
-              value={profile.experience && EXPERIENCE_LABELS[profile.experience]}
+              label={t("Runway", locale)}
+              value={
+                profile.runway &&
+                t(RUNWAY_LABELS[profile.runway] ?? profile.runway, locale)
+              }
             />
             <Fact
-              label="Industries"
+              label={t("Experience", locale)}
+              value={
+                profile.experience &&
+                t(
+                  EXPERIENCE_LABELS[profile.experience] ?? profile.experience,
+                  locale,
+                )
+              }
+            />
+            <Fact
+              label={t("Industries", locale)}
               value={(profile.industry ?? []).join(", ") || null}
             />
           </div>

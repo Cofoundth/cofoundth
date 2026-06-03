@@ -132,7 +132,7 @@ export function BrowseClient({ others }: Props) {
       <div className="mb-10 pb-8 border-b border-line">
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-4xl lg:text-5xl mb-2">{tr("Founders")}</h1>
+            <h1 className="text-4xl lg:text-5xl mb-2">{tr("All founders")}</h1>
             <p className="text-ink">
               {filtered.length}{" "}
               {tr(filtered.length === 1 ? "founder" : "founders")}
@@ -325,6 +325,7 @@ function FilterChip({
 
 function ProfileCard({ profile }: { profile: Profile }) {
   const locale = useLocale();
+  const tr = useT();
   return (
     <Link
       href={`/profile/${profile.slug}`}
@@ -354,13 +355,13 @@ function ProfileCard({ profile }: { profile: Profile }) {
                   7 * 86400_000 && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold font-sans">
                     <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-                    New
+                    {tr("New")}
                   </span>
                 )}
                 {profile.type === "company" && (
                   <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold">
                     <Building2 className="w-2.5 h-2.5" strokeWidth={2} />
-                    Company
+                    {tr("Company")}
                   </span>
                 )}
                 {profile.age && profile.type !== "company" && (
@@ -371,15 +372,17 @@ function ProfileCard({ profile }: { profile: Profile }) {
               </h3>
               <div className="text-sm text-ink-muted mt-1">
                 {profile.type === "company"
-                  ? `Represented by ${profile.full_name}`
+                  ? `${tr("Represented by")} ${profile.full_name}`
                   : profile.i_am.length > 0 &&
-                    profile.i_am.map((r) => ROLE_LABELS[r]).join(" · ")}
+                    profile.i_am.map((r) => tr(ROLE_LABELS[r])).join(" · ")}
                 {profile.intent.length > 0 && (
                   <>
                     {" "}
                     &middot;{" "}
                     <span className="text-gold">
-                      {profile.intent.map((x) => INTENT_LABELS[x]).join(" · ")}
+                      {profile.intent
+                        .map((x) => tr(INTENT_LABELS[x]))
+                        .join(" · ")}
                     </span>
                   </>
                 )}
@@ -412,7 +415,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
             )}
             {profile.stage && (
               <span className="ml-auto inline-flex items-center gap-1 text-navy group-hover:text-gold">
-                View profile <ArrowRight className="w-3 h-3" />
+                {tr("View profile")} <ArrowRight className="w-3 h-3" />
               </span>
             )}
           </div>
