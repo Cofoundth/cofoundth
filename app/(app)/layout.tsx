@@ -113,6 +113,8 @@ export default async function AppLayout({
       label: await tServer("Connections"),
       badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
     },
+    { href: "/insights", label: await tServer("Insights") },
+    { href: "/legal-templates", label: await tServer("Legal") },
   ];
   if (isAdminEmail(user.email)) {
     navItems.push({ href: "/admin/insights", label: await tServer("Admin") });
@@ -123,9 +125,9 @@ export default async function AppLayout({
       <header className="bg-white border-b border-line relative">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3 md:gap-8">
+            <div className="flex items-center gap-3 lg:gap-8">
               <MobileMenu
-                className="md:hidden"
+                className="lg:hidden"
                 links={navItems}
                 footer={
                   <form action={signOutAction}>
@@ -142,7 +144,7 @@ export default async function AppLayout({
                 <BrandMark size="sm" />
                 <Wordmark className="text-base" />
               </Link>
-              <nav className="hidden md:flex items-center gap-1">
+              <nav className="hidden lg:flex items-center gap-1">
                 <NavLink href="/dashboard">{await tServer("Dashboard")}</NavLink>
                 <NavLink href="/community">{await tServer("Community")}</NavLink>
                 <NavLink href="/browse">
@@ -159,6 +161,10 @@ export default async function AppLayout({
                   badge={(receivedPending ?? 0) + (unreadMessages ?? 0)}
                 >
                   {await tServer("Connections")}
+                </NavLink>
+                <NavLink href="/insights">{await tServer("Insights")}</NavLink>
+                <NavLink href="/legal-templates">
+                  {await tServer("Legal")}
                 </NavLink>
                 {isAdminEmail(user.email) && (
                   <NavLink href="/admin/insights">
@@ -186,7 +192,7 @@ export default async function AppLayout({
                   size="sm"
                 />
               </Link>
-              <form action={signOutAction} className="hidden md:block">
+              <form action={signOutAction} className="hidden lg:block">
                 <button
                   type="submit"
                   className="text-sm text-ink-muted hover:text-navy tracking-wide"
