@@ -201,10 +201,6 @@ export default async function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-gold" />{" "}
-                  {tr("Verified profiles")}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-gold" />{" "}
                   {tr("Built for Thailand")}
                 </div>
               </div>
