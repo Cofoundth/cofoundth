@@ -61,6 +61,9 @@ export type ProfileInitial = {
   age?: number | null;
   location?: string | null;
   linkedin_url?: string | null;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
+  x_url?: string | null;
   type?: string | null;
   company_name?: string | null;
   capabilities?: string[] | null;
@@ -169,14 +172,40 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             />
           </Field>
         </div>
-        <Field label={tr("LinkedIn (optional)")}>
-          <input
-            name="linkedin_url"
-            defaultValue={initial.linkedin_url ?? ""}
-            placeholder="linkedin.com/in/you"
-            className={inputCls}
-          />
-        </Field>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label={tr("LinkedIn (optional)")}>
+            <input
+              name="linkedin_url"
+              defaultValue={initial.linkedin_url ?? ""}
+              placeholder="linkedin.com/in/you"
+              className={inputCls}
+            />
+          </Field>
+          <Field label={tr("X (optional)")}>
+            <input
+              name="x_url"
+              defaultValue={initial.x_url ?? ""}
+              placeholder="x.com/you"
+              className={inputCls}
+            />
+          </Field>
+          <Field label={tr("Instagram (optional)")}>
+            <input
+              name="instagram_url"
+              defaultValue={initial.instagram_url ?? ""}
+              placeholder="instagram.com/you"
+              className={inputCls}
+            />
+          </Field>
+          <Field label={tr("Facebook (optional)")}>
+            <input
+              name="facebook_url"
+              defaultValue={initial.facebook_url ?? ""}
+              placeholder="facebook.com/you"
+              className={inputCls}
+            />
+          </Field>
+        </div>
         <Field label={tr("Work experience (optional)")}>
           <textarea
             name="work_experience"

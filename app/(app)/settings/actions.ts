@@ -65,6 +65,13 @@ export async function updateProfileAction(
   const linkedinRaw = String(formData.get("linkedin_url") ?? "")
     .trim()
     .slice(0, 200);
+  const instagramRaw = String(formData.get("instagram_url") ?? "")
+    .trim()
+    .slice(0, 200);
+  const facebookRaw = String(formData.get("facebook_url") ?? "")
+    .trim()
+    .slice(0, 200);
+  const xRaw = String(formData.get("x_url") ?? "").trim().slice(0, 200);
 
   // ---- Professional
   const i_am = cap(formData.getAll("i_am").map(String), ROLE_VALUES.length);
@@ -133,15 +140,25 @@ export async function updateProfileAction(
     age = n;
   }
 
-  let linkedin_url: string | null = null;
-  if (linkedinRaw) {
-    const normalized = /^https?:\/\//i.test(linkedinRaw)
-      ? linkedinRaw
-      : `https://${linkedinRaw}`;
-    if (!normalized.includes("."))
+  const normLink = (raw: string): string | { error: string } | null => {
+    if (!raw) return null;
+    const n = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    if (!n.includes("."))
       return { error: "That doesn't look like a valid link." };
-    linkedin_url = normalized;
-  }
+    return n;
+  };
+  const linkedin = normLink(linkedinRaw);
+  if (linkedin && typeof linkedin !== "string") return linkedin;
+  const instagram = normLink(instagramRaw);
+  if (instagram && typeof instagram !== "string") return instagram;
+  const facebook = normLink(facebookRaw);
+  if (facebook && typeof facebook !== "string") return facebook;
+  const xLink = normLink(xRaw);
+  if (xLink && typeof xLink !== "string") return xLink;
+  const linkedin_url = (linkedin as string | null) ?? null;
+  const instagram_url = (instagram as string | null) ?? null;
+  const facebook_url = (facebook as string | null) ?? null;
+  const x_url = (xLink as string | null) ?? null;
 
   if (i_am.length === 0) return { error: "Please select your role." };
   if (i_am.some((r) => !ROLE_VALUES.includes(r as never)))
@@ -183,6 +200,9 @@ export async function updateProfileAction(
       age,
       location: location || null,
       linkedin_url,
+      instagram_url,
+      facebook_url,
+      x_url,
       i_am,
       intent,
       looking_for,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, BadgeCheck, Building2, MapPin } from "lucide-react";
+import { BadgeCheck, Building2, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -15,6 +15,7 @@ import {
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { provinceLabel } from "@/lib/provinces";
+import { SocialLinks } from "@/components/SocialIcons";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
@@ -51,7 +52,7 @@ export async function generateMetadata({
 }
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
 
 const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   open_to_partnerships: {
@@ -177,12 +178,6 @@ export default async function ProfileDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
-      <Link
-        href="/browse"
-        className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
-      >
-        <ArrowLeft className="w-4 h-4" /> {await tServer("Back to directory")}
-      </Link>
 
       {relationship === "incoming" && !isOwnProfile && (
         <IncomingInterestBanner toId={profile.id} otherName={otherName} />
@@ -539,16 +534,17 @@ export default async function ProfileDetailPage({ params }: Props) {
             />
           </div>
 
-          {profile.linkedin_url && (
-            <div className="bg-white border border-line p-6 text-sm">
-              <a
-                href={profile.linkedin_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-navy hover:text-gold inline-flex items-center gap-2"
-              >
-                LinkedIn profile
-              </a>
+          {(profile.linkedin_url ||
+            profile.x_url ||
+            profile.instagram_url ||
+            profile.facebook_url) && (
+            <div className="bg-white border border-line p-6">
+              <SocialLinks
+                linkedin={profile.linkedin_url as string | null}
+                x={profile.x_url as string | null}
+                instagram={profile.instagram_url as string | null}
+                facebook={profile.facebook_url as string | null}
+              />
             </div>
           )}
         </aside>
