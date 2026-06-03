@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { PostComposer } from "@/components/PostComposer";
-import { PostFeed } from "@/components/PostFeed";
+import { SearchablePostFeed } from "@/components/SearchablePostFeed";
 import { getFeedPosts } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +59,7 @@ export default async function CommunityPage() {
         </div>
       )}
 
-      <PostFeed
+      <SearchablePostFeed
         items={feed}
         locale={locale}
         emptyMessage={await tServer(

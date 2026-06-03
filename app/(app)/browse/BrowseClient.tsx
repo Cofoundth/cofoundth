@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowRight, BadgeCheck, Building2, MapPin } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Building2,
+  ChevronDown,
+  MapPin,
+  SlidersHorizontal,
+} from "lucide-react";
 import {
   type ProfileLike,
   ROLE_LABELS,
@@ -48,6 +55,7 @@ export function BrowseClient({ others }: Props) {
   const [stageFilter, setStageFilter] = useState<string>("");
   const [commitmentFilter, setCommitmentFilter] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const sorted = useMemo(
     () =>
@@ -111,6 +119,13 @@ export function BrowseClient({ others }: Props) {
     setTypeFilter("all");
   }
 
+  const filterCount =
+    roleFilters.length +
+    industryFilters.length +
+    (stageFilter ? 1 : 0) +
+    (commitmentFilter ? 1 : 0) +
+    (typeFilter !== "all" ? 1 : 0);
+
   const activeFilterCount =
     roleFilters.length +
     industryFilters.length +
@@ -148,7 +163,7 @@ export function BrowseClient({ others }: Props) {
       <div className="grid lg:grid-cols-12 gap-10">
         {/* Filter sidebar */}
         <aside className="lg:col-span-3">
-          <div className="lg:sticky lg:top-6 space-y-8">
+          <div className="lg:sticky lg:top-6 space-y-4">
             <div>
               <label
                 htmlFor="search"
@@ -166,7 +181,33 @@ export function BrowseClient({ others }: Props) {
               />
             </div>
 
-            <FilterGroup label={tr("Profile type")}>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 border border-line bg-white text-sm text-ink hover:border-navy transition-colors"
+              aria-expanded={filtersOpen}
+            >
+              <span className="inline-flex items-center gap-2">
+                <SlidersHorizontal
+                  className="w-4 h-4 text-ink-muted"
+                  strokeWidth={1.5}
+                />
+                {tr("Filters")}
+                {filterCount > 0 && (
+                  <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-gold text-white inline-flex items-center justify-center font-medium">
+                    {filterCount}
+                  </span>
+                )}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 text-ink-muted transition-transform ${
+                  filtersOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            <div className={filtersOpen ? "space-y-6" : "hidden"}>
+              <FilterGroup label={tr("Profile type")}>
               <FilterChip
                 selected={typeFilter === "all"}
                 onClick={() => setTypeFilter("all")}
@@ -241,6 +282,7 @@ export function BrowseClient({ others }: Props) {
                 </FilterChip>
               ))}
             </FilterGroup>
+            </div>
           </div>
         </aside>
 
