@@ -36,8 +36,6 @@ type Profile = ProfileLike & {
   created_at: string;
 };
 
-type TypeFilter = "all" | "individual" | "company";
-
 type Props = {
   others: Profile[];
 };
@@ -54,7 +52,6 @@ export function BrowseClient({ others }: Props) {
   const [industryFilters, setIndustryFilters] = useState<string[]>([]);
   const [stageFilter, setStageFilter] = useState<string>("");
   const [commitmentFilter, setCommitmentFilter] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const sorted = useMemo(
@@ -89,7 +86,6 @@ export function BrowseClient({ others }: Props) {
         return false;
       if (stageFilter && p.stage !== stageFilter) return false;
       if (commitmentFilter && p.commitment !== commitmentFilter) return false;
-      if (typeFilter !== "all" && p.type !== typeFilter) return false;
       return true;
     });
   }, [
@@ -99,7 +95,6 @@ export function BrowseClient({ others }: Props) {
     industryFilters,
     stageFilter,
     commitmentFilter,
-    typeFilter,
   ]);
 
   function toggleRole(v: string) {
@@ -116,23 +111,20 @@ export function BrowseClient({ others }: Props) {
     setIndustryFilters([]);
     setStageFilter("");
     setCommitmentFilter("");
-    setTypeFilter("all");
   }
 
   const filterCount =
     roleFilters.length +
     industryFilters.length +
     (stageFilter ? 1 : 0) +
-    (commitmentFilter ? 1 : 0) +
-    (typeFilter !== "all" ? 1 : 0);
+    (commitmentFilter ? 1 : 0);
 
   const activeFilterCount =
     roleFilters.length +
     industryFilters.length +
     (stageFilter ? 1 : 0) +
     (commitmentFilter ? 1 : 0) +
-    (searchTerm ? 1 : 0) +
-    (typeFilter !== "all" ? 1 : 0);
+    (searchTerm ? 1 : 0);
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
@@ -207,28 +199,7 @@ export function BrowseClient({ others }: Props) {
             </button>
 
             <div className={filtersOpen ? "space-y-6" : "hidden"}>
-              <FilterGroup label={tr("Profile type")}>
-              <FilterChip
-                selected={typeFilter === "all"}
-                onClick={() => setTypeFilter("all")}
-              >
-                {tr("All")}
-              </FilterChip>
-              <FilterChip
-                selected={typeFilter === "individual"}
-                onClick={() => setTypeFilter("individual")}
-              >
-                {tr("Individuals")}
-              </FilterChip>
-              <FilterChip
-                selected={typeFilter === "company"}
-                onClick={() => setTypeFilter("company")}
-              >
-                {tr("Companies")}
-              </FilterChip>
-            </FilterGroup>
-
-            <FilterGroup label={tr("Looking for (Role)")}>
+              <FilterGroup label={tr("Looking for (Role)")}>
               {ROLE_OPTIONS.map(([value, label]) => (
                 <FilterChip
                   key={value}
