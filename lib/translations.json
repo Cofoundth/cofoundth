@@ -157,7 +157,7 @@
   "The directory": "ไดเรกทอรี",
   "Clear all filters": "ล้างตัวกรองทั้งหมด",
   "complete your profile for complement scores": "ทำโปรไฟล์ให้สมบูรณ์ เพื่อดู Complement Score",
-  "founders": "founder",
+  "founders": "founders",
   "A 0–100 score measuring how well two founders fit:": "คะแนน 0–100 บอกว่า founder สองคนเข้ากันได้แค่ไหน:",
   "Higher = better starting point for a conversation.": "ยิ่งสูง ยิ่งเริ่มบทสนทนาได้ง่าย",
   "About the Complement Score": "เกี่ยวกับ Complement Score",
@@ -612,5 +612,6 @@
   "Please pick an image file.": "กรุณาเลือกไฟล์รูปภาพ",
   "Max image size is 5MB.": "ขนาดรูปต้องไม่เกิน 5MB",
   "Upload failed.": "อัปโหลดไม่สำเร็จ",
-  "No conversations yet": "ยังไม่มีแชท"
+  "No conversations yet": "ยังไม่มีแชท",
+  "founder": "founder"
 }

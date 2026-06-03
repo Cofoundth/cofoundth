@@ -133,7 +133,8 @@ export function BrowseClient({ others }: Props) {
           <div>
             <h1 className="text-4xl lg:text-5xl mb-2">{tr("Founders")}</h1>
             <p className="text-ink">
-              {filtered.length} {tr("founders")}
+              {filtered.length}{" "}
+              {tr(filtered.length === 1 ? "founder" : "founders")}
             </p>
           </div>
           {activeFilterCount > 0 && (
