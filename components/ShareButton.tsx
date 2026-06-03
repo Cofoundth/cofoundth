@@ -4,8 +4,33 @@ import { useState } from "react";
 import { Check, Share2 } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
 
-// Copies (or natively shares) a link. Pass a relative `path` (resolved against
-// the current origin) or nothing to share the current page.
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // fall through to legacy path
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+// Copies (or, on touch devices, natively shares) a link. Pass a relative `path`
+// (resolved against the current origin) or nothing to share the current page.
 export function ShareButton({
   path,
   className,
@@ -23,20 +48,25 @@ export function ShareButton({
           ? `${window.location.origin}${path}`
           : window.location.href
         : (path ?? "");
-    try {
-      if (navigator.share) {
+
+    // Native share only on touch devices (great for LINE/Messenger on mobile).
+    // On desktop the share sheet is inconsistent, so just copy — predictable
+    // and always gives "Copied" feedback.
+    const isTouch =
+      typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+    if (isTouch && navigator.share) {
+      try {
         await navigator.share({ url });
         return;
+      } catch {
+        // cancelled or failed — fall through to clipboard copy
       }
-    } catch {
-      // user cancelled native share — fall through to clipboard
     }
-    try {
-      await navigator.clipboard.writeText(url);
+
+    const ok = await copyToClipboard(url);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // clipboard blocked — no-op
     }
   }
 

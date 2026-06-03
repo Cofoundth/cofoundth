@@ -100,8 +100,7 @@ export function PostCard({
     if (next && comments === null) void loadComments();
   }
 
-  function submitComment(e: React.FormEvent) {
-    e.preventDefault();
+  function doSubmitComment() {
     const text = draft.trim();
     if (!text || submitting) return;
     startSubmit(async () => {
@@ -113,6 +112,10 @@ export function PostCard({
         await loadComments();
       }
     });
+  }
+  function submitComment(e: React.FormEvent) {
+    e.preventDefault();
+    doSubmitComment();
   }
 
   function removeComment(id: string) {
@@ -284,6 +287,16 @@ export function PostCard({
               rows={1}
               maxLength={2000}
               placeholder={tr("Write a comment…")}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !e.nativeEvent.isComposing
+                ) {
+                  e.preventDefault();
+                  doSubmitComment();
+                }
+              }}
               className="flex-1 px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
             />
             <button
