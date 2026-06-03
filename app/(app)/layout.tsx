@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
 
 export default async function AppLayout({
   children,
@@ -28,6 +29,7 @@ export default async function AppLayout({
     <div className="min-h-screen flex flex-col bg-cream">
       <AppHeader />
       <main className="flex-1">{children}</main>
+      <AppFooter />
     </div>
   );
 }
