@@ -13,6 +13,7 @@ import {
   EXPERIENCE_LABELS,
 } from "@/lib/matching";
 import { tServer, getLocale } from "@/lib/i18n-server";
+import { provinceLabel } from "@/lib/provinces";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
@@ -247,7 +248,8 @@ export default async function ProfileDetailPage({ params }: Props) {
                   )}
                   {profile.location && (
                     <span className="inline-flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" /> {profile.location}
+                      <MapPin className="w-3.5 h-3.5" />{" "}
+                      {provinceLabel(profile.location as string, locale)}
                     </span>
                   )}
                 </div>

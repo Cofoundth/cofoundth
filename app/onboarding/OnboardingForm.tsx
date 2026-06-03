@@ -4,7 +4,7 @@ import { Fragment, useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { saveOnboardingAction } from "./actions";
 import { useT, useLocale } from "@/lib/i18n-client";
-import { provinceOptions } from "@/lib/provinces";
+import { provinceOptions, provinceLabel, canonicalProvince } from "@/lib/provinces";
 import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
@@ -663,8 +663,8 @@ function StepContext({
         <Combobox
           id="location"
           options={provinceOptions(locale)}
-          value={data.location}
-          onChange={(v) => set("location", v)}
+          value={provinceLabel(data.location, locale)}
+          onChange={(v) => set("location", canonicalProvince(v))}
           placeholder={tr("Bangkok, Chiang Mai, Remote, etc.")}
         />
       </div>

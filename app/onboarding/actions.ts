@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { canonicalProvince } from "@/lib/provinces";
 
 export type OnboardingState = { error?: string } | null;
 
@@ -71,7 +72,9 @@ export async function saveOnboardingAction(
   );
   const industry = cap(formData.getAll("industry").map(String), MAX_INDUSTRY);
   const stage = String(formData.get("stage") ?? "");
-  const location = String(formData.get("location") ?? "").trim().slice(0, 100);
+  const location = canonicalProvince(
+    String(formData.get("location") ?? "").trim().slice(0, 100),
+  );
   const commitment = String(formData.get("commitment") ?? "");
   const runway = String(formData.get("runway") ?? "");
   const experience = String(formData.get("experience") ?? "");

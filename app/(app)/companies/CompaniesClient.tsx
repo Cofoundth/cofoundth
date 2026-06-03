@@ -11,7 +11,8 @@ import {
   Search as SearchIcon,
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
-import { useT } from "@/lib/i18n-client";
+import { useT, useLocale } from "@/lib/i18n-client";
+import { provinceLabel } from "@/lib/provinces";
 import { PartnershipRequestDialog } from "./PartnershipRequestDialog";
 
 export type CompanyProfile = {
@@ -343,6 +344,7 @@ function CompanyCard({
   onRequest: () => void;
 }) {
   const tr = useT();
+  const locale = useLocale();
   const fresh = Date.now() - new Date(c.created_at).getTime() < 7 * 86400_000;
 
   return (
@@ -378,7 +380,7 @@ function CompanyCard({
                 {tr("Rep")}: {c.representative}
                 {c.location && (
                   <span className="inline-flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> {c.location}
+                    <MapPin className="w-3 h-3" /> {provinceLabel(c.location, locale)}
                   </span>
                 )}
               </div>

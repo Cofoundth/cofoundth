@@ -6,6 +6,7 @@ import { tServer } from "@/lib/i18n-server";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
+import { provinceLabel } from "@/lib/provinces";
 import { PostComposer } from "@/components/PostComposer";
 import { PostFeed } from "@/components/PostFeed";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
@@ -142,7 +143,7 @@ export default async function DashboardPage() {
             {profile?.location && (
               <p className="text-sm text-ink-muted mt-2 inline-flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-gold" strokeWidth={1.5} />
-                {profile.location as string}
+                {provinceLabel(profile.location as string, locale)}
               </p>
             )}
 

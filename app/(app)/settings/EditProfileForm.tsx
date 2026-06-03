@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { updateProfileAction } from "./actions";
 import { useT, useLocale } from "@/lib/i18n-client";
-import { provinceOptions } from "@/lib/provinces";
+import { provinceOptions, provinceLabel, canonicalProvince } from "@/lib/provinces";
 import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
@@ -162,8 +162,8 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             <Combobox
               name="location"
               options={provinceOptions(locale)}
-              value={location}
-              onChange={setLocation}
+              value={provinceLabel(location, locale)}
+              onChange={(v) => setLocation(canonicalProvince(v))}
               placeholder="Bangkok, Remote, etc."
               className={inputCls}
             />

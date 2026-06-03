@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { canonicalProvince } from "@/lib/provinces";
 
 export type EditProfileState = { error?: string; ok?: boolean } | null;
 
@@ -58,7 +59,9 @@ export async function updateProfileAction(
     .slice(0, 40);
   const full_name = `${first_name} ${last_name}`.trim();
   const ageRaw = String(formData.get("age") ?? "").trim();
-  const location = String(formData.get("location") ?? "").trim().slice(0, 100);
+  const location = canonicalProvince(
+    String(formData.get("location") ?? "").trim().slice(0, 100),
+  );
   const linkedinRaw = String(formData.get("linkedin_url") ?? "")
     .trim()
     .slice(0, 200);

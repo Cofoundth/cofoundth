@@ -18,7 +18,8 @@ import {
   COMMITMENT_LABELS,
 } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
-import { useT } from "@/lib/i18n-client";
+import { useT, useLocale } from "@/lib/i18n-client";
+import { provinceLabel } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
 
 type Profile = ProfileLike & {
@@ -323,6 +324,7 @@ function FilterChip({
 }
 
 function ProfileCard({ profile }: { profile: Profile }) {
+  const locale = useLocale();
   return (
     <Link
       href={`/profile/${profile.slug}`}
@@ -394,7 +396,8 @@ function ProfileCard({ profile }: { profile: Profile }) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink-muted">
             {profile.location && (
               <span className="inline-flex items-center gap-1">
-                <MapPin className="w-3 h-3" /> {profile.location}
+                <MapPin className="w-3 h-3" />{" "}
+                {provinceLabel(profile.location, locale)}
               </span>
             )}
             {profile.industry.slice(0, 3).map((i) => (

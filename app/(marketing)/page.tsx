@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { provinceLabel } from "@/lib/provinces";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Avatar } from "@/components/Avatar";
 
@@ -250,7 +251,9 @@ export default async function LandingPage() {
                                     .map((r) => ROLE_LABEL_EN[r] ?? r)
                                     .join(" · ")
                                 : "—"}
-                              {f.location ? ` · ${f.location}` : ""}
+                              {f.location
+                                ? ` · ${provinceLabel(f.location as string, locale)}`
+                                : ""}
                             </div>
                           </div>
                         </Link>

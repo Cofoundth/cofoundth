@@ -90,5 +90,29 @@ export function provinceOptions(locale: Locale): string[] {
   return PROVINCES.map((p) => (locale === "th" ? p.th : p.en));
 }
 
+// Canonical storage form. Whatever the user picked or typed (Thai label,
+// English label, or free text), collapse a known province to its English name
+// so the DB holds ONE value per place regardless of the UI language. Unknown
+// free text is kept verbatim.
+export function canonicalProvince(label: string | null | undefined): string {
+  const v = (label ?? "").trim();
+  if (!v) return "";
+  const hit = PROVINCES.find((p) => p.en === v || p.th === v);
+  return hit ? hit.en : v;
+}
+
+// Display form. Given a stored value (canonical English, a Thai label, or free
+// text), return it in the active language. Unknown free text passes through.
+export function provinceLabel(
+  value: string | null | undefined,
+  locale: Locale,
+): string {
+  const v = (value ?? "").trim();
+  if (!v) return "";
+  const hit = PROVINCES.find((p) => p.en === v || p.th === v);
+  if (!hit) return v;
+  return locale === "th" ? hit.th : hit.en;
+}
+
 // English list, kept for any locale-agnostic consumer.
 export const THAI_PROVINCES: string[] = PROVINCES.map((p) => p.en);

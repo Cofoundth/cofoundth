@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { tServer, getLocale } from "@/lib/i18n-server";
+import { provinceLabel } from "@/lib/provinces";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
 
@@ -329,7 +330,9 @@ export default async function ConnectionsPage() {
                             </span>
                           </>
                         )}
-                        {p?.location && <> &middot; {p.location as string}</>}
+                        {p?.location && (
+                          <> &middot; {provinceLabel(p.location as string, locale)}</>
+                        )}
                       </div>
                       <p className="text-sm text-ink truncate">
                         {msg?.last_content ?? (
