@@ -63,29 +63,48 @@ function wrap(title: string, body: string) {
 <div class="footer">Cofoundee — Built by founders, for founders.</div></div></body></html>`;
 }
 
+type Locale = "en" | "th";
+
 export async function sendInterestReceivedEmail(opts: {
   toEmail: string;
   toName: string;
   fromName: string;
   note: string | null;
+  locale?: Locale;
 }) {
-  const body = `
+  const from = escapeHtml(opts.fromName);
+  const to = escapeHtml(opts.toName);
+  const noteHtml = opts.note
+    ? `<div class="note">"${escapeHtml(opts.note)}"</div>`
+    : "";
+
+  const isTh = opts.locale === "th";
+  const subject = isTh
+    ? `${opts.fromName} สนใจโปรไฟล์ของคุณ`
+    : `${opts.fromName} expressed interest in your profile`;
+  const body = isTh
+    ? `
+    <div class="badge">ความสนใจใหม่บน Cofoundee</div>
+    <h1>${from} สนใจคุณ</h1>
+    <p>สวัสดี ${to}</p>
+    <p><strong>${from}</strong> เพิ่งแสดงความสนใจในโปรไฟล์ของคุณ</p>
+    ${noteHtml}
+    <p>ลองดูโปรไฟล์ของเขา ถ้าคุณสนใจเหมือนกัน กดแสดงความสนใจกลับได้เลย — พอสนใจตรงกันทั้งคู่ก็เริ่มแชตกันได้</p>
+    <a href="${SITE_URL}/interests" class="button">ดูความสนใจ</a>
+  `
+    : `
     <div class="badge">New on Cofoundee</div>
-    <h1>${escapeHtml(opts.fromName)} expressed interest</h1>
-    <p>Hi ${escapeHtml(opts.toName)},</p>
-    <p><strong>${escapeHtml(opts.fromName)}</strong> just expressed interest in your profile.</p>
-    ${
-      opts.note
-        ? `<div class="note">"${escapeHtml(opts.note)}"</div>`
-        : ""
-    }
+    <h1>${from} expressed interest</h1>
+    <p>Hi ${to},</p>
+    <p><strong>${from}</strong> just expressed interest in your profile.</p>
+    ${noteHtml}
     <p>Review their profile and, if you&rsquo;re also interested, express interest back — messaging unlocks on mutual interest.</p>
     <a href="${SITE_URL}/interests" class="button">View interest</a>
   `;
   return send({
     to: opts.toEmail,
-    subject: `${opts.fromName} expressed interest in your profile`,
-    html: wrap("New interest on Cofoundee", body),
+    subject,
+    html: wrap(subject, body),
   });
 }
 
@@ -94,19 +113,36 @@ export async function sendMutualMatchEmail(opts: {
   toName: string;
   otherName: string;
   matchId: string;
+  locale?: Locale;
 }) {
-  const body = `
+  const other = escapeHtml(opts.otherName);
+  const to = escapeHtml(opts.toName);
+
+  const isTh = opts.locale === "th";
+  const subject = isTh
+    ? `คุณกับ ${opts.otherName} สนใจตรงกันแล้ว`
+    : `You and ${opts.otherName} are a mutual match`;
+  const body = isTh
+    ? `
+    <div class="badge">สนใจตรงกันแล้ว</div>
+    <h1>คุณกับ ${other} แมตช์กันแล้ว</h1>
+    <p>สวัสดี ${to}</p>
+    <p>คุณกับ <strong>${other}</strong> สนใจกันทั้งคู่ ตอนนี้เริ่มแชตกันได้แล้ว</p>
+    <p>นี่เป็นการตัดสินใจครั้งสำคัญ — ค่อยๆ อ่านโปรไฟล์ของเขาให้ละเอียด เตรียมคำถามดีๆ แล้วคุยกันจริงจังก่อนตัดสินใจ</p>
+    <a href="${SITE_URL}/messages/${opts.matchId}" class="button">เปิดแชต</a>
+  `
+    : `
     <div class="badge">Mutual interest unlocked</div>
-    <h1>You and ${escapeHtml(opts.otherName)} matched</h1>
-    <p>Hi ${escapeHtml(opts.toName)},</p>
-    <p>You and <strong>${escapeHtml(opts.otherName)}</strong> both expressed interest. Messaging is now unlocked.</p>
+    <h1>You and ${other} matched</h1>
+    <p>Hi ${to},</p>
+    <p>You and <strong>${other}</strong> both expressed interest. Messaging is now unlocked.</p>
     <p>This is a serious decision &mdash; take time to read their full profile, prepare thoughtful questions, and have a real conversation before committing.</p>
     <a href="${SITE_URL}/messages/${opts.matchId}" class="button">Open conversation</a>
   `;
   return send({
     to: opts.toEmail,
-    subject: `You and ${opts.otherName} are a mutual match`,
-    html: wrap("Mutual match on Cofoundee", body),
+    subject,
+    html: wrap(subject, body),
   });
 }
 

@@ -2,8 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { sendNewMessageEmail } from "@/lib/email";
 
 export type SendMessageState = { error?: string } | null;
 
@@ -46,58 +44,12 @@ export async function sendMessageAction(
     return { error: "Couldn't send your message. Try again." };
   }
 
-  // Notify the other party (best-effort)
-  void notifyNewMessage(matchId, user.id, content);
+  // No email on every message — the recipient still gets an in-app bell
+  // notification (created by DB trigger). Emails fire only for interest +
+  // mutual match (see app/(app)/profile/[id]/actions.ts).
 
   revalidatePath(`/messages/${matchId}`);
   return null;
-}
-
-async function notifyNewMessage(
-  matchId: string,
-  senderId: string,
-  content: string,
-) {
-  try {
-    const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SECRET_KEY;
-    if (!adminUrl || !serviceKey) return;
-
-    const admin = createAdminClient(adminUrl, serviceKey);
-    const { data: match } = await admin
-      .from("matches")
-      .select("profile_a_id, profile_b_id")
-      .eq("id", matchId)
-      .single();
-    if (!match) return;
-
-    const recipientId =
-      match.profile_a_id === senderId
-        ? (match.profile_b_id as string)
-        : (match.profile_a_id as string);
-
-    const [{ data: recipient }, { data: profiles }] = await Promise.all([
-      admin.auth.admin.getUserById(recipientId),
-      admin
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", [senderId, recipientId]),
-    ]);
-    if (!recipient?.user?.email) return;
-
-    const sender = profiles?.find((p) => p.id === senderId);
-    const recipientProfile = profiles?.find((p) => p.id === recipientId);
-
-    await sendNewMessageEmail({
-      toEmail: recipient.user.email,
-      toName: (recipientProfile?.full_name as string) ?? "Founder",
-      fromName: (sender?.full_name as string) ?? "A founder",
-      matchId,
-      preview: content,
-    });
-  } catch (e) {
-    console.error("[notifyNewMessage failed]", e);
-  }
 }
 
 // Fire-and-forget: client mounts the conversation and calls this to mark

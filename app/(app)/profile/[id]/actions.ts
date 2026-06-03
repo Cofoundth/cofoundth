@@ -111,7 +111,7 @@ async function notifyAboutInterest(
         admin.auth.admin.getUserById(toId),
         admin
           .from("profiles")
-          .select("id, full_name")
+          .select("id, full_name, locale")
           .in("id", [fromId, toId]),
       ]);
 
@@ -137,6 +137,7 @@ async function notifyAboutInterest(
             toName: (toProfile?.full_name as string) ?? "Founder",
             otherName: (fromProfile?.full_name as string) ?? "A founder",
             matchId: match.id as string,
+            locale: (toProfile?.locale as "en" | "th") ?? "en",
           }),
         fromUser?.user?.email &&
           sendMutualMatchEmail({
@@ -144,6 +145,7 @@ async function notifyAboutInterest(
             toName: (fromProfile?.full_name as string) ?? "Founder",
             otherName: (toProfile?.full_name as string) ?? "A founder",
             matchId: match.id as string,
+            locale: (fromProfile?.locale as "en" | "th") ?? "en",
           }),
       ]);
     } else if (toUser?.user?.email) {
@@ -152,6 +154,7 @@ async function notifyAboutInterest(
         toName: (toProfile?.full_name as string) ?? "Founder",
         fromName: (fromProfile?.full_name as string) ?? "A founder",
         note: note || null,
+        locale: (toProfile?.locale as "en" | "th") ?? "en",
       });
     }
   } catch (e) {
