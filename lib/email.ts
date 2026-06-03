@@ -7,8 +7,14 @@ import { Resend } from "resend";
 
 const FROM =
   process.env.RESEND_FROM_EMAIL ?? "Cofoundee <onboarding@resend.dev>";
+// Emails are external — links must always point at the live site, never a
+// localhost dev URL (NEXT_PUBLIC_SITE_URL is set to localhost in .env.local).
+const PROD_SITE_URL = "https://www.cofoundee.co";
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
+  process.env.NEXT_PUBLIC_SITE_URL &&
+  !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost")
+    ? process.env.NEXT_PUBLIC_SITE_URL
+    : PROD_SITE_URL;
 
 function client() {
   const key = process.env.RESEND_API_KEY;
