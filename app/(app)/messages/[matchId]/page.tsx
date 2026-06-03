@@ -47,7 +47,7 @@ export default async function MessagePage({ params }: Props) {
 
   const { data: me } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, linkedin_url, instagram_url, facebook_url, x_url")
     .eq("id", user.id)
     .single();
 
@@ -149,7 +149,14 @@ export default async function MessagePage({ params }: Props) {
 
       {/* Sidebar — desktop only */}
       <aside className="hidden lg:flex lg:col-span-4 flex-col bg-white overflow-y-auto p-6">
-        <NextStepsPanel />
+        <NextStepsPanel
+          social={{
+            linkedin: (me?.linkedin_url as string | null) ?? null,
+            x: (me?.x_url as string | null) ?? null,
+            instagram: (me?.instagram_url as string | null) ?? null,
+            facebook: (me?.facebook_url as string | null) ?? null,
+          }}
+        />
       </aside>
     </div>
   );

@@ -6,14 +6,17 @@ import { Check, FileText, MessageSquareQuote, Plus } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
 import { QUICK_REPLY_EVENT } from "./MessageComposer";
 
+type Social = {
+  linkedin?: string | null;
+  x?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+};
+
 const TEMPLATES = [
   {
     label: "Propose a 30-min intro call",
     body: "Hey — would love to do a quick 30-min intro call. I'm free a few times this week. What works for you?",
-  },
-  {
-    label: "Share LinkedIn",
-    body: "Here's my LinkedIn for context: [paste your LinkedIn URL]. Happy to share more about my background on a call.",
   },
   {
     label: "Ask about timeline",
@@ -29,9 +32,30 @@ const TEMPLATES = [
   },
 ];
 
-export function NextStepsPanel() {
+export function NextStepsPanel({ social }: { social?: Social }) {
   const tr = useT();
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+
+  // Build the quick-reply cards. Each is { label, body } already in the active
+  // language. The "share my socials" card is only added when the user actually
+  // has links, and pastes their REAL URLs (no placeholder).
+  const socialUrls = [
+    social?.linkedin,
+    social?.x,
+    social?.instagram,
+    social?.facebook,
+  ].filter(Boolean) as string[];
+
+  const cards: { label: string; body: string }[] = TEMPLATES.map((t) => ({
+    label: tr(t.label),
+    body: tr(t.body),
+  }));
+  if (socialUrls.length) {
+    cards.splice(1, 0, {
+      label: tr("Share my socials"),
+      body: `${tr("Here are my socials:")} ${socialUrls.join(" ")}`,
+    });
+  }
 
   function insert(idx: number, text: string) {
     window.dispatchEvent(new CustomEvent(QUICK_REPLY_EVENT, { detail: text }));
@@ -116,19 +140,19 @@ export function NextStepsPanel() {
           {tr("Tap to drop it into your message box — edit before sending.")}
         </p>
         <ul className="space-y-2">
-          {TEMPLATES.map((t, idx) => (
-            <li key={t.label}>
+          {cards.map((c, idx) => (
+            <li key={c.label}>
               <button
                 type="button"
-                onClick={() => insert(idx, tr(t.body))}
+                onClick={() => insert(idx, c.body)}
                 className="w-full text-left p-3 border border-line bg-white hover:border-navy transition-colors flex items-start gap-3 group"
               >
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-navy mb-1">
-                    {tr(t.label)}
+                    {c.label}
                   </div>
                   <div className="text-[11px] text-ink-muted leading-relaxed line-clamp-2">
-                    {tr(t.body)}
+                    {c.body}
                   </div>
                 </div>
                 {copiedIdx === idx ? (
