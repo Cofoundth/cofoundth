@@ -3,10 +3,26 @@ import { ArrowRight, MessageCircle, Inbox, Send, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
-import { tServer } from "@/lib/i18n-server";
+import { tServer, getLocale } from "@/lib/i18n-server";
+import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
+
+function timeAgo(iso: string, locale: Locale): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  const h = Math.floor(diff / 3_600_000);
+  const d = Math.floor(diff / 86_400_000);
+  if (m < 1) return t("just now", locale);
+  if (m < 60) return t("{n}m ago", locale).replace("{n}", String(m));
+  if (h < 24) return t("{n}h ago", locale).replace("{n}", String(h));
+  if (d < 7) return t("{n}d ago", locale).replace("{n}", String(d));
+  return new Date(iso).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB", {
+    day: "numeric",
+    month: "short",
+  });
+}
 
 // "Connections" — the whole relationship funnel in one place:
 //   pending interest (sent / received)  →  match  →  conversation
@@ -14,6 +30,7 @@ export const dynamic = "force-dynamic";
 export default async function ConnectionsPage() {
   const supabase = await createClient();
   const user = await requireUser();
+  const locale = await getLocale();
 
   // ---- Matches (mutual) + last message / unread -------------------------
   const { data: matches } = await supabase
@@ -286,14 +303,21 @@ export default async function ConnectionsPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3 mb-1">
-                        <div className="font-serif text-xl text-navy">
+                        <div className="font-serif text-xl text-navy truncate min-w-0">
                           {displayName(p)}
                         </div>
-                        {msg?.unread ? (
-                          <span className="text-[10px] uppercase tracking-[0.2em] bg-gold text-white px-2 py-0.5 shrink-0">
-                            {msg.unread} {newLabel}
-                          </span>
-                        ) : null}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {msg?.last_at && (
+                            <span className="text-xs text-ink-muted">
+                              {timeAgo(msg.last_at, locale)}
+                            </span>
+                          )}
+                          {msg?.unread ? (
+                            <span className="text-[10px] uppercase tracking-[0.2em] bg-gold text-white px-2 py-0.5">
+                              {msg.unread} {newLabel}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                       <div className="text-xs text-ink-muted mb-2">
                         {roleLine(p)}
