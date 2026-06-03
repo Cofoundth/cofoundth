@@ -539,10 +539,6 @@ export default async function LandingPage() {
                 q: "Thai or English?",
                 a: "Both — use whichever you're comfortable with. The whole platform works in Thai and English.",
               },
-              {
-                q: "How is this different from LinkedIn or co-founder matching apps?",
-                a: "Those start with a transaction. We start with a community. Trust comes first — matching, intros, and partnerships grow on top of it, not the other way around.",
-              },
             ].map((f) => (
               <div
                 key={f.q}
