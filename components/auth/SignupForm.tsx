@@ -58,22 +58,39 @@ export function SignupForm() {
 
   return (
     <form action={formAction} className="space-y-5">
-      <div>
-        <label
-          htmlFor="fullName"
-          className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-        >
-          {tr("Full name")}
-        </label>
-        <input
-          id="fullName"
-          name="fullName"
-          type="text"
-          required
-          autoComplete="name"
-          autoFocus
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="firstName"
+            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+          >
+            {tr("First name")}
+          </label>
+          <input
+            id="firstName"
+            name="firstName"
+            type="text"
+            required
+            autoComplete="given-name"
+            autoFocus
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="lastName"
+            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+          >
+            {tr("Last name")}
+          </label>
+          <input
+            id="lastName"
+            name="lastName"
+            type="text"
+            autoComplete="family-name"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          />
+        </div>
       </div>
 
       <div>

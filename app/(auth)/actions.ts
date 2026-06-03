@@ -23,14 +23,16 @@ export async function signupAction(
   const supabase = await createClient();
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
 
-  const fullName = String(formData.get("fullName") ?? "").trim();
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const fullName = `${firstName} ${lastName}`.trim();
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-  if (!fullName || !email || !password) {
+  if (!firstName || !email || !password) {
     return { step: "credentials", error: "All fields are required." };
   }
   const passwordError = validatePassword(password);
@@ -70,7 +72,7 @@ export async function signupAction(
     email,
     password,
     options: {
-      data: { full_name: fullName },
+      data: { full_name: fullName, first_name: firstName, last_name: lastName },
       emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
     },
   });
