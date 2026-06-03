@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 import {
   ExternalLink,
   Heart,
@@ -14,6 +14,7 @@ import {
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { TagText } from "@/components/TagText";
+import { CommentText } from "@/components/CommentText";
 import { useT } from "@/lib/i18n-client";
 import { t, type Locale } from "@/lib/i18n";
 import type { PostComment, PostItem, PostKind } from "@/lib/post-types";
@@ -81,6 +82,19 @@ export function PostCard({
   const [draft, setDraft] = useState("");
   const [submitting, startSubmit] = useTransition();
   const composerRef = useRef<HTMLTextAreaElement>(null);
+
+  // Map first-name → profile href for @mention links (thread participants:
+  // the post author + everyone who commented).
+  const mentionMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    const add = (a: PostItem["author"] | PostComment["author"]) => {
+      const first = (a?.full_name ?? "").trim().split(/\s+/)[0].toLowerCase();
+      if (first && a && !map[first]) map[first] = `/profile/${a.slug ?? a.id}`;
+    };
+    add(post.author);
+    (comments ?? []).forEach((c) => add(c.author));
+    return map;
+  }, [comments, post.author]);
 
   function replyTo(name: string | null | undefined) {
     const first = (name ?? "").trim().split(/\s+/)[0] || "founder";
@@ -362,7 +376,7 @@ export function PostCard({
                         )}
                       </div>
                       <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap mt-0.5">
-                        <TagText text={c.content} />
+                        <CommentText text={c.content} mentions={mentionMap} />
                       </p>
                       <button
                         type="button"

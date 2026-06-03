@@ -205,8 +205,71 @@ export async function createPostCommentAction(
     console.error("[comment.create]", error);
     return { error: "Couldn't post comment. Try again." };
   }
+  void notifyMentions(postId, user.id, content);
   revalidateFeeds(postId);
   return null;
+}
+
+// Notify @mentioned thread participants (post author + other commenters),
+// matched by first name. The post author is skipped — the comment trigger
+// already notifies them. Notifications are insert-locked by RLS, so we use
+// the service-role client. Best-effort; never blocks the comment.
+async function notifyMentions(
+  postId: string,
+  commenterId: string,
+  content: string,
+) {
+  try {
+    const handles = Array.from(
+      content.matchAll(/(?:^|[^\p{L}\p{N}\p{M}_/])@([\p{L}\p{N}\p{M}]+)/gu),
+    ).map((m) => m[1].toLowerCase());
+    if (!handles.length) return;
+
+    const admin = createAdminClient();
+    const [{ data: post }, { data: commenters }] = await Promise.all([
+      admin.from("forum_posts").select("author_id, title").eq("id", postId).single(),
+      admin.from("forum_comments").select("author_id").eq("post_id", postId),
+    ]);
+
+    const ids = new Set<string>();
+    if (post?.author_id) ids.add(post.author_id as string);
+    (commenters ?? []).forEach((c) => ids.add(c.author_id as string));
+    ids.delete(commenterId);
+    if (post?.author_id) ids.delete(post.author_id as string); // covered by comment trigger
+    if (!ids.size) return;
+
+    const { data: profs } = await admin
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", [...ids]);
+
+    const recipients = (profs ?? []).filter((p) => {
+      const first = (p.full_name as string | null)?.trim().split(/\s+/)[0]?.toLowerCase();
+      return first && handles.includes(first);
+    });
+    if (!recipients.length) return;
+
+    const { data: me } = await admin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", commenterId)
+      .single();
+
+    await admin.from("notifications").insert(
+      recipients.map((r) => ({
+        recipient_id: r.id as string,
+        actor_id: commenterId,
+        type: "mention",
+        entity_id: postId,
+        data: {
+          actor_name: (me?.full_name as string) ?? "Someone",
+          post_title: (post?.title as string) ?? "",
+        },
+      })),
+    );
+  } catch (e) {
+    console.error("[notifyMentions] failed", e);
+  }
 }
 
 export async function deletePostCommentAction(
