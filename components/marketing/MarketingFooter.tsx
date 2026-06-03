@@ -41,7 +41,7 @@ export async function MarketingFooter() {
     <footer className="bg-navy text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
         <div className="grid md:grid-cols-5 gap-10 mb-12">
-          <div className="md:col-span-1">
+          <div className="md:col-span-2">
             <div className="mb-4">
               <Wordmark variant="light" className="text-2xl" />
             </div>
