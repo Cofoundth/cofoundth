@@ -396,27 +396,19 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
               ))}
             </div>
           )}
-          <input
-            list="common-skills"
-            placeholder="React, Sales, Fundraising…"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === ",") {
-                e.preventDefault();
-                const v = e.currentTarget.value
-                  .trim()
-                  .replace(/,$/, "")
-                  .trim();
-                if (v) setSkills((s) => (s.includes(v) ? s : [...s, v]));
-                e.currentTarget.value = "";
-              }
+          <Combobox
+            options={COMMON_SKILLS}
+            value=""
+            onChange={(v) => {
+              const skill = v.trim();
+              if (skill)
+                setSkills((s) => (s.includes(skill) ? s : [...s, skill]));
             }}
+            placeholder="React, Sales, Fundraising…"
+            allowCustom
             className={inputCls}
+            emptyText={tr("Type to add")}
           />
-          <datalist id="common-skills">
-            {COMMON_SKILLS.map((s) => (
-              <option key={s} value={s} />
-            ))}
-          </datalist>
           {skills.map((s) => (
             <input key={s} type="hidden" name="skills" value={s} />
           ))}
