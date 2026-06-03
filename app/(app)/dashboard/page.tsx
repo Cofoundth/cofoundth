@@ -13,20 +13,6 @@ import { getFeedPosts } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
 
-function timeOfDayGreeting(): string {
-  const bangkokHour = new Date().toLocaleString("en-US", {
-    hour: "numeric",
-    hour12: false,
-    timeZone: "Asia/Bangkok",
-  });
-  const h = parseInt(bangkokHour, 10);
-  if (h < 5) return "Working late";
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  if (h < 21) return "Good evening";
-  return "Burning the midnight oil";
-}
-
 function timeAgo(iso: string, locale: Locale): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60_000);
@@ -107,17 +93,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
-      {/* Greeting */}
-      <div className="mb-8 pb-5 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-1.5">
-          {await tServer(timeOfDayGreeting())}
-        </div>
-        <h1 className="text-2xl lg:text-3xl leading-tight">
-          {await tServer("Hello,")}{" "}
-          <span className="text-navy">{firstName}</span>.
-        </h1>
-      </div>
-
       {/* Onboarding prompt — only if not onboarded */}
       {!profile?.onboarded && (
         <div className="bg-white border border-gold/40 p-6 lg:p-8 mb-8">
