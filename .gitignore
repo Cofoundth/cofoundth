@@ -55,3 +55,6 @@ next-env.d.ts
 
 # Claude Code local state
 .claude/
+
+# Local scratch (translator export, etc.)
+/cofoundee_translations.csv
