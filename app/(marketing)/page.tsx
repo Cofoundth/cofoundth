@@ -101,7 +101,7 @@ export default async function LandingPage() {
       .limit(6),
     admin
       .from("forum_posts")
-      .select("id, author_id, content, kind, created_at")
+      .select("id, author_id, content, kind, image_url, link_url, created_at")
       .in("kind", ["milestone", "show_and_tell"])
       .gte("created_at", thirtyDaysAgo)
       .order("created_at", { ascending: false })
@@ -303,9 +303,36 @@ export default async function LandingPage() {
                     <div className="text-[10px] uppercase tracking-[0.2em] text-gold mb-2 inline-flex items-center gap-1.5">
                       {isMilestone ? tr("Milestone") : tr("Shipped")}
                     </div>
-                    <p className="text-sm text-ink leading-relaxed mb-3 line-clamp-3">
+                    <p className="text-sm text-ink leading-relaxed mb-3 whitespace-pre-wrap">
                       {m.content as string}
                     </p>
+                    {m.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.image_url as string}
+                        alt=""
+                        loading="lazy"
+                        className="w-full max-h-56 object-cover border border-line mb-3"
+                      />
+                    ) : null}
+                    {m.link_url ? (
+                      <a
+                        href={m.link_url as string}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 break-all mb-3"
+                      >
+                        {(() => {
+                          try {
+                            return new URL(
+                              m.link_url as string,
+                            ).hostname.replace(/^www\./, "");
+                          } catch {
+                            return m.link_url as string;
+                          }
+                        })()}
+                      </a>
+                    ) : null}
                     <div className="text-xs text-ink-muted">
                       {(author?.full_name as string) ?? "A founder"}
                     </div>
