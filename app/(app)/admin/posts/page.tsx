@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
+import { Paginated } from "@/components/Paginated";
 import { PostRow, type AdminPost } from "./PostRow";
 
 export const dynamic = "force-dynamic";
@@ -64,11 +65,14 @@ export default async function AdminPostsPage() {
           No posts yet.
         </div>
       ) : (
-        <div className="bg-white border border-line divide-y divide-line">
+        <Paginated
+          pageSize={20}
+          className="bg-white border border-line divide-y divide-line"
+        >
           {posts.map((p) => (
             <PostRow key={p.id} post={p} />
           ))}
-        </div>
+        </Paginated>
       )}
     </div>
   );

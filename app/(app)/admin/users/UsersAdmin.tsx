@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Paginated } from "@/components/Paginated";
 import { UserRow, type AdminUser } from "./UserRow";
 
 const FILTERS = [
@@ -80,15 +81,21 @@ export function UsersAdmin({
         </div>
       </div>
       <p className="text-xs text-ink-muted">{filtered.length} shown</p>
-      <div className="bg-white border border-line divide-y divide-line">
-        {filtered.length === 0 ? (
-          <div className="p-8 text-center text-sm text-ink-muted">
-            No users match.
-          </div>
-        ) : (
-          filtered.map((u) => <UserRow key={u.id} user={u} selfId={selfId} />)
-        )}
-      </div>
+      {filtered.length === 0 ? (
+        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted">
+          No users match.
+        </div>
+      ) : (
+        <Paginated
+          key={`${filter}:${query}`}
+          pageSize={20}
+          className="bg-white border border-line divide-y divide-line"
+        >
+          {filtered.map((u) => (
+            <UserRow key={u.id} user={u} selfId={selfId} />
+          ))}
+        </Paginated>
+      )}
     </div>
   );
 }

@@ -109,7 +109,7 @@ export async function AppHeader() {
       isAdminFlag: profile?.is_admin as boolean | null,
     })
   ) {
-    navItems.push({ href: "/admin/reports", label: await tServer("Admin") });
+    navItems.push({ href: "/admin/overview", label: await tServer("Admin") });
   }
 
   return (

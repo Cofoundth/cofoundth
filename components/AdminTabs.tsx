@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useT } from "@/lib/i18n-client";
 
 const TABS = [
+  { href: "/admin/overview", label: "Overview" },
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/posts", label: "Posts" },

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
+import { Paginated } from "@/components/Paginated";
 import { ReportActions } from "./ReportActions";
 import { tServer, getLocale } from "@/lib/i18n-server";
 
@@ -96,7 +97,7 @@ export default async function AdminReportsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <Paginated pageSize={15} className="space-y-3">
           {reports.map((r) => (
             <div
               key={r.id as string}
@@ -164,7 +165,7 @@ export default async function AdminReportsPage() {
               )}
             </div>
           ))}
-        </div>
+        </Paginated>
       )}
     </div>
   );
