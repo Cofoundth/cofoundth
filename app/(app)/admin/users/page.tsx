@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
-import { UserRow, type AdminUser } from "./UserRow";
+import { type AdminUser } from "./UserRow";
+import { UsersAdmin } from "./UsersAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -53,11 +54,7 @@ export default async function AdminUsersPage() {
         </p>
       </div>
 
-      <div className="bg-white border border-line divide-y divide-line">
-        {users.map((u) => (
-          <UserRow key={u.id} user={u} selfId={user!.id} />
-        ))}
-      </div>
+      <UsersAdmin users={users} selfId={user!.id} />
     </div>
   );
 }
