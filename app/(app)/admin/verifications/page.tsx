@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { BadgeCheck, Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
 import { Avatar } from "@/components/Avatar";
 import { VerifyToggle } from "./VerifyToggle";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminVerificationsPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  if (!isAdminEmail(data.user?.email)) notFound();
+  if (!(await isAdminUser(supabase, data.user))) notFound();
 
   // Service-role read to bypass RLS, list all profiles
   const admin = createAdminClient();

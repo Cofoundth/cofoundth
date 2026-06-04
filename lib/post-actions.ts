@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isAdminUser } from "@/lib/admin";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import type { PostComment, PostItem } from "@/lib/post-types";
 
@@ -287,6 +288,82 @@ export async function deletePostCommentAction(
     .eq("id", commentId)
     .eq("author_id", user.id);
   revalidateFeeds(postId);
+}
+
+// ---- Reporting + moderation -----------------------------------------
+
+// Flag a post or comment. Anyone (not the author) can report; lands in
+// /admin/reports. RLS (reports_insert_self) requires reporter_id = auth.uid().
+export async function reportContentAction(
+  kind: "post" | "comment",
+  targetId: string,
+  reason: string,
+): Promise<{ ok?: boolean; error?: string }> {
+  const r = reason.trim();
+  if (kind !== "post" && kind !== "comment") return { error: "Bad target." };
+  if (r.length < 5) return { error: "Add a few words on why." };
+  if (r.length > 1000) return { error: "Reason is too long." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { error } = await supabase
+    .from("reports")
+    .insert({ reporter_id: user.id, target_kind: kind, target_id: targetId, reason: r });
+  if (error) {
+    console.error("[reportContent]", error);
+    return { error: "Couldn't submit the report. Try again." };
+  }
+  return { ok: true };
+}
+
+// Admin-only: act on a report. "remove" deletes the offending content (post /
+// comment / message) and resolves; "resolve" closes it without deleting;
+// "dismiss" marks it dismissed.
+export async function moderateReportAction(
+  reportId: string,
+  decision: "remove" | "resolve" | "dismiss",
+): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!(await isAdminUser(supabase, user))) return { error: "Not allowed." };
+
+  const admin = createAdminClient();
+  const { data: report } = await admin
+    .from("reports")
+    .select("target_kind, target_id")
+    .eq("id", reportId)
+    .single();
+  if (!report) return { error: "Report not found." };
+
+  if (decision === "remove") {
+    const table =
+      report.target_kind === "post"
+        ? "forum_posts"
+        : report.target_kind === "comment"
+          ? "forum_comments"
+          : report.target_kind === "message"
+            ? "messages"
+            : null; // never auto-delete a profile from a report
+    if (table) await admin.from(table).delete().eq("id", report.target_id);
+  }
+
+  await admin
+    .from("reports")
+    .update({
+      status: decision === "dismiss" ? "dismissed" : "resolved",
+      resolved_at: new Date().toISOString(),
+    })
+    .eq("id", reportId);
+
+  revalidatePath("/admin/reports");
+  revalidateFeeds();
+  return { ok: true };
 }
 
 export async function fetchPostCommentsAction(

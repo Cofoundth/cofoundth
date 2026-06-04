@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Plus, Edit3 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
 import { adminListAll } from "@/lib/insights";
 import { togglePublishAction, deleteInsightAction } from "./actions";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminInsightsPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  if (!isAdminEmail(data.user?.email)) notFound();
+  if (!(await isAdminUser(supabase, data.user))) notFound();
 
   const insights = await adminListAll();
 

@@ -683,5 +683,10 @@
   "Profile": "โปรไฟล์",
   "Message": "ข้อความ",
   "Resolved": "แก้ไขแล้ว",
-  "Dismissed": "ปิดเรื่อง"
+  "Dismissed": "ปิดเรื่อง",
+  "Report": "รายงาน",
+  "Reported": "รายงานแล้ว",
+  "What’s wrong with this?": "มีอะไรไม่เหมาะสม?",
+  "Remove content": "ลบเนื้อหา",
+  "Mark resolved": "ทำเครื่องหมายว่าจัดการแล้ว"
 }

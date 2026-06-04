@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdmin } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { signOutAction } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/Avatar";
@@ -20,7 +20,7 @@ export async function AppHeader() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, photo_url, slug")
+    .select("full_name, photo_url, slug, is_admin")
     .eq("id", user.id)
     .single();
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
@@ -103,8 +103,13 @@ export async function AppHeader() {
     // { href: "/insights", label: await tServer("Insights") },
     // { href: "/legal-templates", label: await tServer("Legal") },
   ];
-  if (isAdminEmail(user.email)) {
-    navItems.push({ href: "/admin/insights", label: await tServer("Admin") });
+  if (
+    isAdmin({
+      email: user.email,
+      isAdminFlag: profile?.is_admin as boolean | null,
+    })
+  ) {
+    navItems.push({ href: "/admin/reports", label: await tServer("Admin") });
   }
 
   return (

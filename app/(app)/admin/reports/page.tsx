@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
+import { ReportActions } from "./ReportActions";
 import { tServer, getLocale } from "@/lib/i18n-server";
 
 export default async function AdminReportsPage() {
@@ -13,11 +14,12 @@ export default async function AdminReportsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!isAdminEmail(user?.email)) notFound();
+  if (!(await isAdminUser(supabase, user))) notFound();
 
   const KIND_LABEL: Record<string, string> = {
     profile: await tServer("Profile"),
     post: await tServer("Post"),
+    comment: await tServer("Comment"),
     message: await tServer("Message"),
   };
   const STATUS_LABEL: Record<string, string> = {
@@ -37,6 +39,32 @@ export default async function AdminReportsPage() {
     .select("id, target_kind, target_id, reason, status, created_at, reporter_id")
     .order("created_at", { ascending: false })
     .limit(200);
+
+  // Pull a snippet of the reported content (post/comment/message) so the admin
+  // can judge without leaving the page. Deleted content simply has no snippet.
+  const idsByKind = (kind: string) =>
+    (reports ?? [])
+      .filter((r) => r.target_kind === kind)
+      .map((r) => r.target_id as string);
+  const [{ data: rPosts }, { data: rComments }, { data: rMsgs }] =
+    await Promise.all([
+      idsByKind("post").length
+        ? admin.from("forum_posts").select("id, content").in("id", idsByKind("post"))
+        : Promise.resolve({ data: [] as { id: string; content: string }[] }),
+      idsByKind("comment").length
+        ? admin
+            .from("forum_comments")
+            .select("id, content")
+            .in("id", idsByKind("comment"))
+        : Promise.resolve({ data: [] as { id: string; content: string }[] }),
+      idsByKind("message").length
+        ? admin.from("messages").select("id, content").in("id", idsByKind("message"))
+        : Promise.resolve({ data: [] as { id: string; content: string }[] }),
+    ]);
+  const contentMap = new Map<string, string>();
+  for (const row of [...(rPosts ?? []), ...(rComments ?? []), ...(rMsgs ?? [])]) {
+    contentMap.set(row.id as string, row.content as string);
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
@@ -99,6 +127,11 @@ export default async function AdminReportsPage() {
               <p className="text-sm text-ink leading-relaxed mb-3">
                 {r.reason as string}
               </p>
+              {contentMap.has(r.target_id as string) && (
+                <div className="bg-cream border-l-2 border-gold p-3 text-sm text-ink mb-3 whitespace-pre-wrap line-clamp-4">
+                  {contentMap.get(r.target_id as string)}
+                </div>
+              )}
               <div className="text-xs text-ink-muted flex gap-4">
                 <span>
                   {reporterLabel}{" "}
@@ -123,6 +156,12 @@ export default async function AdminReportsPage() {
                   )}
                 </span>
               </div>
+              {r.status === "open" && (
+                <ReportActions
+                  reportId={r.id as string}
+                  canRemove={r.target_kind !== "profile"}
+                />
+              )}
             </div>
           ))}
         </div>

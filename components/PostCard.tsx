@@ -15,6 +15,7 @@ import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { TagText } from "@/components/TagText";
 import { CommentText } from "@/components/CommentText";
+import { ReportButton } from "@/components/ReportButton";
 import { useT } from "@/lib/i18n-client";
 import { t, type Locale } from "@/lib/i18n";
 import type { PostComment, PostItem, PostKind } from "@/lib/post-types";
@@ -298,6 +299,12 @@ export function PostCard({
                 className="inline-flex items-center gap-1 text-ink-muted hover:text-navy transition-colors ml-auto"
               />
             </div>
+
+            {!post.isOwn && (
+              <div className="mt-2">
+                <ReportButton kind="post" targetId={post.id} />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -378,13 +385,18 @@ export function PostCard({
                       <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap mt-0.5">
                         <CommentText text={c.content} mentions={mentionMap} />
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => replyTo(c.author?.full_name)}
-                        className="mt-1 text-[11px] text-ink-muted hover:text-navy tracking-wide"
-                      >
-                        {tr("Reply")}
-                      </button>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <button
+                          type="button"
+                          onClick={() => replyTo(c.author?.full_name)}
+                          className="text-[11px] text-ink-muted hover:text-navy tracking-wide"
+                        >
+                          {tr("Reply")}
+                        </button>
+                        {!c.isOwn && (
+                          <ReportButton kind="comment" targetId={c.id} />
+                        )}
+                      </div>
                     </div>
                   </li>
                 );
