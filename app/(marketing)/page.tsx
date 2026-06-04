@@ -98,11 +98,13 @@ export default async function LandingPage() {
       .from("profiles")
       .select("id, full_name, photo_url, i_am, intent, slug, location, pitch")
       .eq("onboarded", true)
+      .eq("suspended", false)
       .order("created_at", { ascending: false })
       .limit(6),
     admin
       .from("forum_posts")
       .select("id, author_id, content, kind, image_url, link_url, created_at")
+      .eq("hidden", false)
       .in("kind", ["milestone", "show_and_tell"])
       .gte("created_at", thirtyDaysAgo)
       .order("created_at", { ascending: false })
@@ -110,11 +112,13 @@ export default async function LandingPage() {
     admin
       .from("profiles")
       .select("id", { count: "exact", head: true })
-      .eq("onboarded", true),
+      .eq("onboarded", true)
+      .eq("suspended", false),
     admin
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("onboarded", true)
+      .eq("suspended", false)
       .gte("created_at", sevenDaysAgo),
     admin
       .from("forum_posts")

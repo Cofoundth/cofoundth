@@ -15,6 +15,7 @@ export default async function BrowsePage() {
     .from("profiles")
     .select(PROFILE_COLUMNS)
     .eq("onboarded", true)
+    .eq("suspended", false)
     .neq("id", user.id);
 
   const othersAdapted = (others ?? []).map((p) => ({

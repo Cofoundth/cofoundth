@@ -15,6 +15,7 @@ import {
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { provinceLabel } from "@/lib/provinces";
+import { isAdminUser } from "@/lib/admin";
 import { SocialLinks } from "@/components/SocialIcons";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
@@ -52,7 +53,7 @@ export async function generateMetadata({
 }
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, verified, onboarded, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, verified, onboarded, suspended, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
 
 const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   open_to_partnerships: {
@@ -101,6 +102,15 @@ export default async function ProfileDetailPage({ params }: Props) {
   }
 
   const isOwnProfile = user?.id === profile.id;
+
+  // Suspended profiles are hidden from everyone but the owner and admins.
+  if (
+    profile.suspended &&
+    !isOwnProfile &&
+    !(await isAdminUser(supabase, user))
+  ) {
+    notFound();
+  }
 
   // Track view — at most one row per (viewer, viewed, UTC day) thanks to the
   // `profile_views_unique_per_day` index (see migration 0010). The duplicate

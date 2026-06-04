@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { useT } from "@/lib/i18n-client";
 
 const TABS = [
-  { href: "/admin/insights", label: "Insights" },
   { href: "/admin/reports", label: "Reports" },
-  { href: "/admin/verifications", label: "Verifications" },
+  { href: "/admin/users", label: "Users" },
+  { href: "/admin/posts", label: "Posts" },
+  { href: "/admin/insights", label: "Insights" },
 ];
 
 export function AdminTabs() {

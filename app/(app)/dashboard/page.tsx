@@ -44,6 +44,7 @@ export default async function DashboardPage() {
       .from("profiles")
       .select("id, full_name, photo_url, i_am, intent, slug, created_at")
       .eq("onboarded", true)
+      .eq("suspended", false)
       .neq("id", user.id)
       .order("created_at", { ascending: false })
       .limit(4),

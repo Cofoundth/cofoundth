@@ -88,6 +88,7 @@ export async function getFeedPosts(
   let q = supabase
     .from("forum_posts")
     .select(POST_COLS)
+    .eq("hidden", false)
     .order("created_at", { ascending: false })
     .limit(limit);
   // Cursor pagination: fetch the page strictly older than `before`.
@@ -120,6 +121,7 @@ export async function searchPosts(
     supabase
       .from("forum_posts")
       .select(POST_COLS)
+      .eq("hidden", false)
       .order("created_at", { ascending: false })
       .limit(limit);
 
