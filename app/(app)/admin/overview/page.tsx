@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
-import { MiniBarChart } from "@/components/MiniBarChart";
+import { TrendChart } from "@/components/TrendChart";
 
 export const dynamic = "force-dynamic";
 
@@ -94,6 +94,13 @@ export default async function AdminOverviewPage() {
     },
   ];
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const dates = Array.from({ length: DAYS }, (_, i) => {
+    const d = new Date(todayStart.getTime() - (DAYS - 1 - i) * DAY_MS);
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  });
+
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <AdminTabs />
@@ -114,17 +121,29 @@ export default async function AdminOverviewPage() {
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-1">
               {c.label}
             </div>
-            <div className="flex items-baseline gap-2 mb-3">
+            <div className="flex items-baseline gap-2">
               <span className="font-serif text-3xl text-navy">{c.total}</span>
               <span className="text-xs text-gold">+{c.week} this week</span>
             </div>
-            <MiniBarChart data={c.data} color={c.color} />
           </div>
         ))}
       </div>
-      <p className="text-[11px] text-ink-muted mt-3">
-        Charts show daily counts over the last {DAYS} days. They&rsquo;ll fill
-        in as activity grows.
+
+      <div className="bg-white border border-line p-5 mt-4">
+        <div className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
+          Daily activity · last {DAYS} days
+        </div>
+        <TrendChart
+          dates={dates}
+          series={cards.map((c) => ({
+            name: c.label,
+            data: c.data,
+            color: c.color,
+          }))}
+        />
+      </div>
+      <p className="text-[11px] text-ink-muted mt-2">
+        It&rsquo;ll fill in as activity grows.
       </p>
     </div>
   );

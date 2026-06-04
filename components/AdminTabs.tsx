@@ -9,7 +9,9 @@ const TABS = [
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/posts", label: "Posts" },
-  { href: "/admin/insights", label: "Insights" },
+  // Insights (blog) hidden for now — public Insights pages aren't linked.
+  // Re-enable when the blog goes live.
+  // { href: "/admin/insights", label: "Insights" },
 ];
 
 export function AdminTabs() {
