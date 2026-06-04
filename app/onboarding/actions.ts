@@ -145,6 +145,12 @@ export async function saveOnboardingAction(
     return { error: "Your pitch must be at least 120 characters." };
   if (pitch.length > 500)
     return { error: "Your pitch must be 500 characters or less." };
+  // Reject unedited pitch templates — they still carry [ ] placeholders.
+  if (/\[[^\]]+\]/.test(pitch))
+    return {
+      error:
+        "Replace the [ ] placeholders with your real details — don't submit the template as-is.",
+    };
   if (!PROFILE_TYPES.includes(profile_type as never))
     return { error: "Invalid profile type." };
   if (profile_type === "company" && !company_name)
