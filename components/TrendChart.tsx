@@ -11,20 +11,24 @@ export type TrendSeries = { name: string; data: number[]; color: string };
 export function TrendChart({
   dates,
   series,
+  showLegend = true,
 }: {
   dates: string[];
   series: TrendSeries[];
+  showLegend?: boolean;
 }) {
   const option = {
     color: series.map((s) => s.color),
     tooltip: { trigger: "axis" },
-    legend: {
-      data: series.map((s) => s.name),
-      bottom: 0,
-      icon: "roundRect",
-      textStyle: { color: "#4A4A4A", fontSize: 11 },
-    },
-    grid: { left: 30, right: 14, top: 14, bottom: 40 },
+    legend: showLegend
+      ? {
+          data: series.map((s) => s.name),
+          bottom: 0,
+          icon: "roundRect",
+          textStyle: { color: "#4A4A4A", fontSize: 11 },
+        }
+      : { show: false },
+    grid: { left: 30, right: 14, top: 14, bottom: showLegend ? 40 : 24 },
     xAxis: {
       type: "category",
       boundaryGap: false,

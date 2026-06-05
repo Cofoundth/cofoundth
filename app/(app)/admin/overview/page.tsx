@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
-import { TrendChart } from "@/components/TrendChart";
+import { TrendTabs } from "@/components/TrendTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -133,7 +133,7 @@ export default async function AdminOverviewPage() {
         <div className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
           Daily activity · last {DAYS} days
         </div>
-        <TrendChart
+        <TrendTabs
           dates={dates}
           series={cards.map((c) => ({
             name: c.label,
