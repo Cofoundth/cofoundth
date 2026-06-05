@@ -133,7 +133,7 @@ export async function AppHeader() {
             />
             <Link href="/dashboard" className="flex items-center gap-2.5">
               <BrandMark size="sm" />
-              <Wordmark className="text-base" />
+              <Wordmark className="text-base hidden sm:inline" />
             </Link>
             <nav className="hidden lg:flex items-center gap-1">
               {navItems.map((i) => (
