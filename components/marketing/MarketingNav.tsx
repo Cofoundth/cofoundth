@@ -20,29 +20,29 @@ export async function MarketingNav() {
 
   return (
     <nav className="bg-white border-b border-line">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10">
-        <div className="flex items-center justify-between h-20">
-          <Link href="/" className="flex items-center gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
             <BrandMark size="md" />
-            <div className="text-left">
-              <Wordmark />
-              <div className="text-[10px] text-ink-muted uppercase tracking-[0.2em] mt-1">
+            <div className="text-left min-w-0">
+              <Wordmark className="!text-base sm:!text-2xl" />
+              <div className="hidden sm:block text-[10px] text-ink-muted uppercase tracking-[0.2em] mt-1">
                 {tr("Est. 2026 · Bangkok")}
               </div>
             </div>
           </Link>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <LanguageSwitcher />
             <Link
               href="/login"
-              className="text-sm text-ink hover:text-navy tracking-wide"
+              className="text-sm text-ink hover:text-navy tracking-wide whitespace-nowrap"
             >
               {tr("Sign in")}
             </Link>
             <Link
               href="/signup"
-              className="px-4 sm:px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors whitespace-nowrap"
+              className="px-3 sm:px-5 py-2 sm:py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors whitespace-nowrap"
             >
               {tr("Join Cofoundee")}
             </Link>
