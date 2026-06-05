@@ -2,13 +2,15 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Send } from "lucide-react";
-import { createCommentAction, type CommentState } from "./actions";
+import { createPostCommentAction, type PostFormState } from "@/lib/post-actions";
+import { useT } from "@/lib/i18n-client";
 
-const INITIAL: CommentState = null;
+const INITIAL: PostFormState = null;
 
 export function CommentComposer({ postId }: { postId: string }) {
-  const action = createCommentAction.bind(null, postId);
-  const [state, formAction, isPending] = useActionState<CommentState, FormData>(
+  const tr = useT();
+  const action = createPostCommentAction.bind(null, postId);
+  const [state, formAction, isPending] = useActionState<PostFormState, FormData>(
     action,
     INITIAL,
   );
@@ -27,7 +29,7 @@ export function CommentComposer({ postId }: { postId: string }) {
         rows={3}
         maxLength={2000}
         required
-        placeholder="Add your comment…"
+        placeholder={tr("Add your comment…")}
         className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y"
       />
       {state?.error && (
@@ -40,7 +42,7 @@ export function CommentComposer({ postId }: { postId: string }) {
           className="px-5 py-2.5 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide inline-flex items-center gap-2"
         >
           <Send className="w-4 h-4" />
-          {isPending ? "Posting…" : "Comment"}
+          {isPending ? tr("Posting…") : tr("Comment")}
         </button>
       </div>
     </form>

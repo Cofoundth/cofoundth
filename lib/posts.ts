@@ -11,6 +11,18 @@ const POST_COLS =
 
 type PostRow = Record<string, unknown>;
 
+// Hidden/suspended authors shouldn't surface in the public feed or search —
+// hiding a user must hide their posts too. Returns the (small) set of
+// suspended profile ids to exclude. Best-effort: if it returns nothing, the
+// feed simply isn't filtered (no worse than before).
+async function suspendedAuthorIds(supabase: DB): Promise<string[]> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("suspended", true);
+  return (data ?? []).map((r) => r.id as string);
+}
+
 // Turn raw forum_posts rows into PostItems (authors, like + comment counts).
 async function shapePosts(
   supabase: DB,
@@ -93,6 +105,9 @@ export async function getFeedPosts(
     .limit(limit);
   // Cursor pagination: fetch the page strictly older than `before`.
   if (before) q = q.lt("created_at", before);
+  const hiddenAuthors = await suspendedAuthorIds(supabase);
+  if (hiddenAuthors.length)
+    q = q.not("author_id", "in", `(${hiddenAuthors.join(",")})`);
 
   const { data: posts } = await q;
   return shapePosts(supabase, posts ?? [], userId);
@@ -117,13 +132,18 @@ export async function searchPosts(
     .limit(50);
   const authorIds = (namedAuthors ?? []).map((a) => a.id as string);
 
-  const base = () =>
-    supabase
+  const hiddenAuthors = await suspendedAuthorIds(supabase);
+  const base = () => {
+    let b = supabase
       .from("forum_posts")
       .select(POST_COLS)
       .eq("hidden", false)
       .order("created_at", { ascending: false })
       .limit(limit);
+    if (hiddenAuthors.length)
+      b = b.not("author_id", "in", `(${hiddenAuthors.join(",")})`);
+    return b;
+  };
 
   const [byContent, byTitle, byTag, byAuthor] = await Promise.all([
     base().ilike("content", like),
