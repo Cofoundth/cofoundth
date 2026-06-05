@@ -59,12 +59,11 @@ export function MobileMenu({
                 </Link>
               ))}
               {footer ? (
-                <div
-                  className="py-3 flex flex-col gap-2"
-                  onClick={() => setOpen(false)}
-                >
-                  {footer}
-                </div>
+                // No onClick={() => setOpen(false)} here: the footer holds the
+                // sign-out <form>, and closing the menu would synchronously
+                // unmount the form before its server action fires, cancelling
+                // the submit. signOutAction redirects, so the menu closes anyway.
+                <div className="py-3 flex flex-col gap-2">{footer}</div>
               ) : null}
             </nav>
           </div>
