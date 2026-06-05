@@ -24,7 +24,7 @@ export function PostRow({ post }: { post: AdminPost }) {
 
   return (
     <div className="p-4">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="text-xs text-ink-muted mb-1 flex items-center gap-2">
             <Link
