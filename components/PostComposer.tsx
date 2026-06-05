@@ -215,11 +215,13 @@ export function PostComposer() {
             <ImagePlus className="w-3.5 h-3.5" strokeWidth={1.5} />
             {tr("Photo")}
           </button>
-          <span
-            className={`tabular-nums ${tooLong ? "text-red-700" : "text-ink-muted"}`}
-          >
-            {remaining}
-          </span>
+          {remaining < 500 && (
+            <span
+              className={`tabular-nums ${tooLong ? "text-red-700" : "text-ink-muted"}`}
+            >
+              {remaining}
+            </span>
+          )}
         </div>
         <button
           type="submit"
