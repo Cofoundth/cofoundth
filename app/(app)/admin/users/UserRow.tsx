@@ -20,6 +20,7 @@ export type AdminUser = {
   suspended: boolean;
   verified: boolean;
   isAdmin: boolean;
+  isBot: boolean;
 };
 
 const btn =
@@ -54,6 +55,11 @@ export function UserRow({ user, selfId }: { user: AdminUser; selfId: string }) {
       <div className="flex-1 min-w-0">
         <div className="text-sm text-navy font-medium flex items-center gap-2 flex-wrap">
           <span className="truncate">{user.fullName ?? "—"}</span>
+          {user.isBot && (
+            <span className="text-[9px] uppercase tracking-[0.12em] px-1.5 py-0.5 bg-navy text-white">
+              Bot
+            </span>
+          )}
           {user.isAdmin && <Badge tone="gold">Admin</Badge>}
           {user.verified && <Badge tone="gold">Verified</Badge>}
           {user.suspended && <Badge tone="red">Hidden</Badge>}

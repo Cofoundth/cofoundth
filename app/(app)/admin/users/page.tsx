@@ -19,7 +19,7 @@ export default async function AdminUsersPage() {
   const { data: rows } = await admin
     .from("profiles")
     .select(
-      "id, full_name, email, photo_url, slug, onboarded, suspended, verified, is_admin, created_at",
+      "id, full_name, email, photo_url, slug, onboarded, suspended, verified, is_admin, is_bot, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -39,6 +39,7 @@ export default async function AdminUsersPage() {
     suspended: !!u.suspended,
     verified: !!u.verified,
     isAdmin: !!u.is_admin,
+    isBot: !!u.is_bot,
   }));
 
   return (
