@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BadgeCheck, Building2, MapPin } from "lucide-react";
+import { BadgeCheck, Building2, ExternalLink, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -12,7 +12,7 @@ import {
   RUNWAY_LABELS,
   EXPERIENCE_LABELS,
 } from "@/lib/matching";
-import { tServer, getLocale } from "@/lib/i18n-server";
+import { getLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { provinceLabel } from "@/lib/provinces";
 import { isAdminUser } from "@/lib/admin";
@@ -53,7 +53,7 @@ export async function generateMetadata({
 }
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, verified, onboarded, suspended, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, verified, onboarded, suspended, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
 
 const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   open_to_partnerships: {
@@ -181,229 +181,237 @@ export default async function ProfileDetailPage({ params }: Props) {
     }
   }
 
+  const isCompany = profile.type === "company";
   const otherName =
-    profile.type === "company" && profile.company_name
+    isCompany && profile.company_name
       ? (profile.company_name as string)
       : (profile.full_name as string);
 
-  return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+  // ---- Presentation-ready labels (sync via t(…, locale)) ----------------
+  const rolesLabel = ((profile.i_am as string[] | null) ?? [])
+    .map((r) => t(ROLE_LABELS[r] ?? r, locale))
+    .filter(Boolean)
+    .join(" · ");
+  const intentLabel = ((profile.intent as string[] | null) ?? [])
+    .map((x) => t(INTENT_LABELS[x] ?? x, locale))
+    .filter(Boolean)
+    .join(" · ");
+  const lookingForLabels = ((profile.looking_for as string[] | null) ?? [])
+    .map((r) => t(ROLE_LABELS[r] ?? r, locale))
+    .filter(Boolean);
+  const skills = (profile.skills as string[] | null) ?? [];
+  const statusTags = (profile.status_tags as string[] | null) ?? [];
+  const capabilities = (profile.capabilities as string[] | null) ?? [];
+  const partnershipSeeking =
+    (profile.partnership_seeking as string[] | null) ?? [];
+  const projectUrl = (profile.project_url as string | null) ?? null;
+  const projectImages = (profile.project_images as string[] | null) ?? [];
+  const seeking = isCompany ? partnershipSeeking : lookingForLabels;
+  const hasAbout = Boolean(
+    profile.background ||
+      profile.work_experience ||
+      profile.education ||
+      skills.length,
+  );
 
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-10">
       {relationship === "incoming" && !isOwnProfile && (
         <IncomingInterestBanner toId={profile.id} otherName={otherName} />
       )}
 
-      <div className="grid lg:grid-cols-12 gap-10">
-        {/* Main column */}
-        <div className="lg:col-span-8">
-          {/* Header */}
-          <header className="bg-white border border-line p-8 lg:p-10 mb-6">
-            <div className="flex items-start gap-6 mb-6">
-              <Avatar
-                name={profile.full_name}
-                url={profile.photo_url}
-                size="xl"
-              />
-              <div className="flex-1">
-                <h1 className="text-3xl mb-2 inline-flex items-center gap-2 flex-wrap">
-                  {profile.type === "company" && profile.company_name
-                    ? profile.company_name
-                    : profile.full_name}
-                  {profile.verified && (
-                    <BadgeCheck
-                      className="w-6 h-6 text-gold shrink-0"
-                      strokeWidth={1.5}
-                      aria-label="Verified founder"
-                    />
-                  )}
-                  {profile.type === "company" && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold font-sans">
-                      <Building2 className="w-3 h-3" strokeWidth={2} />
-                      Company
-                    </span>
-                  )}
-                  {profile.age && profile.type !== "company" && (
-                    <span className="text-ink-muted text-xl font-sans">
-                      , {profile.age}
-                    </span>
-                  )}
-                </h1>
-                {profile.type === "company" && (
-                  <div className="text-sm text-ink-muted mb-2">
-                    {await tServer("Represented by")}{" "}
-                    <span className="text-navy font-medium">
-                      {profile.full_name}
-                    </span>
-                  </div>
-                )}
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted mb-2">
-                  {(profile.i_am ?? []).length > 0 && (
-                    <span className="text-navy font-medium">
-                      {(profile.i_am ?? [])
-                        .map((r: string) => t(ROLE_LABELS[r], locale))
-                        .join(" · ")}
-                    </span>
-                  )}
-                  {(profile.intent ?? []).length > 0 && (
-                    <span className="text-gold">
-                      &middot;{" "}
-                      {(profile.intent ?? [])
-                        .map((x: string) => t(INTENT_LABELS[x], locale))
-                        .join(" · ")}
-                    </span>
-                  )}
-                  {profile.location && (
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />{" "}
-                      {provinceLabel(profile.location as string, locale)}
-                    </span>
-                  )}
-                </div>
-                {(profile.looking_for ?? []).length > 0 && (
-                  <div className="text-sm text-ink mt-3">
-                    <span className="text-ink-muted">
-                      {await tServer("Looking for:")}{" "}
-                    </span>
-                    {(
-                      await Promise.all(
-                        (profile.looking_for ?? [])
-                          .map((r: string) => ROLE_LABELS[r])
-                          .filter(Boolean)
-                          .map((s: string) => tServer(s)),
-                      )
-                    ).join(", ")}
-                  </div>
-                )}
-                {profile.type === "company" &&
-                  ((profile.capabilities ?? []) as string[]).length > 0 && (
-                    <div className="text-sm text-ink mt-3">
-                      <span className="text-ink-muted">
-                        {await tServer("Capabilities:")}{" "}
-                      </span>
-                      {((profile.capabilities ?? []) as string[]).join(", ")}
-                    </div>
-                  )}
-                {profile.type === "company" &&
-                  ((profile.partnership_seeking ?? []) as string[]).length >
-                    0 && (
-                    <div className="text-sm text-ink mt-3">
-                      <span className="text-ink-muted">
-                        {await tServer("Seeking: ")}
-                      </span>
-                      {(
-                        (profile.partnership_seeking ?? []) as string[]
-                      ).join(", ")}
-                    </div>
-                  )}
-                {((profile.status_tags ?? []) as string[]).length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {await Promise.all(
-                      ((profile.status_tags ?? []) as string[]).map(
-                        async (t) => {
-                          const meta = STATUS_TAG_LABELS[t];
-                          if (!meta) return null;
-                          return (
-                            <span
-                              key={t}
-                              className={`text-[10px] uppercase tracking-[0.15em] px-2 py-1 border ${meta.tone}`}
-                            >
-                              {await tServer(meta.en)}
-                            </span>
-                          );
-                        },
-                      ),
-                    )}
-                  </div>
-                )}
+      {/* ---- Hero ---- */}
+      <header className="bg-cream border border-line p-6 sm:p-8 lg:p-10 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
+          <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
+          <div className="flex-1 min-w-0">
+            <h1 className="font-serif text-3xl sm:text-4xl text-navy leading-tight flex items-center gap-2.5 flex-wrap">
+              {otherName}
+              {profile.verified && (
+                <BadgeCheck
+                  className="w-6 h-6 text-gold shrink-0"
+                  strokeWidth={1.5}
+                  aria-label="Verified founder"
+                />
+              )}
+              {isCompany && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold font-sans">
+                  <Building2 className="w-3 h-3" strokeWidth={2} />
+                  {t("Company", locale)}
+                </span>
+              )}
+              {profile.age && !isCompany && (
+                <span className="text-ink-muted text-xl font-sans">
+                  , {profile.age}
+                </span>
+              )}
+            </h1>
+
+            {isCompany && (
+              <div className="text-sm text-ink-muted mt-1">
+                {t("Represented by", locale)}{" "}
+                <span className="text-navy font-medium">
+                  {profile.full_name}
+                </span>
               </div>
+            )}
+
+            <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
+              {rolesLabel && (
+                <span className="text-navy font-medium">{rolesLabel}</span>
+              )}
+              {intentLabel && <span className="text-gold">· {intentLabel}</span>}
+              {profile.location && (
+                <span className="inline-flex items-center gap-1 text-ink-muted">
+                  <MapPin className="w-3.5 h-3.5" />{" "}
+                  {provinceLabel(profile.location as string, locale)}
+                </span>
+              )}
             </div>
-          </header>
 
-          {/* The Pitch */}
-          {profile.pitch && (
-            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
-                {await tServer("The Pitch")}
+            {statusTags.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {statusTags.map((tag) => {
+                  const meta = STATUS_TAG_LABELS[tag];
+                  if (!meta) return null;
+                  return (
+                    <span
+                      key={tag}
+                      className={`text-[10px] uppercase tracking-[0.15em] px-2 py-1 border ${meta.tone}`}
+                    >
+                      {t(meta.en, locale)}
+                    </span>
+                  );
+                })}
               </div>
-              <p className="font-serif text-lg text-ink leading-relaxed">
-                {profile.pitch}
-              </p>
-            </section>
-          )}
+            )}
+          </div>
+        </div>
+      </header>
 
-          {/* Why this, why now */}
-          {profile.why_this && (
-            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
-                {await tServer("Why this, why now")}
-              </div>
-              <p className="text-ink leading-relaxed">{profile.why_this}</p>
-            </section>
-          )}
-
-          {/* Background / track record */}
-          {profile.background && (
-            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
-              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-3">
-                {await tServer("Background")}
-              </div>
-              <p className="text-ink leading-relaxed whitespace-pre-line">
-                {profile.background}
-              </p>
-            </section>
-          )}
-
-          {/* Work experience */}
-          {profile.work_experience && (
-            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
-              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-3">
-                {await tServer("Work experience")}
-              </div>
-              <p className="text-ink leading-relaxed whitespace-pre-line">
-                {profile.work_experience as string}
-              </p>
-            </section>
-          )}
-
-          {/* Education */}
-          {profile.education && (
-            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
-              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-3">
-                {await tServer("Education")}
-              </div>
-              <p className="text-ink leading-relaxed whitespace-pre-line">
-                {profile.education as string}
-              </p>
-            </section>
-          )}
-
-          {/* Skills */}
-          {(profile.skills ?? []).length > 0 && (
-            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
+      <div className="grid lg:grid-cols-12 gap-8 lg:gap-10">
+        {/* ---- Main column ---- */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* What I'm building */}
+          {(profile.pitch ||
+            capabilities.length > 0 ||
+            projectImages.length > 0 ||
+            projectUrl) && (
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
               <div className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
-                {await tServer("Skills & expertise")}
+                {t("About me", locale)}
               </div>
-              <div className="flex flex-wrap gap-2">
-                {(profile.skills as string[]).map((s) => (
-                  <span
-                    key={s}
-                    className="px-3 py-1.5 border border-line text-sm text-ink"
-                  >
-                    {s}
+              {profile.pitch && (
+                <div className="border-l-2 border-gold pl-5">
+                  <p className="font-serif text-xl sm:text-2xl text-navy leading-relaxed">
+                    {profile.pitch}
+                  </p>
+                </div>
+              )}
+              {profile.why_this && (
+                <p className="mt-6 text-ink leading-relaxed">
+                  {profile.why_this}
+                </p>
+              )}
+              {projectImages.length > 0 && (
+                <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {projectImages.map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block border border-line overflow-hidden hover:border-navy transition-colors"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt=""
+                        className="w-full h-32 object-cover"
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
+              {projectUrl && (
+                <a
+                  href={projectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-5 inline-flex items-center gap-2 text-sm text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 break-all"
+                >
+                  <ExternalLink className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                  {(() => {
+                    try {
+                      return new URL(projectUrl).hostname.replace(/^www\./, "");
+                    } catch {
+                      return projectUrl;
+                    }
+                  })()}
+                </a>
+              )}
+              {capabilities.length > 0 && (
+                <div className="mt-6 pt-5 border-t border-line text-sm text-ink">
+                  <span className="text-ink-muted">
+                    {t("Capabilities:", locale)}{" "}
                   </span>
-                ))}
+                  {capabilities.join(", ")}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Who I am */}
+          {hasAbout && (
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+              <div className="text-xs uppercase tracking-[0.2em] text-gold mb-5">
+                {t("Background & experience", locale)}
+              </div>
+              <div className="space-y-5">
+                {profile.background && (
+                  <AboutBlock label={t("Background", locale)}>
+                    {profile.background as string}
+                  </AboutBlock>
+                )}
+                {profile.work_experience && (
+                  <AboutBlock label={t("Work experience", locale)}>
+                    {profile.work_experience as string}
+                  </AboutBlock>
+                )}
+                {profile.education && (
+                  <AboutBlock label={t("Education", locale)}>
+                    {profile.education as string}
+                  </AboutBlock>
+                )}
+                {skills.length > 0 && (
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                      {t("Skills & expertise", locale)}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((s) => (
+                        <span
+                          key={s}
+                          className="px-3 py-1.5 border border-line text-sm text-ink"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           )}
 
+          {/* Recent milestones */}
           {(recentMilestones?.length ?? 0) > 0 && (
-            <section className="bg-white border border-line p-8 lg:p-10 mb-6">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
               <div className="text-xs uppercase tracking-[0.2em] text-gold mb-5">
-                {await tServer("Recent milestones & launches")}
+                {t("Recent milestones & launches", locale)}
               </div>
               <div className="space-y-4">
-                {await Promise.all(
-                  (recentMilestones ?? []).map(async (m) => {
+                {(recentMilestones ?? []).map((m) => {
                   const isMilestone = m.kind === "milestone";
                   return (
                     <div
@@ -415,17 +423,11 @@ export default async function ProfileDetailPage({ params }: Props) {
                       }`}
                     >
                       <div className="text-[10px] uppercase tracking-[0.2em] mb-1.5">
-                        <span
-                          className={
-                            isMilestone ? "text-gold" : "text-navy"
-                          }
-                        >
-                          {await tServer(isMilestone ? "Milestone" : "Shipped")}
+                        <span className={isMilestone ? "text-gold" : "text-navy"}>
+                          {t(isMilestone ? "Milestone" : "Shipped", locale)}
                         </span>
                         <span className="text-ink-muted ml-2">
-                          {new Date(
-                            m.created_at as string,
-                          ).toLocaleDateString(
+                          {new Date(m.created_at as string).toLocaleDateString(
                             locale === "th" ? "th-TH" : "en-GB",
                             { day: "numeric", month: "short" },
                           )}
@@ -454,15 +456,29 @@ export default async function ProfileDetailPage({ params }: Props) {
                       )}
                     </div>
                   );
-                  }),
-                )}
+                })}
               </div>
             </section>
           )}
         </div>
 
-        {/* Sidebar */}
-        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24 self-start">
+        {/* ---- Sidebar ---- */}
+        <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-24 self-start">
+          {/* What I'm looking for — the headline ask */}
+          {seeking.length > 0 && (
+            <div className="bg-navy p-6">
+              <div className="text-xs uppercase tracking-[0.2em] text-gold mb-2.5">
+                {t("Looking for", locale)}
+              </div>
+              <div className="font-serif text-lg text-white leading-snug">
+                {seeking.join(" · ")}
+              </div>
+              {intentLabel && !isCompany && (
+                <div className="text-sm text-white/60 mt-2">{intentLabel}</div>
+              )}
+            </div>
+          )}
+
           {!isOwnProfile && (
             <>
               {relationship !== "incoming" && (
@@ -482,27 +498,29 @@ export default async function ProfileDetailPage({ params }: Props) {
           {isOwnProfile && (
             <div className="bg-cream border border-gold/40 p-6 text-center">
               <p className="text-sm text-ink mb-3">
-                {await tServer(
+                {t(
                   profile.onboarded
                     ? "This is your own profile."
                     : "Finish setting up your profile.",
+                  locale,
                 )}
               </p>
               <Link
                 href={profile.onboarded ? "/settings" : "/onboarding"}
                 className="inline-block px-4 py-2 border border-navy text-navy hover:bg-navy hover:text-white text-sm tracking-wide transition-colors"
               >
-                {await tServer(
+                {t(
                   profile.onboarded ? "Edit profile" : "Complete profile",
+                  locale,
                 )}
               </Link>
             </div>
           )}
 
-          {/* Facts */}
+          {/* Founder facts */}
           <div className="bg-white border border-line p-6 space-y-4 text-sm">
             <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-2">
-              {await tServer("Founder facts")}
+              {t("Founder facts", locale)}
             </div>
             <Fact
               label={t("Stage", locale)}
@@ -559,6 +577,23 @@ export default async function ProfileDetailPage({ params }: Props) {
           )}
         </aside>
       </div>
+    </div>
+  );
+}
+
+function AboutBlock({
+  label,
+  children,
+}: {
+  label: string;
+  children: string;
+}) {
+  return (
+    <div>
+      <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-1.5">
+        {label}
+      </div>
+      <p className="text-ink leading-relaxed whitespace-pre-line">{children}</p>
     </div>
   );
 }

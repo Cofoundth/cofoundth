@@ -11,10 +11,12 @@ export default async function BrowsePage() {
   const user = await requireUser();
 
   // All other onboarded founders
+  // Only complete profiles (name + role + looking-for + About me) appear in the
+  // directory — see the profile_complete trigger (migration 0046).
   const { data: others } = await supabase
     .from("profiles")
     .select(PROFILE_COLUMNS)
-    .eq("onboarded", true)
+    .eq("profile_complete", true)
     .eq("suspended", false)
     .neq("id", user.id);
 

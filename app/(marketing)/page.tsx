@@ -97,7 +97,7 @@ export default async function LandingPage() {
     admin
       .from("profiles")
       .select("id, full_name, photo_url, i_am, intent, slug, location, pitch")
-      .eq("onboarded", true)
+      .eq("profile_complete", true)
       .eq("suspended", false)
       .order("created_at", { ascending: false })
       .limit(6),
@@ -112,12 +112,12 @@ export default async function LandingPage() {
     admin
       .from("profiles")
       .select("id", { count: "exact", head: true })
-      .eq("onboarded", true)
+      .eq("profile_complete", true)
       .eq("suspended", false),
     admin
       .from("profiles")
       .select("id", { count: "exact", head: true })
-      .eq("onboarded", true)
+      .eq("profile_complete", true)
       .eq("suspended", false)
       .gte("created_at", sevenDaysAgo),
     admin
@@ -499,17 +499,17 @@ export default async function LandingPage() {
           <div className="font-serif text-2xl lg:text-3xl leading-relaxed space-y-6">
             <p>
               {tr(
-                "Building a startup feels so much easier these days — AI helps, you need less capital, two or three people can just start. The harder part now is finding the right people to build it with.",
+                "Building a startup is easier than ever — AI, less capital, two or three people can start. The hard part now is finding the right people to build it with.",
               )}
             </p>
             <p>
               {tr(
-                "Take me: I'm in a circle of people with skills a lot like mine, so we all end up lacking the same things. It made me think the person who fills in what you're missing probably isn't in your circle to begin with.",
+                "My own circle all has similar skills, so we lack the same things. The person who fills your gaps usually isn't in it.",
               )}
             </p>
             <p>
               {tr(
-                "So I wanted to build a place where people who have a dream and want to build something similar can find each other. That's where Cofoundee came from.",
+                "So I wanted a place where people who want to build something can find each other. That's where Cofoundee came from.",
               )}
             </p>
           </div>

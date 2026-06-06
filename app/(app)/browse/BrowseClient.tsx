@@ -5,10 +5,14 @@ import { useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
+  Briefcase,
   Building2,
   ChevronDown,
+  Hammer,
   MapPin,
+  Search,
   SlidersHorizontal,
+  UserRound,
 } from "lucide-react";
 import {
   type ProfileLike,
@@ -151,7 +155,7 @@ export function BrowseClient({ others }: Props) {
 
       <div className="grid lg:grid-cols-12 gap-10">
         {/* Filter sidebar */}
-        <aside className="lg:col-span-3">
+        <aside className="lg:col-span-3 min-w-0">
           <div className="lg:sticky lg:top-6 space-y-4">
             <div>
               <label
@@ -255,7 +259,7 @@ export function BrowseClient({ others }: Props) {
         </aside>
 
         {/* Results */}
-        <div className="lg:col-span-9">
+        <div className="lg:col-span-9 min-w-0">
           {filtered.length === 0 ? (
             <div className="bg-white border border-line p-12 text-center">
               <h3 className="text-2xl mb-2">{tr("No matches yet")}</h3>
@@ -323,101 +327,153 @@ function FilterChip({
   );
 }
 
+function LabeledRow({
+  label,
+  icon: Icon,
+  children,
+}: {
+  label: string;
+  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-1 sm:gap-3">
+      <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-gold leading-tight sm:pt-1">
+        {Icon && <Icon className="w-3 h-3" strokeWidth={2} />}
+        {label}
+      </div>
+      <div className="min-w-0 text-sm text-ink">{children}</div>
+    </div>
+  );
+}
+
 function ProfileCard({ profile }: { profile: Profile }) {
   const locale = useLocale();
   const tr = useT();
+  const isCompany = profile.type === "company";
+  const isNew =
+    Date.now() - new Date(profile.created_at).getTime() < 7 * 86400_000;
+  const roles = (profile.i_am ?? [])
+    .map((r) => tr(ROLE_LABELS[r]))
+    .filter(Boolean);
+  const intent = (profile.intent ?? [])
+    .map((x) => tr(INTENT_LABELS[x]))
+    .filter(Boolean);
+  const lookingFor = (profile.looking_for ?? [])
+    .map((r) => tr(ROLE_LABELS[r]))
+    .filter(Boolean);
   return (
     <Link
       href={`/profile/${profile.slug}`}
-      className="block bg-white border border-line p-6 hover:border-navy transition-colors group"
+      className="group block bg-white border border-line hover:border-navy transition-colors"
     >
-      <div className="flex items-start gap-5">
-        <Avatar
-          name={profile.full_name}
-          url={profile.photo_url}
-          size="lg"
-        />
+      <div className="flex items-start gap-4 sm:gap-5 p-5 sm:p-6">
+        <Avatar name={profile.full_name} url={profile.photo_url} size="lg" />
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div>
-              <h3 className="font-serif text-xl text-navy leading-tight inline-flex items-center gap-1.5 flex-wrap">
-                {profile.type === "company" && profile.company_name
-                  ? profile.company_name
-                  : profile.full_name}
-                {profile.verified && (
-                  <BadgeCheck
-                    className="w-4 h-4 text-gold shrink-0"
-                    strokeWidth={2}
-                  />
-                )}
-                {Date.now() - new Date(profile.created_at).getTime() <
-                  7 * 86400_000 && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold font-sans">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-                    {tr("New")}
-                  </span>
-                )}
-                {profile.type === "company" && (
-                  <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold">
-                    <Building2 className="w-2.5 h-2.5" strokeWidth={2} />
-                    {tr("Company")}
-                  </span>
-                )}
-                {profile.age && profile.type !== "company" && (
-                  <span className="text-ink-muted text-base font-sans">
-                    , {profile.age}
-                  </span>
-                )}
-              </h3>
-              <div className="text-sm text-ink-muted mt-1">
-                {profile.type === "company"
-                  ? `${tr("Represented by")} ${profile.full_name}`
-                  : profile.i_am.length > 0 &&
-                    profile.i_am.map((r) => tr(ROLE_LABELS[r])).join(" · ")}
-                {profile.intent.length > 0 && (
-                  <>
-                    {" "}
-                    &middot;{" "}
-                    <span className="text-gold">
-                      {profile.intent
-                        .map((x) => tr(INTENT_LABELS[x]))
-                        .join(" · ")}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {profile.pitch && (
-            <p className="text-sm text-ink leading-relaxed mb-3 line-clamp-3">
-              {profile.pitch}
-            </p>
-          )}
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink-muted">
+          {/* Who */}
+          <h3 className="font-serif text-xl text-navy leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold transition-colors">
+            {isCompany && profile.company_name
+              ? profile.company_name
+              : profile.full_name}
+            {profile.verified && (
+              <BadgeCheck
+                className="w-4 h-4 text-gold shrink-0"
+                strokeWidth={2}
+              />
+            )}
+            {isNew && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold font-sans">
+                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                {tr("New")}
+              </span>
+            )}
+            {isCompany && (
+              <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold">
+                <Building2 className="w-2.5 h-2.5" strokeWidth={2} />
+                {tr("Company")}
+              </span>
+            )}
+            {profile.age && !isCompany && (
+              <span className="text-ink-muted text-base font-sans">
+                , {profile.age}
+              </span>
+            )}
+          </h3>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-muted">
             {profile.location && (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="w-3 h-3" />{" "}
                 {provinceLabel(profile.location, locale)}
               </span>
             )}
+            {intent.length > 0 && (
+              <span className="text-gold">{intent.join(" · ")}</span>
+            )}
+          </div>
+
+          {/* What — each row a distinct visual form:
+              Role = navy chips (who they are), Building = prose (what they do),
+              Looking for = gold chips (what they want). */}
+          <div className="mt-4 space-y-3">
+            {isCompany ? (
+              <LabeledRow label={tr("Represented by")} icon={Briefcase}>
+                <span className="font-medium text-navy">
+                  {profile.full_name}
+                </span>
+              </LabeledRow>
+            ) : (
+              roles.length > 0 && (
+                <LabeledRow label={tr("Role")} icon={UserRound}>
+                  <div className="flex flex-wrap gap-1.5">
+                    {roles.map((r) => (
+                      <span
+                        key={r}
+                        className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03]"
+                      >
+                        {r}
+                      </span>
+                    ))}
+                  </div>
+                </LabeledRow>
+              )
+            )}
+            {profile.pitch && (
+              <LabeledRow label={tr("Building")} icon={Hammer}>
+                <p className="line-clamp-2 leading-relaxed text-ink">
+                  {profile.pitch}
+                </p>
+              </LabeledRow>
+            )}
+            {!isCompany && lookingFor.length > 0 && (
+              <LabeledRow label={tr("Looking for")} icon={Search}>
+                <div className="flex flex-wrap gap-1.5">
+                  {lookingFor.map((r) => (
+                    <span
+                      key={r}
+                      className="px-2 py-0.5 text-xs border border-gold/50 text-gold bg-gold/5"
+                    >
+                      {r}
+                    </span>
+                  ))}
+                </div>
+              </LabeledRow>
+            )}
+          </div>
+
+          {/* Meta */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-muted mt-4 pt-4 border-t border-line">
             {profile.industry.slice(0, 3).map((i) => (
               <span key={i} className="px-2 py-0.5 border border-line">
                 {i}
               </span>
             ))}
             {profile.industry.length > 3 && (
-              <span className="text-ink-muted">
-                +{profile.industry.length - 3}
-              </span>
+              <span>+{profile.industry.length - 3}</span>
             )}
-            {profile.stage && (
-              <span className="ml-auto inline-flex items-center gap-1 text-navy group-hover:text-gold">
-                {tr("View profile")} <ArrowRight className="w-3 h-3" />
-              </span>
-            )}
+            <span className="ml-auto inline-flex items-center gap-1 text-navy group-hover:text-gold transition-colors">
+              {tr("View profile")} <ArrowRight className="w-3 h-3" />
+            </span>
           </div>
         </div>
       </div>

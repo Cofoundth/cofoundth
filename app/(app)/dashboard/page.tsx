@@ -32,7 +32,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, onboarded, i_am, intent, slug, photo_url, location, pitch")
+    .select("full_name, onboarded, profile_complete, i_am, intent, slug, photo_url, location, pitch")
     .eq("id", user.id)
     .single();
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
     supabase
       .from("profiles")
       .select("id, full_name, photo_url, i_am, intent, slug, created_at")
-      .eq("onboarded", true)
+      .eq("profile_complete", true)
       .eq("suspended", false)
       .neq("id", user.id)
       .order("created_at", { ascending: false })
@@ -96,26 +96,28 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
       {/* Onboarding prompt — only if not onboarded */}
-      {!profile?.onboarded && (
+      {!profile?.profile_complete && (
         <div className="bg-white border border-gold/40 p-6 lg:p-8 mb-8">
           <div className="flex items-start gap-5">
             <div className="font-serif text-2xl text-gold leading-none mt-1">
-              I
+              !
             </div>
             <div className="flex-1">
               <h2 className="text-xl mb-2">
-                {await tServer("Finish your founder profile")}
+                {await tServer("Your profile isn’t complete yet")}
               </h2>
               <p className="text-sm text-ink leading-relaxed mb-4 max-w-2xl">
                 {await tServer(
-                  "Declare what you are, what you bring, and what you’re looking for. The more your profile says, the better the matches.",
+                  "Add your role, what you’re looking for, and a short About me — until then your profile won’t appear in the Founder directory.",
                 )}
               </p>
               <Link
-                href="/onboarding"
+                href={profile?.onboarded ? "/settings" : "/onboarding"}
                 className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2"
               >
-                {await tServer("Start onboarding")}{" "}
+                {await tServer(
+                  profile?.onboarded ? "Complete profile" : "Start onboarding",
+                )}{" "}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

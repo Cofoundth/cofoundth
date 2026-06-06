@@ -79,6 +79,14 @@ export async function saveOnboardingAction(
   const runway = String(formData.get("runway") ?? "");
   const experience = String(formData.get("experience") ?? "");
   const pitch = String(formData.get("pitch") ?? "").trim();
+  const projectUrlRaw = String(formData.get("project_url") ?? "")
+    .trim()
+    .slice(0, 300);
+  const project_images = formData
+    .getAll("project_images")
+    .map(String)
+    .filter((u) => /^https?:\/\//.test(u))
+    .slice(0, 3);
   const why_this = String(formData.get("why_this") ?? "").trim().slice(0, 1000);
   const background = String(formData.get("background") ?? "").trim().slice(0, 600);
   const work_experience = String(formData.get("work_experience") ?? "")
@@ -116,37 +124,25 @@ export async function saveOnboardingAction(
     .filter((t) => (STATUS_TAGS as readonly string[]).includes(t))
     .slice(0, 5);
 
-  // ---- Validate
-  if (full_name.length < 2) return { error: "Please enter your name." };
-  if (i_am.length === 0) return { error: "Please select your role." };
+  // ---- Validate (all fields optional — format-check only; the profile just
+  // won't appear in the directory until it's complete, see profile_complete)
   if (i_am.some((r) => !ROLE_VALUES.includes(r as never)))
     return { error: "Invalid role." };
-  if (intent.length === 0)
-    return { error: "Please tell us what you're bringing." };
   if (intent.some((x) => !INTENT_VALUES.includes(x as never)))
     return { error: "Invalid intent." };
-  if (looking_for.length === 0)
-    return { error: "Please select at least one role you're looking for." };
   if (looking_for.some((r) => !ROLE_VALUES.includes(r as never)))
     return { error: "Invalid 'looking for' role." };
-  if (industry.length === 0)
-    return { error: "Please select at least one industry." };
-  if (!STAGE_VALUES.includes(stage as never))
-    return { error: "Please select your stage." };
-  if (!COMMITMENT_VALUES.includes(commitment as never))
-    return { error: "Please select your commitment level." };
-  // runway is optional (see OnboardingForm + step 3 "(optional)" label).
-  // Only validate when the user actually picked something.
+  if (stage && !STAGE_VALUES.includes(stage as never))
+    return { error: "Please select a valid stage." };
+  if (commitment && !COMMITMENT_VALUES.includes(commitment as never))
+    return { error: "Please select a valid commitment level." };
   if (runway && !RUNWAY_VALUES.includes(runway as never))
     return { error: "Please select a valid runway." };
-  if (!EXPERIENCE_VALUES.includes(experience as never))
-    return { error: "Please select your founder experience." };
-  if (pitch.length < 120)
-    return { error: "Your pitch must be at least 120 characters." };
+  if (experience && !EXPERIENCE_VALUES.includes(experience as never))
+    return { error: "Please select a valid experience level." };
   if (pitch.length > 500)
-    return { error: "Your pitch must be 500 characters or less." };
-  // Reject unedited pitch templates — they still carry [ ] placeholders.
-  if (/\[[^\]]+\]/.test(pitch))
+    return { error: "About me must be 500 characters or less." };
+  if (pitch && /\[[^\]]+\]/.test(pitch))
     return {
       error:
         "Replace the [ ] placeholders with your real details — don't submit the template as-is.",
@@ -155,6 +151,16 @@ export async function saveOnboardingAction(
     return { error: "Invalid profile type." };
   if (profile_type === "company" && !company_name)
     return { error: "Company name is required for company profiles." };
+
+  let project_url: string | null = null;
+  if (projectUrlRaw) {
+    const n = /^https?:\/\//i.test(projectUrlRaw)
+      ? projectUrlRaw
+      : `https://${projectUrlRaw}`;
+    if (!n.includes("."))
+      return { error: "That doesn't look like a valid project link." };
+    project_url = n;
+  }
 
   // ---- Persist
   const { error } = await supabase
@@ -167,12 +173,14 @@ export async function saveOnboardingAction(
       intent,
       looking_for,
       industry,
-      stage,
+      stage: stage || null,
       location: location || null,
-      commitment,
+      commitment: commitment || null,
       runway: runway || null,
-      experience,
-      pitch,
+      experience: experience || null,
+      pitch: pitch || null,
+      project_url,
+      project_images,
       why_this: why_this || null,
       background: background || null,
       work_experience: work_experience || null,

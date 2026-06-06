@@ -8,6 +8,7 @@ import { provinceOptions, provinceLabel, canonicalProvince } from "@/lib/provinc
 import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
+import { ProjectImagesField } from "@/components/ProjectImagesField";
 
 // ---- Option lists ---------------------------------------------------
 
@@ -112,6 +113,8 @@ type FormState = {
   runway: string;
   experience: string;
   pitch: string;
+  project_url: string;
+  project_images: string[];
   why_this: string;
   background: string;
   work_experience: string;
@@ -127,7 +130,7 @@ const STEPS = [
   { num: "I", title: "Role" },
   { num: "II", title: "Context" },
   { num: "III", title: "Conviction" },
-  { num: "IV", title: "Pitch" },
+  { num: "IV", title: "About me" },
 ];
 
 // ---- Component ------------------------------------------------------
@@ -153,6 +156,8 @@ export function OnboardingForm({ initial }: Props) {
     runway: "",
     experience: "",
     pitch: "",
+    project_url: "",
+    project_images: [],
     why_this: "",
     background: "",
     work_experience: "",
@@ -183,26 +188,18 @@ export function OnboardingForm({ initial }: Props) {
   }
 
   function stepValid(): boolean {
-    switch (step) {
-      case 0:
-        if (data.first_name.trim().length < 1) return false;
-        if (data.profile_type === "company" && !data.company_name.trim())
-          return false;
-        return (
-          data.i_am.length > 0 &&
-          data.intent.length > 0 &&
-          data.looking_for.length > 0
-        );
-      case 1:
-        return data.industry.length > 0 && !!data.stage;
-      case 2:
-        // runway is optional — invasive to force before any trust is built
-        return !!data.commitment && !!data.experience;
-      case 3:
-        return data.pitch.length >= 120 && data.pitch.length <= 500;
-      default:
-        return false;
-    }
+    // Everything is optional — you can fill in as much or as little as you like
+    // and finish anytime. The profile just won't appear in the Founder directory
+    // until it's complete (name + role + looking-for + About me). We only block
+    // on a too-long About me, or a company profile with no company name.
+    if (
+      step === 0 &&
+      data.profile_type === "company" &&
+      !data.company_name.trim()
+    )
+      return false;
+    if (step === 3 && data.pitch.length > 500) return false;
+    return true;
   }
 
   function next() {
@@ -247,6 +244,8 @@ export function OnboardingForm({ initial }: Props) {
     fd.append("runway", data.runway);
     fd.append("experience", data.experience);
     fd.append("pitch", data.pitch);
+    fd.append("project_url", data.project_url);
+    data.project_images.forEach((u) => fd.append("project_images", u));
     fd.append("why_this", data.why_this);
     fd.append("background", data.background);
     fd.append("work_experience", data.work_experience);
@@ -337,28 +336,11 @@ export function OnboardingForm({ initial }: Props) {
 }
 
 function stepMissing(step: number, d: FormState): string {
-  switch (step) {
-    case 0:
-      if (d.i_am.length === 0) return "Pick at least one role";
-      if (d.intent.length === 0) return "Pick what you’re bringing";
-      if (d.looking_for.length === 0) return "Pick at least one role to look for";
-      return "";
-    case 1:
-      if (d.industry.length === 0) return "Pick at least one industry";
-      if (!d.stage) return "Pick your stage";
-      return "";
-    case 2:
-      if (!d.commitment) return "Pick commitment level";
-      if (!d.experience) return "Pick founder experience";
-      return "";
-    case 3:
-      if (d.pitch.length < 120)
-        return `Pitch needs ${120 - d.pitch.length} more chars (120 min)`;
-      if (d.pitch.length > 500) return "Pitch must be 500 chars or less";
-      return "";
-    default:
-      return "";
-  }
+  if (step === 0 && d.profile_type === "company" && !d.company_name.trim())
+    return "Add your company name";
+  if (step === 3 && d.pitch.length > 500)
+    return "About me must be 500 chars or less";
+  return "";
 }
 
 // ---- Step indicator -------------------------------------------------
@@ -764,18 +746,14 @@ function StepPitch({
             htmlFor="pitch"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
           >
-            {tr("The pitch (120–500 chars, required)")}
+            {tr("About me")}
           </label>
           <span
             className={`text-xs ${
-              pitchLen < 120 || pitchLen > 500
-                ? "text-ink-muted"
-                : "text-gold"
+              pitchLen > 500 ? "text-red-700" : "text-ink-muted"
             }`}
           >
-            {pitchLen < 120
-              ? tr("{n} more").replace("{n}", String(120 - pitchLen))
-              : `${pitchLen} / 500`}
+            {pitchLen} / 500
           </span>
         </div>
         <textarea
@@ -808,6 +786,29 @@ function StepPitch({
             </div>
           </div>
         )}
+      </div>
+
+      <div>
+        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+          {tr("Link to your project (optional)")}
+        </label>
+        <input
+          type="text"
+          value={data.project_url}
+          onChange={(e) => set("project_url", e.target.value)}
+          placeholder="https://"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+          {tr("Add images (optional)")}
+        </label>
+        <ProjectImagesField
+          value={data.project_images}
+          onChange={(v) => set("project_images", v)}
+        />
       </div>
 
       <div>

@@ -22,7 +22,7 @@ import translations from "./translations.json";
 
 export const LOCALES = ["en", "th"] as const;
 export type Locale = (typeof LOCALES)[number];
-export const DEFAULT_LOCALE: Locale = "en";
+export const DEFAULT_LOCALE: Locale = "th";
 export const LOCALE_COOKIE = "locale";
 
 export const TH: Record<string, string> = translations;

@@ -6,6 +6,7 @@ import { updateProfileAction } from "./actions";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceOptions, provinceLabel, canonicalProvince } from "@/lib/provinces";
 import Combobox from "@/components/Combobox";
+import { ProjectImagesField } from "@/components/ProjectImagesField";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
 
@@ -78,6 +79,8 @@ export type ProfileInitial = {
   runway?: string | null;
   experience?: string | null;
   pitch?: string | null;
+  project_url?: string | null;
+  project_images?: string[] | null;
   why_this?: string | null;
   background?: string | null;
   work_experience?: string | null;
@@ -114,6 +117,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
     initial.status_tags ?? [],
   );
   const [pitch, setPitch] = useState(initial.pitch ?? "");
+  const [projectImages, setProjectImages] = useState<string[]>(
+    initial.project_images ?? [],
+  );
   const [skills, setSkills] = useState<string[]>(initial.skills ?? []);
   const [location, setLocation] = useState(initial.location ?? "");
 
@@ -374,10 +380,10 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         ))}
       </Section>
 
-      {/* Pitch */}
-      <Section title={tr("The pitch")}>
+      {/* About me */}
+      <Section title={tr("About me")}>
         <Field
-          label={`${tr("The pitch")} (${pitch.trim().length}/500)`}
+          label={`${tr("About me")} (${pitch.trim().length}/500)`}
         >
           <textarea
             name="pitch"
@@ -386,6 +392,20 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             rows={5}
             maxLength={500}
             className={inputCls}
+          />
+        </Field>
+        <Field label={tr("Link to your project (optional)")}>
+          <input
+            name="project_url"
+            defaultValue={initial.project_url ?? ""}
+            placeholder="https://"
+            className={inputCls}
+          />
+        </Field>
+        <Field label={tr("Add images (optional)")}>
+          <ProjectImagesField
+            value={projectImages}
+            onChange={setProjectImages}
           />
         </Field>
         <Field label={tr("Why this, why now (optional)")}>

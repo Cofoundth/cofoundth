@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AvatarUploader } from "@/components/AvatarUploader";
+import { PasswordForm } from "@/components/PasswordForm";
 import { EditProfileFormClient } from "./EditProfileFormClient";
 import { tServer } from "@/lib/i18n-server";
 
@@ -15,7 +16,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, slug, full_name, first_name, last_name, age, location, linkedin_url, instagram_url, facebook_url, x_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills, onboarded",
+      "id, slug, full_name, first_name, last_name, age, location, linkedin_url, instagram_url, facebook_url, x_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, onboarded",
     )
     .eq("id", user.id)
     .single();
@@ -55,6 +56,8 @@ export default async function SettingsPage() {
     runway: profile.runway ?? "",
     experience: profile.experience ?? "",
     pitch: profile.pitch ?? "",
+    project_url: profile.project_url ?? "",
+    project_images: arr(profile.project_images),
     why_this: profile.why_this ?? "",
     background: profile.background ?? "",
     work_experience: profile.work_experience ?? "",
@@ -94,6 +97,18 @@ export default async function SettingsPage() {
       </div>
 
       <EditProfileFormClient initial={initial} />
+
+      <div className="mt-14 pt-8 border-t border-line">
+        <div className="text-xs uppercase tracking-[0.2em] text-gold border-b border-line pb-2 mb-4">
+          {await tServer("Password")}
+        </div>
+        <p className="text-sm text-ink-muted mb-5 max-w-lg leading-relaxed">
+          {await tServer(
+            "Set a password so you can sign in with your email — handy if you joined with Google.",
+          )}
+        </p>
+        <PasswordForm />
+      </div>
     </div>
   );
 }

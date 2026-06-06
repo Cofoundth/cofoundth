@@ -89,6 +89,14 @@ export async function updateProfileAction(
   const runway = String(formData.get("runway") ?? "");
   const experience = String(formData.get("experience") ?? "");
   const pitch = String(formData.get("pitch") ?? "").trim();
+  const projectUrlRaw = String(formData.get("project_url") ?? "")
+    .trim()
+    .slice(0, 300);
+  const project_images = formData
+    .getAll("project_images")
+    .map(String)
+    .filter((u) => /^https?:\/\//.test(u))
+    .slice(0, 3);
   const why_this = String(formData.get("why_this") ?? "").trim().slice(0, 1000);
   const background = String(formData.get("background") ?? "").trim().slice(0, 600);
   const work_experience = String(formData.get("work_experience") ?? "")
@@ -126,9 +134,7 @@ export async function updateProfileAction(
     .filter((t) => (STATUS_TAGS as readonly string[]).includes(t))
     .slice(0, 5);
 
-  // ---- Validate
-  if (full_name.length < 2)
-    return { error: "Please enter your name." };
+  // ---- Validate (all profile fields are optional — format-check only)
   if (full_name.length > 80)
     return { error: "Name is too long (80 characters max)." };
 
@@ -159,34 +165,28 @@ export async function updateProfileAction(
   const instagram_url = (instagram as string | null) ?? null;
   const facebook_url = (facebook as string | null) ?? null;
   const x_url = (xLink as string | null) ?? null;
+  const projN = normLink(projectUrlRaw);
+  if (projN && typeof projN !== "string") return projN;
+  const project_url = (projN as string | null) ?? null;
 
-  if (i_am.length === 0) return { error: "Please select your role." };
   if (i_am.some((r) => !ROLE_VALUES.includes(r as never)))
     return { error: "Invalid role." };
-  if (intent.length === 0)
-    return { error: "Please tell us what you're bringing." };
   if (intent.some((x) => !INTENT_VALUES.includes(x as never)))
     return { error: "Invalid intent." };
-  if (looking_for.length === 0)
-    return { error: "Please select at least one role you're looking for." };
   if (looking_for.some((r) => !ROLE_VALUES.includes(r as never)))
     return { error: "Invalid 'looking for' role." };
-  if (industry.length === 0)
-    return { error: "Please select at least one industry." };
-  if (!STAGE_VALUES.includes(stage as never))
-    return { error: "Please select your stage." };
-  if (!COMMITMENT_VALUES.includes(commitment as never))
-    return { error: "Please select your commitment level." };
+  if (stage && !STAGE_VALUES.includes(stage as never))
+    return { error: "Please select a valid stage." };
+  if (commitment && !COMMITMENT_VALUES.includes(commitment as never))
+    return { error: "Please select a valid commitment level." };
   if (runway && !RUNWAY_VALUES.includes(runway as never))
     return { error: "Please select a valid runway." };
-  if (!EXPERIENCE_VALUES.includes(experience as never))
-    return { error: "Please select your founder experience." };
-  if (pitch.length < 120)
-    return { error: "Your pitch must be at least 120 characters." };
+  if (experience && !EXPERIENCE_VALUES.includes(experience as never))
+    return { error: "Please select a valid experience level." };
   if (pitch.length > 500)
-    return { error: "Your pitch must be 500 characters or less." };
+    return { error: "About me must be 500 characters or less." };
   // Reject unedited pitch templates — they still carry [ ] placeholders.
-  if (/\[[^\]]+\]/.test(pitch))
+  if (pitch && /\[[^\]]+\]/.test(pitch))
     return {
       error:
         "Replace the [ ] placeholders with your real details — don't submit the template as-is.",
@@ -213,11 +213,13 @@ export async function updateProfileAction(
       intent,
       looking_for,
       industry,
-      stage,
-      commitment,
+      stage: stage || null,
+      commitment: commitment || null,
       runway: runway || null,
-      experience,
-      pitch,
+      experience: experience || null,
+      pitch: pitch || null,
+      project_url,
+      project_images,
       why_this: why_this || null,
       background: background || null,
       work_experience: work_experience || null,
@@ -241,5 +243,33 @@ export async function updateProfileAction(
   revalidatePath("/settings");
   revalidatePath(`/profile/${user.id}`);
   revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export type PasswordState = { error?: string; ok?: boolean } | null;
+
+// Set / change the account password. For Google sign-ups this adds the ability
+// to ALSO sign in with email + password (Supabase keeps the existing OAuth
+// identity and attaches a password credential to the same user).
+export async function setPasswordAction(
+  _prev: PasswordState,
+  formData: FormData,
+): Promise<PasswordState> {
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+  if (password.length < 8)
+    return { error: "Password must be at least 8 characters." };
+  if (password.length > 72)
+    return { error: "Password must be 72 characters or less." };
+  if (password !== confirm) return { error: "Passwords don't match." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated. Please sign in again." };
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
   return { ok: true };
 }
