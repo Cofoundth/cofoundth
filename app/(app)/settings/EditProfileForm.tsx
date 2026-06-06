@@ -142,7 +142,6 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             <input
               name="first_name"
               defaultValue={initial.first_name ?? ""}
-              required
               maxLength={40}
               className={inputCls}
             />
