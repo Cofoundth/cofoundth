@@ -4,7 +4,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 // Ship the CSP in report-only mode first to verify the policy + nonce
 // propagation against real prod without risking a blank app, then flip to
 // enforcing once the console is clean.
-const CSP_REPORT_ONLY = true;
+const CSP_REPORT_ONLY = false;
 
 // Build a strict, nonce-based Content-Security-Policy. This is the defense that
 // actually stops XSS (the precondition for token theft etc.) rather than just
