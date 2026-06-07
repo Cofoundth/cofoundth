@@ -2,8 +2,17 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseEnv } from "./env";
 
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export async function updateSession(
+  request: NextRequest,
+  requestHeaders?: Headers,
+) {
+  // When proxy.ts injects a per-request nonce (for the CSP), carry the modified
+  // request headers onto every NextResponse so Next sees the nonce and stamps
+  // its own <script> tags with it.
+  const nextOptions = requestHeaders
+    ? { request: { headers: requestHeaders } }
+    : { request };
+  let response = NextResponse.next(nextOptions);
   const { url, publishableKey } = supabaseEnv();
 
   const supabase = createServerClient(url, publishableKey, {
@@ -15,7 +24,7 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value),
         );
-        response = NextResponse.next({ request });
+        response = NextResponse.next(nextOptions);
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, {
             ...options,
