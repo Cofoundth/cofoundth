@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
-import { t } from "@/lib/i18n";
+import { t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 import { MessageComposer } from "./MessageComposer";
@@ -132,13 +132,15 @@ export default async function MessagePage({ params }: Props) {
             emptyState={
               <div className="text-center py-12">
                 <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-                  Mutual interest unlocked
+                  {t("Mutual interest unlocked", locale)}
                 </div>
                 <p className="text-ink leading-relaxed max-w-md mx-auto">
-                  You both expressed interest. This is the start of your
-                  conversation &mdash; be specific, be considered.
+                  {t(
+                    "You both expressed interest. This is the start of your conversation — be specific, be considered.",
+                    locale,
+                  )}
                 </p>
-                <SuggestedOpeners />
+                <SuggestedOpeners locale={locale} />
               </div>
             }
           />
@@ -162,16 +164,19 @@ export default async function MessagePage({ params }: Props) {
   );
 }
 
-function SuggestedOpeners() {
+function SuggestedOpeners({ locale }: { locale: Locale }) {
+  // Strings must match the translation keys in lib/translations.json exactly
+  // — note the curly apostrophe in "didn’t" — or t() silently falls back to
+  // English (see lib/i18n.ts).
   const suggestions = [
     "What problem are you most excited to solve right now?",
     "What does your ideal co-founder look like?",
-    "What have you tried that didn't work?",
+    "What have you tried that didn’t work?",
   ];
   return (
     <div className="mt-8 max-w-md mx-auto text-left">
       <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
-        First-call questions
+        {t("First-call questions", locale)}
       </div>
       <ul className="space-y-2 text-sm text-ink">
         {suggestions.map((s, i) => (
@@ -179,7 +184,7 @@ function SuggestedOpeners() {
             <span className="text-gold font-serif text-base leading-none">
               &middot;
             </span>
-            {s}
+            {t(s, locale)}
           </li>
         ))}
       </ul>
