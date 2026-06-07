@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calendar } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 
 type Event = {
   title: string;
@@ -13,7 +13,7 @@ const EVENTS: Event[] = [
   {
     title: "Cofoundee Launch Mixer",
     date: "2026-06-15T18:30:00+07:00",
-    location: "Bangkok &middot; To be announced",
+    location: "Bangkok ·To be announced",
     description:
       "Our first in-person mixer for founders looking for co-founders. Intimate setting, structured intros, vetted attendees.",
     status: "upcoming",
@@ -21,7 +21,7 @@ const EVENTS: Event[] = [
   {
     title: "Founder Office Hours",
     date: "2026-06-22T19:00:00+07:00",
-    location: "Online &middot; Zoom",
+    location: "Online ·Zoom",
     description:
       "Weekly online drop-in with founders from the community. Bring your hardest question.",
     status: "upcoming",
@@ -29,7 +29,7 @@ const EVENTS: Event[] = [
   {
     title: "Pitch Night — FinTech focus",
     date: "2026-07-10T19:00:00+07:00",
-    location: "Bangkok &middot; Venue TBD",
+    location: "Bangkok ·Venue TBD",
     description:
       "Five Thai FinTech founders pitch their ventures. Investors and operators in the audience.",
     status: "upcoming",
@@ -86,12 +86,10 @@ export default function EventsPage() {
                       weekday: "long",
                     })}
                   </span>
-                  <span
-                    className="inline-flex items-center gap-1"
-                    dangerouslySetInnerHTML={{
-                      __html: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${e.location}`,
-                    }}
-                  />
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {e.location}
+                  </span>
                 </div>
                 <p className="text-sm text-ink leading-relaxed mb-4">
                   {e.description}
@@ -102,7 +100,7 @@ export default function EventsPage() {
                   className="text-sm text-ink-muted inline-flex items-center gap-1.5 cursor-not-allowed"
                   title="RSVP opens closer to event"
                 >
-                  RSVP &middot; opens closer to event
+                  RSVP ·opens closer to event
                 </button>
               </div>
             </div>
