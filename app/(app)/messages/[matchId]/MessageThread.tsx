@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { LinkedText } from "@/components/LinkedText";
 import { useLocale } from "@/lib/i18n-client";
-import { markConversationRead } from "./actions";
+import { fetchMessagesAction, markConversationRead } from "./actions";
 
 export type Msg = {
   id: string;
@@ -44,74 +43,25 @@ export function MessageThread({
     setMessages((prev) => mergeById(prev, initialMessages));
   }, [initialMessages]);
 
-  // Realtime: append new INSERTs for this conversation. RLS scopes the stream
-  // to conversation participants — so the WebSocket must carry the user's
-  // access token (setAuth) BEFORE subscribing, or it connects as anon and RLS
-  // silently delivers nothing.
+  // Live updates via a server-action poll. Auth tokens are HttpOnly, so the
+  // browser has no JS-readable session — the previous browser-client realtime
+  // socket AND REST poll could no longer authenticate and silently returned
+  // nothing. fetchMessagesAction runs server-side (reads the HttpOnly cookie,
+  // RLS-scoped to participants) every 4s while the tab is visible. mergeById
+  // dedupes, so re-sending the whole list each tick is cheap and idempotent.
   useEffect(() => {
-    const supabase = createClient();
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    let cancelled = false;
-    (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (session?.access_token) supabase.realtime.setAuth(session.access_token);
-      channel = supabase
-        .channel(`messages:${matchId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `match_id=eq.${matchId}`,
-          },
-          (payload) => {
-            const m = payload.new as Msg;
-            setMessages((prev) => mergeById(prev, [m]));
-            // Live-incoming message from the other party → clear unread badge.
-            if (m.sender_id !== currentUserId) {
-              void markConversationRead(matchId);
-            }
-          },
-        )
-        .subscribe((status) => {
-          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            console.error("[realtime messages] channel status:", status);
-          }
-        });
-    })();
-    return () => {
-      cancelled = true;
-      if (channel) void supabase.removeChannel(channel);
-    };
-  }, [matchId, currentUserId]);
-
-  // Polling fallback — the realtime WebSocket is unreliable for this low-traffic
-  // app (the tenant sleeps and the socket often won't reconnect). Re-fetch every
-  // 4s straight from the browser client (browser→Supabase REST: no Next
-  // fetch-cache, carries the session token so RLS still scopes to participants;
-  // proven to work even when the socket doesn't). mergeById dedupes against any
-  // realtime-delivered rows; pauses when the tab is hidden.
-  useEffect(() => {
-    const supabase = createClient();
     let stopped = false;
-    const interval = setInterval(async () => {
+    const tick = async () => {
       if (document.visibilityState !== "visible") return;
-      const { data } = await supabase
-        .from("messages")
-        .select("id, sender_id, content, read_at, created_at")
-        .eq("match_id", matchId)
-        .order("created_at", { ascending: true });
-      if (stopped || !data || data.length === 0) return;
-      const rows = data as Msg[];
+      const rows = await fetchMessagesAction(matchId);
+      if (stopped || rows.length === 0) return;
       setMessages((prev) => mergeById(prev, rows));
       if (rows.some((m) => m.sender_id !== currentUserId && !m.read_at)) {
         void markConversationRead(matchId);
       }
-    }, 4000);
+    };
+    void tick();
+    const interval = setInterval(tick, 4000);
     return () => {
       stopped = true;
       clearInterval(interval);

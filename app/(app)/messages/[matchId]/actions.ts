@@ -3,6 +3,41 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
+export type ConvMessage = {
+  id: string;
+  sender_id: string;
+  content: string;
+  read_at: string | null;
+  created_at: string;
+};
+
+// Server-side message fetch for the live-poll in <MessageThread>. Runs as the
+// authenticated server client (reads the HttpOnly auth cookie), so RLS scopes
+// the rows to this conversation's participants. Replaces the old browser-client
+// query/realtime, which broke once auth tokens became HttpOnly (the browser
+// client has no readable session to authorize the socket/REST call).
+export async function fetchMessagesAction(
+  matchId: string,
+): Promise<ConvMessage[]> {
+  if (!matchId) return [];
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, sender_id, content, read_at, created_at")
+    .eq("match_id", matchId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("[fetchMessages] query failed", error);
+    return [];
+  }
+  return (data ?? []) as ConvMessage[];
+}
+
 export type SendMessageState = { error?: string } | null;
 
 export async function sendMessageAction(
