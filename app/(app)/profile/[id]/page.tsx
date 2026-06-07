@@ -299,7 +299,7 @@ export default async function ProfileDetailPage({ params }: Props) {
             projectUrl) && (
             <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
               <div className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
-                {t("About me", locale)}
+                {t("What I'm building", locale)}
               </div>
               {profile.pitch && (
                 <div className="border-l-2 border-gold pl-5">

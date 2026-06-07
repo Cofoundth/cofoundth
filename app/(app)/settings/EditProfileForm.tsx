@@ -379,10 +379,10 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         ))}
       </Section>
 
-      {/* About me */}
-      <Section title={tr("About me")}>
+      {/* What are you building */}
+      <Section title={tr("What are you building?")}>
         <Field
-          label={`${tr("About me")} (${pitch.trim().length}/500)`}
+          label={`${tr("What are you building?")} (${pitch.trim().length}/500)`}
         >
           <textarea
             name="pitch"
@@ -390,6 +390,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             onChange={(e) => setPitch(e.target.value)}
             rows={5}
             maxLength={500}
+            placeholder={tr(
+              "Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests.",
+            )}
             className={inputCls}
           />
         </Field>

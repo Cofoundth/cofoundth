@@ -130,7 +130,7 @@ const STEPS = [
   { num: "I", title: "Role" },
   { num: "II", title: "Context" },
   { num: "III", title: "Conviction" },
-  { num: "IV", title: "About me" },
+  { num: "IV", title: "What are you building?" },
 ];
 
 // ---- Component ------------------------------------------------------
@@ -746,7 +746,7 @@ function StepPitch({
             htmlFor="pitch"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
           >
-            {tr("About me")}
+            {tr("What are you building?")}
           </label>
           <span
             className={`text-xs ${
