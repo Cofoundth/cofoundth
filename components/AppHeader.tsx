@@ -149,7 +149,6 @@ export async function AppHeader() {
             <NotificationBell
               items={notifItems}
               unreadCount={unreadNotifs ?? 0}
-              currentUserId={user.id}
             />
             <Link
               href={myProfileHref}

@@ -14,7 +14,15 @@ export async function createClient() {
       setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
+            cookieStore.set(name, value, {
+              ...options,
+              // Auth tokens are managed strictly server-side: HttpOnly so
+              // browser JS (and any XSS) can't read them. `secure` only in prod
+              // because localhost is http.
+              httpOnly: true,
+              sameSite: "lax",
+              secure: process.env.NODE_ENV === "production",
+            }),
           );
         } catch {
           // Called from a Server Component — middleware refreshes the session instead.

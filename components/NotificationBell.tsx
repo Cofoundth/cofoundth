@@ -6,11 +6,11 @@ import { X } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { timeAgo } from "@/lib/time";
-import { createClient } from "@/lib/supabase/client";
 import {
   markAllNotificationsRead,
   dismissNotification,
   clearAllNotifications,
+  fetchNotificationsAction,
 } from "@/app/(app)/notifications/actions";
 
 export type NotifItem = {
@@ -48,11 +48,9 @@ function hrefFor(n: NotifItem): string {
 export function NotificationBell({
   items: initialItems,
   unreadCount,
-  currentUserId,
 }: {
   items: NotifItem[];
   unreadCount: number;
-  currentUserId: string;
 }) {
   const tr = useT();
   const locale = useLocale();
@@ -72,116 +70,44 @@ export function NotificationBell({
     setUnread(unreadCount);
   }, [unreadCount]);
 
-  // Live: prepend new notifications as they arrive. RLS-scoped to me; the
-  // socket needs the access token set BEFORE subscribing or it gets nothing.
+  // Poll the server every 15s for new notifications. The server reads the
+  // HttpOnly session cookie, so the browser never needs a JS-readable token.
+  // Pauses when the tab is hidden.
   useEffect(() => {
-    const supabase = createClient();
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    let cancelled = false;
-    (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (session?.access_token) supabase.realtime.setAuth(session.access_token);
-      channel = supabase
-        .channel(`notifications:${currentUserId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "notifications",
-            filter: `recipient_id=eq.${currentUserId}`,
-          },
-          (payload) => {
-            const n = payload.new as Record<string, unknown>;
-            const data =
-              (n.data as { actor_name?: string; post_title?: string }) ?? null;
-            const item: NotifItem = {
-              id: n.id as string,
-              type: n.type as string,
-              entityId: (n.entity_id as string | null) ?? null,
-              data,
-              readAt: (n.read_at as string | null) ?? null,
-              createdAt: n.created_at as string,
-              actor: n.actor_id
-                ? {
-                    id: n.actor_id as string,
-                    slug: null,
-                    photo_url: null,
-                    full_name: data?.actor_name ?? null,
-                  }
-                : null,
-            };
-            setItems((prev) =>
-              prev.some((p) => p.id === item.id) ? prev : [item, ...prev],
-            );
-            if (!openRef.current) setUnread((u) => u + 1);
-          },
-        )
-        .subscribe((status) => {
-          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            console.error("[realtime notifications] status:", status);
-          }
-        });
-    })();
-    return () => {
-      cancelled = true;
-      if (channel) void supabase.removeChannel(channel);
-    };
-  }, [currentUserId]);
-
-  // Polling fallback — the realtime socket is unreliable, so the bell also
-  // re-checks every 15s straight from the browser client (no Next cache, RLS
-  // scoped to me). This keeps the badge live on EVERY page, not just inside a
-  // chat, so you actually know when something arrives. Pauses when the tab is
-  // hidden to avoid needless load.
-  useEffect(() => {
-    const supabase = createClient();
     let stopped = false;
     const interval = setInterval(async () => {
       if (document.visibilityState !== "visible") return;
-      const { data } = await supabase
-        .from("notifications")
-        .select("id, type, entity_id, data, read_at, created_at, actor_id")
-        .eq("recipient_id", currentUserId)
-        .order("created_at", { ascending: false })
-        .limit(12);
-      if (stopped || !data) return;
-      const polled: NotifItem[] = data.map((n) => {
-        const d =
-          (n.data as { actor_name?: string; post_title?: string } | null) ??
-          null;
-        return {
-          id: n.id as string,
-          type: n.type as string,
-          entityId: (n.entity_id as string | null) ?? null,
-          data: d,
-          readAt: (n.read_at as string | null) ?? null,
-          createdAt: n.created_at as string,
-          actor: n.actor_id
-            ? {
-                id: n.actor_id as string,
-                slug: null,
-                photo_url: null,
-                full_name: d?.actor_name ?? null,
-              }
-            : null,
-        };
-      });
+      const { items: polled, unread: polledUnread } =
+        await fetchNotificationsAction();
+      if (stopped) return;
+      const mapped: NotifItem[] = polled.map((n) => ({
+        id: n.id,
+        type: n.type,
+        entityId: n.entityId,
+        data: n.data,
+        readAt: n.readAt,
+        createdAt: n.createdAt,
+        actor: n.actorId
+          ? {
+              id: n.actorId,
+              slug: null,
+              photo_url: null,
+              full_name: n.data?.actor_name ?? null,
+            }
+          : null,
+      }));
       setItems((prev) => {
         const known = new Set(prev.map((i) => i.id));
-        const fresh = polled.filter((p) => !known.has(p.id));
+        const fresh = mapped.filter((p) => !known.has(p.id));
         return fresh.length ? [...fresh, ...prev] : prev;
       });
-      if (!openRef.current) setUnread(polled.filter((p) => !p.readAt).length);
+      if (!openRef.current) setUnread(polledUnread);
     }, 15000);
     return () => {
       stopped = true;
       clearInterval(interval);
     };
-  }, [currentUserId]);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
