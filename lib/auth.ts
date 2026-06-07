@@ -33,7 +33,7 @@ export const getOwnProfile = cache(async () => {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, full_name, photo_url, email, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, location, age, onboarded, verified",
+      "id, full_name, photo_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, location, age, onboarded, verified",
     )
     .eq("id", user.id)
     .single();

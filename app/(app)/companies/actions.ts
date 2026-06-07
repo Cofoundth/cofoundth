@@ -62,7 +62,7 @@ export async function sendPartnershipRequestAction(
   // Target must be a company
   const { data: to } = await supabase
     .from("profiles")
-    .select("id, type, company_name, full_name, email")
+    .select("id, type, company_name, full_name")
     .eq("id", toProfileId)
     .single();
   if (!to || to.type !== "company") {
@@ -93,9 +93,18 @@ export async function sendPartnershipRequestAction(
     return { error: "Couldn't send. Try again." };
   }
 
+  // `email` is revoked from `authenticated` (anti-harvesting — see migration
+  // 0047). Fetch the recipient's notification address via the service-role
+  // client; the caller is an onboarded company sending a legitimate request.
+  const { data: toContact } = await createAdminClient()
+    .from("profiles")
+    .select("email")
+    .eq("id", toProfileId)
+    .single();
+
   // Fire-and-forget email notification
   void notifyPartnershipRequest({
-    toEmail: (to.email as string | null) ?? null,
+    toEmail: (toContact?.email as string | null) ?? null,
     toRep: (to.full_name as string) ?? "there",
     toCompany: (to.company_name as string) ?? "your company",
     fromCompany: (from.company_name as string) ?? "A founder",

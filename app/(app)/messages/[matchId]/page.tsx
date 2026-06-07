@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { t, type Locale } from "@/lib/i18n";
@@ -41,7 +42,17 @@ export default async function MessagePage({ params }: Props) {
 
   const { data: other } = await supabase
     .from("profiles")
-    .select("id, full_name, i_am, intent, location, photo_url, email")
+    .select("id, full_name, i_am, intent, location, photo_url")
+    .eq("id", otherId)
+    .single();
+
+  // `email` is revoked from the `authenticated` role (anti-harvesting — see
+  // migration 0047). The caller is provably a member of this match (the match
+  // read above is RLS-gated, else we 404'd), so fetch the counterpart's email
+  // for the "share contact" action via the service-role client.
+  const { data: otherContact } = await createAdminClient()
+    .from("profiles")
+    .select("email")
     .eq("id", otherId)
     .single();
 
@@ -113,7 +124,7 @@ export default async function MessagePage({ params }: Props) {
               matchId={matchId}
               myName={myName}
               otherName={otherName}
-              otherEmail={(other?.email as string | null) ?? null}
+              otherEmail={(otherContact?.email as string | null) ?? null}
             />
           </div>
         </header>
