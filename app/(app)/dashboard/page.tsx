@@ -97,23 +97,26 @@ export default async function DashboardPage() {
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
       {/* Onboarding prompt — only if not onboarded */}
       {!profile?.profile_complete && (
-        <div className="bg-white border border-gold/40 p-6 lg:p-8 mb-8">
+        <div className="bg-navy text-white p-6 lg:p-8 mb-8">
           <div className="flex items-start gap-5">
             <div className="font-serif text-2xl text-gold leading-none mt-1">
               !
             </div>
             <div className="flex-1">
-              <h2 className="text-xl mb-2">
+              <h2 className="text-xl mb-2 text-white">
                 {await tServer("Your profile isn’t complete yet")}
               </h2>
-              <p className="text-sm text-ink leading-relaxed mb-4 max-w-2xl">
+              <p className="text-sm text-white leading-relaxed mb-1.5 max-w-2xl">
+                {await tServer("Right now other founders can’t find your profile.")}
+              </p>
+              <p className="text-sm text-white/75 leading-relaxed mb-4 max-w-2xl">
                 {await tServer(
-                  "Add your role, what you’re looking for, and a short About me — until then your profile won’t appear in the Founder directory.",
+                  "Add a bit about you, what you’re looking for, and what you’re working on — then your profile shows on the Founders page for others to find.",
                 )}
               </p>
               <Link
                 href={profile?.onboarded ? "/settings" : "/onboarding"}
-                className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2"
+                className="px-5 py-2.5 bg-gold hover:bg-gold/90 text-navy font-medium text-sm tracking-wide transition-colors inline-flex items-center gap-2"
               >
                 {await tServer(
                   profile?.onboarded ? "Complete profile" : "Start onboarding",

@@ -357,6 +357,8 @@
   "Background & experience": "ภูมิหลังและประสบการณ์",
   "Your profile isn’t complete yet": "โปรไฟล์ของคุณยังไม่สมบูรณ์",
   "Add your role, what you’re looking for, and a short About me — until then your profile won’t appear in the Founder directory.": "เพิ่มบทบาท สิ่งที่คุณกำลังมองหา และข้อมูลเกี่ยวกับตัวคุณสั้นๆ ถ้ายังไม่ครบ โปรไฟล์ของคุณจะยังไม่แสดงในไดเรกทอรี Founder",
+  "Right now other founders can’t find your profile.": "ตอนนี้โปรไฟล์ของคุณจะไม่ถูกค้นพบจากผู้ใช้อื่น",
+  "Add a bit about you, what you’re looking for, and what you’re working on — then your profile shows on the Founders page for others to find.": "เพิ่มข้อมูลเกี่ยวกับตัวคุณ สิ่งที่คุณกำลังมองหา และสิ่งที่คุณกำลังทำอยู่ โปรไฟล์ของคุณจึงจะแสดงในหน้า Founders ให้ผู้ใช้อื่นค้นพบได้",
   "Password": "รหัสผ่าน",
   "New password": "รหัสผ่านใหม่",
   "Set password": "ตั้งรหัสผ่าน",
