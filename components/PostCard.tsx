@@ -216,13 +216,21 @@ export function PostCard({
             </p>
 
             {post.image_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={post.image_url}
-                alt=""
-                loading="lazy"
-                className="mt-3 max-h-[28rem] w-auto border border-line"
-              />
+              // Fixed-ratio box reserves space so the card doesn't jump when the
+              // image lazy-loads (CLS). Cropped preview here; full image on the
+              // post page.
+              <Link
+                href={`/community/${post.id}`}
+                className="block mt-3 aspect-[3/2] w-full overflow-hidden border border-line bg-cream"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.image_url}
+                  alt=""
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+              </Link>
             )}
 
             {post.link_url && (

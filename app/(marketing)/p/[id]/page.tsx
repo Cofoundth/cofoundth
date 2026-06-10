@@ -172,12 +172,16 @@ export default async function PublicPostPage({ params }: Props) {
         </p>
 
         {post.image_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={post.image_url as string}
-            alt=""
-            className="mt-4 max-h-[32rem] w-auto border border-line"
-          />
+          // Reserve space (fixed ratio) so the page doesn't shift when the image
+          // loads; object-contain keeps the full image visible on its own page.
+          <div className="mt-4 aspect-[3/2] w-full overflow-hidden border border-line bg-cream">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.image_url as string}
+              alt=""
+              className="w-full h-full object-contain"
+            />
+          </div>
         )}
 
         {post.link_url && (

@@ -314,13 +314,15 @@ export default async function LandingPage() {
                       {m.content as string}
                     </p>
                     {m.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={m.image_url as string}
-                        alt=""
-                        loading="lazy"
-                        className="w-full max-h-56 object-cover border border-line mb-3"
-                      />
+                      <div className="aspect-[3/2] w-full overflow-hidden border border-line bg-cream mb-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={m.image_url as string}
+                          alt=""
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     ) : null}
                     {m.link_url ? (
                       <a
