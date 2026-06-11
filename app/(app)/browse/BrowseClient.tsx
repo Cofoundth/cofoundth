@@ -8,10 +8,14 @@ import {
   Briefcase,
   Building2,
   ChevronDown,
+  ExternalLink,
+  GraduationCap,
   Hammer,
+  Image as ImageIcon,
   MapPin,
   Search,
   SlidersHorizontal,
+  Sparkles,
   UserRound,
 } from "lucide-react";
 import {
@@ -35,6 +39,11 @@ type Profile = ProfileLike & {
   verified: boolean;
   pitch: string | null;
   skills: string[];
+  project_url: string | null;
+  project_images: string[];
+  work_experience: string | null;
+  background: string | null;
+  education: string | null;
   type: "individual" | "company";
   company_name: string | null;
   capabilities: string[];
@@ -58,6 +67,8 @@ export function BrowseClient({ others }: Props) {
   const [stageFilter, setStageFilter] = useState<string>("");
   const [commitmentFilter, setCommitmentFilter] = useState<string>("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Top-level split: founders who already have an idea vs. those still exploring.
+  const [ideaTab, setIdeaTab] = useState<"idea" | "exploring">("idea");
 
   const sorted = useMemo(
     () =>
@@ -67,7 +78,9 @@ export function BrowseClient({ others }: Props) {
     [others],
   );
 
-  const filtered = useMemo(() => {
+  // Everything except the idea/exploring tab — so the tab counts reflect the
+  // other active filters.
+  const filteredBase = useMemo(() => {
     return sorted.filter((p) => {
       if (searchTerm) {
         const q = searchTerm.toLowerCase();
@@ -102,6 +115,20 @@ export function BrowseClient({ others }: Props) {
     commitmentFilter,
   ]);
 
+  const ideaCount = useMemo(
+    () => filteredBase.filter((p) => (p.intent ?? []).includes("idea")).length,
+    [filteredBase],
+  );
+  const exploringCount = filteredBase.length - ideaCount;
+
+  const filtered = useMemo(
+    () =>
+      filteredBase.filter(
+        (p) => (p.intent ?? []).includes("idea") === (ideaTab === "idea"),
+      ),
+    [filteredBase, ideaTab],
+  );
+
   function toggleRole(v: string) {
     setRoleFilters((s) => (s.includes(v) ? s.filter((x) => x !== v) : [...s, v]));
   }
@@ -133,7 +160,7 @@ export function BrowseClient({ others }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
-      <div className="mb-10 pb-8 border-b border-line">
+      <div className="mb-6">
         <div className="flex items-end justify-between">
           <div>
             <h1 className="text-4xl lg:text-5xl mb-2">{tr("All founders")}</h1>
@@ -153,10 +180,33 @@ export function BrowseClient({ others }: Props) {
         </div>
       </div>
 
+      <div className="flex gap-6 border-b border-line mb-8">
+        {(
+          [
+            ["idea", tr("Has an idea"), ideaCount],
+            ["exploring", tr("Exploring"), exploringCount],
+          ] as const
+        ).map(([key, label, count]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setIdeaTab(key)}
+            className={`pb-3 -mb-px text-sm tracking-wide border-b-2 transition-colors ${
+              ideaTab === key
+                ? "border-navy text-navy font-medium"
+                : "border-transparent text-ink-muted hover:text-navy"
+            }`}
+          >
+            {label}{" "}
+            <span className="text-xs text-ink-muted">({count})</span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid lg:grid-cols-12 gap-10">
         {/* Filter sidebar */}
         <aside className="lg:col-span-3 min-w-0">
-          <div className="lg:sticky lg:top-6 space-y-4">
+          <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto space-y-4 pr-1">
             <div>
               <label
                 htmlFor="search"
@@ -362,6 +412,8 @@ function ProfileCard({ profile }: { profile: Profile }) {
   const lookingFor = (profile.looking_for ?? [])
     .map((r) => tr(ROLE_LABELS[r]))
     .filter(Boolean);
+  // Idea-havers sell the project; explorers sell their track record.
+  const hasIdea = (profile.intent ?? []).includes("idea");
   return (
     <Link
       href={`/profile/${profile.slug}`}
@@ -438,10 +490,84 @@ function ProfileCard({ profile }: { profile: Profile }) {
                 </LabeledRow>
               )
             )}
-            {profile.pitch && (
-              <LabeledRow label={tr("Building")} icon={Hammer}>
-                <p className="line-clamp-2 leading-relaxed text-ink">
-                  {profile.pitch}
+            {isCompany ? (
+              profile.pitch && (
+                <LabeledRow label={tr("Pitch")} icon={Hammer}>
+                  <p className="leading-relaxed text-ink whitespace-pre-wrap">
+                    {profile.pitch}
+                  </p>
+                </LabeledRow>
+              )
+            ) : hasIdea ? (
+              <>
+                {profile.pitch && (
+                  <LabeledRow label={tr("Pitch")} icon={Hammer}>
+                    <p className="leading-relaxed text-ink whitespace-pre-wrap">
+                      {profile.pitch}
+                    </p>
+                  </LabeledRow>
+                )}
+                {(profile.project_url ||
+                  profile.project_images.length > 0) && (
+                  <LabeledRow label={tr("Project")} icon={ImageIcon}>
+                    <div className="space-y-2">
+                      {profile.project_images.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {profile.project_images.map((url, i) => (
+                            <div
+                              key={i}
+                              className="w-20 h-14 overflow-hidden border border-line shrink-0 bg-cream"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={url}
+                                alt=""
+                                loading="lazy"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {profile.project_url && (
+                        <span className="inline-flex items-center gap-1 text-xs text-navy break-all">
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                          {profile.project_url}
+                        </span>
+                      )}
+                    </div>
+                  </LabeledRow>
+                )}
+              </>
+            ) : (
+              <>
+                {(profile.work_experience || profile.background) && (
+                  <LabeledRow label={tr("Experience")} icon={Briefcase}>
+                    <p className="leading-relaxed text-ink whitespace-pre-wrap">
+                      {profile.work_experience || profile.background}
+                    </p>
+                  </LabeledRow>
+                )}
+                {profile.skills.length > 0 && (
+                  <LabeledRow label={tr("Skills")} icon={Sparkles}>
+                    <div className="flex flex-wrap gap-1.5">
+                      {profile.skills.slice(0, 6).map((s) => (
+                        <span
+                          key={s}
+                          className="px-2 py-0.5 text-xs border border-line text-ink"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </LabeledRow>
+                )}
+              </>
+            )}
+            {!isCompany && profile.education && (
+              <LabeledRow label={tr("Education")} icon={GraduationCap}>
+                <p className="leading-relaxed text-ink whitespace-pre-wrap">
+                  {profile.education}
                 </p>
               </LabeledRow>
             )}

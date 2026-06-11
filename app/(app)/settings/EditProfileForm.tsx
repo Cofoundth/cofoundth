@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { updateProfileAction } from "./actions";
 import { useT, useLocale } from "@/lib/i18n-client";
@@ -122,9 +122,33 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
   );
   const [skills, setSkills] = useState<string[]>(initial.skills ?? []);
   const [location, setLocation] = useState(initial.location ?? "");
+  const [firstName, setFirstName] = useState(initial.first_name ?? "");
+  const [lastName, setLastName] = useState(initial.last_name ?? "");
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+
+  // The four fields that gate directory visibility (migration 0046's
+  // profile_complete trigger). Flagged red until filled, and on load we land the
+  // user on the first empty one — so it's obvious what's blocking the listing.
+  const nameMissing = !firstName.trim() && !lastName.trim();
+  const roleMissing = iAm.length === 0;
+  const lookingMissing = lookingFor.length === 0;
+  const pitchMissing = !pitch.trim();
+
+  useEffect(() => {
+    const firstId = [
+      nameMissing && "rf-name",
+      roleMissing && "rf-role",
+      lookingMissing && "rf-looking",
+      pitchMissing && "rf-pitch",
+    ].find(Boolean) as string | undefined;
+    if (firstId)
+      document
+        .getElementById(firstId)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <form
@@ -137,24 +161,27 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
     >
       {/* Personal */}
       <Section title={tr("Personal information")}>
-        <div className="grid grid-cols-2 gap-4">
+        <div id="rf-name" className="grid grid-cols-2 gap-4">
           <Field label={tr("First name")}>
             <input
               name="first_name"
-              defaultValue={initial.first_name ?? ""}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               maxLength={40}
-              className={inputCls}
+              className={reqInput(nameMissing)}
             />
           </Field>
           <Field label={tr("Last name")}>
             <input
               name="last_name"
-              defaultValue={initial.last_name ?? ""}
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               maxLength={40}
-              className={inputCls}
+              className={reqInput(nameMissing)}
             />
           </Field>
         </div>
+        {nameMissing && <RequiredFlag tr={tr} />}
         <div className="grid grid-cols-2 gap-4">
           <Field label={tr("Age (optional)")}>
             <input
@@ -263,7 +290,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         */}
         <input type="hidden" name="profile_type" value="individual" />
 
-        <Label>{tr("I am…")}</Label>
+        <Label id="rf-role" missing={roleMissing}>
+          {tr("I am…")}
+        </Label>
         <Pills
           options={ROLES}
           selected={iAm}
@@ -273,6 +302,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         {iAm.map((v) => (
           <input key={v} type="hidden" name="i_am" value={v} />
         ))}
+        {roleMissing && <RequiredFlag tr={tr} />}
 
         <Label>{tr("I'm bringing…")}</Label>
         <Pills
@@ -285,7 +315,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           <input key={v} type="hidden" name="intent" value={v} />
         ))}
 
-        <Label>{tr("I'm looking for…")}</Label>
+        <Label id="rf-looking" missing={lookingMissing}>
+          {tr("I'm looking for…")}
+        </Label>
         <Pills
           options={ROLES}
           selected={lookingFor}
@@ -295,6 +327,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         {lookingFor.map((v) => (
           <input key={v} type="hidden" name="looking_for" value={v} />
         ))}
+        {lookingMissing && <RequiredFlag tr={tr} />}
       </Section>
 
       {/* Context */}
@@ -381,21 +414,24 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
 
       {/* What are you building */}
       <Section title={tr("What are you building?")}>
-        <Field
-          label={`${tr("What are you building?")} (${pitch.trim().length}/500)`}
-        >
-          <textarea
-            name="pitch"
-            value={pitch}
-            onChange={(e) => setPitch(e.target.value)}
-            rows={5}
-            maxLength={500}
-            placeholder={tr(
-              "Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests.",
-            )}
-            className={inputCls}
-          />
-        </Field>
+        <div id="rf-pitch">
+          <Field
+            label={`${tr("What are you building?")} (${pitch.trim().length}/500)`}
+          >
+            <textarea
+              name="pitch"
+              value={pitch}
+              onChange={(e) => setPitch(e.target.value)}
+              rows={5}
+              maxLength={500}
+              placeholder={tr(
+                "Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests.",
+              )}
+              className={reqInput(pitchMissing)}
+            />
+          </Field>
+          {pitchMissing && <RequiredFlag tr={tr} />}
+        </div>
         <Field label={tr("Link to your project (optional)")}>
           <input
             name="project_url"
@@ -496,6 +532,22 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
 const inputCls =
   "w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:border-navy focus:outline-none";
 
+// Required-field input: red border + tint until filled.
+const reqInput = (missing: boolean) =>
+  `w-full border bg-white px-3 py-2 text-sm text-ink focus:outline-none ${
+    missing
+      ? "border-red-400 bg-red-50 focus:border-red-500"
+      : "border-line focus:border-navy"
+  }`;
+
+function RequiredFlag({ tr }: { tr: (s: string) => string }) {
+  return (
+    <p className="text-xs text-red-600 mt-1.5">
+      {tr("Required to appear in the Founders directory")}
+    </p>
+  );
+}
+
 function Section({
   title,
   children,
@@ -528,8 +580,23 @@ function Field({
   );
 }
 
-function Label({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-ink-muted">{children}</p>;
+function Label({
+  children,
+  missing,
+  id,
+}: {
+  children: React.ReactNode;
+  missing?: boolean;
+  id?: string;
+}) {
+  return (
+    <p
+      id={id}
+      className={`text-sm ${missing ? "text-red-600 font-medium" : "text-ink-muted"}`}
+    >
+      {children}
+    </p>
+  );
 }
 
 function Chip({

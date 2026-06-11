@@ -65,27 +65,6 @@ const EXPERIENCES = [
   { value: "three_plus", label: "3+ ventures" },
 ];
 
-// Tappable pitch scaffolds — beat blank-page paralysis (the #1 onboarding
-// abandonment driver). Each fills the textarea with a fill-in-the-blank
-// starter the founder edits. `template` strings are i18n keys.
-const PITCH_STARTERS = [
-  {
-    en: "I have an idea",
-    template:
-      "I'm building [what] for [who]. The problem is [problem]. I've already [traction so far], and I'm looking for a co-founder who can [what they bring].",
-  },
-  {
-    en: "I have skills",
-    template:
-      "I'm a [your role] with [N] years in [domain]. I've built [notable work]. I want to join a founder with a strong vision in [industry] and own [what you'd own].",
-  },
-  {
-    en: "Still exploring",
-    template:
-      "My background is [background]. I'm drawn to problems in [areas]. I'm looking for someone to explore ideas with and figure out what to build together.",
-  },
-];
-
 // ---- Types ----------------------------------------------------------
 
 type StatusTag =
@@ -130,7 +109,7 @@ const STEPS = [
   { num: "I", title: "Role" },
   { num: "II", title: "Context" },
   { num: "III", title: "Conviction" },
-  { num: "IV", title: "What are you building?" },
+  { num: "IV", title: "Info & ideas" },
 ];
 
 // ---- Component ------------------------------------------------------
@@ -741,15 +720,17 @@ function StepPitch({
   return (
     <div className="space-y-10">
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-start justify-between gap-3 mb-2">
           <label
             htmlFor="pitch"
-            className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
+            className="block text-sm text-ink-muted leading-relaxed"
           >
-            {tr("What are you building?")}
+            {tr(
+              "Introduce yourself — or if you’ve got an idea, pitch it to attract other founders",
+            )}
           </label>
           <span
-            className={`text-xs ${
+            className={`text-xs shrink-0 mt-1 ${
               pitchLen > 500 ? "text-red-700" : "text-ink-muted"
             }`}
           >
@@ -763,29 +744,10 @@ function StepPitch({
           rows={6}
           maxLength={500}
           placeholder={tr(
-            "Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests.",
+            "e.g. I’m a programmer, 5 years in tech, built an online shopping app. Got a cool idea? Pitch it — I’d love to hear it.",
           )}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />
-        {data.pitch.length === 0 && (
-          <div className="mt-3">
-            <div className="text-xs text-ink-muted mb-2">
-              {tr("Stuck? Start from one of these:")}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {PITCH_STARTERS.map((s) => (
-                <button
-                  key={s.en}
-                  type="button"
-                  onClick={() => set("pitch", tr(s.template))}
-                  className="text-xs px-3 py-1.5 border border-line text-ink hover:border-navy hover:text-navy transition-colors"
-                >
-                  {tr(s.en)}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       <div>

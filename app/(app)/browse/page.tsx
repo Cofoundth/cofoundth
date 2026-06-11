@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { BrowseClient } from "./BrowseClient";
 
 const PROFILE_COLUMNS =
-  "id, slug, full_name, age, location, photo_url, verified, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, onboarded, type, company_name, capabilities, created_at";
+  "id, slug, full_name, age, location, photo_url, verified, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, project_url, project_images, work_experience, background, education, onboarded, type, company_name, capabilities, created_at";
 
 export default async function BrowsePage() {
   const supabase = await createClient();
@@ -29,6 +29,11 @@ export default async function BrowsePage() {
     verified: (p.verified as boolean | null) ?? false,
     pitch: (p.pitch as string | null) ?? null,
     skills: (p.skills as string[] | null) ?? [],
+    project_url: (p.project_url as string | null) ?? null,
+    project_images: ((p.project_images ?? []) as string[]) ?? [],
+    work_experience: (p.work_experience as string | null) ?? null,
+    background: (p.background as string | null) ?? null,
+    education: (p.education as string | null) ?? null,
     i_am: p.i_am ?? [],
     intent: p.intent ?? [],
     looking_for: p.looking_for ?? [],

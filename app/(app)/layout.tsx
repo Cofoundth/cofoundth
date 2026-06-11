@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
+import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 
 export default async function AppLayout({
   children,
@@ -16,7 +17,7 @@ export default async function AppLayout({
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarded")
+    .select("onboarded, profile_complete")
     .eq("id", user.id)
     .single();
 
@@ -28,7 +29,10 @@ export default async function AppLayout({
   return (
     <div className="min-h-screen flex flex-col bg-cream">
       <AppHeader />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <IncompleteProfileBanner complete={!!profile?.profile_complete} />
+        {children}
+      </main>
       <AppFooter />
     </div>
   );
