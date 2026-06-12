@@ -413,10 +413,10 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
       </Section>
 
       {/* What are you building */}
-      <Section title={tr("What are you building?")}>
+      <Section title={tr("Info & ideas")}>
         <div id="rf-pitch">
           <Field
-            label={`${tr("What are you building?")} (${pitch.trim().length}/500)`}
+            label={`${tr("Introduce yourself — or if you’ve got an idea, pitch it to attract other founders")} (${pitch.trim().length}/500)`}
           >
             <textarea
               name="pitch"
@@ -425,7 +425,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
               rows={5}
               maxLength={500}
               placeholder={tr(
-                "Idea-havers: describe your idea. Skill-bringers: describe what you offer. Explorers: describe your interests.",
+                "e.g. I’m a programmer, 5 years in tech, built an online shopping app. Got a cool idea? Pitch it — I’d love to hear it.",
               )}
               className={reqInput(pitchMissing)}
             />
