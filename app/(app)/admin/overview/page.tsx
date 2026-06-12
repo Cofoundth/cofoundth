@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
 import { TrendTabs } from "@/components/TrendTabs";
+import { msAgoISO } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +32,8 @@ export default async function AdminOverviewPage() {
   if (!(await isAdminUser(supabase, user))) notFound();
 
   const admin = createAdminClient();
-  const since = new Date(Date.now() - DAYS * DAY_MS).toISOString();
-  const weekAgo = new Date(Date.now() - 7 * DAY_MS).toISOString();
+  const since = msAgoISO(DAYS * DAY_MS);
+  const weekAgo = msAgoISO(7 * DAY_MS);
 
   const [
     { count: totalUsers },

@@ -7,17 +7,17 @@ import { Fragment } from "react";
 // links to the community search. Thai-aware: tone/vowel marks are \p{M}.
 // A hashtag must be preceded by start-of-string or a non-tag character so we
 // don't match inside words or URLs.
-const TAG_RE =
-  /(^|[^\p{L}\p{N}\p{M}_/])#([\p{L}\p{N}\p{M}]+(?:-[\p{L}\p{N}\p{M}]+)*)/gu;
-
 export function TagText({ text }: { text: string }) {
+  // Built fresh per render so the stateful `lastIndex` isn't shared module
+  // state mutated during render.
+  const tagRe =
+    /(^|[^\p{L}\p{N}\p{M}_/])#([\p{L}\p{N}\p{M}]+(?:-[\p{L}\p{N}\p{M}]+)*)/gu;
   const nodes: React.ReactNode[] = [];
   let last = 0;
   let key = 0;
   let m: RegExpExecArray | null;
-  TAG_RE.lastIndex = 0;
 
-  while ((m = TAG_RE.exec(text)) !== null) {
+  while ((m = tagRe.exec(text)) !== null) {
     const [full, pre, tag] = m;
     const start = m.index;
     const before = text.slice(last, start) + pre;

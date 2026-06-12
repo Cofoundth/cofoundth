@@ -39,9 +39,13 @@ export function MessageThread({
 
   // Merge server-provided messages (from revalidation after a send or
   // read-receipt) into local state without dropping realtime-delivered ones.
-  useEffect(() => {
+  // Done during render (not an effect) by comparing against the prop we last
+  // merged, so the merge runs synchronously when `initialMessages` changes.
+  const [prevInitial, setPrevInitial] = useState(initialMessages);
+  if (initialMessages !== prevInitial) {
+    setPrevInitial(initialMessages);
     setMessages((prev) => mergeById(prev, initialMessages));
-  }, [initialMessages]);
+  }
 
   // Live updates via a server-action poll. Auth tokens are HttpOnly, so the
   // browser has no JS-readable session — the previous browser-client realtime

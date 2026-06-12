@@ -29,6 +29,7 @@ import { Avatar } from "@/components/Avatar";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
+import { isWithinMs, DAY_MS } from "@/lib/time";
 
 type Profile = ProfileLike & {
   id: string;
@@ -401,8 +402,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
   const locale = useLocale();
   const tr = useT();
   const isCompany = profile.type === "company";
-  const isNew =
-    Date.now() - new Date(profile.created_at).getTime() < 7 * 86400_000;
+  const isNew = isWithinMs(profile.created_at, 7 * DAY_MS);
   const roles = (profile.i_am ?? [])
     .map((r) => tr(ROLE_LABELS[r]))
     .filter(Boolean);

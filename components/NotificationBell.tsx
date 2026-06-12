@@ -58,17 +58,28 @@ export function NotificationBell({
   const [items, setItems] = useState<NotifItem[]>(initialItems);
   const [unread, setUnread] = useState(unreadCount);
   const ref = useRef<HTMLDivElement>(null);
+  // Mirror `open` into a ref so the 15s poll (deps []) can read the latest
+  // value at tick time. Synced in an effect — refs must not be written during
+  // render.
   const openRef = useRef(open);
-  openRef.current = open;
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   // Server is the source of truth on navigation (it already includes any
-  // realtime-delivered rows, which persist).
-  useEffect(() => {
+  // realtime-delivered rows, which persist). Sync the props into local state
+  // during render (comparing against the prop we last applied) rather than in
+  // an effect, to avoid a setState-in-effect cascade.
+  const [prevInitialItems, setPrevInitialItems] = useState(initialItems);
+  if (initialItems !== prevInitialItems) {
+    setPrevInitialItems(initialItems);
     setItems(initialItems);
-  }, [initialItems]);
-  useEffect(() => {
+  }
+  const [prevUnreadCount, setPrevUnreadCount] = useState(unreadCount);
+  if (unreadCount !== prevUnreadCount) {
+    setPrevUnreadCount(unreadCount);
     setUnread(unreadCount);
-  }, [unreadCount]);
+  }
 
   // Poll the server every 15s for new notifications. The server reads the
   // HttpOnly session cookie, so the browser never needs a JS-readable token.

@@ -18,6 +18,7 @@ import { CommentText } from "@/components/CommentText";
 import { ReportButton } from "@/components/ReportButton";
 import { useT } from "@/lib/i18n-client";
 import { t, type Locale } from "@/lib/i18n";
+import { isWithinMs } from "@/lib/time";
 import type { PostComment, PostItem, PostKind } from "@/lib/post-types";
 import {
   createPostCommentAction,
@@ -108,7 +109,7 @@ export function PostCard({
   const authorHref = post.author
     ? `/profile/${post.author.slug ?? post.author.id}`
     : "#";
-  const fresh = Date.now() - new Date(post.created_at).getTime() < 3 * 3600_000;
+  const fresh = isWithinMs(post.created_at, 3 * 3600_000);
 
   async function loadComments() {
     setLoading(true);

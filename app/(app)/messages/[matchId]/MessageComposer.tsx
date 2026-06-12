@@ -19,10 +19,24 @@ export function MessageComposer({ matchId }: { matchId: string }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [draft, setDraft] = useState("");
 
-  // Reset after a successful send.
+  // Clear the draft after a successful (non-error) send. Mirrors the effect
+  // below's [isPending, state] trigger but runs during render so the reset
+  // isn't a setState-in-effect. Tracking the previous deps keeps it firing on
+  // the same transitions the effect did (incl. initial mount, which is a no-op
+  // on an empty draft).
+  const [prevSettled, setPrevSettled] = useState<{
+    isPending: boolean;
+    state: SendMessageState;
+  }>({ isPending, state });
+  if (prevSettled.isPending !== isPending || prevSettled.state !== state) {
+    setPrevSettled({ isPending, state });
+    if (!isPending && !state?.error) setDraft("");
+  }
+
+  // Refocus the box after a successful send. focus() is a real DOM effect, so
+  // it stays in an effect.
   useEffect(() => {
     if (!isPending && !state?.error) {
-      setDraft("");
       textareaRef.current?.focus();
     }
   }, [isPending, state]);

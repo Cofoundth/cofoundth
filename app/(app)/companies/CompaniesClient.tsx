@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -14,6 +14,7 @@ import { Avatar } from "@/components/Avatar";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { PartnershipRequestDialog } from "./PartnershipRequestDialog";
+import { isWithinMs, DAY_MS } from "@/lib/time";
 
 export type CompanyProfile = {
   id: string;
@@ -70,13 +71,19 @@ export function CompaniesClient({
 
   // Deep-link from the partnership board ("Respond" → /companies?focus=<id>):
   // auto-open the request dialog for that company, if the viewer can send.
-  useEffect(() => {
-    if (!focusId || !currentUserIsCompany) return;
-    const target = companies.find((c) => c.id === focusId);
-    if (target) setRequestTarget(target);
-    // Only on mount / when the focus target changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusId]);
+  // Runs during render when `focusId` changes (incl. first render) — tracking
+  // the previous value so we react only to focus changes, not to every
+  // companies/eligibility update.
+  const [prevFocusId, setPrevFocusId] = useState<string | null | undefined>(
+    undefined,
+  );
+  if (focusId !== prevFocusId) {
+    setPrevFocusId(focusId);
+    if (focusId && currentUserIsCompany) {
+      const target = companies.find((c) => c.id === focusId);
+      if (target) setRequestTarget(target);
+    }
+  }
 
   function toggle(
     set: React.Dispatch<React.SetStateAction<string[]>>,
@@ -345,7 +352,7 @@ function CompanyCard({
 }) {
   const tr = useT();
   const locale = useLocale();
-  const fresh = Date.now() - new Date(c.created_at).getTime() < 7 * 86400_000;
+  const fresh = isWithinMs(c.created_at, 7 * DAY_MS);
 
   return (
     <div className="bg-white border border-line p-6 hover:border-navy transition-colors">

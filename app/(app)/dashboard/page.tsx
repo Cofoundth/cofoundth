@@ -11,6 +11,7 @@ import { PostComposer } from "@/components/PostComposer";
 import { PostFeed } from "@/components/PostFeed";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { getFeedPosts } from "@/lib/posts";
+import { isWithinMs, DAY_MS } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -231,9 +232,7 @@ export default async function DashboardPage() {
             <div className="bg-white border border-line divide-y divide-line">
               {newFounders.map((f) => {
                 const href = `/profile/${(f.slug as string | undefined) ?? f.id}`;
-                const ageMs =
-                  Date.now() - new Date(f.created_at as string).getTime();
-                const fresh = ageMs < 7 * 86400_000;
+                const fresh = isWithinMs(f.created_at as string, 7 * DAY_MS);
                 return (
                   <Link
                     key={f.id as string}

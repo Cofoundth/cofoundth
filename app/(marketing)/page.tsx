@@ -13,6 +13,7 @@ import { getLocale } from "@/lib/i18n-server";
 import { provinceLabel } from "@/lib/provinces";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Avatar } from "@/components/Avatar";
+import { msAgoISO, DAY_MS } from "@/lib/time";
 
 export const revalidate = 60; // refresh live numbers every minute
 
@@ -85,8 +86,8 @@ export default async function LandingPage() {
 
   // Live platform data — service-role to read past RLS
   const admin = createAdminClient();
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000).toISOString();
+  const sevenDaysAgo = msAgoISO(7 * DAY_MS);
+  const thirtyDaysAgo = msAgoISO(30 * DAY_MS);
   const [
     { data: featured },
     { data: recentMilestones },

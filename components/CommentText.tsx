@@ -7,9 +7,6 @@ import { Fragment } from "react";
 // text. Mentions resolve against a {firstNameLower: profileHref} map built from
 // the thread's participants; an @name with no match renders as plain text.
 // Thai-aware (\p{M} = tone/vowel marks).
-const RE =
-  /(^|[^\p{L}\p{N}\p{M}_/])([#@])([\p{L}\p{N}\p{M}]+(?:-[\p{L}\p{N}\p{M}]+)*)/gu;
-
 export function CommentText({
   text,
   mentions,
@@ -17,13 +14,16 @@ export function CommentText({
   text: string;
   mentions?: Record<string, string>;
 }) {
+  // Built fresh per render so the stateful `lastIndex` isn't shared module
+  // state mutated during render.
+  const re =
+    /(^|[^\p{L}\p{N}\p{M}_/])([#@])([\p{L}\p{N}\p{M}]+(?:-[\p{L}\p{N}\p{M}]+)*)/gu;
   const nodes: React.ReactNode[] = [];
   let last = 0;
   let key = 0;
   let m: RegExpExecArray | null;
-  RE.lastIndex = 0;
 
-  while ((m = RE.exec(text)) !== null) {
+  while ((m = re.exec(text)) !== null) {
     const [full, pre, sigil, word] = m;
     const start = m.index;
     const before = text.slice(last, start) + pre;

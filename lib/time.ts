@@ -1,3 +1,21 @@
+export const DAY_MS = 86_400_000;
+
+// "Is this timestamp within the last `ms`?" Kept as a plain function (not a
+// component/hook) so the impure Date.now() read doesn't trip React Compiler's
+// purity rule when used for "New" badges during render.
+export function isWithinMs(
+  dateStr: string | null | undefined,
+  ms: number,
+): boolean {
+  if (!dateStr) return false;
+  return Date.now() - new Date(dateStr).getTime() < ms;
+}
+
+// ISO timestamp for `ms` ago — for server-side "since" query bounds.
+export function msAgoISO(ms: number): string {
+  return new Date(Date.now() - ms).toISOString();
+}
+
 // Compact relative time ("3h ago" / "3 ชั่วโมงที่แล้ว"), bilingual.
 export function timeAgo(iso: string, locale: string): string {
   const diff = Date.now() - new Date(iso).getTime();

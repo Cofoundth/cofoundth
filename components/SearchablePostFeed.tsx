@@ -36,39 +36,56 @@ export function SearchablePostFeed({
   const [q, setQ] = useState(initialQuery ?? "");
   const [results, setResults] = useState<PostItem[] | null>(null);
   const [searching, setSearching] = useState(false);
-  const reqId = useRef(0);
 
   const searchActive = q.trim().length >= 2;
 
   // Keep the feed fresh across server revalidations (like/comment/new post)
   // WITHOUT discarding pages the user already scrolled in: refresh the first
-  // page from `items`, keep the appended tail.
-  useEffect(() => {
+  // page from `items`, keep the appended tail. Done during render (comparing
+  // against the prop we last merged) so it isn't a setState-in-effect.
+  const [prevItems, setPrevItems] = useState(items);
+  if (items !== prevItems) {
+    setPrevItems(items);
     setFeed((prev) => {
       const freshIds = new Set(items.map((p) => p.id));
       const tail = prev.filter((p) => !freshIds.has(p.id));
       return [...items, ...tail];
     });
-  }, [items]);
+  }
 
-  // Debounced full-DB search. A request id guards against out-of-order results.
-  useEffect(() => {
-    const term = q.trim();
-    if (term.length < 2) {
+  // The synchronous part of search state (flag on, or full reset when the term
+  // is too short) is derived during render keyed on `q` — the spinner shows the
+  // moment typing crosses the threshold, and clears immediately below it. The
+  // actual fetch lives in the effect below.
+  const [prevSearchQ, setPrevSearchQ] = useState(q);
+  if (q !== prevSearchQ) {
+    setPrevSearchQ(q);
+    if (q.trim().length < 2) {
       setResults(null);
       setSearching(false);
-      return;
+    } else {
+      setSearching(true);
     }
-    setSearching(true);
-    const id = ++reqId.current;
+  }
+
+  // Debounced full-DB search (only when the term is long enough). A per-run
+  // cancelled flag (flipped by cleanup on the next keystroke) drops any
+  // out-of-order result.
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) return;
+    let cancelled = false;
     const handle = setTimeout(async () => {
       const r = await searchFeedAction(term);
-      if (id === reqId.current) {
+      if (!cancelled) {
         setResults(r);
         setSearching(false);
       }
     }, 300);
-    return () => clearTimeout(handle);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
   }, [q]);
 
   const loadMore = useCallback(async () => {

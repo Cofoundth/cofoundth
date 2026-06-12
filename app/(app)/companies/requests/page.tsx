@@ -11,6 +11,7 @@ import { requireUser } from "@/lib/auth";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
 import { AskRowActions } from "./AskRowActions";
+import { isWithinMs, DAY_MS } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -209,8 +210,7 @@ export default async function PartnershipRequestsBoardPage() {
             const authorHref = `/profile/${(author?.slug as string | undefined) ?? ask.author_id}`;
             const fresh =
               ask.status === "open" &&
-              Date.now() - new Date(ask.created_at as string).getTime() <
-                24 * 3600_000;
+              isWithinMs(ask.created_at as string, DAY_MS);
             const isMine = ask.author_id === user.id;
             const canRespond =
               !isMine && canPost && ask.status === "open";
