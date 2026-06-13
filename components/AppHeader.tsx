@@ -99,6 +99,7 @@ export async function AppHeader() {
       label: await tServer("Connections"),
       badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
     },
+    { href: "/orgs", label: await tServer("Companies") },
     // Insights + Legal hidden for now.
     // { href: "/insights", label: await tServer("Insights") },
     // { href: "/legal-templates", label: await tServer("Legal") },
