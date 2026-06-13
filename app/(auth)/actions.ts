@@ -1,8 +1,26 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+// Resolve the origin of the CURRENT request, so confirmation / password-reset
+// links (and any OAuth redirectTo built server-side) land back on whatever host
+// the user is actually on — production, a staging preview, or localhost —
+// instead of a hardcoded prod URL. Vercel sets `x-forwarded-host` to the real
+// public host; the /auth/callback route trusts the same header for its
+// post-OAuth redirect. Falls back to NEXT_PUBLIC_SITE_URL, then prod.
+async function getRequestOrigin(): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (host) {
+    const isLocal = host.startsWith("localhost") || host.startsWith("127.0.0.1");
+    const proto = h.get("x-forwarded-proto") ?? (isLocal ? "http" : "https");
+    return `${proto}://${host}`;
+  }
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
+}
 
 // ------------------------------------------------------------------
 // SIGN UP — link-only flow.
@@ -21,7 +39,7 @@ export async function signupAction(
   formData: FormData,
 ): Promise<SignupState> {
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
+  const origin = await getRequestOrigin();
 
   const firstName = String(formData.get("firstName") ?? "").trim();
   const lastName = String(formData.get("lastName") ?? "").trim();
@@ -177,7 +195,7 @@ export async function resetPasswordAction(
   formData: FormData,
 ): Promise<ResetState> {
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
+  const origin = await getRequestOrigin();
 
   if (prev.step === "email") {
     const email = String(formData.get("email") ?? "")
