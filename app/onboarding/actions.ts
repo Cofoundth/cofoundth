@@ -2,9 +2,34 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { canonicalProvince } from "@/lib/provinces";
 
 export type OnboardingState = { error?: string } | null;
+
+// Persist the role chosen on the onboarding screen. account_type drives which
+// onboarding fields show + where the user lives afterwards (founder app vs
+// investor space). Written via the service role to avoid column-grant concerns.
+export async function setOnboardingRoleAction(
+  role: "founder" | "investor",
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const account_type = role === "investor" ? "investor" : "founder";
+  const { error } = await createAdminClient()
+    .from("profiles")
+    .update({ account_type })
+    .eq("id", user.id);
+  if (error) {
+    console.error("[onboarding.setRole]", error);
+    return { error: "Couldn't switch role." };
+  }
+  return {};
+}
 
 const ROLE_VALUES = [
   "technical",

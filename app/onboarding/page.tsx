@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { OnboardingForm } from "./OnboardingForm";
-import { AvatarUploader } from "@/components/AvatarUploader";
 import { tServer } from "@/lib/i18n-server";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
 import { signOutAction } from "../(auth)/actions";
+import { OnboardingRoleSwitch } from "./OnboardingRoleSwitch";
+import type { InvestorInitial } from "../investor/InvestorOnboardingForm";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -22,11 +22,18 @@ export default async function OnboardingPage() {
     .eq("id", user.id)
     .single();
 
-  // Investors don't use the founder/company onboarding — send them to their
-  // own space (which has the investor-specific onboarding).
-  if (profile?.account_type === "investor") redirect("/investor");
+  const { data: inv } = await supabase
+    .from("investor_profiles")
+    .select(
+      "investor_type, firm_name, focus_industries, stages, ticket_size, thesis, location",
+    )
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  const initial = profile
+  const initialRole: "founder" | "investor" =
+    profile?.account_type === "investor" ? "investor" : "founder";
+
+  const founderInitial = profile
     ? {
         first_name: (profile.first_name as string | null) ?? "",
         last_name: (profile.last_name as string | null) ?? "",
@@ -38,13 +45,13 @@ export default async function OnboardingPage() {
         partnership_seeking: (
           (profile.partnership_seeking ?? []) as string[]
         ).join(", "),
-        status_tags: ((profile.status_tags ?? []) as Array<
+        status_tags: (profile.status_tags ?? []) as Array<
           | "open_to_partnerships"
           | "open_to_cofounder"
           | "hiring"
           | "raising"
           | "looking_for_advisors"
-        >),
+        >,
         i_am: profile.i_am ?? [],
         intent: profile.intent ?? [],
         looking_for: profile.looking_for ?? [],
@@ -84,19 +91,15 @@ export default async function OnboardingPage() {
           </div>
         </div>
       </header>
-      <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-10">
-        <div className="bg-white border border-line p-6 lg:p-8 mb-6">
-          <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
-            {await tServer("Profile photo")}
-          </div>
-          <AvatarUploader
-            userId={user.id}
-            initialUrl={profile?.photo_url ?? null}
-            name={profile?.full_name ?? user.email ?? null}
-          />
-        </div>
-      </div>
-      <OnboardingForm initial={initial} />
+
+      <OnboardingRoleSwitch
+        initialRole={initialRole}
+        founderInitial={founderInitial}
+        investorInitial={(inv as InvestorInitial | null) ?? undefined}
+        userId={user.id}
+        photoUrl={profile?.photo_url ?? null}
+        userName={profile?.full_name ?? user.email ?? null}
+      />
     </>
   );
 }

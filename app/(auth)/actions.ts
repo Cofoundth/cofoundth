@@ -55,7 +55,9 @@ export async function signupAction(
     String(formData.get("account_type") ?? "") === "investor"
       ? "investor"
       : "founder";
-  const next = accountType === "investor" ? "/investor" : "/dashboard";
+  // Everyone lands on /onboarding (role-aware); account_type just pre-selects
+  // the Founder/Investor choice there.
+  const next = "/onboarding";
 
   if (!firstName || !email || !password) {
     return { step: "credentials", error: "All fields are required." };
