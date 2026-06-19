@@ -10,6 +10,7 @@ import { STAGE_LABELS } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
 import { ManagePanel, type PanelMember } from "./ManagePanel";
 import { LeaveButton } from "./LeaveButton";
+import { ConnectActions, type ConnState } from "./ConnectActions";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export default async function OrgPage({ params }: Props) {
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "id, name, slug, tagline, about, website, logo_url, industry, capabilities, partnership_seeking, stage, location, verified",
+      "id, name, slug, tagline, about, pitch, product_url, product_images, calendly_url, website, logo_url, industry, capabilities, partnership_seeking, stage, location, verified",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -109,6 +110,46 @@ export default async function OrgPage({ params }: Props) {
   const industry = (org.industry as string[] | null) ?? [];
   const capabilities = (org.capabilities as string[] | null) ?? [];
   const seeking = (org.partnership_seeking as string[] | null) ?? [];
+  const productImages = (org.product_images as string[] | null) ?? [];
+  const productUrl = org.product_url as string | null;
+  // Pitch is the current "what we do"; fall back to legacy `about`.
+  const pitch =
+    (org.pitch as string | null) ?? (org.about as string | null);
+  const calendlyUrl = org.calendly_url as string | null;
+
+  // Connection state between the viewer's company and this one.
+  let connState: ConnState = "none";
+  let connectionId: string | null = null;
+  if (isMember) {
+    connState = "self";
+  } else {
+    const { data: myFirst } = await supabase
+      .from("org_members")
+      .select("org_id, joined_at")
+      .eq("user_id", user.id)
+      .order("joined_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const myOrgId = (myFirst?.org_id as string | undefined) ?? null;
+    if (!myOrgId) {
+      connState = "no_org";
+    } else {
+      const { data: conn } = await supabase
+        .from("org_connections")
+        .select("id, requester_org, status")
+        .or(
+          `and(requester_org.eq.${myOrgId},target_org.eq.${org.id}),and(requester_org.eq.${org.id},target_org.eq.${myOrgId})`,
+        )
+        .maybeSingle();
+      if (!conn || conn.status === "declined") connState = "none";
+      else if (conn.status === "accepted") connState = "connected";
+      else if (conn.requester_org === myOrgId) connState = "pending_sent";
+      else {
+        connState = "pending_received";
+        connectionId = conn.id as string;
+      }
+    }
+  }
   const stageLabel = org.stage
     ? t(STAGE_LABELS[org.stage as string] ?? (org.stage as string), locale)
     : null;
@@ -167,6 +208,17 @@ export default async function OrgPage({ params }: Props) {
                 {org.location as string}
               </span>
             )}
+            {productUrl && (
+              <a
+                href={productUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-navy"
+              >
+                <ExternalLink className="w-4 h-4 text-gold" />
+                {await tServer("View product")}
+              </a>
+            )}
             {org.website && (
               <a
                 href={org.website as string}
@@ -185,14 +237,44 @@ export default async function OrgPage({ params }: Props) {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main */}
         <div className="lg:col-span-2 space-y-8">
-          {org.about && (
+          {pitch && (
             <section>
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
-                {await tServer("About")}
+                {await tServer("What this company does")}
               </h2>
               <p className="text-ink leading-relaxed whitespace-pre-wrap">
-                {org.about as string}
+                {pitch}
               </p>
+            </section>
+          )}
+
+          {productImages.length > 0 && (
+            <section>
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+                {await tServer("Product")}
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {productImages.map((src) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={src}
+                    src={src}
+                    alt=""
+                    className="w-full aspect-[4/3] object-cover border border-line"
+                  />
+                ))}
+              </div>
+              {productUrl && (
+                <a
+                  href={productUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-navy hover:text-gold mt-3"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  {await tServer("View product")}
+                </a>
+              )}
             </section>
           )}
 
@@ -224,8 +306,21 @@ export default async function OrgPage({ params }: Props) {
           )}
         </div>
 
-        {/* Aside — team */}
+        {/* Aside — connect + team */}
         <aside className="space-y-4">
+          {connState !== "self" && (
+            <div className="bg-white border border-line p-5">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+                {await tServer("Connect")}
+              </h2>
+              <ConnectActions
+                targetOrgId={org.id as string}
+                state={connState}
+                connectionId={connectionId}
+                calendlyUrl={calendlyUrl}
+              />
+            </div>
+          )}
           <div className="bg-white border border-line p-5">
             <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
               {(await tServer("Team ({n})")).replace(

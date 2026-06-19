@@ -15,6 +15,8 @@ type OrgLite = {
   logo_url: string | null;
   industry: string[] | null;
   location: string | null;
+  capabilities: string[] | null;
+  partnership_seeking: string[] | null;
   verified?: boolean | null;
 };
 
@@ -38,7 +40,44 @@ function OrgLogo({ org }: { org: { name: string; logo_url: string | null } }) {
   );
 }
 
-function OrgCard({ org, role }: { org: OrgLite; role?: string }) {
+function CardTags({ label, items }: { label: string; items: string[] }) {
+  if (!items.length) return null;
+  const shown = items.slice(0, 3);
+  const extra = items.length - shown.length;
+  return (
+    <div className="mt-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-gold mb-1">
+        {label}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {shown.map((c) => (
+          <span
+            key={c}
+            className="text-[11px] text-ink border border-line bg-cream px-2 py-0.5"
+          >
+            {c}
+          </span>
+        ))}
+        {extra > 0 && (
+          <span className="text-[11px] text-ink-muted self-center">+{extra}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OrgCard({
+  org,
+  role,
+  offerLabel,
+  seekingLabel,
+}: {
+  org: OrgLite;
+  role?: string;
+  offerLabel: string;
+  seekingLabel: string;
+}) {
+  const hasMeta = org.location || org.industry?.length;
   return (
     <Link
       href={`/orgs/${org.slug}`}
@@ -63,17 +102,21 @@ function OrgCard({ org, role }: { org: OrgLite; role?: string }) {
           {org.tagline && (
             <p className="text-sm text-ink mt-1 line-clamp-2">{org.tagline}</p>
           )}
-          <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted">
-            {org.location && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-gold" />
-                {org.location}
-              </span>
-            )}
-            {org.industry?.length ? (
-              <span className="truncate">{org.industry.join(" · ")}</span>
-            ) : null}
-          </div>
+          {hasMeta && (
+            <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted">
+              {org.location && (
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-gold" />
+                  {org.location}
+                </span>
+              )}
+              {org.industry?.length ? (
+                <span className="truncate">{org.industry.join(" · ")}</span>
+              ) : null}
+            </div>
+          )}
+          <CardTags label={offerLabel} items={org.capabilities ?? []} />
+          <CardTags label={seekingLabel} items={org.partnership_seeking ?? []} />
         </div>
       </div>
     </Link>
@@ -95,13 +138,13 @@ export default async function OrgsPage() {
       supabase
         .from("org_members")
         .select(
-          "role, organizations(id, name, slug, tagline, logo_url, industry, location, verified)",
+          "role, organizations(id, name, slug, tagline, logo_url, industry, location, capabilities, partnership_seeking, verified)",
         )
         .eq("user_id", user.id),
       supabase
         .from("organizations")
         .select(
-          "id, name, slug, tagline, logo_url, industry, location, verified",
+          "id, name, slug, tagline, logo_url, industry, location, capabilities, partnership_seeking, verified",
         )
         .order("created_at", { ascending: false })
         .limit(60),
@@ -128,6 +171,8 @@ export default async function OrgsPage() {
   );
 
   const invitedAsTpl = await tServer("Invited you as {role}");
+  const offerLabel = await tServer("What we offer");
+  const seekingLabel = await tServer("Looking for");
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
@@ -206,7 +251,13 @@ export default async function OrgsPage() {
         ) : (
           <div className="grid sm:grid-cols-2 gap-4">
             {myOrgs.map((m) => (
-              <OrgCard key={m.org!.id} org={m.org!} role={m.role} />
+              <OrgCard
+                key={m.org!.id}
+                org={m.org!}
+                role={m.role}
+                offerLabel={offerLabel}
+                seekingLabel={seekingLabel}
+              />
             ))}
           </div>
         )}
@@ -220,7 +271,12 @@ export default async function OrgsPage() {
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
             {directory.map((o) => (
-              <OrgCard key={o.id} org={o} />
+              <OrgCard
+                key={o.id}
+                org={o}
+                offerLabel={offerLabel}
+                seekingLabel={seekingLabel}
+              />
             ))}
           </div>
         </section>

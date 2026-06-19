@@ -49,6 +49,13 @@ export async function signupAction(
     .toLowerCase();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
+  // Registration persona. Only 'investor' is honored; anything else (incl.
+  // tampering) falls back to 'founder'. NOTE: 'admin' is never selectable here.
+  const accountType =
+    String(formData.get("account_type") ?? "") === "investor"
+      ? "investor"
+      : "founder";
+  const next = accountType === "investor" ? "/investor" : "/dashboard";
 
   if (!firstName || !email || !password) {
     return { step: "credentials", error: "All fields are required." };
@@ -77,7 +84,7 @@ export async function signupAction(
       type: "signup",
       email,
       options: {
-        emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${origin}/auth/callback?next=${next}`,
       },
     });
     if (resendError) {
@@ -90,8 +97,13 @@ export async function signupAction(
     email,
     password,
     options: {
-      data: { full_name: fullName, first_name: firstName, last_name: lastName },
-      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+      data: {
+        full_name: fullName,
+        first_name: firstName,
+        last_name: lastName,
+        account_type: accountType,
+      },
+      emailRedirectTo: `${origin}/auth/callback?next=${next}`,
     },
   });
 

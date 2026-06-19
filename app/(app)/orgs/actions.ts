@@ -55,8 +55,10 @@ export async function createOrgAction(
 ): Promise<OrgFormState> {
   const name = String(formData.get("name") ?? "").trim();
   const tagline = String(formData.get("tagline") ?? "").trim();
-  const about = String(formData.get("about") ?? "").trim();
-  const website = String(formData.get("website") ?? "").trim();
+  const pitch = String(formData.get("pitch") ?? "").trim();
+  const productUrl = String(formData.get("product_url") ?? "").trim();
+  const logoUrl = String(formData.get("logo_url") ?? "").trim();
+  const calendlyUrl = String(formData.get("calendly_url") ?? "").trim();
   const location = String(formData.get("location") ?? "").trim();
   const stage = String(formData.get("stage") ?? "").trim();
   const industry = parseList(String(formData.get("industry") ?? ""));
@@ -65,13 +67,38 @@ export async function createOrgAction(
     String(formData.get("partnership_seeking") ?? ""),
   );
 
+  // product_images arrives as a JSON array of uploaded public URLs.
+  let productImages: string[] = [];
+  try {
+    const parsed = JSON.parse(String(formData.get("product_images") ?? "[]"));
+    if (Array.isArray(parsed)) {
+      productImages = parsed
+        .filter((u): u is string => typeof u === "string" && u.length > 0)
+        .slice(0, 6);
+    }
+  } catch {
+    productImages = [];
+  }
+
+  const urlOk = (u: string) => /^https?:\/\/.+\..+/.test(u);
+
   if (name.length < 2 || name.length > 80) {
     return { error: "Company name must be 2–80 characters." };
   }
   if (tagline.length > 140) return { error: "Tagline is too long (140 max)." };
-  if (about.length > 2000) return { error: "About is too long (2000 max)." };
-  if (website && !/^https?:\/\/.+\..+/.test(website)) {
-    return { error: "Website must be a valid URL (https://…)." };
+  if (!pitch) return { error: "Add a short pitch — what your company does." };
+  if (pitch.length > 1000) {
+    return { error: "Pitch is too long (about 200 words max)." };
+  }
+  if (!logoUrl) return { error: "Upload a company logo." };
+  if (!productUrl || !urlOk(productUrl)) {
+    return { error: "Add a valid product link (https://…)." };
+  }
+  if (productImages.length === 0) {
+    return { error: "Add at least one product image." };
+  }
+  if (calendlyUrl && !urlOk(calendlyUrl)) {
+    return { error: "Calendly link must be a valid URL (https://…)." };
   }
   if (stage && !(STAGES as readonly string[]).includes(stage)) {
     return { error: "Invalid stage." };
@@ -92,8 +119,11 @@ export async function createOrgAction(
       slug,
       name,
       tagline: tagline || null,
-      about: about || null,
-      website: website || null,
+      pitch,
+      product_url: productUrl,
+      product_images: productImages,
+      logo_url: logoUrl,
+      calendly_url: calendlyUrl || null,
       location: location || null,
       stage: stage || null,
       industry,
@@ -269,6 +299,126 @@ export async function removeMemberAction(
     return { error: "Couldn't remove member." };
   }
   revalidatePath(`/orgs`);
+  return {};
+}
+
+// ------------------------------------------------------------------
+// COMPANY <-> COMPANY connections (the gate for "นัดคุย" / scheduling).
+// A member acts on behalf of their first company. Writes go through the
+// service role (no insert/update RLS on org_connections), after verifying
+// membership here — mirroring the org_members / org_invites design.
+// ------------------------------------------------------------------
+
+// The org the viewer acts as (their earliest-joined membership). Most users
+// belong to 0 or 1 company; if several, we use the first.
+async function viewerPrimaryOrg(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("org_members")
+    .select("org_id, joined_at")
+    .eq("user_id", userId)
+    .order("joined_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return (data?.org_id as string | undefined) ?? null;
+}
+
+export async function requestConnectionAction(
+  targetOrgId: string,
+): Promise<{ error?: string; ok?: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const myOrg = await viewerPrimaryOrg(supabase, user.id);
+  if (!myOrg) return { error: "Create a company first to connect." };
+  if (myOrg === targetOrgId) return { error: "That's your own company." };
+
+  const admin = createAdminClient();
+  // Either direction already on file?
+  const { data: existing } = await admin
+    .from("org_connections")
+    .select("id, status")
+    .or(
+      `and(requester_org.eq.${myOrg},target_org.eq.${targetOrgId}),and(requester_org.eq.${targetOrgId},target_org.eq.${myOrg})`,
+    )
+    .maybeSingle();
+
+  if (existing && existing.status !== "declined") {
+    return { error: "A connection already exists." };
+  }
+
+  if (existing) {
+    // Re-open a previously declined request from my side.
+    await admin
+      .from("org_connections")
+      .update({
+        requester_org: myOrg,
+        target_org: targetOrgId,
+        status: "pending",
+        created_by: user.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id);
+  } else {
+    const { error } = await admin.from("org_connections").insert({
+      requester_org: myOrg,
+      target_org: targetOrgId,
+      status: "pending",
+      created_by: user.id,
+    });
+    if (error) {
+      console.error("[orgs.connect.request]", error);
+      return { error: "Couldn't send the request. Try again." };
+    }
+  }
+
+  revalidatePath("/orgs");
+  return { ok: true };
+}
+
+export async function respondConnectionAction(
+  connectionId: string,
+  accept: boolean,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const admin = createAdminClient();
+  const { data: conn } = await admin
+    .from("org_connections")
+    .select("id, target_org, status")
+    .eq("id", connectionId)
+    .maybeSingle();
+  if (!conn || conn.status !== "pending") {
+    return { error: "Request not found." };
+  }
+
+  // Only a member of the TARGET company can accept / decline.
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("user_id")
+    .eq("org_id", conn.target_org)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership) return { error: "Not allowed." };
+
+  await admin
+    .from("org_connections")
+    .update({
+      status: accept ? "accepted" : "declined",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", conn.id);
+
+  revalidatePath("/orgs");
   return {};
 }
 

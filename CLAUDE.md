@@ -120,7 +120,7 @@ This is how Indie Hackers, Y Combinator's network, and AngelList all grew. Commu
 
 **Complement Score weights:** Role 40% / Intent 30% / Industry 15% / Stage 10% / Location+Commitment 5%
 
-Mutual interest required before messaging unlocks. The Pitch field is mandatory (200–500 chars).
+Mutual interest required before messaging unlocks. The Pitch field is required (non-empty) for a profile to appear in the Founder directory — **max 500 chars, no minimum length** (the old 200/120 floors were removed in migration 0046).
 
 ### B2B profile type (built)
 

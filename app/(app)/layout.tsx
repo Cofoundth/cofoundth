@@ -17,11 +17,18 @@ export default async function AppLayout({
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarded, profile_complete")
+    .select("onboarded, profile_complete, account_type")
     .eq("id", user.id)
     .single();
 
-  // New users must finish their profile before using the app.
+  // Investors don't use the founder app yet — route them to their space. The
+  // full investor module ships in Phase 2. (/investor lives outside this route
+  // group, so this can't loop.)
+  if (profile?.account_type === "investor") {
+    redirect("/investor");
+  }
+
+  // New founders must finish their profile before using the app.
   if (!profile?.onboarded) {
     redirect("/onboarding");
   }

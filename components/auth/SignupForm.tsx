@@ -15,6 +15,13 @@ const passwordRules = (pw: string) => ({
   number: /[0-9]/.test(pw),
 });
 
+// Registration persona. Admin is NOT here — it's a granted privilege, never
+// self-selected. Investor is captured now; its full experience ships later.
+const ACCOUNT_TYPES = [
+  { value: "founder", en: "Founder / Company", hint: "Build & find partners" },
+  { value: "investor", en: "Investor", hint: "Back startups · early access" },
+] as const;
+
 export function SignupForm() {
   const tr = useT();
   const [state, formAction, isPending] = useActionState<SignupState, FormData>(
@@ -25,6 +32,9 @@ export function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [accountType, setAccountType] = useState<"founder" | "investor">(
+    "founder",
+  );
 
   if (state.step === "check_email") {
     return (
@@ -58,6 +68,32 @@ export function SignupForm() {
 
   return (
     <form action={formAction} className="space-y-5">
+      <input type="hidden" name="account_type" value={accountType} />
+
+      <div>
+        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+          {tr("I'm joining as")}
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          {ACCOUNT_TYPES.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setAccountType(opt.value)}
+              aria-pressed={accountType === opt.value}
+              className={`text-left p-3 border transition-colors ${
+                accountType === opt.value
+                  ? "bg-cream border-navy"
+                  : "bg-white border-line hover:border-navy"
+              }`}
+            >
+              <div className="text-sm text-navy font-medium">{tr(opt.en)}</div>
+              <div className="text-xs text-ink-muted mt-0.5">{tr(opt.hint)}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label
