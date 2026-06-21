@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 export type AskState = { error?: string } | null;
 
@@ -27,8 +28,8 @@ export async function createAskAction(
   if (!subject || subject.length < 5 || subject.length > 200) {
     return { error: "Subject must be 5–200 characters." };
   }
-  if (!context || context.length < 50 || context.length > 2000) {
-    return { error: "Add more context — 50–2000 characters." };
+  if (!context || context.length < 50 || context.length > LONG_TEXT_MAX) {
+    return { error: "Add more context (at least 50 characters)." };
   }
   if (!(TYPES as readonly string[]).includes(requestType)) {
     return { error: "Pick a request type." };

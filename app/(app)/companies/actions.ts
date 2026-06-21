@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPartnershipRequestEmail } from "@/lib/email";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 export type RequestState = { error?: string; ok?: true } | null;
 
@@ -29,8 +30,8 @@ export async function sendPartnershipRequestAction(
   if (!subject || subject.length < 5 || subject.length > 200) {
     return { error: "Subject must be 5–200 characters." };
   }
-  if (!context || context.length < 50 || context.length > 2000) {
-    return { error: "Tell them more — 50–2000 characters." };
+  if (!context || context.length < 50 || context.length > LONG_TEXT_MAX) {
+    return { error: "Tell them more (at least 50 characters)." };
   }
   if (!(TYPES as readonly string[]).includes(requestType)) {
     return { error: "Pick a request type." };
@@ -139,7 +140,7 @@ export async function acceptPartnershipRequestAction(
   requestId: string,
   formData: FormData,
 ) {
-  const responseNote = String(formData.get("response_note") ?? "").trim().slice(0, 1000);
+  const responseNote = String(formData.get("response_note") ?? "").trim().slice(0, LONG_TEXT_MAX);
   const supabase = await createClient();
   const {
     data: { user },
@@ -164,7 +165,7 @@ export async function declinePartnershipRequestAction(
   requestId: string,
   formData: FormData,
 ) {
-  const responseNote = String(formData.get("response_note") ?? "").trim().slice(0, 1000);
+  const responseNote = String(formData.get("response_note") ?? "").trim().slice(0, LONG_TEXT_MAX);
   const supabase = await createClient();
   const {
     data: { user },

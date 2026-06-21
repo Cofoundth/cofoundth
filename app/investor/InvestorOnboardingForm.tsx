@@ -7,9 +7,10 @@ import {
   type InvestorFormState,
 } from "./actions";
 import { useT } from "@/lib/i18n-client";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 const INITIAL: InvestorFormState = null;
-const THESIS_MAX = 600;
+const THESIS_MAX = LONG_TEXT_MAX;
 
 const TYPES: { value: string; en: string }[] = [
   { value: "angel", en: "Angel" },

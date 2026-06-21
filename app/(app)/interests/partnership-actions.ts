@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 // Lightweight server actions for accept/decline/withdraw on the interests
 // page. The full send action lives in app/(app)/companies/actions.ts.
@@ -12,7 +13,7 @@ export async function acceptPartnershipAction(
 ) {
   const responseNote = String(formData.get("response_note") ?? "")
     .trim()
-    .slice(0, 1000);
+    .slice(0, LONG_TEXT_MAX);
   const supabase = await createClient();
   const {
     data: { user },
@@ -39,7 +40,7 @@ export async function declinePartnershipAction(
 ) {
   const responseNote = String(formData.get("response_note") ?? "")
     .trim()
-    .slice(0, 1000);
+    .slice(0, LONG_TEXT_MAX);
   const supabase = await createClient();
   const {
     data: { user },

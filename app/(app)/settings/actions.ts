@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { canonicalProvince } from "@/lib/provinces";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 export type EditProfileState = { error?: string; ok?: boolean } | null;
 
@@ -97,14 +98,14 @@ export async function updateProfileAction(
     .map(String)
     .filter((u) => /^https?:\/\//.test(u))
     .slice(0, 3);
-  const why_this = String(formData.get("why_this") ?? "").trim().slice(0, 1000);
-  const background = String(formData.get("background") ?? "").trim().slice(0, 600);
+  const why_this = String(formData.get("why_this") ?? "").trim().slice(0, LONG_TEXT_MAX);
+  const background = String(formData.get("background") ?? "").trim().slice(0, LONG_TEXT_MAX);
   const work_experience = String(formData.get("work_experience") ?? "")
     .trim()
-    .slice(0, 800);
+    .slice(0, LONG_TEXT_MAX);
   const education = String(formData.get("education") ?? "")
     .trim()
-    .slice(0, 400);
+    .slice(0, LONG_TEXT_MAX);
   const skills = cap(
     formData
       .getAll("skills")
@@ -183,8 +184,8 @@ export async function updateProfileAction(
     return { error: "Please select a valid runway." };
   if (experience && !EXPERIENCE_VALUES.includes(experience as never))
     return { error: "Please select a valid experience level." };
-  if (pitch.length > 500)
-    return { error: "About me must be 500 characters or less." };
+  if (pitch.length > LONG_TEXT_MAX)
+    return { error: "About me is too long." };
   // Reject unedited pitch templates — they still carry [ ] placeholders.
   if (pitch && /\[[^\]]+\]/.test(pitch))
     return {

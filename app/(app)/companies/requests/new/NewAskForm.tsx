@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { HandshakeIcon } from "lucide-react";
 import { createAskAction, type AskState } from "../actions";
 import { useT } from "@/lib/i18n-client";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 const INITIAL: AskState = null;
 
@@ -54,7 +55,7 @@ export function NewAskForm() {
   const [requestType, setRequestType] = useState("integration");
   const [context, setContext] = useState("");
 
-  const remaining = 2000 - context.length;
+  const remaining = LONG_TEXT_MAX - context.length;
   const tooShort = context.length < 50;
   const tooLong = remaining < 0;
 
@@ -121,7 +122,7 @@ export function NewAskForm() {
               tooLong || tooShort ? "text-ink-muted" : "text-gold"
             }`}
           >
-            {context.length} / 2000
+            {context.length} / {LONG_TEXT_MAX}
           </span>
         </div>
         <textarea
@@ -130,7 +131,7 @@ export function NewAskForm() {
           rows={8}
           required
           minLength={50}
-          maxLength={2000}
+          maxLength={LONG_TEXT_MAX}
           value={context}
           onChange={(e) => setContext(e.target.value)}
           placeholder={tr(

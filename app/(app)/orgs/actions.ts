@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid, slugify } from "@/lib/slug";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 export type OrgFormState = { error?: string } | null;
 
@@ -87,7 +88,7 @@ export async function createOrgAction(
   }
   if (tagline.length > 140) return { error: "Tagline is too long (140 max)." };
   if (!pitch) return { error: "Add a short pitch — what your company does." };
-  if (pitch.length > 1000) {
+  if (pitch.length > LONG_TEXT_MAX) {
     return { error: "Pitch is too long (about 200 words max)." };
   }
   if (!logoUrl) return { error: "Upload a company logo." };

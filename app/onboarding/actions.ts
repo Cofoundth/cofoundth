@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { canonicalProvince } from "@/lib/provinces";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 export type OnboardingState = { error?: string } | null;
 
@@ -121,14 +122,14 @@ export async function saveOnboardingAction(
     .map(String)
     .filter((u) => /^https?:\/\//.test(u))
     .slice(0, 3);
-  const why_this = String(formData.get("why_this") ?? "").trim().slice(0, 1000);
-  const background = String(formData.get("background") ?? "").trim().slice(0, 600);
+  const why_this = String(formData.get("why_this") ?? "").trim().slice(0, LONG_TEXT_MAX);
+  const background = String(formData.get("background") ?? "").trim().slice(0, LONG_TEXT_MAX);
   const work_experience = String(formData.get("work_experience") ?? "")
     .trim()
-    .slice(0, 800);
+    .slice(0, LONG_TEXT_MAX);
   const education = String(formData.get("education") ?? "")
     .trim()
-    .slice(0, 400);
+    .slice(0, LONG_TEXT_MAX);
   const skills = cap(
     formData
       .getAll("skills")
@@ -174,8 +175,8 @@ export async function saveOnboardingAction(
     return { error: "Please select a valid runway." };
   if (experience && !EXPERIENCE_VALUES.includes(experience as never))
     return { error: "Please select a valid experience level." };
-  if (pitch.length > 500)
-    return { error: "About me must be 500 characters or less." };
+  if (pitch.length > LONG_TEXT_MAX)
+    return { error: "About me is too long." };
   if (pitch && /\[[^\]]+\]/.test(pitch))
     return {
       error:

@@ -9,6 +9,7 @@ import Combobox from "@/components/Combobox";
 import { ProjectImagesField } from "@/components/ProjectImagesField";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 type SaveResult = { error?: string; ok?: boolean } | null;
 
@@ -243,7 +244,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             name="work_experience"
             defaultValue={initial.work_experience ?? ""}
             rows={4}
-            maxLength={800}
+            maxLength={LONG_TEXT_MAX}
             className={inputCls}
             placeholder={tr(
               "Roles, companies, what you built. One per line is fine.",
@@ -255,7 +256,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             name="education"
             defaultValue={initial.education ?? ""}
             rows={2}
-            maxLength={400}
+            maxLength={LONG_TEXT_MAX}
             className={inputCls}
             placeholder={tr("Degrees, schools, bootcamps.")}
           />
@@ -416,14 +417,14 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
       <Section title={tr("Info & ideas")}>
         <div id="rf-pitch">
           <Field
-            label={`${tr("Introduce yourself — or if you’ve got an idea, pitch it to attract other founders")} (${pitch.trim().length}/500)`}
+            label={`${tr("Introduce yourself — or if you’ve got an idea, pitch it to attract other founders")} (${pitch.trim().length}/${LONG_TEXT_MAX})`}
           >
             <textarea
               name="pitch"
               value={pitch}
               onChange={(e) => setPitch(e.target.value)}
               rows={5}
-              maxLength={500}
+              maxLength={LONG_TEXT_MAX}
               placeholder={tr(
                 "e.g. I’m a programmer, 5 years in tech, built an online shopping app. Got a cool idea? Pitch it — I’d love to hear it.",
               )}
@@ -451,7 +452,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             name="why_this"
             defaultValue={initial.why_this ?? ""}
             rows={3}
-            maxLength={1000}
+            maxLength={LONG_TEXT_MAX}
             className={inputCls}
             placeholder={tr(
               "e.g. I ran into this problem myself, and now's finally the right time to fix it.",
@@ -463,7 +464,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             name="background"
             defaultValue={initial.background ?? ""}
             rows={4}
-            maxLength={600}
+            maxLength={LONG_TEXT_MAX}
             className={inputCls}
             placeholder={tr(
               "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.",

@@ -9,6 +9,7 @@ import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
 import { ProjectImagesField } from "@/components/ProjectImagesField";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 // ---- Option lists ---------------------------------------------------
 
@@ -177,7 +178,7 @@ export function OnboardingForm({ initial }: Props) {
       !data.company_name.trim()
     )
       return false;
-    if (step === 3 && data.pitch.length > 500) return false;
+    if (step === 3 && data.pitch.length > LONG_TEXT_MAX) return false;
     return true;
   }
 
@@ -317,8 +318,8 @@ export function OnboardingForm({ initial }: Props) {
 function stepMissing(step: number, d: FormState): string {
   if (step === 0 && d.profile_type === "company" && !d.company_name.trim())
     return "Add your company name";
-  if (step === 3 && d.pitch.length > 500)
-    return "About me must be 500 chars or less";
+  if (step === 3 && d.pitch.length > LONG_TEXT_MAX)
+    return "About me is too long.";
   return "";
 }
 
@@ -734,7 +735,7 @@ function StepPitch({
               pitchLen > 500 ? "text-red-700" : "text-ink-muted"
             }`}
           >
-            {pitchLen} / 500
+            {pitchLen} / {LONG_TEXT_MAX}
           </span>
         </div>
         <textarea
@@ -742,7 +743,7 @@ function StepPitch({
           value={data.pitch}
           onChange={(e) => set("pitch", e.target.value)}
           rows={6}
-          maxLength={500}
+          maxLength={LONG_TEXT_MAX}
           placeholder={tr(
             "e.g. I’m a programmer, 5 years in tech, built an online shopping app. Got a cool idea? Pitch it — I’d love to hear it.",
           )}
@@ -785,6 +786,7 @@ function StepPitch({
           value={data.why_this}
           onChange={(e) => set("why_this", e.target.value)}
           rows={3}
+          maxLength={LONG_TEXT_MAX}
           placeholder={tr(
             "e.g. I ran into this problem myself, and now's finally the right time to fix it.",
           )}
@@ -804,7 +806,7 @@ function StepPitch({
           value={data.background}
           onChange={(e) => set("background", e.target.value)}
           rows={4}
-          maxLength={600}
+          maxLength={LONG_TEXT_MAX}
           placeholder={tr(
             "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.",
           )}
@@ -824,7 +826,7 @@ function StepPitch({
           value={data.work_experience}
           onChange={(e) => set("work_experience", e.target.value)}
           rows={4}
-          maxLength={800}
+          maxLength={LONG_TEXT_MAX}
           placeholder={tr(
             "Roles, companies, what you built. One per line is fine.",
           )}
@@ -844,7 +846,7 @@ function StepPitch({
           value={data.education}
           onChange={(e) => set("education", e.target.value)}
           rows={2}
-          maxLength={400}
+          maxLength={LONG_TEXT_MAX}
           placeholder={tr("Degrees, schools, bootcamps.")}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
         />

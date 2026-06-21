@@ -5,9 +5,10 @@ import { Building2 } from "lucide-react";
 import { createOrgAction, type OrgFormState } from "../actions";
 import { OrgLogoField, OrgProductImagesField } from "./OrgImageFields";
 import { useT } from "@/lib/i18n-client";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 const INITIAL: OrgFormState = null;
-const PITCH_MAX = 1000;
+const PITCH_MAX = LONG_TEXT_MAX;
 
 const STAGES: { value: string; en: string }[] = [
   { value: "idea", en: "Idea" },

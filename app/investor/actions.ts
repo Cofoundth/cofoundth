@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 export type InvestorFormState = { error?: string } | null;
 
@@ -50,8 +51,8 @@ export async function saveInvestorProfileAction(
   if (!(TYPES as readonly string[]).includes(investorType)) {
     return { error: "Pick your investor type." };
   }
-  if (thesis.length > 600) {
-    return { error: "Keep your thesis under 600 characters." };
+  if (thesis.length > LONG_TEXT_MAX) {
+    return { error: "Your thesis is too long." };
   }
 
   // RLS (investor_profiles_*_self) enforces user_id = the caller.

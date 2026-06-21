@@ -6,6 +6,7 @@ import { sendPartnershipRequestAction, type RequestState } from "./actions";
 import type { CompanyProfile } from "./CompaniesClient";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/lib/i18n-client";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 const INITIAL: RequestState = null;
 
@@ -80,7 +81,7 @@ export function PartnershipRequestDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const contextRemaining = 2000 - context.length;
+  const contextRemaining = LONG_TEXT_MAX - context.length;
   const contextTooShort = context.length < 50;
   const contextTooLong = contextRemaining < 0;
 
@@ -201,7 +202,7 @@ export function PartnershipRequestDialog({
                   : "text-gold"
               }`}
             >
-              {context.length} / 2000
+              {context.length} / {LONG_TEXT_MAX}
             </span>
           </div>
           <textarea
@@ -210,7 +211,7 @@ export function PartnershipRequestDialog({
             rows={6}
             required
             minLength={50}
-            maxLength={2000}
+            maxLength={LONG_TEXT_MAX}
             value={context}
             onChange={(e) => setContext(e.target.value)}
             placeholder={tr(

@@ -17,6 +17,7 @@ import {
   declinePartnershipAction,
   withdrawPartnershipAction,
 } from "./partnership-actions";
+import { LONG_TEXT_MAX } from "@/lib/limits";
 
 const TYPE_LABEL: Record<string, { en: string }> = {
   integration: { en: "Integration" },
@@ -167,7 +168,7 @@ export function PartnershipCard({ row, locale }: Props) {
                 <div className="space-y-3">
                   <textarea
                     rows={2}
-                    maxLength={1000}
+                    maxLength={LONG_TEXT_MAX}
                     value={responseNote}
                     onChange={(e) => setResponseNote(e.target.value)}
                     placeholder={tr(
