@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Clock, Handshake, X } from "lucide-react";
+import { Check, Clock, Handshake, MessageCircle, X } from "lucide-react";
 import {
   requestConnectionAction,
   respondConnectionAction,
@@ -19,10 +20,12 @@ export type ConnState =
 
 export function ConnectActions({
   targetOrgId,
+  slug,
   state,
   connectionId,
 }: {
   targetOrgId: string;
+  slug: string;
   state: ConnState;
   connectionId?: string | null;
 }) {
@@ -52,10 +55,19 @@ export function ConnectActions({
 
   if (state === "connected") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-sm text-gold">
-        <Check className="w-4 h-4" />
-        {tr("Connected")}
-      </span>
+      <div className="space-y-2">
+        <span className="inline-flex items-center gap-1.5 text-sm text-gold">
+          <Check className="w-4 h-4" />
+          {tr("Connected")}
+        </span>
+        <Link
+          href={`/orgs/${slug}/chat`}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+        >
+          <MessageCircle className="w-4 h-4" />
+          {tr("Message")}
+        </Link>
+      </div>
     );
   }
 

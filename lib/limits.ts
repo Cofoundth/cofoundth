@@ -10,3 +10,7 @@
 // keep their own larger cap (DEAL_DESCRIPTION_MAX) — deals need the detail.
 export const LONG_TEXT_MAX = 1500;
 export const DEAL_DESCRIPTION_MAX = 5000;
+
+// A single chat message (company-to-company thread). Conversational, so it has
+// its own cap separate from the long-form profile fields.
+export const MESSAGE_MAX = 2000;

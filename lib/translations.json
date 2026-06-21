@@ -891,5 +891,12 @@
   "Add more context (at least 50 characters).": "เพิ่มรายละเอียดอีกหน่อย (อย่างน้อย 50 ตัวอักษร)",
   "This can’t be changed later — founders and investors use separate accounts.": "เลือกแล้วเปลี่ยนภายหลังไม่ได้ — ผู้ก่อตั้งและนักลงทุนใช้บัญชีแยกกัน",
   "Book your signing slot": "จองเวลาเซ็นสัญญา",
-  "Both sides confirmed — book a time with Cofoundee to sign the contract.": "ทั้งสองฝ่ายยืนยันแล้ว — จองเวลากับ Cofoundee เพื่อเซ็นสัญญา"
+  "Both sides confirmed — book a time with Cofoundee to sign the contract.": "ทั้งสองฝ่ายยืนยันแล้ว — จองเวลากับ Cofoundee เพื่อเซ็นสัญญา",
+  "Back to company": "กลับไปหน้าบริษัท",
+  "Company chat": "แชทบริษัท",
+  "No messages yet. Say hello and align on the deal.": "ยังไม่มีข้อความ — ทักทายและตกลงเรื่องดีลกันได้เลย",
+  "Write a message first.": "พิมพ์ข้อความก่อน",
+  "You can only message companies you're connected with.": "คุณส่งข้อความได้เฉพาะบริษัทที่เชื่อมต่อกันแล้ว",
+  "Invalid conversation.": "การสนทนาไม่ถูกต้อง",
+  "Couldn't send. Try again.": "ส่งไม่สำเร็จ ลองอีกครั้ง"
 }

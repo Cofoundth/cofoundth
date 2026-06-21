@@ -391,6 +391,7 @@ export default async function OrgPage({ params }: Props) {
               </h2>
               <ConnectActions
                 targetOrgId={org.id as string}
+                slug={org.slug as string}
                 state={connState}
                 connectionId={connectionId}
               />
