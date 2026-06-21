@@ -898,5 +898,12 @@
   "Write a message first.": "พิมพ์ข้อความก่อน",
   "You can only message companies you're connected with.": "คุณส่งข้อความได้เฉพาะบริษัทที่เชื่อมต่อกันแล้ว",
   "Invalid conversation.": "การสนทนาไม่ถูกต้อง",
-  "Couldn't send. Try again.": "ส่งไม่สำเร็จ ลองอีกครั้ง"
+  "Couldn't send. Try again.": "ส่งไม่สำเร็จ ลองอีกครั้ง",
+  "Your conversations — co-founders and companies.": "บทสนทนาของคุณ — ทั้งโค-ฟาวเดอร์และบริษัท",
+  "Personal": "ส่วนตัว",
+  "Company conversations": "บทสนทนากับบริษัท",
+  "No company chats yet": "ยังไม่มีแชทกับบริษัท",
+  "Connect with a company, then chat to align before proposing a deal.": "เชื่อมต่อกับบริษัท แล้วแชทเพื่อตกลงรายละเอียดก่อนเสนอดีล",
+  "Browse companies": "ดูบริษัททั้งหมด",
+  "Start the conversation": "เริ่มบทสนทนา"
 }

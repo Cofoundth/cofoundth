@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, MessageCircle, Inbox, Send, Clock } from "lucide-react";
+import {
+  ArrowRight,
+  MessageCircle,
+  Inbox,
+  Send,
+  Clock,
+  Building2,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
@@ -25,13 +32,36 @@ function timeAgo(iso: string, locale: Locale): string {
   });
 }
 
-// "Connections" — the whole relationship funnel in one place:
-//   pending interest (sent / received)  →  match  →  conversation
-// Replaces the old separate /interests and /matches pages.
-export default async function ConnectionsPage() {
+type CompanyConvo = {
+  connectionId: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  last_content: string | null;
+  last_at: string | null;
+};
+
+// "Connections" — the relationship funnel in one place. Two tabs:
+//   Personal — co-founder interest → match → conversation
+//   Company  — chats with companies your company is connected to
+export default async function ConnectionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab: tabParam } = await searchParams;
   const supabase = await createClient();
   const user = await requireUser();
   const locale = await getLocale();
+
+  // Does the viewer belong to a company? Decides whether the Company tab shows.
+  const { data: myMemberships } = await supabase
+    .from("org_members")
+    .select("org_id")
+    .eq("user_id", user.id);
+  const myOrgIds = (myMemberships ?? []).map((m) => m.org_id as string);
+  const hasCompany = myOrgIds.length > 0;
+  const tab = tabParam === "company" && hasCompany ? "company" : "personal";
 
   // ---- Matches (mutual) + last message / unread -------------------------
   const { data: matches } = await supabase
@@ -117,6 +147,64 @@ export default async function ConnectionsPage() {
     return new Date(bAt).getTime() - new Date(aAt).getTime();
   });
 
+  // ---- Company conversations (B2B chat) ---------------------------------
+  // org_connections / org_messages reads are RLS-scoped to the viewer's orgs.
+  let companyConvos: CompanyConvo[] = [];
+  if (hasCompany) {
+    const { data: conns } = await supabase
+      .from("org_connections")
+      .select("id, requester_org, target_org")
+      .eq("status", "accepted");
+    const connList = conns ?? [];
+    if (connList.length) {
+      const otherOf = (c: { requester_org: string; target_org: string }) =>
+        myOrgIds.includes(c.requester_org) ? c.target_org : c.requester_org;
+      const otherOrgIds = connList.map((c) =>
+        otherOf(c as { requester_org: string; target_org: string }),
+      );
+      const connIds = connList.map((c) => c.id as string);
+      const [{ data: orgsData }, { data: convoMsgs }] = await Promise.all([
+        supabase
+          .from("organizations")
+          .select("id, name, slug, logo_url")
+          .in("id", otherOrgIds),
+        supabase
+          .from("org_messages")
+          .select("connection_id, body, created_at")
+          .in("connection_id", connIds)
+          .order("created_at", { ascending: false }),
+      ]);
+      const orgById = new Map((orgsData ?? []).map((o) => [o.id as string, o]));
+      const lastByConn = new Map<string, { body: string; at: string }>();
+      for (const m of convoMsgs ?? []) {
+        const cid = m.connection_id as string;
+        if (!lastByConn.has(cid)) {
+          lastByConn.set(cid, {
+            body: m.body as string,
+            at: m.created_at as string,
+          });
+        }
+      }
+      companyConvos = connList
+        .map((c) => {
+          const o = orgById.get(
+            otherOf(c as { requester_org: string; target_org: string }),
+          );
+          const last = lastByConn.get(c.id as string);
+          return {
+            connectionId: c.id as string,
+            name: (o?.name as string) ?? "Company",
+            slug: (o?.slug as string) ?? "",
+            logo_url: (o?.logo_url as string | null) ?? null,
+            last_content: last?.body ?? null,
+            last_at: last?.at ?? null,
+          };
+        })
+        .filter((c) => c.slug)
+        .sort((a, b) => (b.last_at ?? "").localeCompare(a.last_at ?? ""));
+    }
+  }
+
   const roleLine = (p: ReturnType<typeof profiles.get>) =>
     ((p?.i_am as string[] | null) ?? [])
       .map((r) => t(ROLE_LABELS[r], locale))
@@ -136,210 +224,99 @@ export default async function ConnectionsPage() {
   const pendingLabel = await tServer("pending");
   const newLabel = await tServer("new");
   const mutualLabel = await tServer("Mutual interest! Start the conversation.");
+  const startConvoLabel = await tServer("Start the conversation");
+
+  const tabClass = (active: boolean) =>
+    `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
+      active
+        ? "border-navy text-navy font-medium"
+        : "border-transparent text-ink-muted hover:text-navy"
+    }`;
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
-      <div className="mb-10 pb-8 border-b border-line">
+      <div className="mb-6">
         <h1 className="text-4xl lg:text-5xl mb-2">
           {await tServer("Connections")}
         </h1>
         <p className="text-ink">
-          {await tServer(
-            "Interest, matches, and conversations — all in one place.",
-          )}
+          {await tServer("Your conversations — co-founders and companies.")}
         </p>
       </div>
 
-      {/* ---- Requests (pending interest) ---- */}
-      {hasRequests && (
-        <section className="mb-12">
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
-            {await tServer("Requests")}
-          </h2>
-
-          {received.length > 0 && (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 text-sm text-ink-muted mb-3">
-                <Inbox className="w-4 h-4" strokeWidth={1.5} />
-                {(
-                  await tServer(
-                    "{n} interested in you — open their profile to respond",
-                  )
-                ).replace("{n}", String(received.length))}
-              </div>
-              <div className="bg-white border border-line divide-y divide-line">
-                {received.map((r) => {
-                  const p = profiles.get(r.from_profile_id as string);
-                  return (
-                    <Link
-                      key={r.id as string}
-                      href={profileHref(p, r.from_profile_id as string)}
-                      className="flex items-start gap-4 p-5 hover:bg-cream transition-colors group"
-                    >
-                      <Avatar
-                        name={p?.full_name as string}
-                        url={p?.photo_url as string | null}
-                        size="md"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-serif text-lg text-navy group-hover:text-gold transition-colors">
-                          {displayName(p)}
-                        </div>
-                        <div className="text-xs text-ink-muted">
-                          {roleLine(p) || "—"}
-                        </div>
-                        {r.note ? (
-                          <p className="text-sm text-ink mt-1.5 line-clamp-2">
-                            “{r.note as string}”
-                          </p>
-                        ) : null}
-                      </div>
-                      <span className="text-xs text-navy inline-flex items-center gap-1 shrink-0 mt-1">
-                        {respondLabel}
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {sent.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 text-sm text-ink-muted mb-3">
-                <Send className="w-4 h-4" strokeWidth={1.5} />
-                {(await tServer("Waiting to hear back ({n})")).replace(
-                  "{n}",
-                  String(sent.length),
-                )}
-              </div>
-              <div className="bg-white border border-line divide-y divide-line">
-                {sent.map((s) => {
-                  const p = profiles.get(s.to_profile_id as string);
-                  return (
-                    <Link
-                      key={s.id as string}
-                      href={profileHref(p, s.to_profile_id as string)}
-                      className="flex items-center gap-4 p-4 hover:bg-cream transition-colors group"
-                    >
-                      <Avatar
-                        name={p?.full_name as string}
-                        url={p?.photo_url as string | null}
-                        size="sm"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-navy font-medium group-hover:text-gold transition-colors">
-                          {displayName(p)}
-                        </div>
-                        <div className="text-xs text-ink-muted">
-                          {roleLine(p) || "—"}
-                        </div>
-                      </div>
-                      <span className="text-[11px] uppercase tracking-[0.15em] text-ink-muted inline-flex items-center gap-1 shrink-0">
-                        <Clock className="w-3 h-3" /> {pendingLabel}
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </section>
+      {hasCompany && (
+        <nav className="flex items-center gap-1 mb-8 border-b border-line">
+          <Link href="/matches" className={tabClass(tab === "personal")}>
+            {await tServer("Personal")}
+          </Link>
+          <Link
+            href="/matches?tab=company"
+            className={tabClass(tab === "company")}
+          >
+            {await tServer("Company")}
+          </Link>
+        </nav>
       )}
 
-      {/* ---- Conversations (matches) ---- */}
-      <section>
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
-            {await tServer("Conversations")}
+      {tab === "company" ? (
+        <section>
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+            {await tServer("Company conversations")}
           </h2>
-          {(matches?.length ?? 0) > 0 && (
-            <span className="text-xs text-ink-muted">
-              {matches?.length}{" "}
-              {await tServer("match(es) · messaging unlocked")}
-            </span>
-          )}
-        </div>
-
-        {!matches?.length ? (
-          <div className="bg-white border border-line p-12 text-center">
-            <h3 className="text-2xl mb-2">
-              {await tServer("No conversations yet")}
-            </h3>
-            <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
-              {await tServer(
-                "Mutual interest creates a match. Browse the directory, express interest in founders whose profiles align, and matches will appear here when they reciprocate.",
-              )}
-            </p>
-            <Link
-              href="/browse"
-              className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
-            >
-              {await tServer("Open directory")}{" "}
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {sortedMatches.map((m) => {
-              const otherId =
-                m.profile_a_id === user.id
-                  ? (m.profile_b_id as string)
-                  : (m.profile_a_id as string);
-              const p = profiles.get(otherId);
-              const msg = messagesByMatch.get(m.id as string);
-              return (
+          {companyConvos.length === 0 ? (
+            <div className="bg-white border border-line p-12 text-center">
+              <h3 className="text-2xl mb-2">
+                {await tServer("No company chats yet")}
+              </h3>
+              <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
+                {await tServer(
+                  "Connect with a company, then chat to align before proposing a deal.",
+                )}
+              </p>
+              <Link
+                href="/orgs"
+                className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+              >
+                {await tServer("Browse companies")}{" "}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {companyConvos.map((c) => (
                 <Link
-                  key={m.id as string}
-                  href={`/messages/${m.id}`}
+                  key={c.connectionId}
+                  href={`/orgs/${c.slug}/chat`}
                   className="block bg-white border border-line hover:border-navy transition-colors p-5 group"
                 >
                   <div className="flex items-start gap-4">
-                    <Avatar
-                      name={p?.full_name as string}
-                      url={p?.photo_url as string | null}
-                      size="lg"
-                    />
+                    {c.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={c.logo_url}
+                        alt={c.name}
+                        className="w-12 h-12 object-cover border border-line shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center shrink-0">
+                        <Building2 className="w-5 h-5 text-ink-muted" />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3 mb-1">
                         <div className="font-serif text-xl text-navy truncate min-w-0">
-                          {displayName(p)}
+                          {c.name}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {msg?.last_at && (
-                            <span className="text-xs text-ink-muted">
-                              {timeAgo(msg.last_at, locale)}
-                            </span>
-                          )}
-                          {msg?.unread ? (
-                            <span className="text-[10px] uppercase tracking-[0.2em] bg-gold text-white px-2 py-0.5">
-                              {msg.unread} {newLabel}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                      <div className="text-xs text-ink-muted mb-2">
-                        {roleLine(p)}
-                        {((p?.intent as string[] | null) ?? []).length > 0 && (
-                          <>
-                            {" "}
-                            &middot;{" "}
-                            <span className="text-gold">
-                              {((p?.intent as string[] | null) ?? [])
-                                .map((x) => t(INTENT_LABELS[x], locale))
-                                .join(" · ")}
-                            </span>
-                          </>
-                        )}
-                        {p?.location && (
-                          <> &middot; {provinceLabel(p.location as string, locale)}</>
+                        {c.last_at && (
+                          <span className="text-xs text-ink-muted shrink-0">
+                            {timeAgo(c.last_at, locale)}
+                          </span>
                         )}
                       </div>
                       <p className="text-sm text-ink truncate">
-                        {msg?.last_content ?? (
+                        {c.last_content ?? (
                           <span className="text-ink-muted italic">
-                            {mutualLabel}
+                            {startConvoLabel}
                           </span>
                         )}
                       </p>
@@ -347,11 +324,221 @@ export default async function ConnectionsPage() {
                     <MessageCircle className="w-5 h-5 text-ink-muted group-hover:text-navy mt-1 shrink-0" />
                   </div>
                 </Link>
-              );
-            })}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <>
+          {/* ---- Requests (pending interest) ---- */}
+          {hasRequests && (
+            <section className="mb-12">
+              <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+                {await tServer("Requests")}
+              </h2>
+
+              {received.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 text-sm text-ink-muted mb-3">
+                    <Inbox className="w-4 h-4" strokeWidth={1.5} />
+                    {(
+                      await tServer(
+                        "{n} interested in you — open their profile to respond",
+                      )
+                    ).replace("{n}", String(received.length))}
+                  </div>
+                  <div className="bg-white border border-line divide-y divide-line">
+                    {received.map((r) => {
+                      const p = profiles.get(r.from_profile_id as string);
+                      return (
+                        <Link
+                          key={r.id as string}
+                          href={profileHref(p, r.from_profile_id as string)}
+                          className="flex items-start gap-4 p-5 hover:bg-cream transition-colors group"
+                        >
+                          <Avatar
+                            name={p?.full_name as string}
+                            url={p?.photo_url as string | null}
+                            size="md"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-serif text-lg text-navy group-hover:text-gold transition-colors">
+                              {displayName(p)}
+                            </div>
+                            <div className="text-xs text-ink-muted">
+                              {roleLine(p) || "—"}
+                            </div>
+                            {r.note ? (
+                              <p className="text-sm text-ink mt-1.5 line-clamp-2">
+                                “{r.note as string}”
+                              </p>
+                            ) : null}
+                          </div>
+                          <span className="text-xs text-navy inline-flex items-center gap-1 shrink-0 mt-1">
+                            {respondLabel}
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {sent.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-ink-muted mb-3">
+                    <Send className="w-4 h-4" strokeWidth={1.5} />
+                    {(await tServer("Waiting to hear back ({n})")).replace(
+                      "{n}",
+                      String(sent.length),
+                    )}
+                  </div>
+                  <div className="bg-white border border-line divide-y divide-line">
+                    {sent.map((s) => {
+                      const p = profiles.get(s.to_profile_id as string);
+                      return (
+                        <Link
+                          key={s.id as string}
+                          href={profileHref(p, s.to_profile_id as string)}
+                          className="flex items-center gap-4 p-4 hover:bg-cream transition-colors group"
+                        >
+                          <Avatar
+                            name={p?.full_name as string}
+                            url={p?.photo_url as string | null}
+                            size="sm"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-navy font-medium group-hover:text-gold transition-colors">
+                              {displayName(p)}
+                            </div>
+                            <div className="text-xs text-ink-muted">
+                              {roleLine(p) || "—"}
+                            </div>
+                          </div>
+                          <span className="text-[11px] uppercase tracking-[0.15em] text-ink-muted inline-flex items-center gap-1 shrink-0">
+                            <Clock className="w-3 h-3" /> {pendingLabel}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* ---- Conversations (matches) ---- */}
+          <section>
+            <div className="flex items-baseline justify-between mb-4">
+              <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
+                {await tServer("Conversations")}
+              </h2>
+              {(matches?.length ?? 0) > 0 && (
+                <span className="text-xs text-ink-muted">
+                  {matches?.length}{" "}
+                  {await tServer("match(es) · messaging unlocked")}
+                </span>
+              )}
+            </div>
+
+            {!matches?.length ? (
+              <div className="bg-white border border-line p-12 text-center">
+                <h3 className="text-2xl mb-2">
+                  {await tServer("No conversations yet")}
+                </h3>
+                <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
+                  {await tServer(
+                    "Mutual interest creates a match. Browse the directory, express interest in founders whose profiles align, and matches will appear here when they reciprocate.",
+                  )}
+                </p>
+                <Link
+                  href="/browse"
+                  className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+                >
+                  {await tServer("Open directory")}{" "}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sortedMatches.map((m) => {
+                  const otherId =
+                    m.profile_a_id === user.id
+                      ? (m.profile_b_id as string)
+                      : (m.profile_a_id as string);
+                  const p = profiles.get(otherId);
+                  const msg = messagesByMatch.get(m.id as string);
+                  return (
+                    <Link
+                      key={m.id as string}
+                      href={`/messages/${m.id}`}
+                      className="block bg-white border border-line hover:border-navy transition-colors p-5 group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <Avatar
+                          name={p?.full_name as string}
+                          url={p?.photo_url as string | null}
+                          size="lg"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3 mb-1">
+                            <div className="font-serif text-xl text-navy truncate min-w-0">
+                              {displayName(p)}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {msg?.last_at && (
+                                <span className="text-xs text-ink-muted">
+                                  {timeAgo(msg.last_at, locale)}
+                                </span>
+                              )}
+                              {msg?.unread ? (
+                                <span className="text-[10px] uppercase tracking-[0.2em] bg-gold text-white px-2 py-0.5">
+                                  {msg.unread} {newLabel}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="text-xs text-ink-muted mb-2">
+                            {roleLine(p)}
+                            {((p?.intent as string[] | null) ?? []).length >
+                              0 && (
+                              <>
+                                {" "}
+                                &middot;{" "}
+                                <span className="text-gold">
+                                  {((p?.intent as string[] | null) ?? [])
+                                    .map((x) => t(INTENT_LABELS[x], locale))
+                                    .join(" · ")}
+                                </span>
+                              </>
+                            )}
+                            {p?.location && (
+                              <>
+                                {" "}
+                                &middot;{" "}
+                                {provinceLabel(p.location as string, locale)}
+                              </>
+                            )}
+                          </div>
+                          <p className="text-sm text-ink truncate">
+                            {msg?.last_content ?? (
+                              <span className="text-ink-muted italic">
+                                {mutualLabel}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <MessageCircle className="w-5 h-5 text-ink-muted group-hover:text-navy mt-1 shrink-0" />
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }
