@@ -3,12 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
+  CalendarClock,
   ExternalLink,
   HandshakeIcon,
   MapPin,
   ShieldCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { COFOUNDEE_CALENDLY_URL } from "@/lib/calendly";
 import { requireUser } from "@/lib/auth";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
@@ -230,6 +232,10 @@ export default async function OrgPage({ params }: Props) {
     })),
   );
   const proposeLabel = await tServer("Propose a deal");
+  const bookSigningLabel = await tServer("Book your signing slot");
+  const signingHint = await tServer(
+    "Both sides confirmed — book a time with Cofoundee to sign the contract.",
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-6 lg:px-10 py-10">
@@ -416,6 +422,23 @@ export default async function OrgPage({ params }: Props) {
                       {d.status === "proposed" && (
                         <div className="mt-2">
                           <DealActions dealId={d.id} role={d.role} />
+                        </div>
+                      )}
+                      {(d.status === "confirmed" ||
+                        d.status === "admin_review") && (
+                        <div className="mt-2">
+                          <p className="text-[11px] text-ink-muted mb-1.5">
+                            {signingHint}
+                          </p>
+                          <a
+                            href={COFOUNDEE_CALENDLY_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark text-white text-xs transition-colors"
+                          >
+                            <CalendarClock className="w-3.5 h-3.5" />
+                            {bookSigningLabel}
+                          </a>
                         </div>
                       )}
                     </li>
