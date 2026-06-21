@@ -67,7 +67,7 @@ export default async function OrgPage({ params }: Props) {
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "id, name, slug, tagline, about, pitch, product_url, product_images, calendly_url, website, logo_url, industry, capabilities, partnership_seeking, stage, location, verified",
+      "id, name, slug, tagline, about, pitch, product_url, product_images, website, logo_url, industry, capabilities, partnership_seeking, stage, location, verified",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -124,7 +124,6 @@ export default async function OrgPage({ params }: Props) {
   // Pitch is the current "what we do"; fall back to legacy `about`.
   const pitch =
     (org.pitch as string | null) ?? (org.about as string | null);
-  const calendlyUrl = org.calendly_url as string | null;
 
   // The viewer's company (first membership) + connection state with this org.
   const { data: myFirst } = await supabase
@@ -394,7 +393,6 @@ export default async function OrgPage({ params }: Props) {
                 targetOrgId={org.id as string}
                 state={connState}
                 connectionId={connectionId}
-                calendlyUrl={calendlyUrl}
               />
             </div>
           )}

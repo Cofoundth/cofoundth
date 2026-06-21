@@ -59,7 +59,6 @@ export async function createOrgAction(
   const pitch = String(formData.get("pitch") ?? "").trim();
   const productUrl = String(formData.get("product_url") ?? "").trim();
   const logoUrl = String(formData.get("logo_url") ?? "").trim();
-  const calendlyUrl = String(formData.get("calendly_url") ?? "").trim();
   const location = String(formData.get("location") ?? "").trim();
   const stage = String(formData.get("stage") ?? "").trim();
   const industry = parseList(String(formData.get("industry") ?? ""));
@@ -98,9 +97,6 @@ export async function createOrgAction(
   if (productImages.length === 0) {
     return { error: "Add at least one product image." };
   }
-  if (calendlyUrl && !urlOk(calendlyUrl)) {
-    return { error: "Calendly link must be a valid URL (https://…)." };
-  }
   if (stage && !(STAGES as readonly string[]).includes(stage)) {
     return { error: "Invalid stage." };
   }
@@ -124,7 +120,6 @@ export async function createOrgAction(
       product_url: productUrl,
       product_images: productImages,
       logo_url: logoUrl,
-      calendly_url: calendlyUrl || null,
       location: location || null,
       stage: stage || null,
       industry,

@@ -141,18 +141,6 @@ export function CreateOrgForm() {
         <OrgProductImagesField value={productImages} onChange={setProductImages} />
       </Field>
 
-      <Field
-        label={tr("Schedule-a-call link (Calendly)")}
-        hint={tr("Shown to companies you connect with, for booking a call.")}
-      >
-        <input
-          name="calendly_url"
-          type="url"
-          placeholder="https://calendly.com/…"
-          className={inputCls}
-        />
-      </Field>
-
       <div className="border-t border-line pt-6">
         <p className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-4">
           {tr("Optional")}

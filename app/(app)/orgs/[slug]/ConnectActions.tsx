@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Check, Clock, Handshake, X } from "lucide-react";
+import { Check, Clock, Handshake, X } from "lucide-react";
 import {
   requestConnectionAction,
   respondConnectionAction,
@@ -21,12 +21,10 @@ export function ConnectActions({
   targetOrgId,
   state,
   connectionId,
-  calendlyUrl,
 }: {
   targetOrgId: string;
   state: ConnState;
   connectionId?: string | null;
-  calendlyUrl?: string | null;
 }) {
   const tr = useT();
   const router = useRouter();
@@ -54,23 +52,10 @@ export function ConnectActions({
 
   if (state === "connected") {
     return (
-      <div className="space-y-2">
-        <span className="inline-flex items-center gap-1.5 text-sm text-gold">
-          <Check className="w-4 h-4" />
-          {tr("Connected")}
-        </span>
-        {calendlyUrl && (
-          <a
-            href={calendlyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
-          >
-            <CalendarClock className="w-4 h-4" />
-            {tr("Schedule a call")}
-          </a>
-        )}
-      </div>
+      <span className="inline-flex items-center gap-1.5 text-sm text-gold">
+        <Check className="w-4 h-4" />
+        {tr("Connected")}
+      </span>
     );
   }
 
