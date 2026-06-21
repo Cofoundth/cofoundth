@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { slugify } from "@/lib/slug";
+import { isUuid, slugify } from "@/lib/slug";
 
 export type OrgFormState = { error?: string } | null;
 
@@ -337,6 +337,7 @@ export async function requestConnectionAction(
   const myOrg = await viewerPrimaryOrg(supabase, user.id);
   if (!myOrg) return { error: "Create a company first to connect." };
   if (myOrg === targetOrgId) return { error: "That's your own company." };
+  if (!isUuid(targetOrgId)) return { error: "Couldn't send the request. Try again." };
 
   const admin = createAdminClient();
   // Either direction already on file?

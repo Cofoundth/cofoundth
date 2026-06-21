@@ -68,6 +68,15 @@ export async function saveOnboardingAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated. Please sign in again." };
 
+  // This is the founder onboarding. If the account is an investor (they belong
+  // in /investor), don't let a crafted submit write founder fields to it.
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("account_type")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (prof?.account_type === "investor") redirect("/investor");
+
   // Per-item / array caps to prevent malicious clients from writing megabytes
   // into a profile row.
   const MAX_ITEM_LEN = 50;

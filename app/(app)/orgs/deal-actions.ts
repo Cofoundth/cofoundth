@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isUuid } from "@/lib/slug";
 
 export type DealFormState = { error?: string } | null;
 
@@ -60,7 +61,12 @@ export async function proposeDealAction(
     return { error: "Describe the deal (20–5000 characters)." };
   }
   const valueAmount = valueRaw ? Number(valueRaw) : null;
-  if (valueAmount !== null && (!isFinite(valueAmount) || valueAmount < 0)) {
+  if (
+    valueAmount !== null &&
+    (!isFinite(valueAmount) ||
+      valueAmount < 0 ||
+      valueAmount > 9_999_999_999_999)
+  ) {
     return { error: "Invalid deal value." };
   }
   if (valueAmount !== null && !(CURRENCIES as readonly string[]).includes(valueCurrency)) {
@@ -76,6 +82,7 @@ export async function proposeDealAction(
   const myOrg = await viewerOrg(supabase, user.id);
   if (!myOrg) return { error: "You need a company to propose a deal." };
   if (myOrg === targetOrgId) return { error: "That's your own company." };
+  if (!isUuid(targetOrgId)) return { error: "Invalid company." };
 
   const admin = createAdminClient();
   const { data: conn } = await admin
@@ -148,7 +155,9 @@ export async function confirmDealAction(
     return { error: "Not allowed." };
   }
 
-  await admin
+  // Atomic guard: the update only applies while still 'proposed', so a
+  // double-confirm / TOCTOU race can't double-fire. Empty result = lost the race.
+  const { data: updated, error } = await admin
     .from("org_deals")
     .update({
       status: "confirmed",
@@ -156,7 +165,14 @@ export async function confirmDealAction(
       confirmed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
-    .eq("id", deal.id);
+    .eq("id", deal.id)
+    .eq("status", "proposed")
+    .select("id");
+  if (error) {
+    console.error("[deals.confirm]", error);
+    return { error: "Couldn't confirm. Try again." };
+  }
+  if (!updated?.length) return { error: "This proposal was already handled." };
   revalidatePath("/orgs");
   return {};
 }
@@ -182,10 +198,17 @@ export async function declineDealAction(
     return { error: "Not allowed." };
   }
 
-  await admin
+  const { data: updated, error } = await admin
     .from("org_deals")
     .update({ status: "declined", updated_at: new Date().toISOString() })
-    .eq("id", deal.id);
+    .eq("id", deal.id)
+    .eq("status", "proposed")
+    .select("id");
+  if (error) {
+    console.error("[deals.decline]", error);
+    return { error: "Couldn't decline. Try again." };
+  }
+  if (!updated?.length) return { error: "This proposal was already handled." };
   revalidatePath("/orgs");
   return {};
 }
@@ -211,10 +234,17 @@ export async function cancelDealAction(
     return { error: "Not allowed." };
   }
 
-  await admin
+  const { data: updated, error } = await admin
     .from("org_deals")
     .update({ status: "cancelled", updated_at: new Date().toISOString() })
-    .eq("id", deal.id);
+    .eq("id", deal.id)
+    .eq("status", "proposed")
+    .select("id");
+  if (error) {
+    console.error("[deals.cancel]", error);
+    return { error: "Couldn't withdraw. Try again." };
+  }
+  if (!updated?.length) return { error: "This proposal was already handled." };
   revalidatePath("/orgs");
   return {};
 }

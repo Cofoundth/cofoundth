@@ -75,6 +75,9 @@ export async function saveInvestorProfileAction(
     return { error: "Couldn't save. Try again." };
   }
 
+  // Mark onboarded so an investor isn't treated as a half-set-up account.
+  await supabase.from("profiles").update({ onboarded: true }).eq("id", user.id);
+
   revalidatePath("/investor");
   redirect("/investor");
 }
