@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { getLocale } from "@/lib/i18n-server";
 import { LocaleProvider } from "@/lib/i18n-client";
 import "./globals.css";
@@ -80,6 +81,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <LocaleProvider locale={locale}>{children}</LocaleProvider>
+        <Analytics />
       </body>
     </html>
   );
