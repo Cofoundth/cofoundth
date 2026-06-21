@@ -26,7 +26,7 @@ function OrgLogo({ org }: { org: { name: string; logo_url: string | null } }) {
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={org.logo_url}
-        alt=""
+        alt={org.name}
         className="w-12 h-12 object-cover border border-line shrink-0"
       />
     );
@@ -173,6 +173,12 @@ export default async function OrgsPage() {
   const invitedAsTpl = await tServer("Invited you as {role}");
   const offerLabel = await tServer("What we offer");
   const seekingLabel = await tServer("Looking for");
+  const roleLabels: Record<string, string> = {
+    owner: await tServer("Owner"),
+    admin: await tServer("Admin"),
+    member: await tServer("Member"),
+  };
+  const roleLabel = (r: string) => roleLabels[r] ?? r;
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
@@ -218,7 +224,7 @@ export default async function OrgsPage() {
                       {inv.org!.name}
                     </p>
                     <p className="text-sm text-ink-muted">
-                      {invitedAsTpl.replace("{role}", inv.role)}
+                      {invitedAsTpl.replace("{role}", roleLabel(inv.role))}
                     </p>
                   </div>
                 </div>
@@ -254,7 +260,7 @@ export default async function OrgsPage() {
               <OrgCard
                 key={m.org!.id}
                 org={m.org!}
-                role={m.role}
+                role={roleLabel(m.role)}
                 offerLabel={offerLabel}
                 seekingLabel={seekingLabel}
               />

@@ -24,16 +24,21 @@ function Field({
   label,
   hint,
   required,
+  htmlFor,
   children,
 }: {
   label: string;
   hint?: string;
   required?: boolean;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+      <label
+        htmlFor={htmlFor}
+        className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+      >
         {label}
         {required && <span className="text-gold ml-1">*</span>}
       </label>
@@ -61,12 +66,20 @@ export function DealProposalForm({
   const [hasValue, setHasValue] = useState(false);
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      action={formAction}
+      onSubmit={(e) => {
+        // Disabling the button stops a second click, but Enter in any field
+        // still fires submit — block it while a request is in flight.
+        if (isPending) e.preventDefault();
+      }}
+      className="space-y-6"
+    >
       <input type="hidden" name="target_org" value={targetOrgId} />
       <input type="hidden" name="target_slug" value={targetSlug} />
 
-      <Field label={tr("Deal type")} required>
-        <select name="deal_type" defaultValue="" required className={inputCls}>
+      <Field label={tr("Deal type")} required htmlFor="deal_type">
+        <select id="deal_type" name="deal_type" defaultValue="" required className={inputCls}>
           <option value="" disabled>
             {tr("Select…")}
           </option>
@@ -78,8 +91,9 @@ export function DealProposalForm({
         </select>
       </Field>
 
-      <Field label={tr("Title")} required>
+      <Field label={tr("Title")} required htmlFor="title">
         <input
+          id="title"
           name="title"
           type="text"
           required
@@ -93,9 +107,11 @@ export function DealProposalForm({
       <Field
         label={tr("Deal details")}
         required
+        htmlFor="description"
         hint={tr("Scope, what each side gives and gets, expected outcome.")}
       >
         <textarea
+          id="description"
           name="description"
           rows={6}
           required
@@ -125,10 +141,16 @@ export function DealProposalForm({
               name="value_amount"
               type="text"
               inputMode="decimal"
+              aria-label={tr("Deal value")}
               placeholder={tr("e.g. 500,000")}
               className={inputCls}
             />
-            <select name="value_currency" defaultValue="THB" className={inputCls}>
+            <select
+              name="value_currency"
+              defaultValue="THB"
+              aria-label={tr("Currency")}
+              className={inputCls}
+            >
               <option value="THB">THB</option>
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
@@ -138,8 +160,9 @@ export function DealProposalForm({
       </div>
 
       <div className="grid sm:grid-cols-2 gap-6">
-        <Field label={tr("Payment terms")}>
+        <Field label={tr("Payment terms")} htmlFor="payment_terms">
           <input
+            id="payment_terms"
             name="payment_terms"
             type="text"
             maxLength={200}
@@ -147,8 +170,9 @@ export function DealProposalForm({
             className={inputCls}
           />
         </Field>
-        <Field label={tr("Timeline")}>
+        <Field label={tr("Timeline")} htmlFor="timeline">
           <input
+            id="timeline"
             name="timeline"
             type="text"
             maxLength={200}

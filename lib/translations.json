@@ -36,9 +36,7 @@
   "Connect with this company first.": "เชื่อมต่อกับบริษัทนี้ก่อน",
   "Couldn't send the proposal. Try again.": "ส่งข้อเสนอไม่สำเร็จ ลองอีกครั้ง",
   "Proposal not found.": "ไม่พบข้อเสนอ",
-
   "Comma-separated, e.g. Fintech, Logistics": "คั่นด้วยจุลภาค เช่น Fintech, Logistics",
-
   "Set up your investor profile": "ตั้งค่าโปรไฟล์นักลงทุน",
   "Tell us how you invest. This is separate from the founder profile — no company or co-founder details needed.": "บอกเราว่าคุณลงทุนแบบไหน ส่วนนี้แยกจากโปรไฟล์ founder — ไม่ต้องกรอกข้อมูลบริษัทหรือ co-founder",
   "Investor type": "ประเภทนักลงทุน",
@@ -64,7 +62,6 @@
   "Keep your thesis under 600 characters.": "แนวทางการลงทุนต้องไม่เกิน 600 ตัวอักษร",
   "Couldn't save. Try again.": "บันทึกไม่สำเร็จ ลองอีกครั้ง",
   "Your investor profile is saved. The full experience — discovering and backing Thai startups — is coming soon; we'll reach out when early access opens.": "บันทึกโปรไฟล์นักลงทุนของคุณแล้ว ฟีเจอร์เต็มรูปแบบ — ค้นหาและร่วมลงทุนกับสตาร์ทอัพไทย — กำลังจะมาเร็ว ๆ นี้ เราจะติดต่อกลับเมื่อเปิดให้ใช้งานในช่วงแรก",
-
   "Connected": "เชื่อมต่อแล้ว",
   "This company wants to connect.": "บริษัทนี้ต้องการเชื่อมต่อกับคุณ",
   "Schedule a call": "นัดคุย",
@@ -75,7 +72,6 @@
   "Couldn't send the request. Try again.": "ส่งคำขอไม่สำเร็จ ลองอีกครั้ง",
   "Request not found.": "ไม่พบคำขอ",
   "Not allowed.": "ไม่มีสิทธิ์ดำเนินการ",
-
   "Company logo": "โลโก้บริษัท",
   "Change logo": "เปลี่ยนโลโก้",
   "Upload logo": "อัปโหลดโลโก้",
@@ -99,7 +95,6 @@
   "Calendly link must be a valid URL (https://…).": "ลิงก์ Calendly ต้องเป็น URL ที่ถูกต้อง (https://…)",
   "Please upload a JPG, PNG, WebP, or GIF.": "กรุณาอัปโหลดไฟล์ JPG, PNG, WebP หรือ GIF",
   "No file received.": "ไม่ได้รับไฟล์",
-
   "I'm joining as": "สมัครในฐานะ",
   "Founder / Company": "ผู้ก่อตั้ง / บริษัท",
   "Build & find partners": "สร้างธุรกิจและหาพาร์ทเนอร์",
@@ -108,7 +103,6 @@
   "Welcome, {name}": "ยินดีต้อนรับ {name}",
   "Welcome": "ยินดีต้อนรับ",
   "The investor experience — discovering and backing Thai startups — is coming soon. Your account is ready; we'll reach out when early access opens.": "ฟีเจอร์สำหรับนักลงทุน — ค้นหาและร่วมลงทุนกับสตาร์ทอัพไทย — กำลังจะมาเร็ว ๆ นี้ บัญชีของคุณพร้อมแล้ว เราจะติดต่อกลับเมื่อเปิดให้ใช้งานในช่วงแรก",
-
   "Create company": "สร้างบริษัท",
   "Create a company": "สร้างบริษัท",
   "Set up your company page": "ตั้งค่าหน้าบริษัทของคุณ",
@@ -168,7 +162,6 @@
   "Couldn't update role.": "อัปเดตตำแหน่งไม่สำเร็จ",
   "Couldn't remove member.": "นำสมาชิกออกไม่สำเร็จ",
   "Couldn't revoke invite.": "ยกเลิกคำเชิญไม่สำเร็จ",
-
   "How it works": "วิธีใช้งาน",
   "Insights": "บทความ",
   "Legal": "กฎหมาย",
@@ -534,7 +527,6 @@
   "Required to appear in the Founders directory": "ต้องกรอกเพื่อให้โปรไฟล์แสดงในหน้า Founders",
   "Introduce yourself — or if you’ve got an idea, pitch it to attract other founders": "แนะนำตัวเองสั้นๆ หรือ ถ้ามีไอเดียแล้ว ลองเล่าเพื่อใช้มันดึงดูด founder คนอื่น",
   "e.g. I’m a programmer, 5 years in tech, built an online shopping app. Got a cool idea? Pitch it — I’d love to hear it.": "ฉันเป็นโปรแกรมเมอร์ อยู่ในวงการ Tech มา 5 ปี เคยสร้าง App ซื้อของออนไลน์ ใครมีไอเดียอะไรเจ๋งๆ ลองเสนอมาหน่อย ฉันอยากฟัง",
-  "Password": "รหัสผ่าน",
   "New password": "รหัสผ่านใหม่",
   "Set password": "ตั้งรหัสผ่าน",
   "Password updated.": "อัปเดตรหัสผ่านแล้ว",
@@ -885,5 +877,12 @@
   "Mark resolved": "ทำเครื่องหมายว่าจัดการแล้ว",
   "Users": "ผู้ใช้",
   "Posts": "โพสต์",
-  "Overview": "ภาพรวม"
+  "Overview": "ภาพรวม",
+  "Owner": "เจ้าของ",
+  "Confirming…": "กำลังยืนยัน…",
+  "Declining…": "กำลังปฏิเสธ…",
+  "Withdrawing…": "กำลังยกเลิก…",
+  "Product image": "รูปสินค้า",
+  "Deal value": "มูลค่าดีล",
+  "Currency": "สกุลเงิน"
 }

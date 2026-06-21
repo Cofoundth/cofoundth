@@ -38,12 +38,19 @@ export function OnboardingRoleSwitch({
   const tr = useT();
   const [role, setRole] = useState<"founder" | "investor">(initialRole);
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function pick(next: "founder" | "investor") {
     if (next === role || pending) return;
-    setRole(next);
+    const prev = role;
+    setRole(next); // optimistic
+    setError(null);
     start(async () => {
-      await setOnboardingRoleAction(next);
+      const res = await setOnboardingRoleAction(next);
+      if (res?.error) {
+        setRole(prev); // roll back on failure so the UI matches the DB
+        setError(res.error);
+      }
     });
   }
 
@@ -72,6 +79,9 @@ export function OnboardingRoleSwitch({
             </button>
           ))}
         </div>
+        {error && (
+          <p className="text-xs text-red-700 mb-2">{tr(error)}</p>
+        )}
       </div>
 
       {role === "founder" ? (

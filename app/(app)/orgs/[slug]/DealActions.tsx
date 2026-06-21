@@ -42,7 +42,7 @@ export function DealActions({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-xs transition-colors"
           >
             <Check className="w-3.5 h-3.5" />
-            {tr("Confirm")}
+            {pending ? tr("Confirming…") : tr("Confirm")}
           </button>
           <button
             type="button"
@@ -51,7 +51,7 @@ export function DealActions({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors"
           >
             <X className="w-3.5 h-3.5" />
-            {tr("Decline")}
+            {pending ? tr("Declining…") : tr("Decline")}
           </button>
         </div>
         {error && <p className="text-xs text-red-700 mt-1">{tr(error)}</p>}
@@ -67,7 +67,7 @@ export function DealActions({
         onClick={() => run(() => cancelDealAction(dealId))}
         className="text-xs text-ink-muted hover:text-red-700 disabled:opacity-50"
       >
-        {tr("Withdraw")}
+        {pending ? tr("Withdrawing…") : tr("Withdraw")}
       </button>
       {error && <p className="text-xs text-red-700 mt-1">{tr(error)}</p>}
     </div>

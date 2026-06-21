@@ -128,7 +128,7 @@ export function ManagePanel({
                   <Mail className="w-3.5 h-3.5 text-ink-muted shrink-0" />
                   <span className="truncate">{inv.email}</span>
                   <span className="text-[10px] uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5">
-                    {inv.role}
+                    {tr(inv.role === "admin" ? "Admin" : "Member")}
                   </span>
                 </span>
                 <button

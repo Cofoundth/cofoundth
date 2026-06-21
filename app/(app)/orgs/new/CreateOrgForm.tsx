@@ -55,7 +55,7 @@ export function CreateOrgForm() {
   const [productUrl, setProductUrl] = useState("");
 
   const pitchLen = pitch.trim().length;
-  const pitchTooLong = pitch.length > PITCH_MAX;
+  const pitchTooLong = pitchLen > PITCH_MAX;
   const canSubmit =
     !isPending &&
     pitchLen > 0 &&
@@ -120,7 +120,7 @@ export function CreateOrgForm() {
             pitchTooLong ? "text-red-700" : "text-ink-muted"
           }`}
         >
-          {pitch.length} / {PITCH_MAX}
+          {pitchLen} / {PITCH_MAX}
         </div>
       </Field>
 

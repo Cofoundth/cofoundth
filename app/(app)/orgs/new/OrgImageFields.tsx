@@ -162,7 +162,7 @@ export function OrgProductImagesField({
             className="relative w-24 h-20 border border-line overflow-hidden group"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt="" className="w-full h-full object-cover" />
+            <img src={url} alt={tr("Product image")} className="w-full h-full object-cover" />
             <button
               type="button"
               onClick={() => onChange(value.filter((u) => u !== url))}
@@ -178,6 +178,7 @@ export function OrgProductImagesField({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
+            aria-label={tr("Add image")}
             className="w-24 h-20 border border-dashed border-line hover:border-navy bg-white flex items-center justify-center text-ink-muted transition-colors disabled:opacity-60"
           >
             {busy ? (

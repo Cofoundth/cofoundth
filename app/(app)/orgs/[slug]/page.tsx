@@ -191,6 +191,11 @@ export default async function OrgPage({ params }: Props) {
     role: m.role,
   }));
 
+  const ROLE_LABELS: Record<string, string> = {
+    owner: "Owner",
+    admin: "Admin",
+    member: "Member",
+  };
   const DEAL_TYPE_LABELS: Record<string, string> = {
     integration: "Integration",
     distribution: "Distribution",
@@ -242,7 +247,7 @@ export default async function OrgPage({ params }: Props) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={org.logo_url as string}
-            alt=""
+            alt={org.name as string}
             className="w-20 h-20 object-cover border border-line shrink-0"
           />
         ) : (
@@ -320,12 +325,12 @@ export default async function OrgPage({ params }: Props) {
                 {await tServer("Product")}
               </h2>
               <div className="grid grid-cols-2 gap-3">
-                {productImages.map((src) => (
+                {productImages.map((src, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     key={src}
                     src={src}
-                    alt=""
+                    alt={`${org.name} — ${t("Product image", locale)} ${i + 1}`}
                     className="w-full aspect-[4/3] object-cover border border-line"
                   />
                 ))}
@@ -437,7 +442,7 @@ export default async function OrgPage({ params }: Props) {
                         {m.name}
                       </div>
                       <div className="text-[10px] uppercase tracking-wider text-ink-muted">
-                        {m.role}
+                        {t(ROLE_LABELS[m.role] ?? m.role, locale)}
                       </div>
                     </div>
                   </>
