@@ -888,5 +888,6 @@
   "About me is too long.": "ข้อความแนะนำตัวยาวเกินไป",
   "Your thesis is too long.": "แนวการลงทุนยาวเกินไป",
   "Tell them more (at least 50 characters).": "เล่ารายละเอียดเพิ่มอีกนิด (อย่างน้อย 50 ตัวอักษร)",
-  "Add more context (at least 50 characters).": "เพิ่มรายละเอียดอีกหน่อย (อย่างน้อย 50 ตัวอักษร)"
+  "Add more context (at least 50 characters).": "เพิ่มรายละเอียดอีกหน่อย (อย่างน้อย 50 ตัวอักษร)",
+  "This can’t be changed later — founders and investors use separate accounts.": "เลือกแล้วเปลี่ยนภายหลังไม่ได้ — ผู้ก่อตั้งและนักลงทุนใช้บัญชีแยกกัน"
 }

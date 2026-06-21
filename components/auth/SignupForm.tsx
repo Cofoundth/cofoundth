@@ -92,6 +92,11 @@ export function SignupForm() {
             </button>
           ))}
         </div>
+        <p className="text-xs text-ink-muted mt-2">
+          {tr(
+            "This can’t be changed later — founders and investors use separate accounts.",
+          )}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

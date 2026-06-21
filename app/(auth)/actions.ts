@@ -55,8 +55,9 @@ export async function signupAction(
     String(formData.get("account_type") ?? "") === "investor"
       ? "investor"
       : "founder";
-  // Everyone lands on /onboarding (role-aware); account_type just pre-selects
-  // the Founder/Investor choice there.
+  // account_type is the binding role for this account — chosen here at signup,
+  // not changeable later (one account = one role). /onboarding then shows only
+  // that role's form.
   const next = "/onboarding";
 
   if (!firstName || !email || !password) {
