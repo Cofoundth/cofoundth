@@ -1,0 +1,81 @@
+import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
+import { tServer } from "@/lib/i18n-server";
+import { DealProposalForm } from "./DealProposalForm";
+
+export const dynamic = "force-dynamic";
+
+export default async function ProposePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("id, name, slug")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!org) notFound();
+
+  const { data: myFirst } = await supabase
+    .from("org_members")
+    .select("org_id, joined_at")
+    .eq("user_id", user.id)
+    .order("joined_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const myOrgId = myFirst?.org_id as string | undefined;
+  if (!myOrgId || myOrgId === org.id) redirect(`/orgs/${slug}`);
+
+  // Proposals require an accepted connection between the two companies.
+  const { data: conn } = await supabase
+    .from("org_connections")
+    .select("status")
+    .or(
+      `and(requester_org.eq.${myOrgId},target_org.eq.${org.id}),and(requester_org.eq.${org.id},target_org.eq.${myOrgId})`,
+    )
+    .maybeSingle();
+  if (!conn || conn.status !== "accepted") redirect(`/orgs/${slug}`);
+
+  return (
+    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-10">
+      <Link
+        href={`/orgs/${slug}`}
+        className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        {org.name as string}
+      </Link>
+
+      <p className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+        {await tServer("Deal proposal")}
+      </p>
+      <h1 className="font-serif text-3xl text-navy leading-tight mb-2">
+        {(await tServer("Propose a deal with {company}")).replace(
+          "{company}",
+          org.name as string,
+        )}
+      </h1>
+      <p className="text-ink-muted leading-relaxed mb-8">
+        {await tServer(
+          "Both sides confirm the terms, then Cofoundee coordinates the contract.",
+        )}
+      </p>
+
+      <div className="bg-white border border-line p-6 lg:p-8">
+        <DealProposalForm
+          targetOrgId={org.id as string}
+          targetSlug={org.slug as string}
+          targetName={org.name as string}
+        />
+      </div>
+    </div>
+  );
+}

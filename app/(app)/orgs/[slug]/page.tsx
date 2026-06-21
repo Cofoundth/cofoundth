@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  HandshakeIcon,
+  MapPin,
+  ShieldCheck,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getLocale, tServer } from "@/lib/i18n-server";
@@ -11,6 +17,7 @@ import { Avatar } from "@/components/Avatar";
 import { ManagePanel, type PanelMember } from "./ManagePanel";
 import { LeaveButton } from "./LeaveButton";
 import { ConnectActions, type ConnState } from "./ConnectActions";
+import { DealActions } from "./DealActions";
 
 export const dynamic = "force-dynamic";
 
@@ -117,38 +124,62 @@ export default async function OrgPage({ params }: Props) {
     (org.pitch as string | null) ?? (org.about as string | null);
   const calendlyUrl = org.calendly_url as string | null;
 
-  // Connection state between the viewer's company and this one.
+  // The viewer's company (first membership) + connection state with this org.
+  const { data: myFirst } = await supabase
+    .from("org_members")
+    .select("org_id, joined_at")
+    .eq("user_id", user.id)
+    .order("joined_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const myOrgId = (myFirst?.org_id as string | undefined) ?? null;
+
   let connState: ConnState = "none";
   let connectionId: string | null = null;
   if (isMember) {
     connState = "self";
+  } else if (!myOrgId) {
+    connState = "no_org";
   } else {
-    const { data: myFirst } = await supabase
-      .from("org_members")
-      .select("org_id, joined_at")
-      .eq("user_id", user.id)
-      .order("joined_at", { ascending: true })
-      .limit(1)
+    const { data: conn } = await supabase
+      .from("org_connections")
+      .select("id, requester_org, status")
+      .or(
+        `and(requester_org.eq.${myOrgId},target_org.eq.${org.id}),and(requester_org.eq.${org.id},target_org.eq.${myOrgId})`,
+      )
       .maybeSingle();
-    const myOrgId = (myFirst?.org_id as string | undefined) ?? null;
-    if (!myOrgId) {
-      connState = "no_org";
-    } else {
-      const { data: conn } = await supabase
-        .from("org_connections")
-        .select("id, requester_org, status")
-        .or(
-          `and(requester_org.eq.${myOrgId},target_org.eq.${org.id}),and(requester_org.eq.${org.id},target_org.eq.${myOrgId})`,
-        )
-        .maybeSingle();
-      if (!conn || conn.status === "declined") connState = "none";
-      else if (conn.status === "accepted") connState = "connected";
-      else if (conn.requester_org === myOrgId) connState = "pending_sent";
-      else {
-        connState = "pending_received";
-        connectionId = conn.id as string;
-      }
+    if (!conn || conn.status === "declined") connState = "none";
+    else if (conn.status === "accepted") connState = "connected";
+    else if (conn.requester_org === myOrgId) connState = "pending_sent";
+    else {
+      connState = "pending_received";
+      connectionId = conn.id as string;
     }
+  }
+
+  // Deals between the viewer's company and this one (once connected).
+  type DealRow = {
+    id: string;
+    proposer_org: string;
+    responder_org: string;
+    deal_type: string;
+    title: string;
+    status: string;
+    value_amount: number | null;
+    value_currency: string | null;
+  };
+  let deals: DealRow[] = [];
+  if (connState === "connected" && myOrgId) {
+    const { data: dealRows } = await supabase
+      .from("org_deals")
+      .select(
+        "id, proposer_org, responder_org, deal_type, title, status, value_amount, value_currency",
+      )
+      .or(
+        `and(proposer_org.eq.${myOrgId},responder_org.eq.${org.id}),and(proposer_org.eq.${org.id},responder_org.eq.${myOrgId})`,
+      )
+      .order("created_at", { ascending: false });
+    deals = (dealRows ?? []) as DealRow[];
   }
   const stageLabel = org.stage
     ? t(STAGE_LABELS[org.stage as string] ?? (org.stage as string), locale)
@@ -159,6 +190,41 @@ export default async function OrgPage({ params }: Props) {
     name: m.name,
     role: m.role,
   }));
+
+  const DEAL_TYPE_LABELS: Record<string, string> = {
+    integration: "Integration",
+    distribution: "Distribution",
+    white_label: "White label",
+    co_marketing: "Co-marketing",
+    vendor_supplier: "Vendor / supplier",
+    partnership: "Partnership",
+    other: "Other",
+  };
+  const DEAL_STATUS_LABELS: Record<string, string> = {
+    proposed: "Awaiting confirmation",
+    confirmed: "Confirmed — with Cofoundee",
+    admin_review: "With Cofoundee",
+    signed: "Signed",
+    declined: "Declined",
+    cancelled: "Withdrawn",
+  };
+  const dealsView = await Promise.all(
+    deals.map(async (d) => ({
+      id: d.id,
+      title: d.title,
+      status: d.status,
+      typeLabel: await tServer(DEAL_TYPE_LABELS[d.deal_type] ?? d.deal_type),
+      statusLabel: await tServer(DEAL_STATUS_LABELS[d.status] ?? d.status),
+      role: (d.responder_org === myOrgId ? "responder" : "proposer") as
+        | "responder"
+        | "proposer",
+      value:
+        d.value_amount != null
+          ? `${Number(d.value_amount).toLocaleString()} ${d.value_currency ?? ""}`.trim()
+          : null,
+    })),
+  );
+  const proposeLabel = await tServer("Propose a deal");
 
   return (
     <div className="max-w-4xl mx-auto px-6 lg:px-10 py-10">
@@ -321,6 +387,39 @@ export default async function OrgPage({ params }: Props) {
               />
             </div>
           )}
+          {connState === "connected" && (
+            <div className="bg-white border border-line p-5">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+                {await tServer("Deals")}
+              </h2>
+              <Link
+                href={`/orgs/${org.slug as string}/propose`}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-navy text-navy hover:bg-navy hover:text-white text-sm transition-colors"
+              >
+                <HandshakeIcon className="w-4 h-4" />
+                {proposeLabel}
+              </Link>
+              {dealsView.length > 0 && (
+                <ul className="divide-y divide-line border-t border-line mt-3">
+                  {dealsView.map((d) => (
+                    <li key={d.id} className="py-3">
+                      <div className="text-sm text-navy">{d.title}</div>
+                      <div className="text-[11px] text-ink-muted mt-0.5">
+                        {d.typeLabel}
+                        {d.value ? ` · ${d.value}` : ""} · {d.statusLabel}
+                      </div>
+                      {d.status === "proposed" && (
+                        <div className="mt-2">
+                          <DealActions dealId={d.id} role={d.role} />
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           <div className="bg-white border border-line p-5">
             <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
               {(await tServer("Team ({n})")).replace(
