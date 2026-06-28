@@ -32,6 +32,7 @@ export default async function FundingPage() {
   const acceptedLabel = await tServer("Connected");
   const sentLabel = await tServer("Request sent");
   const openLabel = await tServer("Open");
+  const viewTalksLabel = await tServer("View funding talks");
 
   // ===================================================================
   // INVESTOR VIEW — companies I've connected with + discover companies
@@ -95,6 +96,15 @@ export default async function FundingPage() {
                       <div className="text-xs text-ink-muted truncate">
                         {(o.tagline as string | null) ?? ""}
                       </div>
+                      {c.status === "accepted" && (
+                        <Link
+                          href={`/funding/${c.id}`}
+                          className="inline-flex items-center gap-1 text-xs text-navy mt-2 hover:text-gold"
+                        >
+                          {viewTalksLabel}
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      )}
                     </div>
                     <div className="shrink-0">
                       <StatusPill
@@ -248,6 +258,15 @@ export default async function FundingPage() {
                     <div className="text-xs text-ink-muted">
                       {(i.investor_type as string) ?? ""}
                     </div>
+                    {c.status === "accepted" && (
+                      <Link
+                        href={`/funding/${c.id}`}
+                        className="inline-flex items-center gap-1 text-xs text-navy mt-2 hover:text-gold"
+                      >
+                        {viewTalksLabel}
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
                   </div>
                   <div className="shrink-0">
                     <StatusPill
