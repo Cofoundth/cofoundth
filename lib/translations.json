@@ -909,5 +909,15 @@
   "Separate with commas": "คั่นด้วยเครื่องหมาย ,",
   "e.g. Software, inventory tools, mobile app": "เช่น ซอฟต์แวร์, ตัวช่วยจัดการสินค้า, แอปพลิเคชั่น",
   "e.g. Media companies, ad agencies, influencers": "เช่น บริษัทสื่อ, นักทำโฆษณา, อินฟลูเอนเซอร์",
-  "Cofoundee charges 1% of the deal value (minimum ฿2,000) per signed deal. A partner law firm drafts and handles the contract; signing happens in person.": "Cofoundee คิดค่าบริการ 1% ของมูลค่าดีล (ขั้นต่ำ ฿2,000) ต่อดีลที่เซ็นสำเร็จ — สำนักงานกฎหมายพาร์ทเนอร์เป็นผู้ร่างและดูแลสัญญา และเซ็นกันแบบพบตัวจริง"
+  "Cofoundee charges 1% of the deal value (minimum ฿2,000) per signed deal. A partner law firm drafts and handles the contract; signing happens in person.": "Cofoundee คิดค่าบริการ 1% ของมูลค่าดีล (ขั้นต่ำ ฿2,000) ต่อดีลที่เซ็นสำเร็จ — สำนักงานกฎหมายพาร์ทเนอร์เป็นผู้ร่างและดูแลสัญญา และเซ็นกันแบบพบตัวจริง",
+  "Funding": "ระดมทุน",
+  "Companies you've connected with, and new ones to back.": "บริษัทที่คุณเชื่อมต่อแล้ว และบริษัทใหม่ที่น่าร่วมลงทุน",
+  "No connections yet — find a company below.": "ยังไม่มีการเชื่อมต่อ — หาบริษัทด้านล่าง",
+  "Discover companies": "ค้นหาบริษัท",
+  "Investors you've connected with, and new ones to reach.": "นักลงทุนที่คุณเชื่อมต่อแล้ว และรายใหม่ที่น่าติดต่อ",
+  "Your investors": "นักลงทุนของคุณ",
+  "No investor connections yet — find one below.": "ยังไม่มีการเชื่อมต่อกับนักลงทุน — หาด้านล่าง",
+  "Discover investors": "ค้นหานักลงทุน",
+  "No investors on the platform yet.": "ยังไม่มีนักลงทุนในระบบ",
+  "Create a company to raise funding from investors.": "สร้างบริษัทเพื่อระดมทุนจากนักลงทุน"
 }
