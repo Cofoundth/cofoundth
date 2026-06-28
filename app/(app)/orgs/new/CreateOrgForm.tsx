@@ -141,6 +141,27 @@ export function CreateOrgForm() {
         <OrgProductImagesField value={productImages} onChange={setProductImages} />
       </Field>
 
+      <Field
+        label={tr("What are you looking for?")}
+        hint={tr("This places your company under these tabs in the directory.")}
+      >
+        <div className="flex flex-col gap-2">
+          <label className="inline-flex items-center gap-2 text-sm text-ink cursor-pointer">
+            <input
+              type="checkbox"
+              name="seeking"
+              value="partner"
+              defaultChecked
+            />
+            {tr("A business partner")}
+          </label>
+          <label className="inline-flex items-center gap-2 text-sm text-ink cursor-pointer">
+            <input type="checkbox" name="seeking" value="funding" />
+            {tr("Funding from investors")}
+          </label>
+        </div>
+      </Field>
+
       <div className="border-t border-line pt-6">
         <p className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-4">
           {tr("Optional")}

@@ -17,6 +17,7 @@ type OrgLite = {
   location: string | null;
   capabilities: string[] | null;
   partnership_seeking: string[] | null;
+  seeking?: string[] | null;
   verified?: boolean | null;
 };
 
@@ -123,7 +124,13 @@ function OrgCard({
   );
 }
 
-export default async function OrgsPage() {
+export default async function OrgsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  const activeTab = tab === "partner" || tab === "funding" ? tab : "all";
   const user = await requireUser();
   const supabase = await createClient();
   const myEmail = (user.email ?? "").toLowerCase();
@@ -144,7 +151,7 @@ export default async function OrgsPage() {
       supabase
         .from("organizations")
         .select(
-          "id, name, slug, tagline, logo_url, industry, location, capabilities, partnership_seeking, verified",
+          "id, name, slug, tagline, logo_url, industry, location, capabilities, partnership_seeking, seeking, verified",
         )
         .order("created_at", { ascending: false })
         .limit(60),
@@ -169,6 +176,21 @@ export default async function OrgsPage() {
   const directory = ((allOrgs ?? []) as OrgLite[]).filter(
     (o) => !myOrgIds.has(o.id),
   );
+  const filteredDirectory =
+    activeTab === "all"
+      ? directory
+      : directory.filter((o) => (o.seeking ?? []).includes(activeTab));
+
+  const tabAll = await tServer("All");
+  const tabPartner = await tServer("Want a partner");
+  const tabFunding = await tServer("Want funding");
+  const noneInTab = await tServer("No companies in this tab yet.");
+  const tabCls = (active: boolean) =>
+    `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
+      active
+        ? "border-navy text-navy font-medium"
+        : "border-transparent text-ink-muted hover:text-navy"
+    }`;
 
   const invitedAsTpl = await tServer("Invited you as {role}");
   const offerLabel = await tServer("What we offer");
@@ -275,16 +297,37 @@ export default async function OrgsPage() {
           <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
             {await tServer("All companies")}
           </h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {directory.map((o) => (
-              <OrgCard
-                key={o.id}
-                org={o}
-                offerLabel={offerLabel}
-                seekingLabel={seekingLabel}
-              />
-            ))}
-          </div>
+          <nav className="flex items-center gap-1 mb-5 border-b border-line">
+            <Link href="/orgs" className={tabCls(activeTab === "all")}>
+              {tabAll}
+            </Link>
+            <Link
+              href="/orgs?tab=partner"
+              className={tabCls(activeTab === "partner")}
+            >
+              {tabPartner}
+            </Link>
+            <Link
+              href="/orgs?tab=funding"
+              className={tabCls(activeTab === "funding")}
+            >
+              {tabFunding}
+            </Link>
+          </nav>
+          {filteredDirectory.length === 0 ? (
+            <p className="text-sm text-ink-muted">{noneInTab}</p>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {filteredDirectory.map((o) => (
+                <OrgCard
+                  key={o.id}
+                  org={o}
+                  offerLabel={offerLabel}
+                  seekingLabel={seekingLabel}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

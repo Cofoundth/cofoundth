@@ -66,6 +66,15 @@ export async function createOrgAction(
   const partnershipSeeking = parseList(
     String(formData.get("partnership_seeking") ?? ""),
   );
+  // What the company wants on the platform: a partner, funding, or both.
+  const seeking = [
+    ...new Set(
+      formData
+        .getAll("seeking")
+        .map(String)
+        .filter((s) => s === "partner" || s === "funding"),
+    ),
+  ];
 
   // product_images arrives as a JSON array of uploaded public URLs.
   let productImages: string[] = [];
@@ -125,6 +134,7 @@ export async function createOrgAction(
       industry,
       capabilities,
       partnership_seeking: partnershipSeeking,
+      seeking,
       created_by: user.id,
     })
     .select("id, slug")

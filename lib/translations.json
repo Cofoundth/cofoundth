@@ -960,5 +960,12 @@
   "Invalid request.": "คำขอไม่ถูกต้อง",
   "Invalid proposal.": "ข้อเสนอไม่ถูกต้อง",
   "Partnership deals": "ดีลพาร์ทเนอร์ชิป",
-  "Funding deals": "ดีลระดมทุน"
+  "Funding deals": "ดีลระดมทุน",
+  "What are you looking for?": "คุณกำลังมองหาอะไร?",
+  "This places your company under these tabs in the directory.": "บริษัทของคุณจะถูกจัดอยู่ในแท็บเหล่านี้ในไดเรกทอรี",
+  "A business partner": "พาร์ทเนอร์ทางธุรกิจ",
+  "Funding from investors": "เงินทุนจากนักลงทุน",
+  "Want a partner": "ต้องการพาร์ทเนอร์",
+  "Want funding": "ต้องการระดมทุน",
+  "No companies in this tab yet.": "ยังไม่มีบริษัทในแท็บนี้"
 }
