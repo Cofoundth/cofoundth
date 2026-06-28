@@ -76,7 +76,7 @@ export default async function AdminDealsPage() {
   const { data: fundingRows } = await admin
     .from("investor_deals")
     .select(
-      "id, connection_id, status, equity_pct, monthly_amount, monthly_currency, contract_months, confirmed_at",
+      "id, connection_id, status, equity_pct, monthly_amount, monthly_currency, contract_months, fee_amount, confirmed_at",
     )
     .in("status", OPEN_STATES)
     .order("confirmed_at", { ascending: false, nullsFirst: false });
@@ -116,6 +116,7 @@ export default async function AdminDealsPage() {
   const moW = await tServer("/mo");
   const monthsW = await tServer("months");
   const investorW = await tServer("Investor");
+  const feeW = await tServer("Cofoundee fee");
 
   const fundingView = await Promise.all(
     funding.map(async (f) => {
@@ -143,6 +144,7 @@ export default async function AdminDealsPage() {
           STATUS_LABELS[f.status as string] ?? (f.status as string),
         ),
         terms,
+        fee: f.fee_amount as number | null,
       };
     }),
   );
@@ -253,6 +255,11 @@ export default async function AdminDealsPage() {
                     </div>
                     {f.terms && (
                       <div className="text-xs text-ink-muted mt-2">{f.terms}</div>
+                    )}
+                    {f.fee != null && (
+                      <div className="text-xs text-gold mt-1">
+                        {feeW}: ฿{Number(f.fee).toLocaleString()}
+                      </div>
                     )}
                   </div>
                 ))}

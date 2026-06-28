@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { COFOUNDEE_CALENDLY_URL } from "@/lib/calendly";
 import { requireUser } from "@/lib/auth";
+import { getActiveOrgId } from "@/lib/active-org";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { STAGE_LABELS } from "@/lib/matching";
@@ -125,15 +126,9 @@ export default async function OrgPage({ params }: Props) {
   const pitch =
     (org.pitch as string | null) ?? (org.about as string | null);
 
-  // The viewer's company (first membership) + connection state with this org.
-  const { data: myFirst } = await supabase
-    .from("org_members")
-    .select("org_id, joined_at")
-    .eq("user_id", user.id)
-    .order("joined_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  const myOrgId = (myFirst?.org_id as string | undefined) ?? null;
+  // The viewer's ACTIVE company (the one they're acting as via the org switcher)
+  // + connection state with this org — not whichever they joined first.
+  const myOrgId = await getActiveOrgId(supabase, user.id);
 
   let connState: ConnState = "none";
   let connectionId: string | null = null;

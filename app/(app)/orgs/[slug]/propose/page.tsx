@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import { getActiveOrgId } from "@/lib/active-org";
 import { tServer } from "@/lib/i18n-server";
 import { DealProposalForm } from "./DealProposalForm";
 
@@ -24,14 +25,9 @@ export default async function ProposePage({
     .maybeSingle();
   if (!org) notFound();
 
-  const { data: myFirst } = await supabase
-    .from("org_members")
-    .select("org_id, joined_at")
-    .eq("user_id", user.id)
-    .order("joined_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  const myOrgId = myFirst?.org_id as string | undefined;
+  // Propose AS the company the viewer is currently acting as (active-org cookie),
+  // not whichever they joined first — matters for users in multiple companies.
+  const myOrgId = (await getActiveOrgId(supabase, user.id)) ?? undefined;
   if (!myOrgId || myOrgId === org.id) redirect(`/orgs/${slug}`);
 
   // Proposals require an accepted connection between the two companies.

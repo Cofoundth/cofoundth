@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { HandshakeIcon, ShieldCheck } from "lucide-react";
 import { proposeInvestorDealAction, type FundingFormState } from "./actions";
+import { cofoundeeFee } from "@/lib/fee";
 import { useT } from "@/lib/i18n-client";
 
 const INITIAL: FundingFormState = null;
@@ -17,6 +18,16 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
     FundingFormState,
     FormData
   >(proposeInvestorDealAction, INITIAL);
+
+  // Live Cofoundee-fee preview from the entered cash terms.
+  const [monthly, setMonthly] = useState("");
+  const [months, setMonths] = useState("");
+  const m = Number(monthly.replace(/,/g, ""));
+  const n = Number(months);
+  const fee = cofoundeeFee(
+    isFinite(m) ? m : 0,
+    Number.isInteger(n) ? n : 0,
+  );
 
   return (
     <form
@@ -52,6 +63,8 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
             type="text"
             inputMode="decimal"
             placeholder={tr("e.g. 50,000")}
+            value={monthly}
+            onChange={(e) => setMonthly(e.target.value)}
             className={inputCls}
           />
         </div>
@@ -68,6 +81,8 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
             type="text"
             inputMode="numeric"
             placeholder={tr("e.g. 12")}
+            value={months}
+            onChange={(e) => setMonths(e.target.value)}
             className={inputCls}
           />
         </div>
@@ -102,11 +117,23 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
 
       <div className="flex items-start gap-3 p-4 bg-cream border border-line">
         <ShieldCheck className="w-5 h-5 text-gold shrink-0 mt-0.5" />
-        <p className="text-xs text-ink leading-relaxed">
-          {tr(
-            "Cofoundee charges 1% of the deal value (minimum ฿2,000) per signed deal. A partner law firm drafts and handles the contract; signing happens in person.",
-          )}
-        </p>
+        <div className="text-xs text-ink leading-relaxed">
+          <p>
+            {tr(
+              "Cofoundee charges 1% of the deal value (minimum ฿2,000) per signed deal. A partner law firm drafts and handles the contract; signing happens in person.",
+            )}
+          </p>
+          <p className="mt-2 text-navy">
+            {tr("Cofoundee fee for this deal")}:{" "}
+            <span className="font-serif">฿{fee.toLocaleString()}</span>
+            {m * n <= 0 && (
+              <span className="text-ink-muted">
+                {" "}
+                ({tr("minimum — add monthly terms to compute 1%")})
+              </span>
+            )}
+          </p>
+        </div>
       </div>
 
       {state?.error && (

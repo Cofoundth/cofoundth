@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid } from "@/lib/slug";
 import { DEAL_DESCRIPTION_MAX } from "@/lib/limits";
+import { cofoundeeFee, COFOUNDEE_FEE_CURRENCY } from "@/lib/fee";
 import { getActiveOrgId } from "@/lib/active-org";
 import { notifyUsers, notifyOrgMembers } from "@/lib/notify";
 
@@ -228,6 +229,8 @@ export async function proposeInvestorDealAction(
   if (resolved.conn.status !== "accepted")
     return { error: "Connect first, then send a proposal." };
 
+  const feeAmount = cofoundeeFee(monthly, months);
+
   const { error } = await admin.from("investor_deals").insert({
     connection_id: connectionId,
     proposed_by: user.id,
@@ -238,6 +241,9 @@ export async function proposeInvestorDealAction(
     contract_months: months,
     payment_terms: paymentTerms || null,
     description: description || null,
+    fee_amount: feeAmount,
+    fee_currency: COFOUNDEE_FEE_CURRENCY,
+    fee_type: "standard",
     status: "proposed",
   });
   if (error) {

@@ -83,7 +83,7 @@ export default async function FundingDetailPage({ params }: Props) {
   const { data: dealsRaw } = await supabase
     .from("investor_deals")
     .select(
-      "id, proposer_side, equity_pct, monthly_amount, monthly_currency, contract_months, payment_terms, description, status, created_at",
+      "id, proposer_side, equity_pct, monthly_amount, monthly_currency, contract_months, payment_terms, description, fee_amount, status, created_at",
     )
     .eq("connection_id", connectionId)
     .order("created_at", { ascending: false });
@@ -102,6 +102,7 @@ export default async function FundingDetailPage({ params }: Props) {
       months: d.contract_months as number | null,
       payment: d.payment_terms as string | null,
       description: d.description as string | null,
+      fee: d.fee_amount as number | null,
       // proposer side === viewer side → viewer can withdraw; else confirm
       actionRole:
         (d.proposer_side as string) === side
@@ -113,6 +114,7 @@ export default async function FundingDetailPage({ params }: Props) {
   const equityLabel = await tServer("equity");
   const perMonthLabel = await tServer("/mo");
   const monthsLabel = await tServer("months");
+  const feeLabel = await tServer("Cofoundee fee");
   const bookSigning = await tServer("Book your signing slot");
 
   return (
@@ -172,6 +174,11 @@ export default async function FundingDetailPage({ params }: Props) {
                 </div>
                 {d.payment && (
                   <div className="text-xs text-ink-muted mt-1">{d.payment}</div>
+                )}
+                {d.fee != null && (
+                  <div className="text-xs text-gold mt-1">
+                    {feeLabel}: ฿{Number(d.fee).toLocaleString()}
+                  </div>
                 )}
                 {d.description && (
                   <p className="text-sm text-ink mt-2 whitespace-pre-wrap">
