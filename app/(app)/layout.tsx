@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { AppHeader } from "@/components/AppHeader";
@@ -21,15 +22,15 @@ export default async function AppLayout({
     .eq("id", user.id)
     .single();
 
-  // Investors don't use the founder app yet — route them to their space. The
-  // full investor module ships in Phase 2. (/investor lives outside this route
-  // group, so this can't loop.)
-  if (profile?.account_type === "investor") {
-    redirect("/investor");
-  }
+  const pathname = (await headers()).get("x-pathname") ?? "";
 
-  // New founders must finish their profile before using the app.
-  if (!profile?.onboarded) {
+  // Investors live on /funding inside the app (their profile/onboarding live at
+  // /investor + /onboarding, outside this route group). Bounce them to /funding
+  // from any other app page.
+  if (profile?.account_type === "investor") {
+    if (!pathname.startsWith("/funding")) redirect("/funding");
+  } else if (!profile?.onboarded) {
+    // New founders must finish their profile before using the app.
     redirect("/onboarding");
   }
 

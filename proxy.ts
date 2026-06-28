@@ -47,6 +47,8 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("content-security-policy", csp);
+  // Expose the path to RSC (the app layout uses it for role-based routing).
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
 
   let response: NextResponse;
   if (

@@ -22,7 +22,7 @@ export async function AppHeader() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, photo_url, slug, is_admin")
+    .select("full_name, photo_url, slug, is_admin, account_type")
     .eq("id", user.id)
     .single();
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
@@ -99,21 +99,23 @@ export async function AppHeader() {
     };
   });
 
-  const navItems: { href: string; label: string; badge?: number }[] = [
-    { href: "/dashboard", label: await tServer("Dashboard") },
-    { href: "/community", label: await tServer("Community") },
-    { href: "/browse", label: await tServer("Founders") },
-    {
-      href: "/matches",
-      label: await tServer("Connections"),
-      badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
-    },
-    { href: "/orgs", label: await tServer("Companies") },
-    { href: "/funding", label: await tServer("Funding") },
-    // Insights + Legal hidden for now.
-    // { href: "/insights", label: await tServer("Insights") },
-    // { href: "/legal-templates", label: await tServer("Legal") },
-  ];
+  // Investors only use /funding inside the app (the layout bounces them there).
+  const isInvestor = profile?.account_type === "investor";
+  const navItems: { href: string; label: string; badge?: number }[] =
+    isInvestor
+      ? [{ href: "/funding", label: await tServer("Funding") }]
+      : [
+          { href: "/dashboard", label: await tServer("Dashboard") },
+          { href: "/community", label: await tServer("Community") },
+          { href: "/browse", label: await tServer("Founders") },
+          {
+            href: "/matches",
+            label: await tServer("Connections"),
+            badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
+          },
+          { href: "/orgs", label: await tServer("Companies") },
+          { href: "/funding", label: await tServer("Funding") },
+        ];
   if (
     isAdmin({
       email: user.email,
