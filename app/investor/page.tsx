@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Compass, Pencil } from "lucide-react";
+import { ArrowRight, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
-import { signOutAction } from "@/app/(auth)/actions";
-import { BrandMark, Wordmark } from "@/components/Brand";
+import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
 import {
   InvestorOnboardingForm,
   type InvestorInitial,
@@ -45,22 +45,7 @@ export default async function InvestorPage({
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
-      <header className="bg-white border-b border-line">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <BrandMark size="sm" />
-            <Wordmark className="text-base" />
-          </div>
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              className="text-sm text-ink-muted hover:text-navy tracking-wide"
-            >
-              {await tServer("Sign out")}
-            </button>
-          </form>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="flex-1 px-6 py-12">
         {editing ? (
@@ -83,38 +68,105 @@ export default async function InvestorPage({
             </div>
           </div>
         ) : (
-          <div className="max-w-md mx-auto">
-            <div className="bg-white border border-line p-8 lg:p-10 text-center">
-              <div className="w-14 h-14 mx-auto bg-cream border border-line flex items-center justify-center mb-6">
-                <Compass className="w-6 h-6 text-gold" strokeWidth={1.5} />
-              </div>
-              <p className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-                {await tServer("Investor")}
-              </p>
-              <h1 className="font-serif text-2xl text-navy leading-tight mb-3">
-                {firstName
+          <div className="max-w-2xl mx-auto">
+            <p className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+              {await tServer("Investor")}
+            </p>
+            <h1 className="font-serif text-3xl text-navy leading-tight mb-1">
+              {(inv?.firm_name as string | null) ||
+                (firstName
                   ? (await tServer("Welcome, {name}")).replace(
                       "{name}",
                       firstName,
                     )
-                  : await tServer("Welcome")}
-              </h1>
-              <p className="text-ink-muted leading-relaxed mb-6">
-                {await tServer(
-                  "Your investor profile is saved. The full experience — discovering and backing Thai startups — is coming soon; we'll reach out when early access opens.",
-                )}
-              </p>
-              <Link
-                href="/investor?edit=1"
-                className="inline-flex items-center gap-2 px-5 py-2.5 border border-line hover:border-navy text-ink hover:text-navy text-sm transition-colors"
-              >
-                <Pencil className="w-4 h-4" />
-                {await tServer("Edit profile")}
-              </Link>
+                  : await tServer("Welcome"))}
+            </h1>
+            <p className="text-ink-muted mb-8">
+              {[inv?.investor_type, inv?.location].filter(Boolean).join(" · ")}
+            </p>
+
+            {/* The live investor surface — discovering + backing companies. */}
+            <Link
+              href="/funding"
+              className="flex items-center justify-between gap-4 bg-navy hover:bg-navy-dark text-white px-6 py-5 mb-8 transition-colors"
+            >
+              <span>
+                <span className="block font-serif text-lg">
+                  {await tServer("Discover companies to back")}
+                </span>
+                <span className="block text-xs text-white/70 mt-0.5">
+                  {await tServer(
+                    "Browse Thai startups, connect, and propose a deal.",
+                  )}
+                </span>
+              </span>
+              <ArrowRight className="w-5 h-5 shrink-0" />
+            </Link>
+
+            <div className="bg-white border border-line p-6 lg:p-8 space-y-5">
+              {((inv?.focus_industries as string[] | null) ?? []).length > 0 && (
+                <div>
+                  <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+                    {await tServer("Focus")}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {((inv?.focus_industries as string[] | null) ?? []).map(
+                      (x) => (
+                        <span
+                          key={x}
+                          className="text-xs px-2 py-1 border border-line text-ink"
+                        >
+                          {x}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                </div>
+              )}
+              {((inv?.stages as string[] | null) ?? []).length > 0 && (
+                <div>
+                  <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+                    {await tServer("Stages")}
+                  </div>
+                  <div className="text-sm text-ink">
+                    {((inv?.stages as string[] | null) ?? []).join(" · ")}
+                  </div>
+                </div>
+              )}
+              {inv?.ticket_size && (
+                <div>
+                  <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+                    {await tServer("Cheque size")}
+                  </div>
+                  <div className="text-sm text-ink">
+                    {inv.ticket_size as string}
+                  </div>
+                </div>
+              )}
+              {inv?.thesis && (
+                <div>
+                  <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+                    {await tServer("Thesis")}
+                  </div>
+                  <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">
+                    {inv.thesis as string}
+                  </p>
+                </div>
+              )}
+              <div className="pt-1">
+                <Link
+                  href="/investor?edit=1"
+                  className="inline-flex items-center gap-2 text-sm text-navy hover:text-gold transition-colors"
+                >
+                  <Pencil className="w-4 h-4" />
+                  {await tServer("Edit profile")}
+                </Link>
+              </div>
             </div>
           </div>
         )}
       </main>
+      <AppFooter />
     </div>
   );
 }
