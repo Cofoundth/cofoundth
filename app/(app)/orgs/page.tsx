@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Building2, MapPin, Plus, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import { isInvestorAccount } from "@/lib/account";
 import { tServer } from "@/lib/i18n-server";
 import { InviteActions } from "./InviteActions";
 
@@ -134,6 +135,8 @@ export default async function OrgsPage({
   const user = await requireUser();
   const supabase = await createClient();
   const myEmail = (user.email ?? "").toLowerCase();
+  // Investors browse companies for deal flow — they don't create or join one.
+  const isInvestor = await isInvestorAccount(supabase, user.id);
 
   const [{ data: inviteRows }, { data: memberRows }, { data: allOrgs }] =
     await Promise.all([
@@ -207,28 +210,32 @@ export default async function OrgsPage({
       <div className="flex items-end justify-between mb-8">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-gold mb-2">
-            {await tServer("B2B")}
+            {await tServer(isInvestor ? "Discover" : "B2B")}
           </p>
           <h1 className="font-serif text-3xl text-navy leading-tight">
             {await tServer("Companies")}
           </h1>
           <p className="text-ink-muted mt-1">
             {await tServer(
-              "Create your company, invite your team, and connect with other companies.",
+              isInvestor
+                ? "Browse Thai startups — see what they're building and who's raising."
+                : "Create your company, invite your team, and connect with other companies.",
             )}
           </p>
         </div>
-        <Link
-          href="/orgs/new"
-          className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {await tServer("Create company")}
-        </Link>
+        {!isInvestor && (
+          <Link
+            href="/orgs/new"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            {await tServer("Create company")}
+          </Link>
+        )}
       </div>
 
       {/* Pending invites */}
-      {invites.length > 0 && (
+      {!isInvestor && invites.length > 0 && (
         <section className="mb-10">
           <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
             {await tServer("Invitations")}
@@ -257,11 +264,12 @@ export default async function OrgsPage({
         </section>
       )}
 
-      {/* Your companies */}
-      <section className="mb-10">
-        <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
-          {await tServer("Your companies")}
-        </h2>
+      {/* Your companies (founders only) */}
+      {!isInvestor && (
+        <section className="mb-10">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
+            {await tServer("Your companies")}
+          </h2>
         {myOrgs.length === 0 ? (
           <div className="bg-white border border-line p-8 text-center">
             <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
@@ -289,7 +297,8 @@ export default async function OrgsPage({
             ))}
           </div>
         )}
-      </section>
+        </section>
+      )}
 
       {/* Directory */}
       {directory.length > 0 && (

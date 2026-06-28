@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid, slugify } from "@/lib/slug";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { getActiveOrgId } from "@/lib/active-org";
+import { isInvestorAccount } from "@/lib/account";
 
 export type OrgFormState = { error?: string } | null;
 
@@ -116,6 +117,8 @@ export async function createOrgAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  if (await isInvestorAccount(supabase, user.id))
+    return { error: "Investor accounts can't create a company." };
 
   const admin = createAdminClient();
   const slug = await uniqueOrgSlug(admin, name);

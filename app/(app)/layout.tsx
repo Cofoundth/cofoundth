@@ -37,7 +37,13 @@ export default async function AppLayout({
       pathname === "/community" ||
       (pathname.startsWith("/community/") &&
         !pathname.startsWith("/community/new")) ||
-      pathname === "/browse" ||
+      // Companies: investors browse the company directory + profiles (read), but
+      // not the founder-to-founder B2B actions (create / propose / chat).
+      pathname === "/orgs" ||
+      (pathname.startsWith("/orgs/") &&
+        !pathname.startsWith("/orgs/new") &&
+        !pathname.endsWith("/propose") &&
+        !pathname.endsWith("/chat")) ||
       pathname.startsWith("/profile/") ||
       pathname === "/settings";
     if (!readable) redirect("/funding");

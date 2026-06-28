@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import { COFOUNDEE_CALENDLY_URL } from "@/lib/calendly";
 import { requireUser } from "@/lib/auth";
 import { getActiveOrgId } from "@/lib/active-org";
+import { isInvestorAccount } from "@/lib/account";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { STAGE_LABELS } from "@/lib/matching";
@@ -129,6 +130,8 @@ export default async function OrgPage({ params }: Props) {
   // The viewer's ACTIVE company (the one they're acting as via the org switcher)
   // + connection state with this org — not whichever they joined first.
   const myOrgId = await getActiveOrgId(supabase, user.id);
+  // Investors view companies for research — no B2B connect/propose actions.
+  const isInvestor = await isInvestorAccount(supabase, user.id);
 
   let connState: ConnState = "none";
   let connectionId: string | null = null;
@@ -379,7 +382,7 @@ export default async function OrgPage({ params }: Props) {
 
         {/* Aside — connect + team */}
         <aside className="space-y-4">
-          {connState !== "self" && (
+          {connState !== "self" && !isInvestor && (
             <div className="bg-white border border-line p-5">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
                 {await tServer("Connect")}
