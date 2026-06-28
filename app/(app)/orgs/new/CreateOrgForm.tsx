@@ -175,18 +175,25 @@ export function CreateOrgForm() {
             <input name="industry" type="text" className={inputCls} />
           </Field>
 
-          <Field
-            label={tr("What we offer")}
-            hint={tr("Comma-separated capabilities partners can tap into.")}
-          >
-            <input name="capabilities" type="text" className={inputCls} />
+          <Field label={tr("What we offer")} hint={tr("Separate with commas")}>
+            <input
+              name="capabilities"
+              type="text"
+              placeholder={tr("e.g. Software, inventory tools, mobile app")}
+              className={inputCls}
+            />
           </Field>
 
           <Field
             label={tr("Partnerships we're seeking")}
-            hint={tr("Comma-separated — what kind of partners you want.")}
+            hint={tr("Separate with commas")}
           >
-            <input name="partnership_seeking" type="text" className={inputCls} />
+            <input
+              name="partnership_seeking"
+              type="text"
+              placeholder={tr("e.g. Media companies, ad agencies, influencers")}
+              className={inputCls}
+            />
           </Field>
         </div>
       </div>

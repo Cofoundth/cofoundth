@@ -905,5 +905,9 @@
   "No company chats yet": "ยังไม่มีแชทกับบริษัท",
   "Connect with a company, then chat to align before proposing a deal.": "เชื่อมต่อกับบริษัท แล้วแชทเพื่อตกลงรายละเอียดก่อนเสนอดีล",
   "Browse companies": "ดูบริษัททั้งหมด",
-  "Start the conversation": "เริ่มบทสนทนา"
+  "Start the conversation": "เริ่มบทสนทนา",
+  "Separate with commas": "คั่นด้วยเครื่องหมาย ,",
+  "e.g. Software, inventory tools, mobile app": "เช่น ซอฟต์แวร์, ตัวช่วยจัดการสินค้า, แอปพลิเคชั่น",
+  "e.g. Media companies, ad agencies, influencers": "เช่น บริษัทสื่อ, นักทำโฆษณา, อินฟลูเอนเซอร์",
+  "Cofoundee charges 1% of the deal value (minimum ฿2,000) per signed deal. A partner law firm drafts and handles the contract; signing happens in person.": "Cofoundee คิดค่าบริการ 1% ของมูลค่าดีล (ขั้นต่ำ ฿2,000) ต่อดีลที่เซ็นสำเร็จ — สำนักงานกฎหมายพาร์ทเนอร์เป็นผู้ร่างและดูแลสัญญา และเซ็นกันแบบพบตัวจริง"
 }

@@ -186,7 +186,7 @@ export function DealProposalForm({
         <ShieldCheck className="w-5 h-5 text-gold shrink-0 mt-0.5" />
         <p className="text-xs text-ink leading-relaxed">
           {tr(
-            "Cofoundee charges a flat coordination fee per signed deal (our team confirms the amount). A partner law firm drafts and handles the contract; signing happens in person.",
+            "Cofoundee charges 1% of the deal value (minimum ฿2,000) per signed deal. A partner law firm drafts and handles the contract; signing happens in person.",
           )}
         </p>
       </div>
