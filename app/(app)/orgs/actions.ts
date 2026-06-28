@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid, slugify } from "@/lib/slug";
 import { LONG_TEXT_MAX } from "@/lib/limits";
+import { getActiveOrgId } from "@/lib/active-org";
 
 export type OrgFormState = { error?: string } | null;
 
@@ -315,20 +316,13 @@ export async function removeMemberAction(
 // membership here — mirroring the org_members / org_invites design.
 // ------------------------------------------------------------------
 
-// The org the viewer acts as (their earliest-joined membership). Most users
-// belong to 0 or 1 company; if several, we use the first.
+// The org the viewer is acting as — their chosen "active company" (cookie),
+// falling back to earliest-joined. See lib/active-org.
 async function viewerPrimaryOrg(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
 ): Promise<string | null> {
-  const { data } = await supabase
-    .from("org_members")
-    .select("org_id, joined_at")
-    .eq("user_id", userId)
-    .order("joined_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  return (data?.org_id as string | undefined) ?? null;
+  return getActiveOrgId(supabase, userId);
 }
 
 export async function requestConnectionAction(

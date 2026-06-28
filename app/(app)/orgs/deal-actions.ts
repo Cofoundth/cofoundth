@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid } from "@/lib/slug";
+import { getActiveOrgId } from "@/lib/active-org";
 
 export type DealFormState = { error?: string } | null;
 
@@ -19,18 +20,12 @@ const DEAL_TYPES = [
 ] as const;
 const CURRENCIES = ["THB", "USD", "EUR"] as const;
 
+// The org the viewer is acting as (active company cookie, else earliest-joined).
 async function viewerOrg(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
 ): Promise<string | null> {
-  const { data } = await supabase
-    .from("org_members")
-    .select("org_id, joined_at")
-    .eq("user_id", userId)
-    .order("joined_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  return (data?.org_id as string | undefined) ?? null;
+  return getActiveOrgId(supabase, userId);
 }
 
 // ------------------------------------------------------------------

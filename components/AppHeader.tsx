@@ -9,6 +9,8 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
 import { NotificationBell, type NotifItem } from "@/components/NotificationBell";
 import { MobileMenu } from "@/components/MobileMenu";
+import { OrgSwitcher } from "@/components/OrgSwitcher";
+import { getUserOrgs, getActiveOrgId } from "@/lib/active-org";
 
 // The single app header. Rendered by the (app) layout AND by MarketingNav for
 // logged-in visitors, so public content (insights/legal) and the app share the
@@ -24,6 +26,11 @@ export async function AppHeader() {
     .eq("id", user.id)
     .single();
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
+
+  // "Acting as" company switcher — only meaningful when in >1 company.
+  const myOrgs = await getUserOrgs(supabase, user.id);
+  const activeOrgId =
+    myOrgs.length > 1 ? await getActiveOrgId(supabase, user.id) : null;
 
   const [
     { count: receivedPending },
@@ -147,6 +154,9 @@ export async function AppHeader() {
           </div>
 
           <div className="flex items-center gap-4">
+            {activeOrgId && (
+              <OrgSwitcher orgs={myOrgs} activeId={activeOrgId} />
+            )}
             <LanguageSwitcher />
             <NotificationBell
               items={notifItems}

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid } from "@/lib/slug";
 import { DEAL_DESCRIPTION_MAX } from "@/lib/limits";
+import { getActiveOrgId } from "@/lib/active-org";
 
 export type FundingFormState = { error?: string } | null;
 
@@ -26,14 +27,7 @@ async function viewerPrimaryOrg(
   supabase: SBClient,
   userId: string,
 ): Promise<string | null> {
-  const { data } = await supabase
-    .from("org_members")
-    .select("org_id, joined_at")
-    .eq("user_id", userId)
-    .order("joined_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  return (data?.org_id as string | undefined) ?? null;
+  return getActiveOrgId(supabase, userId);
 }
 
 // Which side of a connection is the caller on? Checks membership of THIS
