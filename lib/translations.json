@@ -967,5 +967,8 @@
   "Funding from investors": "เงินทุนจากนักลงทุน",
   "Want a partner": "ต้องการพาร์ทเนอร์",
   "Want funding": "ต้องการระดมทุน",
-  "No companies in this tab yet.": "ยังไม่มีบริษัทในแท็บนี้"
+  "No companies in this tab yet.": "ยังไม่มีบริษัทในแท็บนี้",
+  "{name} proposed a partnership deal": "{name} ส่งข้อเสนอดีลพาร์ทเนอร์ชิป",
+  "{name} sent a funding proposal": "{name} ส่งข้อเสนอระดมทุน",
+  "A company": "บริษัทหนึ่ง"
 }

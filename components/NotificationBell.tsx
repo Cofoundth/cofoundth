@@ -17,7 +17,7 @@ export type NotifItem = {
   id: string;
   type: string;
   entityId: string | null;
-  data: { actor_name?: string; post_title?: string } | null;
+  data: { actor_name?: string; post_title?: string; slug?: string } | null;
   readAt: string | null;
   createdAt: string;
   actor: {
@@ -40,6 +40,10 @@ function hrefFor(n: NotifItem): string {
     case "interest":
     case "match":
       return "/matches";
+    case "deal_proposed":
+      return n.data?.slug ? `/orgs/${n.data.slug}` : "/orgs";
+    case "funding_proposed":
+      return n.entityId ? `/funding/${n.entityId}` : "/funding";
     default:
       return "/dashboard";
   }
@@ -171,6 +175,13 @@ export function NotificationBell({
         return tr("You and {name} are now connected").replace("{name}", name);
       case "message":
         return tr("{name} sent you a message").replace("{name}", name);
+      case "deal_proposed":
+        return tr("{name} proposed a partnership deal").replace(
+          "{name}",
+          n.data?.actor_name || tr("A company"),
+        );
+      case "funding_proposed":
+        return tr("{name} sent a funding proposal").replace("{name}", name);
       default:
         return "";
     }

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid } from "@/lib/slug";
 import { getActiveOrgId } from "@/lib/active-org";
+import { notifyOrgMembers } from "@/lib/notify";
 
 export type DealFormState = { error?: string } | null;
 
@@ -109,6 +110,21 @@ export async function proposeDealAction(
     console.error("[deals.propose]", error);
     return { error: "Couldn't send the proposal. Try again." };
   }
+
+  // Notify the other company's members that a proposal arrived.
+  const { data: proposer } = await admin
+    .from("organizations")
+    .select("name, slug")
+    .eq("id", myOrg)
+    .maybeSingle();
+  await notifyOrgMembers(targetOrgId, user.id, {
+    actorId: user.id,
+    type: "deal_proposed",
+    data: {
+      actor_name: (proposer?.name as string) ?? "",
+      slug: (proposer?.slug as string) ?? "",
+    },
+  });
 
   revalidatePath("/orgs");
   redirect(targetSlug ? `/orgs/${targetSlug}` : "/orgs");

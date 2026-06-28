@@ -90,7 +90,9 @@ export async function AppHeader() {
       id: n.id as string,
       type: n.type as string,
       entityId: (n.entity_id as string | null) ?? null,
-      data: (n.data as { actor_name?: string; post_title?: string }) ?? null,
+      data:
+        (n.data as { actor_name?: string; post_title?: string; slug?: string }) ??
+        null,
       readAt: (n.read_at as string | null) ?? null,
       createdAt: n.created_at as string,
       actor,

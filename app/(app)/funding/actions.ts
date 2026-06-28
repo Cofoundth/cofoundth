@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid } from "@/lib/slug";
 import { DEAL_DESCRIPTION_MAX } from "@/lib/limits";
 import { getActiveOrgId } from "@/lib/active-org";
+import { notifyUsers, notifyOrgMembers } from "@/lib/notify";
 
 export type FundingFormState = { error?: string } | null;
 
@@ -243,6 +244,45 @@ export async function proposeInvestorDealAction(
     console.error("[funding.propose]", error);
     return { error: "Couldn't send the proposal. Try again." };
   }
+
+  // Notify the other side that a funding proposal arrived.
+  const conn = resolved.conn;
+  if (resolved.side === "company") {
+    const { data: co } = await admin
+      .from("organizations")
+      .select("name")
+      .eq("id", conn.org_id)
+      .maybeSingle();
+    await notifyUsers([conn.investor_id], {
+      actorId: user.id,
+      type: "funding_proposed",
+      entityId: connectionId,
+      data: { actor_name: (co?.name as string) ?? "" },
+    });
+  } else {
+    const [{ data: ip }, { data: p }] = await Promise.all([
+      admin
+        .from("investor_profiles")
+        .select("firm_name")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      admin
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]);
+    await notifyOrgMembers(conn.org_id, user.id, {
+      actorId: user.id,
+      type: "funding_proposed",
+      entityId: connectionId,
+      data: {
+        actor_name:
+          (ip?.firm_name as string) || (p?.full_name as string) || "",
+      },
+    });
+  }
+
   revalidatePath("/funding");
   return {};
 }
