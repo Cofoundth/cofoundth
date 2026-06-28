@@ -65,9 +65,11 @@ const KIND_META: Record<
 export function PostCard({
   post,
   locale,
+  canComment = true,
 }: {
   post: PostItem;
   locale: Locale;
+  canComment?: boolean;
 }) {
   const tr = useT();
   const [optimistic, setOptimistic] = useOptimistic(
@@ -321,34 +323,36 @@ export function PostCard({
       {/* Inline comments */}
       {open && (
         <div className="border-t border-line bg-cream/40 px-5 py-4">
-          <form onSubmit={submitComment} className="flex items-start gap-2 mb-4">
-            <textarea
-              ref={composerRef}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              rows={1}
-              maxLength={2000}
-              placeholder={tr("Write a comment…")}
-              onKeyDown={(e) => {
-                if (
-                  e.key === "Enter" &&
-                  !e.shiftKey &&
-                  !e.nativeEvent.isComposing
-                ) {
-                  e.preventDefault();
-                  doSubmitComment();
-                }
-              }}
-              className="flex-1 px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
-            />
-            <button
-              type="submit"
-              disabled={submitting || draft.trim().length === 0}
-              className="inline-flex items-center gap-1 px-3 py-2 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm shrink-0"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </form>
+          {canComment && (
+            <form onSubmit={submitComment} className="flex items-start gap-2 mb-4">
+              <textarea
+                ref={composerRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                rows={1}
+                maxLength={2000}
+                placeholder={tr("Write a comment…")}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" &&
+                    !e.shiftKey &&
+                    !e.nativeEvent.isComposing
+                  ) {
+                    e.preventDefault();
+                    doSubmitComment();
+                  }
+                }}
+                className="flex-1 px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
+              />
+              <button
+                type="submit"
+                disabled={submitting || draft.trim().length === 0}
+                className="inline-flex items-center gap-1 px-3 py-2 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm shrink-0"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
+          )}
 
           {loading && comments === null ? (
             <p className="text-xs text-ink-muted">{tr("Loading…")}</p>

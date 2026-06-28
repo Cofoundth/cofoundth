@@ -4,6 +4,7 @@ import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { PostComposer } from "@/components/PostComposer";
 import { SearchablePostFeed } from "@/components/SearchablePostFeed";
 import { getFeedPosts } from "@/lib/posts";
+import { isInvestorAccount } from "@/lib/account";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,9 @@ export default async function CommunityPage({
   const { q } = await searchParams;
 
   const feed = await getFeedPosts(supabase, { limit: 50, userId: user?.id });
+
+  // Investors read the founder community but don't post or comment in it.
+  const canWrite = !!user && !(await isInvestorAccount(supabase, user.id));
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
@@ -44,7 +48,8 @@ export default async function CommunityPage({
         locale={locale}
         canLoadMore={feed.length >= 50}
         initialQuery={q ?? ""}
-        composer={user ? <PostComposer /> : null}
+        canComment={canWrite}
+        composer={canWrite ? <PostComposer /> : null}
         emptyMessage={await tServer(
           "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
         )}

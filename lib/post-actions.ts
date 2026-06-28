@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
+import { isInvestorAccount } from "@/lib/account";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import type { PostComment, PostItem } from "@/lib/post-types";
 
@@ -94,6 +95,8 @@ export async function createPostAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  if (await isInvestorAccount(supabase, user.id))
+    return { error: "Only founders can post in the community." };
 
   let imageUrl: string | null = null;
   const imageFile = formData.get("image");
@@ -197,6 +200,8 @@ export async function createPostCommentAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  if (await isInvestorAccount(supabase, user.id))
+    return { error: "Only founders can comment in the community." };
 
   const { error } = await supabase
     .from("forum_comments")

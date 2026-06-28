@@ -24,11 +24,21 @@ export default async function AppLayout({
 
   const pathname = (await headers()).get("x-pathname") ?? "";
 
-  // Investors live on /funding inside the app (their profile/onboarding live at
-  // /investor + /onboarding, outside this route group). Bounce them to /funding
-  // from any other app page.
+  // Investors are funding actors + read-first community members: they can reach
+  // funding, the community feed, the founder directory, profiles, and settings.
+  // Everything else (dashboard, B2B/orgs, connections/DMs) — and posting a new
+  // thread — bounces to /funding. Writes are also blocked server-side.
   if (profile?.account_type === "investor") {
-    if (!pathname.startsWith("/funding")) redirect("/funding");
+    const readable =
+      pathname === "/funding" ||
+      pathname.startsWith("/funding/") ||
+      pathname === "/community" ||
+      (pathname.startsWith("/community/") &&
+        !pathname.startsWith("/community/new")) ||
+      pathname === "/browse" ||
+      pathname.startsWith("/profile/") ||
+      pathname === "/settings";
+    if (!readable) redirect("/funding");
   } else if (!profile?.onboarded) {
     // New founders must finish their profile before using the app.
     redirect("/onboarding");

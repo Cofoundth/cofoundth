@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { isInvestorAccount } from "@/lib/account";
 import { Avatar } from "@/components/Avatar";
 import { ROLE_LABELS } from "@/lib/matching";
 import { t } from "@/lib/i18n";
@@ -31,6 +32,9 @@ export default async function PostPage({ params }: Props) {
     .single();
 
   if (!post) notFound();
+
+  // Investors read the founder community but don't comment in it.
+  const canWrite = !!user && !(await isInvestorAccount(supabase, user.id));
 
   const { data: author } = await supabase
     .from("profiles")
@@ -201,7 +205,7 @@ export default async function PostPage({ params }: Props) {
           </p>
         )}
 
-        <CommentComposer postId={post.id as string} />
+        {canWrite && <CommentComposer postId={post.id as string} />}
       </section>
     </div>
   );

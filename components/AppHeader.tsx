@@ -25,7 +25,10 @@ export async function AppHeader() {
     .select("full_name, photo_url, slug, is_admin, account_type")
     .eq("id", user.id)
     .single();
-  const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
+  const myProfileHref =
+    profile?.account_type === "investor"
+      ? "/investor"
+      : `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
   // "Acting as" company switcher — only meaningful when in >1 company.
   const myOrgs = await getUserOrgs(supabase, user.id);
@@ -99,11 +102,17 @@ export async function AppHeader() {
     };
   });
 
-  // Investors only use /funding inside the app (the layout bounces them there).
+  // Investors are funding actors + read-only community members (the layout
+  // bounces them off founder-only pages). Their nav is funding + the read
+  // surfaces they're allowed on.
   const isInvestor = profile?.account_type === "investor";
   const navItems: { href: string; label: string; badge?: number }[] =
     isInvestor
-      ? [{ href: "/funding", label: await tServer("Funding") }]
+      ? [
+          { href: "/funding", label: await tServer("Funding") },
+          { href: "/community", label: await tServer("Community") },
+          { href: "/browse", label: await tServer("Founders") },
+        ]
       : [
           { href: "/dashboard", label: await tServer("Dashboard") },
           { href: "/community", label: await tServer("Community") },

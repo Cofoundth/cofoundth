@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isInvestorAccount } from "@/lib/account";
 
 export type CommentState = { error?: string } | null;
 
@@ -54,6 +55,8 @@ export async function createCommentAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  if (await isInvestorAccount(supabase, user.id))
+    return { error: "Only founders can comment in the community." };
 
   const { error } = await supabase
     .from("forum_comments")

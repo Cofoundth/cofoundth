@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isInvestorAccount } from "@/lib/account";
 
 export type PostState = { error?: string } | null;
 
@@ -41,6 +42,8 @@ export async function createPostAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  if (await isInvestorAccount(supabase, user.id))
+    return { error: "Only founders can post in the community." };
 
   const { data, error } = await supabase
     .from("forum_posts")

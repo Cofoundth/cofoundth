@@ -19,6 +19,7 @@ export function SearchablePostFeed({
   composer,
   initialQuery,
   canLoadMore = false,
+  canComment = true,
 }: {
   items: PostItem[];
   locale: Locale;
@@ -26,6 +27,7 @@ export function SearchablePostFeed({
   composer?: React.ReactNode;
   initialQuery?: string;
   canLoadMore?: boolean;
+  canComment?: boolean;
 }) {
   const tr = useT();
 
@@ -153,7 +155,12 @@ export function SearchablePostFeed({
       ) : (
         <div className="space-y-3">
           {list.map((p) => (
-            <PostCard key={p.id} post={p} locale={locale} />
+            <PostCard
+              key={p.id}
+              post={p}
+              locale={locale}
+              canComment={canComment}
+            />
           ))}
         </div>
       )}
