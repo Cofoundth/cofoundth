@@ -6,7 +6,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid } from "@/lib/slug";
 import { DEAL_DESCRIPTION_MAX } from "@/lib/limits";
 import { cofoundeeFee, COFOUNDEE_FEE_CURRENCY } from "@/lib/fee";
-import { getActiveOrgId } from "@/lib/active-org";
 import { notifyUsers, notifyOrgMembers } from "@/lib/notify";
 
 export type FundingFormState = { error?: string } | null;
@@ -21,15 +20,6 @@ async function isInvestor(supabase: SBClient, userId: string): Promise<boolean> 
     .eq("id", userId)
     .maybeSingle();
   return data?.account_type === "investor";
-}
-
-// First company the user belongs to (acts on its behalf). Multi-company acting
-// context is a separate follow-up; earliest-joined org for now.
-async function viewerPrimaryOrg(
-  supabase: SBClient,
-  userId: string,
-): Promise<string | null> {
-  return getActiveOrgId(supabase, userId);
 }
 
 // Which side of a connection is the caller on? Checks membership of THIS
@@ -99,44 +89,6 @@ export async function investorConnectAction(
   });
   if (error) {
     console.error("[funding.investorConnect]", error);
-    return { error: "Couldn't send the request. Try again." };
-  }
-  revalidatePath("/funding");
-  return {};
-}
-
-// ---- Connect: company → investor ----------------------------------------
-export async function companyConnectInvestorAction(
-  investorId: string,
-): Promise<{ error?: string }> {
-  if (!isUuid(investorId)) return { error: "Invalid investor." };
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated." };
-
-  const myOrg = await viewerPrimaryOrg(supabase, user.id);
-  if (!myOrg) return { error: "You need a company to connect with investors." };
-
-  const admin = createAdminClient();
-  const { data: existing } = await admin
-    .from("investor_connections")
-    .select("id")
-    .eq("investor_id", investorId)
-    .eq("org_id", myOrg)
-    .maybeSingle();
-  if (existing) return { error: "You already have a request with this investor." };
-
-  const { error } = await admin.from("investor_connections").insert({
-    investor_id: investorId,
-    org_id: myOrg,
-    status: "pending",
-    requested_by: "company",
-    created_by: user.id,
-  });
-  if (error) {
-    console.error("[funding.companyConnect]", error);
     return { error: "Couldn't send the request. Try again." };
   }
   revalidatePath("/funding");

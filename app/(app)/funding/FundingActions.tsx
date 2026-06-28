@@ -5,20 +5,13 @@ import { useRouter } from "next/navigation";
 import { Handshake, Check, X } from "lucide-react";
 import {
   investorConnectAction,
-  companyConnectInvestorAction,
   respondInvestorConnectionAction,
 } from "./actions";
 import { useT } from "@/lib/i18n-client";
 
-// as="investor": targetId = orgId (an investor connects to a company)
-// as="company":  targetId = investorId (a company connects to an investor)
-export function FundingConnect({
-  targetId,
-  as,
-}: {
-  targetId: string;
-  as: "investor" | "company";
-}) {
+// Funding is investor-initiated: an investor connects to a company (targetId =
+// orgId). Companies never cold-connect to investors.
+export function FundingConnect({ targetId }: { targetId: string }) {
   const tr = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -27,10 +20,7 @@ export function FundingConnect({
   function go() {
     setError(null);
     start(async () => {
-      const res =
-        as === "investor"
-          ? await investorConnectAction(targetId)
-          : await companyConnectInvestorAction(targetId);
+      const res = await investorConnectAction(targetId);
       if (res?.error) setError(res.error);
       else router.refresh();
     });

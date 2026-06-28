@@ -147,7 +147,7 @@ export default async function FundingPage() {
                     {(o.tagline as string | null) ?? ""}
                   </div>
                 </div>
-                <FundingConnect targetId={o.id as string} as="investor" />
+                <FundingConnect targetId={o.id as string} />
               </div>
             ))}
           </div>
@@ -191,12 +191,23 @@ export default async function FundingPage() {
   const conns = (connsRaw ?? []) as ConnRow[];
   const connByInvestor = new Map(conns.map((c) => [c.investor_id, c]));
 
-  const { data: investorRows } = await admin
-    .from("investor_profiles")
-    .select("user_id, investor_type, firm_name")
-    .limit(80);
-  const investors = investorRows ?? [];
-  const investorIds = investors.map((i) => i.user_id as string);
+  // Investor-initiated model: a company never browses investors — it only sees
+  // the investors who reached out to it. So load just the connected investors,
+  // never the full investor list (protects the scarce, privacy-sensitive side).
+  const investorIds = [...new Set(conns.map((c) => c.investor_id))];
+  const { data: investorRows } = investorIds.length
+    ? await admin
+        .from("investor_profiles")
+        .select("user_id, investor_type, firm_name")
+        .in("user_id", investorIds)
+    : {
+        data: [] as {
+          user_id: string;
+          investor_type: string | null;
+          firm_name: string | null;
+        }[],
+      };
+  const connected = investorRows ?? [];
   const { data: people } = investorIds.length
     ? await admin
         .from("profiles")
@@ -207,13 +218,6 @@ export default async function FundingPage() {
     (people ?? []).map((p) => [p.id as string, p]),
   );
 
-  const connected = investors.filter((i) =>
-    connByInvestor.has(i.user_id as string),
-  );
-  const discover = investors.filter(
-    (i) => !connByInvestor.has(i.user_id as string),
-  );
-
   const investorName = (uid: string, firm: string | null) =>
     firm || (personById.get(uid)?.full_name as string) || "Investor";
 
@@ -222,7 +226,7 @@ export default async function FundingPage() {
       <div className="mb-8">
         <h1 className="text-4xl lg:text-5xl mb-2">{heading}</h1>
         <p className="text-ink">
-          {await tServer("Investors you've connected with, and new ones to reach.")}
+          {await tServer("Investors who've reached out to your company.")}
         </p>
       </div>
 
@@ -232,7 +236,9 @@ export default async function FundingPage() {
         </h2>
         {connected.length === 0 ? (
           <p className="text-sm text-ink-muted">
-            {await tServer("No investor connections yet — find one below.")}
+            {await tServer(
+              "No investor interest yet. Investors discover and reach out to companies here — keep your company profile strong.",
+            )}
           </p>
         ) : (
           <div className="space-y-3">
@@ -284,43 +290,9 @@ export default async function FundingPage() {
         )}
       </section>
 
-      <section>
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
-          {await tServer("Discover investors")}
-        </h2>
-        {discover.length === 0 ? (
-          <p className="text-sm text-ink-muted">
-            {await tServer("No investors on the platform yet.")}
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {discover.map((i) => {
-              const uid = i.user_id as string;
-              return (
-                <div
-                  key={uid}
-                  className="bg-white border border-line p-5 flex items-center gap-4"
-                >
-                  <Avatar
-                    name={personById.get(uid)?.full_name as string}
-                    url={(personById.get(uid)?.photo_url as string | null) ?? null}
-                    size="md"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-serif text-lg text-navy">
-                      {investorName(uid, i.firm_name as string | null)}
-                    </div>
-                    <div className="text-xs text-ink-muted">
-                      {(i.investor_type as string) ?? ""}
-                    </div>
-                  </div>
-                  <FundingConnect targetId={uid} as="company" />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      {/* No "discover investors" — funding is investor-initiated. Companies are
+          discoverable to investors on the investor view; they manage inbound
+          interest here, they don't browse or cold-contact investors. */}
       {/* openLabel reserved for deal states on the detail page */}
       <span className="hidden">{openLabel}</span>
     </div>
