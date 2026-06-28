@@ -28,7 +28,9 @@ export default async function AppLayout({
   // funding, the community feed, the founder directory, profiles, and settings.
   // Everything else (dashboard, B2B/orgs, connections/DMs) — and posting a new
   // thread — bounces to /funding. Writes are also blocked server-side.
-  if (profile?.account_type === "investor") {
+  const isInvestor = profile?.account_type === "investor";
+
+  if (isInvestor) {
     const readable =
       pathname === "/funding" ||
       pathname.startsWith("/funding/") ||
@@ -48,7 +50,9 @@ export default async function AppLayout({
     <div className="min-h-screen flex flex-col bg-cream">
       <AppHeader />
       <main className="flex-1">
-        <IncompleteProfileBanner complete={!!profile?.profile_complete} />
+        <IncompleteProfileBanner
+          complete={isInvestor || !!profile?.profile_complete}
+        />
         {children}
       </main>
       <AppFooter />
