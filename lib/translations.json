@@ -958,5 +958,7 @@
   "Invalid company.": "บริษัทไม่ถูกต้อง",
   "Invalid investor.": "นักลงทุนไม่ถูกต้อง",
   "Invalid request.": "คำขอไม่ถูกต้อง",
-  "Invalid proposal.": "ข้อเสนอไม่ถูกต้อง"
+  "Invalid proposal.": "ข้อเสนอไม่ถูกต้อง",
+  "Partnership deals": "ดีลพาร์ทเนอร์ชิป",
+  "Funding deals": "ดีลระดมทุน"
 }
