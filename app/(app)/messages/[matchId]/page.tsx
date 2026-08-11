@@ -76,7 +76,11 @@ export default async function MessagePage({ params }: Props) {
   const myName = (me?.full_name as string) ?? "A founder";
 
   return (
-    <div className="max-w-7xl mx-auto h-[calc(100vh-4rem)] grid lg:grid-cols-12">
+    // 100dvh, not 100vh: on mobile Safari/Chrome `vh` is the *largest* viewport,
+    // so with the URL bar showing, the last 60-100px of this column — the
+    // composer — sat underneath the browser chrome and was unreachable. `dvh`
+    // tracks the visible viewport and keeps the composer on screen.
+    <div className="max-w-7xl mx-auto h-[calc(100dvh-4rem)] grid lg:grid-cols-12">
       <ReadOnMount matchId={matchId} />
       {/* Conversation column */}
       <div className="lg:col-span-8 flex flex-col h-full min-h-0 border-r border-line">

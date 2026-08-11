@@ -1,129 +1,17 @@
 import Link from "next/link";
-import { Building2, MapPin, Plus, ShieldCheck } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { isInvestorAccount } from "@/lib/account";
 import { tServer } from "@/lib/i18n-server";
+import { OrgCard, OrgLogo, type OrgCardOrg } from "@/components/OrgCard";
 import { InviteActions } from "./InviteActions";
 
 export const dynamic = "force-dynamic";
 
-type OrgLite = {
-  id: string;
-  name: string;
-  slug: string;
-  tagline: string | null;
-  logo_url: string | null;
-  industry: string[] | null;
-  location: string | null;
-  capabilities: string[] | null;
-  partnership_seeking: string[] | null;
-  seeking?: string[] | null;
-  verified?: boolean | null;
-};
-
-function OrgLogo({ org }: { org: { name: string; logo_url: string | null } }) {
-  if (org.logo_url) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={org.logo_url}
-        alt={org.name}
-        className="w-12 h-12 object-cover border border-line shrink-0"
-      />
-    );
-  }
-  return (
-    <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center shrink-0">
-      <span className="font-serif text-lg text-navy">
-        {org.name.trim().charAt(0).toUpperCase() || "?"}
-      </span>
-    </div>
-  );
-}
-
-function CardTags({ label, items }: { label: string; items: string[] }) {
-  if (!items.length) return null;
-  const shown = items.slice(0, 3);
-  const extra = items.length - shown.length;
-  return (
-    <div className="mt-2.5">
-      <div className="text-[10px] uppercase tracking-wider text-gold-ink mb-1">
-        {label}
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {shown.map((c) => (
-          <span
-            key={c}
-            className="text-[11px] text-ink border border-line bg-cream px-2 py-0.5"
-          >
-            {c}
-          </span>
-        ))}
-        {extra > 0 && (
-          <span className="text-[11px] text-ink-muted self-center">+{extra}</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function OrgCard({
-  org,
-  role,
-  offerLabel,
-  seekingLabel,
-}: {
-  org: OrgLite;
-  role?: string;
-  offerLabel: string;
-  seekingLabel: string;
-}) {
-  const hasMeta = org.location || org.industry?.length;
-  return (
-    <Link
-      href={`/orgs/${org.slug}`}
-      className="block bg-white border border-line p-5 hover:border-navy transition-colors group"
-    >
-      <div className="flex items-start gap-4">
-        <OrgLogo org={org} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-serif text-lg text-navy truncate group-hover:text-gold-ink transition-colors">
-              {org.name}
-            </h3>
-            {org.verified && (
-              <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
-            )}
-            {role && (
-              <span className="text-[10px] uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 shrink-0">
-                {role}
-              </span>
-            )}
-          </div>
-          {org.tagline && (
-            <p className="text-sm text-ink mt-1 line-clamp-2">{org.tagline}</p>
-          )}
-          {hasMeta && (
-            <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted">
-              {org.location && (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-gold" />
-                  {org.location}
-                </span>
-              )}
-              {org.industry?.length ? (
-                <span className="truncate">{org.industry.join(" · ")}</span>
-              ) : null}
-            </div>
-          )}
-          <CardTags label={offerLabel} items={org.capabilities ?? []} />
-          <CardTags label={seekingLabel} items={org.partnership_seeking ?? []} />
-        </div>
-      </div>
-    </Link>
-  );
-}
+// The card itself now lives in components/OrgCard.tsx so the investor's
+// company browse on /funding renders the same company, the same way.
+type OrgLite = OrgCardOrg;
 
 export default async function OrgsPage({
   searchParams,
@@ -201,6 +89,7 @@ export default async function OrgsPage({
   const invitedAsTpl = await tServer("Invited you as {role}");
   const offerLabel = await tServer("What we offer");
   const seekingLabel = await tServer("Looking for");
+  const verifiedLabel = await tServer("Verified company");
   const roleLabels: Record<string, string> = {
     owner: await tServer("Owner"),
     admin: await tServer("Admin"),
@@ -296,6 +185,7 @@ export default async function OrgsPage({
                 role={roleLabel(m.role)}
                 offerLabel={offerLabel}
                 seekingLabel={seekingLabel}
+                verifiedLabel={verifiedLabel}
               />
             ))}
           </div>
@@ -338,6 +228,7 @@ export default async function OrgsPage({
                 org={o}
                 offerLabel={offerLabel}
                 seekingLabel={seekingLabel}
+                verifiedLabel={verifiedLabel}
               />
             ))}
           </div>

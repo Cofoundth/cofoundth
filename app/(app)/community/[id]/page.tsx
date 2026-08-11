@@ -213,14 +213,18 @@ export default async function PostPage({ params }: Props) {
           </a>
         ) : null}
 
-        <div className="mt-8 pt-6 border-t border-line flex items-center gap-4">
+        {/* Same footer vocabulary as the feed card (components/PostCard.tsx):
+            borderless icon + count pairs sitting side by side. The row owns the
+            type scale so the like control and the comment read-out can never
+            drift apart. */}
+        <div className="mt-8 pt-6 border-t border-line flex items-center gap-4 text-sm">
           <LikeButton
             postId={post.id as string}
             initialCount={likeCount ?? 0}
             initialLiked={!!myLike}
           />
           {/* Plain read-out, not a control — the composer below is how you comment. */}
-          <span className="inline-flex items-center gap-2 text-sm text-ink-muted">
+          <span className="inline-flex items-center gap-2 text-ink-muted">
             <MessageCircle
               className="w-4 h-4"
               strokeWidth={1.5}

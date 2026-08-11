@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, Building2, Clock, Check, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, Building2, Clock, Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { INVESTOR_TYPE_LABELS } from "@/lib/investor";
 import { Avatar } from "@/components/Avatar";
+import { OrgCard, type OrgCardOrg } from "@/components/OrgCard";
 import { FundingConnect, FundingRespond } from "./FundingActions";
 
 export const dynamic = "force-dynamic";
@@ -47,14 +48,25 @@ export default async function FundingPage() {
     const conns = (connsRaw ?? []) as ConnRow[];
     const connByOrg = new Map(conns.map((c) => [c.org_id, c]));
 
+    // Same columns /orgs selects — the investor browses companies through the
+    // same OrgCard, so it needs the same signals (location, industry, what the
+    // company offers, what it's looking for), not just a name and a tagline.
     const { data: orgs } = await admin
       .from("organizations")
-      .select("id, name, slug, tagline, logo_url, verified")
+      .select(
+        "id, name, slug, tagline, logo_url, industry, location, capabilities, partnership_seeking, verified",
+      )
       .order("created_at", { ascending: false })
       .limit(80);
-    const orgList = orgs ?? [];
-    const connectedOrgs = orgList.filter((o) => connByOrg.has(o.id as string));
-    const discover = orgList.filter((o) => !connByOrg.has(o.id as string));
+    const orgList = (orgs ?? []) as OrgCardOrg[];
+    const connectedOrgs = orgList.filter((o) => connByOrg.has(o.id));
+    const discover = orgList.filter((o) => !connByOrg.has(o.id));
+
+    // OrgCard takes already-translated labels — resolve them once, here, so the
+    // card maps below stay synchronous.
+    const offerLabel = await tServer("What we offer");
+    const seekingLabel = await tServer("Looking for");
+    const verifiedLabel = await tServer("Verified company");
 
     return (
       <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
@@ -76,34 +88,18 @@ export default async function FundingPage() {
           ) : (
             <div className="space-y-3">
               {connectedOrgs.map((o) => {
-                const c = connByOrg.get(o.id as string)!;
+                const c = connByOrg.get(o.id)!;
                 const respondable =
                   c.status === "pending" && c.requested_by === "company";
                 return (
-                  <div
-                    key={o.id as string}
-                    className="bg-white border border-line p-5 flex items-start gap-4"
-                  >
-                    <OrgLogo
-                      url={o.logo_url as string | null}
-                      name={o.name as string}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/orgs/${o.slug}`}
-                          className="font-serif text-lg text-navy hover:text-gold-ink truncate"
-                        >
-                          {o.name as string}
-                        </Link>
-                        {o.verified && (
-                          <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
-                        )}
-                      </div>
-                      <div className="text-xs text-ink-muted truncate">
-                        {(o.tagline as string | null) ?? ""}
-                      </div>
-                      {c.status === "accepted" && (
+                  <OrgCard
+                    key={o.id}
+                    org={o}
+                    offerLabel={offerLabel}
+                    seekingLabel={seekingLabel}
+                    verifiedLabel={verifiedLabel}
+                    footer={
+                      c.status === "accepted" ? (
                         <Link
                           href={`/funding/${c.id}`}
                           className="inline-flex items-center gap-1 text-xs text-navy mt-2 hover:text-gold-ink"
@@ -111,19 +107,21 @@ export default async function FundingPage() {
                           {viewTalksLabel}
                           <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
-                      )}
-                    </div>
-                    <div className="shrink-0">
-                      <StatusPill
-                        status={c.status}
-                        respondable={respondable}
-                        accepted={acceptedLabel}
-                        sent={sentLabel}
-                        declined={declinedLabel}
-                      />
-                      {respondable && <FundingRespond connectionId={c.id} />}
-                    </div>
-                  </div>
+                      ) : null
+                    }
+                    action={
+                      <>
+                        <StatusPill
+                          status={c.status}
+                          respondable={respondable}
+                          accepted={acceptedLabel}
+                          sent={sentLabel}
+                          declined={declinedLabel}
+                        />
+                        {respondable && <FundingRespond connectionId={c.id} />}
+                      </>
+                    }
+                  />
                 );
               })}
             </div>
@@ -144,32 +142,14 @@ export default async function FundingPage() {
           ) : (
             <div className="space-y-3">
               {discover.map((o) => (
-                <div
-                  key={o.id as string}
-                  className="bg-white border border-line p-5 flex items-center gap-4"
-                >
-                  <OrgLogo
-                    url={o.logo_url as string | null}
-                    name={o.name as string}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/orgs/${o.slug}`}
-                        className="font-serif text-lg text-navy hover:text-gold-ink truncate"
-                      >
-                        {o.name as string}
-                      </Link>
-                      {o.verified && (
-                        <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
-                      )}
-                    </div>
-                    <div className="text-xs text-ink-muted truncate">
-                      {(o.tagline as string | null) ?? ""}
-                    </div>
-                  </div>
-                  <FundingConnect targetId={o.id as string} />
-                </div>
+                <OrgCard
+                  key={o.id}
+                  org={o}
+                  offerLabel={offerLabel}
+                  seekingLabel={seekingLabel}
+                  verifiedLabel={verifiedLabel}
+                  action={<FundingConnect targetId={o.id} />}
+                />
               ))}
             </div>
           )}
@@ -330,24 +310,6 @@ export default async function FundingPage() {
           interest here, they don't browse or cold-contact investors. */}
       {/* openLabel reserved for deal states on the detail page */}
       <span className="hidden">{openLabel}</span>
-    </div>
-  );
-}
-
-function OrgLogo({ url, name }: { url: string | null; name: string }) {
-  if (url) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={url}
-        alt={name}
-        className="w-12 h-12 object-cover border border-line shrink-0"
-      />
-    );
-  }
-  return (
-    <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center shrink-0">
-      <Building2 className="w-5 h-5 text-ink-muted" />
     </div>
   );
 }

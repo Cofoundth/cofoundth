@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BadgeCheck, Building2, ExternalLink, MapPin } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Building2,
+  ExternalLink,
+  MapPin,
+  MessageCircle,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -20,6 +28,7 @@ import { SocialLinks } from "@/components/SocialIcons";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
+import { LinkButton, buttonClasses } from "@/components/ui";
 import { ExpressInterestForm } from "./ExpressInterestForm";
 import { IncomingInterestBanner } from "./IncomingInterestBanner";
 import { ReportForm } from "./ReportForm";
@@ -214,6 +223,51 @@ export default async function ProfileDetailPage({ params }: Props) {
       skills.length,
   );
 
+  // ── Mobile CTA (BI6) ─────────────────────────────────────────────────────
+  // The connect aside comes after the pitch, background and milestones in DOM
+  // order, so on a phone the one action this page exists for sits below the
+  // entire profile. Reordering the aside above the main column would also drag
+  // the report-abuse form, founder facts and social links above the pitch —
+  // trading one problem for a worse one — so instead a compact bar mirrors the
+  // aside's primary action on small screens only. It is `lg:hidden`, so the
+  // desktop two-column layout is untouched.
+  //
+  // The bar LINKS to the aside (#connect) rather than re-rendering
+  // <ExpressInterestForm>: that component owns the open/pending form state, so
+  // a second copy would be a second independent state machine racing the first.
+  //
+  // No bar for `incoming` (IncomingInterestBanner is already the first thing on
+  // the page) or `outgoing` (no action is available — the aside just reports
+  // "Interest sent").
+  //
+  // `children` (not a label + icon pair) so each bar reproduces its aside
+  // button's icon placement: the message CTA leads with the glyph, the express-
+  // interest CTA trails it.
+  let mobileCta: { href: string; children: ReactNode } | null = null;
+  if (!isOwnProfile) {
+    if (relationship === "matched") {
+      mobileCta = {
+        href: matchId ? `/messages/${matchId}` : "/matches",
+        children: (
+          <>
+            <MessageCircle className="w-4 h-4" />
+            {t("Message {name}", locale).replace("{name}", otherName)}
+          </>
+        ),
+      };
+    } else if (relationship === "none") {
+      mobileCta = {
+        href: "#connect",
+        children: (
+          <>
+            {t("Express Interest", locale)}
+            <ArrowRight className="w-4 h-4" />
+          </>
+        ),
+      };
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-10">
       {relationship === "incoming" && !isOwnProfile && (
@@ -353,11 +407,20 @@ export default async function ProfileDetailPage({ params }: Props) {
                 </a>
               )}
               {capabilities.length > 0 && (
-                <div className="mt-6 pt-5 border-t border-line text-sm text-ink">
-                  <span className="text-ink-muted">
-                    {t("Capabilities:", locale)}{" "}
-                  </span>
-                  {capabilities.join(", ")}
+                <div className="mt-6 pt-5 border-t border-line">
+                  <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                    {t("Capabilities", locale)}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {capabilities.map((c) => (
+                      <span
+                        key={c}
+                        className="px-3 py-1.5 border border-line text-sm text-ink"
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </section>
@@ -486,12 +549,14 @@ export default async function ProfileDetailPage({ params }: Props) {
           {!isOwnProfile && (
             <>
               {relationship !== "incoming" && (
-                <ExpressInterestForm
-                  toId={profile.id}
-                  relationship={relationship}
-                  matchId={matchId}
-                  otherName={otherName}
-                />
+                <div id="connect" className="scroll-mt-6">
+                  <ExpressInterestForm
+                    toId={profile.id}
+                    relationship={relationship}
+                    matchId={matchId}
+                    otherName={otherName}
+                  />
+                </div>
               )}
               <div className="bg-white border border-line p-4">
                 <ReportForm targetId={profile.id} />
@@ -581,6 +646,30 @@ export default async function ProfileDetailPage({ params }: Props) {
           )}
         </aside>
       </div>
+
+      {/* ---- Mobile-only CTA bar (BI6) ---- */}
+      {mobileCta && (
+        <>
+          {/* Keeps the fixed bar from covering the last of the page content. */}
+          <div className="h-20 lg:hidden" aria-hidden="true" />
+          <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(10,31,68,0.08)] pb-[env(safe-area-inset-bottom)]">
+            <div className="px-4 py-3">
+              {mobileCta.href.startsWith("#") ? (
+                <a
+                  href={mobileCta.href}
+                  className={buttonClasses({ fullWidth: true })}
+                >
+                  {mobileCta.children}
+                </a>
+              ) : (
+                <LinkButton href={mobileCta.href} fullWidth>
+                  {mobileCta.children}
+                </LinkButton>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

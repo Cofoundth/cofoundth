@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   CalendarClock,
+  Check,
   ExternalLink,
   HandshakeIcon,
   MapPin,
-  ShieldCheck,
+  MessageCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { COFOUNDEE_CALENDLY_URL } from "@/lib/calendly";
@@ -18,6 +20,7 @@ import { getLocale, tServer } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { STAGE_LABELS } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
+import { LinkButton, VerifiedBadge, buttonClasses } from "@/components/ui";
 import { ManagePanel, type PanelMember } from "./ManagePanel";
 import { LeaveButton } from "./LeaveButton";
 import { ConnectActions, type ConnState } from "./ConnectActions";
@@ -45,13 +48,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const ROLE_ORDER: Record<string, number> = { owner: 0, admin: 1, member: 2 };
 
+// Same chip as the founder profile's "Skills & expertise" list — the two
+// profile surfaces now share one chip treatment.
 function Chips({ items }: { items: string[] }) {
   return (
     <div className="flex flex-wrap gap-2">
       {items.map((c) => (
         <span
           key={c}
-          className="text-xs text-ink border border-line bg-cream px-2.5 py-1"
+          className="px-3 py-1.5 border border-line text-sm text-ink"
         >
           {c}
         </span>
@@ -234,8 +239,57 @@ export default async function OrgPage({ params }: Props) {
     "Both sides confirmed — book a time with Cofoundee to sign the contract.",
   );
 
+  // ── Mobile CTA (BI6) ─────────────────────────────────────────────────────
+  // The connect/deals aside comes after the whole pitch in DOM order, so on a
+  // phone the one action this page exists for is a long scroll away. Reordering
+  // the aside above the content would drag the team list and the "no action
+  // available" states above the pitch too, so instead a compact bar mirrors the
+  // aside's primary action on small screens only. It is `lg:hidden`, so the
+  // desktop two-column layout is byte-for-byte untouched.
+  //
+  // The bar LINKS to the aside (#connect) rather than re-rendering
+  // <ConnectActions>: that component owns transition state, so a second copy
+  // would be a second independent state machine racing the first.
+  //
+  // No bar for `no_org` / `pending_sent`: neither offers an action, the aside
+  // only reports status.
+  let mobileCta: { href: string; children: ReactNode } | null = null;
+  if (!isInvestor && connState !== "self") {
+    if (connState === "connected") {
+      mobileCta = {
+        href: `/orgs/${org.slug as string}/chat`,
+        children: (
+          <>
+            <MessageCircle className="w-4 h-4" />
+            {await tServer("Message")}
+          </>
+        ),
+      };
+    } else if (connState === "pending_received") {
+      mobileCta = {
+        href: "#connect",
+        children: (
+          <>
+            <Check className="w-4 h-4" />
+            {await tServer("Accept")}
+          </>
+        ),
+      };
+    } else if (connState === "none") {
+      mobileCta = {
+        href: "#connect",
+        children: (
+          <>
+            <HandshakeIcon className="w-4 h-4" />
+            {await tServer("Connect")}
+          </>
+        ),
+      };
+    }
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-10">
       <Link
         href="/orgs"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"
@@ -244,76 +298,83 @@ export default async function OrgPage({ params }: Props) {
         {await tServer("Companies")}
       </Link>
 
-      {/* Header */}
-      <div className="flex items-start gap-5 mb-8">
-        {org.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={org.logo_url as string}
-            alt={org.name as string}
-            className="w-20 h-20 object-cover border border-line shrink-0"
-          />
-        ) : (
-          <div className="w-20 h-20 bg-cream border border-line flex items-center justify-center shrink-0">
-            <span className="font-serif text-3xl text-navy">
-              {(org.name as string).trim().charAt(0).toUpperCase()}
-            </span>
-          </div>
-        )}
-        <div className="flex-1 min-w-0 pt-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="font-serif text-3xl text-navy leading-tight">
-              {org.name as string}
-            </h1>
-            {org.verified && <ShieldCheck className="w-5 h-5 text-gold" />}
-            {stageLabel && (
-              <span className="text-[11px] uppercase tracking-wider text-navy border border-navy bg-cream px-2 py-0.5">
-                {stageLabel}
+      {/* ---- Hero ---- */}
+      <header className="bg-cream border border-line p-6 sm:p-8 lg:p-10 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
+          {org.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={org.logo_url as string}
+              alt={org.name as string}
+              className="w-24 h-24 object-cover border border-line shrink-0"
+            />
+          ) : (
+            <div className="w-24 h-24 bg-white border border-line flex items-center justify-center shrink-0">
+              <span className="font-serif text-3xl text-navy">
+                {(org.name as string).trim().charAt(0).toUpperCase()}
               </span>
-            )}
-          </div>
-          {org.tagline && (
-            <p className="text-lg text-ink mt-1.5">{org.tagline as string}</p>
+            </div>
           )}
-          <div className="flex items-center gap-4 mt-3 text-sm text-ink-muted">
-            {org.location && (
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-gold" />
-                {org.location as string}
-              </span>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-serif text-3xl sm:text-4xl text-navy leading-tight flex items-center gap-2.5 flex-wrap">
+              {org.name as string}
+              {org.verified && (
+                <VerifiedBadge
+                  label={await tServer("Verified company")}
+                  size="lg"
+                />
+              )}
+              {stageLabel && (
+                <span className="text-[10px] uppercase tracking-[0.15em] px-2 py-1 border border-navy text-navy bg-cream font-sans">
+                  {stageLabel}
+                </span>
+              )}
+            </h1>
+
+            {org.tagline && (
+              <p className="text-lg text-ink mt-1.5">{org.tagline as string}</p>
             )}
-            {productUrl && (
-              <a
-                href={productUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 hover:text-navy"
-              >
-                <ExternalLink className="w-4 h-4 text-gold" />
-                {await tServer("View product")}
-              </a>
-            )}
-            {org.website && (
-              <a
-                href={org.website as string}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 hover:text-navy"
-              >
-                <ExternalLink className="w-4 h-4 text-gold" />
-                {await tServer("Website")}
-              </a>
-            )}
+
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-muted">
+              {org.location && (
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-gold" />
+                  {org.location as string}
+                </span>
+              )}
+              {productUrl && (
+                <a
+                  href={productUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 hover:text-navy"
+                >
+                  <ExternalLink className="w-4 h-4 text-gold" />
+                  {await tServer("View product")}
+                </a>
+              )}
+              {org.website && (
+                <a
+                  href={org.website as string}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 hover:text-navy"
+                >
+                  <ExternalLink className="w-4 h-4 text-gold" />
+                  {await tServer("Website")}
+                </a>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main */}
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid lg:grid-cols-12 gap-8 lg:gap-10">
+        {/* ---- Main column ---- */}
+        <div className="lg:col-span-8 space-y-6">
           {pitch && (
-            <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("What this company does")}
               </h2>
               <p className="text-ink leading-relaxed whitespace-pre-wrap">
@@ -323,8 +384,8 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {productImages.length > 0 && (
-            <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Product")}
               </h2>
               <div className="grid grid-cols-2 gap-3">
@@ -353,8 +414,8 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {industry.length > 0 && (
-            <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Industry")}
               </h2>
               <Chips items={industry} />
@@ -362,8 +423,8 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {capabilities.length > 0 && (
-            <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("What we offer")}
               </h2>
               <Chips items={capabilities} />
@@ -371,8 +432,8 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {seeking.length > 0 && (
-            <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Partnerships we're seeking")}
               </h2>
               <Chips items={seeking} />
@@ -380,10 +441,13 @@ export default async function OrgPage({ params }: Props) {
           )}
         </div>
 
-        {/* Aside — connect + team */}
-        <aside className="space-y-4">
+        {/* ---- Sidebar — connect + deals + team ---- */}
+        <aside className="lg:col-span-4 space-y-5">
           {connState !== "self" && !isInvestor && (
-            <div className="bg-white border border-line p-5">
+            <div
+              id="connect"
+              className="bg-white border border-line p-6 scroll-mt-6"
+            >
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Connect")}
               </h2>
@@ -396,7 +460,7 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
           {connState === "connected" && (
-            <div className="bg-white border border-line p-5">
+            <div className="bg-white border border-line p-6">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Deals")}
               </h2>
@@ -445,7 +509,7 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
 
-          <div className="bg-white border border-line p-5">
+          <div className="bg-white border border-line p-6">
             <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
               {(await tServer("Team ({n})")).replace(
                 "{n}",
@@ -506,6 +570,30 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
         </div>
+      )}
+
+      {/* ---- Mobile-only CTA bar (BI6) ---- */}
+      {mobileCta && (
+        <>
+          {/* Keeps the fixed bar from covering the last of the page content. */}
+          <div className="h-20 lg:hidden" aria-hidden="true" />
+          <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(10,31,68,0.08)] pb-[env(safe-area-inset-bottom)]">
+            <div className="px-4 py-3">
+              {mobileCta.href.startsWith("#") ? (
+                <a
+                  href={mobileCta.href}
+                  className={buttonClasses({ fullWidth: true })}
+                >
+                  {mobileCta.children}
+                </a>
+              ) : (
+                <LinkButton href={mobileCta.href} fullWidth>
+                  {mobileCta.children}
+                </LinkButton>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { Check, HandshakeIcon, X } from "lucide-react";
 import { sendPartnershipRequestAction, type RequestState } from "./actions";
 import type { CompanyProfile } from "./CompaniesClient";
 import { Avatar } from "@/components/Avatar";
+import { Button, Input, Textarea } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 
@@ -64,6 +65,13 @@ export function PartnershipRequestDialog({
   const [requestType, setRequestType] = useState("integration");
   const [context, setContext] = useState("");
 
+  // Ids for aria-labelledby. Generated rather than hard-coded so a second
+  // dialog instance can never duplicate them.
+  const baseId = useId();
+  const eyebrowId = `${baseId}-eyebrow`;
+  const titleId = `${baseId}-title`;
+  const sentTitleId = `${baseId}-sent`;
+
   // Close on success
   useEffect(() => {
     if (state?.ok) {
@@ -72,14 +80,8 @@ export function PartnershipRequestDialog({
     }
   }, [state, onClose]);
 
-  // Escape to close
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  // Escape-to-close now lives in <DialogShell> alongside the focus trap — one
+  // keydown listener owns every dialog-level key.
 
   const contextRemaining = LONG_TEXT_MAX - context.length;
   const contextTooShort = context.length < 50;
@@ -87,12 +89,14 @@ export function PartnershipRequestDialog({
 
   if (state?.ok) {
     return (
-      <DialogShell onClose={onClose}>
+      <DialogShell onClose={onClose} labelledBy={sentTitleId}>
         <div className="text-center py-8">
           <div className="w-12 h-12 mx-auto mb-4 bg-gold/10 border border-gold/40 inline-flex items-center justify-center">
             <Check className="w-6 h-6 text-gold" strokeWidth={1.5} />
           </div>
-          <h2 className="text-2xl mb-2">{tr("Request sent")}</h2>
+          <h2 id={sentTitleId} className="text-2xl mb-2">
+            {tr("Request sent")}
+          </h2>
           <p className="text-sm text-ink-muted leading-relaxed max-w-sm mx-auto">
             {tr(
               "{name} will get an email notification. We'll let you know when they respond.",
@@ -104,7 +108,7 @@ export function PartnershipRequestDialog({
   }
 
   return (
-    <DialogShell onClose={onClose}>
+    <DialogShell onClose={onClose} labelledBy={`${eyebrowId} ${titleId}`}>
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="min-w-0 flex items-start gap-3">
           <Avatar
@@ -113,11 +117,14 @@ export function PartnershipRequestDialog({
             size="md"
           />
           <div className="min-w-0">
-            <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-1 inline-flex items-center gap-1.5">
+            <div
+              id={eyebrowId}
+              className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-1 inline-flex items-center gap-1.5"
+            >
               <HandshakeIcon className="w-3 h-3" />
               {tr("Partnership request")}
             </div>
-            <div className="font-serif text-xl text-navy truncate">
+            <div id={titleId} className="font-serif text-xl text-navy truncate">
               → {target.company_name}
             </div>
             {fromCompanyName && (
@@ -168,44 +175,19 @@ export function PartnershipRequestDialog({
           </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="subject"
-            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-          >
-            {tr("Subject")}
-          </label>
-          <input
-            id="subject"
-            name="subject"
-            type="text"
-            required
-            minLength={5}
-            maxLength={200}
-            placeholder={tr('e.g. "Looking for logistics partner in Bangkok"')}
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
-          />
-        </div>
+        <Input
+          id="subject"
+          name="subject"
+          type="text"
+          required
+          minLength={5}
+          maxLength={200}
+          label={tr("Subject")}
+          placeholder={tr('e.g. "Looking for logistics partner in Bangkok"')}
+        />
 
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label
-              htmlFor="context"
-              className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
-            >
-              {tr("Context")}
-            </label>
-            <span
-              className={`text-xs tabular-nums ${
-                contextTooLong || contextTooShort
-                  ? "text-ink-muted"
-                  : "text-gold-ink"
-              }`}
-            >
-              {context.length} / {LONG_TEXT_MAX}
-            </span>
-          </div>
-          <textarea
+          <Textarea
             id="context"
             name="context"
             rows={6}
@@ -214,10 +196,22 @@ export function PartnershipRequestDialog({
             maxLength={LONG_TEXT_MAX}
             value={context}
             onChange={(e) => setContext(e.target.value)}
+            resize="y"
+            label={tr("Context")}
+            hint={
+              <span
+                className={`text-xs tabular-nums ${
+                  contextTooLong || contextTooShort
+                    ? "text-ink-muted"
+                    : "text-gold-ink"
+                }`}
+              >
+                {context.length} / {LONG_TEXT_MAX}
+              </span>
+            }
             placeholder={tr(
               "What you're looking for, why this company fits, and what you'd ideally agree on.",
             )}
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y"
           />
           {contextTooShort && context.length > 0 && (
             <p className="text-xs text-ink-muted mt-1">
@@ -259,39 +253,127 @@ export function PartnershipRequestDialog({
           >
             {tr("Cancel")}
           </button>
-          <button
+          <Button
             type="submit"
-            disabled={
-              isPending || contextTooShort || contextTooLong
-            }
-            className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm tracking-wide transition-colors"
+            disabled={isPending || contextTooShort || contextTooLong}
           >
             <HandshakeIcon className="w-4 h-4" />
             {isPending ? tr("Sending…") : tr("Send request")}
-          </button>
+          </Button>
         </div>
       </form>
     </DialogShell>
   );
 }
 
+// Tab-order members inside the panel. Deliberately excludes tabindex="-1" —
+// the panel itself is programmatically focusable but must never sit in the
+// Tab cycle.
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+
 function DialogShell({
   onClose,
+  labelledBy,
   children,
 }: {
   onClose: () => void;
+  /** Space-separated ids of the elements that name this dialog. */
+  labelledBy: string;
   children: React.ReactNode;
 }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Lock the page behind the overlay, and hand focus back to whatever opened
+  // the dialog on the way out. Mount-once on purpose: the success panel swaps
+  // the *children*, not this shell, so the page never unlocks mid-flow.
+  // paddingRight compensates for the scrollbar the lock removes, otherwise the
+  // page underneath visibly jumps sideways as the dialog opens.
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    const { overflow, paddingRight } = document.body.style;
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
+    return () => {
+      document.body.style.overflow = overflow;
+      document.body.style.paddingRight = paddingRight;
+      opener?.focus?.();
+    };
+  }, []);
+
+  // Pull focus in on open — and again when the dialog swaps content (the
+  // labelling ids change with it) and the focused control was unmounted along
+  // with the old content.
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || panel.contains(document.activeElement)) return;
+    const first = panel.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    (first ?? panel).focus();
+  }, [labelledBy]);
+
+  // Escape closes. Tab / Shift+Tab cycle within the panel instead of walking
+  // into the page behind the overlay.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const items = Array.from(
+        panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter((el) => el.getClientRects().length > 0);
+      if (items.length === 0) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !panel.contains(active)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby={labelledBy}
       className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white border border-line p-6 lg:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* tabIndex -1 makes the panel a focus fallback for content with no
+          controls (the "Request sent" panel). globals.css only rings
+          a/button/input/textarea/select/summary on :focus-visible, so this
+          adds no outline. */}
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="bg-white border border-line p-6 lg:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
         {children}
       </div>
     </div>
