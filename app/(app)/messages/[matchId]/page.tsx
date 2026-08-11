@@ -98,7 +98,7 @@ export default async function MessagePage({ params }: Props) {
                 size="md"
               />
               <div className="min-w-0">
-                <div className="font-serif text-xl text-navy group-hover:text-gold truncate">
+                <div className="font-serif text-xl text-navy group-hover:text-gold-ink truncate">
                   {otherName}
                 </div>
                 <div className="text-xs text-ink-muted truncate">
@@ -110,7 +110,7 @@ export default async function MessagePage({ params }: Props) {
                     <>
                       {" "}
                       &middot;{" "}
-                      <span className="text-gold">
+                      <span className="text-gold-ink">
                         {((other?.intent as string[] | null) ?? [])
                           .map((x) => t(INTENT_LABELS[x], locale))
                           .join(" · ")}
@@ -142,7 +142,7 @@ export default async function MessagePage({ params }: Props) {
             }))}
             emptyState={
               <div className="text-center py-12">
-                <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+                <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
                   {t("Mutual interest unlocked", locale)}
                 </div>
                 <p className="text-ink leading-relaxed max-w-md mx-auto">
@@ -192,7 +192,7 @@ function SuggestedOpeners({ locale }: { locale: Locale }) {
       <ul className="space-y-2 text-sm text-ink">
         {suggestions.map((s, i) => (
           <li key={i} className="flex gap-3">
-            <span className="text-gold font-serif text-base leading-none">
+            <span className="text-gold-ink font-serif text-base leading-none">
               &middot;
             </span>
             {t(s, locale)}

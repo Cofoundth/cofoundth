@@ -32,7 +32,7 @@ export function LikeButton({ postId, initialCount, initialLiked }: Props) {
       }
       className={`inline-flex items-center gap-2 px-4 py-2 border transition-colors ${
         optimistic.liked
-          ? "border-gold text-gold bg-gold/5"
+          ? "border-gold text-gold-ink bg-gold/5"
           : "border-line text-ink-muted hover:border-navy hover:text-navy"
       } disabled:opacity-60`}
       aria-pressed={optimistic.liked}

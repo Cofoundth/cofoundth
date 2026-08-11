@@ -39,12 +39,17 @@ export function FundingDealActions({
         <button
           type="button"
           disabled={pending}
+          aria-busy={pending}
           onClick={() => run(() => cancelInvestorDealAction(dealId))}
           className="text-xs text-ink-muted hover:text-red-700 disabled:opacity-50"
         >
           {pending ? tr("Withdrawing…") : tr("Withdraw")}
         </button>
-        {error && <p className="text-xs text-red-700 mt-1">{tr(error)}</p>}
+        {error && (
+          <p role="alert" className="text-xs text-red-700 mt-1">
+            {tr(error)}
+          </p>
+        )}
       </div>
     );
   }
@@ -55,6 +60,7 @@ export function FundingDealActions({
         <button
           type="button"
           disabled={pending}
+          aria-busy={pending}
           onClick={() => run(() => confirmInvestorDealAction(dealId))}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-xs transition-colors"
         >
@@ -64,6 +70,7 @@ export function FundingDealActions({
         <button
           type="button"
           disabled={pending}
+          aria-busy={pending}
           onClick={() => run(() => declineInvestorDealAction(dealId))}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors"
         >
@@ -71,7 +78,11 @@ export function FundingDealActions({
           {tr("Decline")}
         </button>
       </div>
-      {error && <p className="text-xs text-red-700 mt-1">{tr(error)}</p>}
+      {error && (
+        <p role="alert" className="text-xs text-red-700 mt-1">
+          {tr(error)}
+        </p>
+      )}
     </div>
   );
 }

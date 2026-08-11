@@ -134,7 +134,7 @@ export function CompaniesClient({
       <div className="mb-10 pb-8 border-b border-line">
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div>
-            <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
+            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
               <Building2 className="w-3 h-3" strokeWidth={1.5} />
               {tr("B2B Network")}
               <span className="text-line">·</span>
@@ -154,7 +154,7 @@ export function CompaniesClient({
           <div className="flex items-center gap-6">
             <Link
               href="/companies/requests"
-              className="text-sm text-navy hover:text-gold inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors"
+              className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors"
             >
               <HandshakeIcon className="w-4 h-4" strokeWidth={1.5} />
               {tr("Partnership board")}
@@ -178,7 +178,7 @@ export function CompaniesClient({
               )}
               <Link
                 href="/onboarding"
-                className="text-navy hover:text-gold underline underline-offset-4 decoration-gold/30"
+                className="text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30"
               >
                 {tr("Edit profile")}
               </Link>
@@ -367,7 +367,7 @@ function CompanyCard({
                 href={`/profile/${c.slug}`}
                 className="group inline-flex items-center gap-1.5 flex-wrap"
               >
-                <h3 className="font-serif text-xl text-navy leading-tight group-hover:text-gold transition-colors">
+                <h3 className="font-serif text-xl text-navy leading-tight group-hover:text-gold-ink transition-colors">
                   {c.company_name}
                 </h3>
                 {c.verified && (
@@ -377,7 +377,7 @@ function CompanyCard({
                   />
                 )}
                 {fresh && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold-ink">
                     <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
                     {tr("New")}
                   </span>
@@ -402,7 +402,7 @@ function CompanyCard({
                 return (
                   <span
                     key={t}
-                    className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border border-gold/60 text-gold bg-gold/5"
+                    className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border border-gold/60 text-gold-ink bg-gold/5"
                   >
                     {tr(label)}
                   </span>
@@ -419,7 +419,7 @@ function CompanyCard({
 
           {c.capabilities.length > 0 && (
             <div className="mb-3">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-gold mb-1.5">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-gold-ink mb-1.5">
                 {tr("Offers")}
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -449,7 +449,7 @@ function CompanyCard({
                 {c.partnership_seeking.slice(0, 8).map((s) => (
                   <span
                     key={s}
-                    className="text-xs px-2 py-0.5 bg-gold/10 border border-gold/40 text-gold"
+                    className="text-xs px-2 py-0.5 bg-gold/10 border border-gold/40 text-gold-ink"
                   >
                     {s}
                   </span>
@@ -461,7 +461,7 @@ function CompanyCard({
           <div className="flex items-center gap-3 pt-3 border-t border-line">
             <Link
               href={`/profile/${c.slug}`}
-              className="text-sm text-navy hover:text-gold inline-flex items-center gap-1"
+              className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1"
             >
               {tr("Full profile")}
               <ArrowRight className="w-3.5 h-3.5" />

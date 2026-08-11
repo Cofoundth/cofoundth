@@ -31,13 +31,18 @@ export function FundingConnect({ targetId }: { targetId: string }) {
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending}
         onClick={go}
         className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm transition-colors"
       >
         <Handshake className="w-4 h-4" />
         {pending ? tr("Connecting…") : tr("Connect")}
       </button>
-      {error && <p className="text-xs text-red-700 mt-1.5">{tr(error)}</p>}
+      {error && (
+        <p role="alert" className="text-xs text-red-700 mt-1.5">
+          {tr(error)}
+        </p>
+      )}
     </div>
   );
 }
@@ -63,6 +68,7 @@ export function FundingRespond({ connectionId }: { connectionId: string }) {
         <button
           type="button"
           disabled={pending}
+          aria-busy={pending}
           onClick={() => go(true)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-xs transition-colors"
         >
@@ -72,6 +78,7 @@ export function FundingRespond({ connectionId }: { connectionId: string }) {
         <button
           type="button"
           disabled={pending}
+          aria-busy={pending}
           onClick={() => go(false)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors"
         >
@@ -79,7 +86,11 @@ export function FundingRespond({ connectionId }: { connectionId: string }) {
           {tr("Decline")}
         </button>
       </div>
-      {error && <p className="text-xs text-red-700 mt-1.5">{tr(error)}</p>}
+      {error && (
+        <p role="alert" className="text-xs text-red-700 mt-1.5">
+          {tr(error)}
+        </p>
+      )}
     </div>
   );
 }

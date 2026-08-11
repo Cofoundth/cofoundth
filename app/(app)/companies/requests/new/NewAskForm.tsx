@@ -119,7 +119,7 @@ export function NewAskForm() {
           </label>
           <span
             className={`text-xs tabular-nums ${
-              tooLong || tooShort ? "text-ink-muted" : "text-gold"
+              tooLong || tooShort ? "text-ink-muted" : "text-gold-ink"
             }`}
           >
             {context.length} / {LONG_TEXT_MAX}

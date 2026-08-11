@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, Building2, Clock, Check } from "lucide-react";
+import { ArrowRight, Building2, Clock, Check, ShieldCheck, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
+import { INVESTOR_TYPE_LABELS } from "@/lib/investor";
 import { Avatar } from "@/components/Avatar";
 import { FundingConnect, FundingRespond } from "./FundingActions";
 
@@ -32,6 +33,7 @@ export default async function FundingPage() {
   const acceptedLabel = await tServer("Connected");
   const sentLabel = await tServer("Request sent");
   const openLabel = await tServer("Open");
+  const declinedLabel = await tServer("Declined");
   const viewTalksLabel = await tServer("View funding talks");
 
   // ===================================================================
@@ -57,14 +59,14 @@ export default async function FundingPage() {
     return (
       <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
         <div className="mb-8">
-          <h1 className="text-4xl lg:text-5xl mb-2">{heading}</h1>
+          <h1 className="text-3xl mb-2">{heading}</h1>
           <p className="text-ink">
             {await tServer("Companies you've connected with, and new ones to back.")}
           </p>
         </div>
 
         <section className="mb-12">
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
             {await tServer("Your companies")}
           </h2>
           {connectedOrgs.length === 0 ? (
@@ -87,19 +89,24 @@ export default async function FundingPage() {
                       name={o.name as string}
                     />
                     <div className="flex-1 min-w-0">
-                      <Link
-                        href={`/orgs/${o.slug}`}
-                        className="font-serif text-lg text-navy hover:text-gold"
-                      >
-                        {o.name as string}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/orgs/${o.slug}`}
+                          className="font-serif text-lg text-navy hover:text-gold-ink truncate"
+                        >
+                          {o.name as string}
+                        </Link>
+                        {o.verified && (
+                          <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
+                        )}
+                      </div>
                       <div className="text-xs text-ink-muted truncate">
                         {(o.tagline as string | null) ?? ""}
                       </div>
                       {c.status === "accepted" && (
                         <Link
                           href={`/funding/${c.id}`}
-                          className="inline-flex items-center gap-1 text-xs text-navy mt-2 hover:text-gold"
+                          className="inline-flex items-center gap-1 text-xs text-navy mt-2 hover:text-gold-ink"
                         >
                           {viewTalksLabel}
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -112,6 +119,7 @@ export default async function FundingPage() {
                         respondable={respondable}
                         accepted={acceptedLabel}
                         sent={sentLabel}
+                        declined={declinedLabel}
                       />
                       {respondable && <FundingRespond connectionId={c.id} />}
                     </div>
@@ -123,34 +131,48 @@ export default async function FundingPage() {
         </section>
 
         <section>
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
             {await tServer("Discover companies")}
           </h2>
-          <div className="space-y-3">
-            {discover.map((o) => (
-              <div
-                key={o.id as string}
-                className="bg-white border border-line p-5 flex items-center gap-4"
-              >
-                <OrgLogo
-                  url={o.logo_url as string | null}
-                  name={o.name as string}
-                />
-                <div className="flex-1 min-w-0">
-                  <Link
-                    href={`/orgs/${o.slug}`}
-                    className="font-serif text-lg text-navy hover:text-gold"
-                  >
-                    {o.name as string}
-                  </Link>
-                  <div className="text-xs text-ink-muted truncate">
-                    {(o.tagline as string | null) ?? ""}
+          {discover.length === 0 ? (
+            <div className="bg-white border border-line p-12 text-center">
+              <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
+              <p className="text-ink-muted">
+                {await tServer("No companies to show yet — check back soon.")}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {discover.map((o) => (
+                <div
+                  key={o.id as string}
+                  className="bg-white border border-line p-5 flex items-center gap-4"
+                >
+                  <OrgLogo
+                    url={o.logo_url as string | null}
+                    name={o.name as string}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/orgs/${o.slug}`}
+                        className="font-serif text-lg text-navy hover:text-gold-ink truncate"
+                      >
+                        {o.name as string}
+                      </Link>
+                      {o.verified && (
+                        <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
+                      )}
+                    </div>
+                    <div className="text-xs text-ink-muted truncate">
+                      {(o.tagline as string | null) ?? ""}
+                    </div>
                   </div>
+                  <FundingConnect targetId={o.id as string} />
                 </div>
-                <FundingConnect targetId={o.id as string} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     );
@@ -168,7 +190,7 @@ export default async function FundingPage() {
   if (myOrgIds.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
-        <h1 className="text-4xl lg:text-5xl mb-2">{heading}</h1>
+        <h1 className="text-3xl mb-2">{heading}</h1>
         <div className="bg-white border border-line p-12 text-center mt-6">
           <p className="text-ink-muted mb-6">
             {await tServer("Create a company to raise funding from investors.")}
@@ -221,17 +243,26 @@ export default async function FundingPage() {
   const investorName = (uid: string, firm: string | null) =>
     firm || (personById.get(uid)?.full_name as string) || "Investor";
 
+  // Slug → translated label, resolved up front so the card map stays sync.
+  const typeLabels: Record<string, string> = Object.fromEntries(
+    await Promise.all(
+      Object.entries(INVESTOR_TYPE_LABELS).map(
+        async ([slug, en]) => [slug, await tServer(en)] as const,
+      ),
+    ),
+  );
+
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-8">
-        <h1 className="text-4xl lg:text-5xl mb-2">{heading}</h1>
+        <h1 className="text-3xl mb-2">{heading}</h1>
         <p className="text-ink">
           {await tServer("Investors who've reached out to your company.")}
         </p>
       </div>
 
       <section className="mb-12">
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
           {await tServer("Your investors")}
         </h2>
         {connected.length === 0 ? (
@@ -262,12 +293,15 @@ export default async function FundingPage() {
                       {investorName(uid, i.firm_name as string | null)}
                     </div>
                     <div className="text-xs text-ink-muted">
-                      {(i.investor_type as string) ?? ""}
+                      {i.investor_type
+                        ? typeLabels[i.investor_type as string] ??
+                          (i.investor_type as string)
+                        : ""}
                     </div>
                     {c.status === "accepted" && (
                       <Link
                         href={`/funding/${c.id}`}
-                        className="inline-flex items-center gap-1 text-xs text-navy mt-2 hover:text-gold"
+                        className="inline-flex items-center gap-1 text-xs text-navy mt-2 hover:text-gold-ink"
                       >
                         {viewTalksLabel}
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -280,6 +314,7 @@ export default async function FundingPage() {
                       respondable={respondable}
                       accepted={acceptedLabel}
                       sent={sentLabel}
+                      declined={declinedLabel}
                     />
                     {respondable && <FundingRespond connectionId={c.id} />}
                   </div>
@@ -322,15 +357,17 @@ function StatusPill({
   respondable,
   accepted,
   sent,
+  declined,
 }: {
   status: string;
   respondable: boolean;
   accepted: string;
   sent: string;
+  declined: string;
 }) {
   if (status === "accepted") {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-gold mb-1">
+      <span className="inline-flex items-center gap-1 text-xs text-gold-ink mb-1">
         <Check className="w-3.5 h-3.5" /> {accepted}
       </span>
     );
@@ -339,6 +376,14 @@ function StatusPill({
     return (
       <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-ink-muted mb-1">
         <Clock className="w-3 h-3" /> {sent}
+      </span>
+    );
+  }
+  // A declined connection stays in the list — say so, don't render nothing.
+  if (status === "declined") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-ink-muted border border-line bg-cream px-2 py-0.5 mb-1">
+        <X className="w-3 h-3" /> {declined}
       </span>
     );
   }

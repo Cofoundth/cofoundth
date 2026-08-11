@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
+import { investorTypeLabel } from "@/lib/investor";
 import {
   InvestorOnboardingForm,
   type InvestorInitial,
@@ -42,6 +43,10 @@ export default async function InvestorPage({
   const editing = sp?.edit === "1" || !inv;
   const firstName =
     (profile?.full_name as string | null)?.split(" ")[0]?.trim() ?? "";
+  // Never render the raw slug ("family_office") — map it, then translate.
+  const typeLabel = inv?.investor_type
+    ? await tServer(investorTypeLabel(inv.investor_type as string))
+    : "";
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
@@ -50,7 +55,7 @@ export default async function InvestorPage({
       <main className="flex-1 px-6 py-12">
         {editing ? (
           <div className="max-w-2xl mx-auto">
-            <p className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+            <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               {await tServer("Investor")}
             </p>
             <h1 className="font-serif text-3xl text-navy leading-tight mb-2">
@@ -69,7 +74,7 @@ export default async function InvestorPage({
           </div>
         ) : (
           <div className="max-w-2xl mx-auto">
-            <p className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+            <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               {await tServer("Investor")}
             </p>
             <h1 className="font-serif text-3xl text-navy leading-tight mb-1">
@@ -82,7 +87,7 @@ export default async function InvestorPage({
                   : await tServer("Welcome"))}
             </h1>
             <p className="text-ink-muted mb-8">
-              {[inv?.investor_type, inv?.location].filter(Boolean).join(" · ")}
+              {[typeLabel, inv?.location].filter(Boolean).join(" · ")}
             </p>
 
             {/* The live investor surface — discovering + backing companies. */}
@@ -156,7 +161,7 @@ export default async function InvestorPage({
               <div className="pt-1">
                 <Link
                   href="/investor?edit=1"
-                  className="inline-flex items-center gap-2 text-sm text-navy hover:text-gold transition-colors"
+                  className="inline-flex items-center gap-2 text-sm text-navy hover:text-gold-ink transition-colors"
                 >
                   <Pencil className="w-4 h-4" />
                   {await tServer("Edit profile")}

@@ -209,7 +209,7 @@ export function NotificationBell({
           />
         </svg>
         {unread > 0 && (
-          <span className="absolute top-0.5 right-0 min-w-[18px] h-[18px] px-1 text-[10px] bg-gold text-white inline-flex items-center justify-center font-medium">
+          <span className="absolute top-0.5 right-0 min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white inline-flex items-center justify-center font-medium">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -243,10 +243,23 @@ export function NotificationBell({
                   <Link
                     href={hrefFor(n)}
                     onClick={() => setOpen(false)}
+                    // Unread must not rest on the background tint alone — it is
+                    // a ~1% wash that low-vision users and anyone on a dim
+                    // screen will miss. The gold marker carries it visually,
+                    // the aria-label carries it for screen readers.
+                    aria-label={
+                      n.readAt ? undefined : `${tr("Unread")}: ${textFor(n)}`
+                    }
                     className={`flex items-start gap-3 px-4 py-3 pr-9 border-b border-line last:border-b-0 hover:bg-cream transition-colors ${
                       n.readAt ? "" : "bg-cream/60"
                     }`}
                   >
+                    {!n.readAt && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-1.5 top-4 w-1.5 h-1.5 bg-gold"
+                      />
+                    )}
                     <Avatar
                       name={n.actor?.full_name ?? n.data?.actor_name}
                       url={n.actor?.photo_url}

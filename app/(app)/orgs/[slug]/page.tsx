@@ -313,7 +313,7 @@ export default async function OrgPage({ params }: Props) {
         <div className="lg:col-span-2 space-y-8">
           {pitch && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("What this company does")}
               </h2>
               <p className="text-ink leading-relaxed whitespace-pre-wrap">
@@ -324,7 +324,7 @@ export default async function OrgPage({ params }: Props) {
 
           {productImages.length > 0 && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Product")}
               </h2>
               <div className="grid grid-cols-2 gap-3">
@@ -343,7 +343,7 @@ export default async function OrgPage({ params }: Props) {
                   href={productUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-navy hover:text-gold mt-3"
+                  className="inline-flex items-center gap-1.5 text-sm text-navy hover:text-gold-ink mt-3"
                 >
                   <ExternalLink className="w-4 h-4" />
                   {await tServer("View product")}
@@ -354,7 +354,7 @@ export default async function OrgPage({ params }: Props) {
 
           {industry.length > 0 && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Industry")}
               </h2>
               <Chips items={industry} />
@@ -363,7 +363,7 @@ export default async function OrgPage({ params }: Props) {
 
           {capabilities.length > 0 && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("What we offer")}
               </h2>
               <Chips items={capabilities} />
@@ -372,7 +372,7 @@ export default async function OrgPage({ params }: Props) {
 
           {seeking.length > 0 && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Partnerships we're seeking")}
               </h2>
               <Chips items={seeking} />
@@ -384,7 +384,7 @@ export default async function OrgPage({ params }: Props) {
         <aside className="space-y-4">
           {connState !== "self" && !isInvestor && (
             <div className="bg-white border border-line p-5">
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Connect")}
               </h2>
               <ConnectActions
@@ -397,7 +397,7 @@ export default async function OrgPage({ params }: Props) {
           )}
           {connState === "connected" && (
             <div className="bg-white border border-line p-5">
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Deals")}
               </h2>
               <Link
@@ -446,7 +446,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           <div className="bg-white border border-line p-5">
-            <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
+            <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
               {(await tServer("Team ({n})")).replace(
                 "{n}",
                 String(members.length),

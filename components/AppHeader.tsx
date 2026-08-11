@@ -217,7 +217,7 @@ function NavLink({
     >
       {children}
       {badge !== undefined && badge > 0 && (
-        <span className="absolute top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] bg-gold text-white inline-flex items-center justify-center font-medium">
+        <span className="absolute top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white inline-flex items-center justify-center font-medium">
           {badge > 9 ? "9+" : badge}
         </span>
       )}

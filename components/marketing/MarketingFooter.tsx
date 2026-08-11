@@ -47,7 +47,7 @@ export async function MarketingFooter() {
             </div>
             <p className="text-sm text-slate-300 leading-relaxed">
               {tr(
-                "The platform for Thailand’s founders to find their co-founder.",
+                "Community, partners, and co-founders — in one place. Free to join.",
               )}
             </p>
           </div>

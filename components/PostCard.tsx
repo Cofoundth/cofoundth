@@ -169,7 +169,7 @@ export function PostCard({
               <div className="text-xs flex items-center gap-2 flex-wrap min-w-0">
                 <Link
                   href={authorHref}
-                  className="text-navy font-medium hover:text-gold truncate"
+                  className="text-navy font-medium hover:text-gold-ink truncate"
                 >
                   {post.author?.full_name ?? tr("A founder")}
                 </Link>
@@ -208,7 +208,7 @@ export function PostCard({
 
             {post.title && (
               <Link href={`/community/${post.id}`} className="block group mt-1">
-                <h3 className="font-serif text-lg text-navy leading-tight group-hover:text-gold transition-colors">
+                <h3 className="font-serif text-lg text-navy leading-tight group-hover:text-gold-ink transition-colors">
                   {post.title}
                 </h3>
               </Link>
@@ -241,7 +241,7 @@ export function PostCard({
                 href={post.link_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-xs text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 break-all"
+                className="mt-2 inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 break-all"
               >
                 <ExternalLink className="w-3 h-3" />
                 {(() => {
@@ -282,7 +282,9 @@ export function PostCard({
                   })
                 }
                 className={`inline-flex items-center gap-1 transition-colors ${
-                  optimistic.liked ? "text-gold" : "text-ink-muted hover:text-navy"
+                  optimistic.liked
+                    ? "text-gold-ink"
+                    : "text-ink-muted hover:text-navy"
                 }`}
                 aria-pressed={optimistic.liked}
                 aria-label={optimistic.liked ? tr("Unlike") : tr("Like")}
@@ -376,7 +378,7 @@ export function PostCard({
                         <div className="text-xs text-ink-muted">
                           <Link
                             href={cHref}
-                            className="text-navy font-medium hover:text-gold"
+                            className="text-navy font-medium hover:text-gold-ink"
                           >
                             {c.author?.full_name ?? tr("A founder")}
                           </Link>
@@ -419,7 +421,7 @@ export function PostCard({
                   <button
                     type="button"
                     onClick={() => setVisibleComments((n) => n + 10)}
-                    className="text-xs text-navy hover:text-gold tracking-wide"
+                    className="text-xs text-navy hover:text-gold-ink tracking-wide"
                   >
                     {tr("Show more comments")} (
                     {comments.length - visibleComments})

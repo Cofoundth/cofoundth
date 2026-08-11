@@ -48,7 +48,7 @@ function CardTags({ label, items }: { label: string; items: string[] }) {
   const extra = items.length - shown.length;
   return (
     <div className="mt-2.5">
-      <div className="text-[10px] uppercase tracking-wider text-gold mb-1">
+      <div className="text-[10px] uppercase tracking-wider text-gold-ink mb-1">
         {label}
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -89,7 +89,7 @@ function OrgCard({
         <OrgLogo org={org} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-serif text-lg text-navy truncate group-hover:text-gold transition-colors">
+            <h3 className="font-serif text-lg text-navy truncate group-hover:text-gold-ink transition-colors">
               {org.name}
             </h3>
             {org.verified && (
@@ -188,6 +188,9 @@ export default async function OrgsPage({
   const tabPartner = await tServer("Want a partner");
   const tabFunding = await tServer("Want funding");
   const noneInTab = await tServer("No companies in this tab yet.");
+  const noneYet = await tServer("No companies yet — check back soon.");
+  // Empty directory → the tabs still render; only the grid swaps for a card.
+  const directoryEmptyMsg = directory.length === 0 ? noneYet : noneInTab;
   const tabCls = (active: boolean) =>
     `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
       active
@@ -209,7 +212,7 @@ export default async function OrgsPage({
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <div className="flex items-end justify-between mb-8">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-gold mb-2">
+          <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
             {await tServer(isInvestor ? "Discover" : "B2B")}
           </p>
           <h1 className="font-serif text-3xl text-navy leading-tight">
@@ -237,7 +240,7 @@ export default async function OrgsPage({
       {/* Pending invites */}
       {!isInvestor && invites.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
             {await tServer("Invitations")}
           </h2>
           <div className="space-y-3">
@@ -267,7 +270,7 @@ export default async function OrgsPage({
       {/* Your companies (founders only) */}
       {!isInvestor && (
         <section className="mb-10">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
             {await tServer("Your companies")}
           </h2>
         {myOrgs.length === 0 ? (
@@ -301,44 +304,45 @@ export default async function OrgsPage({
       )}
 
       {/* Directory */}
-      {directory.length > 0 && (
-        <section>
-          <h2 className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
-            {await tServer("All companies")}
-          </h2>
-          <nav className="flex items-center gap-1 mb-5 border-b border-line">
-            <Link href="/orgs" className={tabCls(activeTab === "all")}>
-              {tabAll}
-            </Link>
-            <Link
-              href="/orgs?tab=partner"
-              className={tabCls(activeTab === "partner")}
-            >
-              {tabPartner}
-            </Link>
-            <Link
-              href="/orgs?tab=funding"
-              className={tabCls(activeTab === "funding")}
-            >
-              {tabFunding}
-            </Link>
-          </nav>
-          {filteredDirectory.length === 0 ? (
-            <p className="text-sm text-ink-muted">{noneInTab}</p>
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-4">
-              {filteredDirectory.map((o) => (
-                <OrgCard
-                  key={o.id}
-                  org={o}
-                  offerLabel={offerLabel}
-                  seekingLabel={seekingLabel}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      )}
+      <section>
+        <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
+          {await tServer("All companies")}
+        </h2>
+        <nav className="flex items-center gap-1 mb-5 border-b border-line">
+          <Link href="/orgs" className={tabCls(activeTab === "all")}>
+            {tabAll}
+          </Link>
+          <Link
+            href="/orgs?tab=partner"
+            className={tabCls(activeTab === "partner")}
+          >
+            {tabPartner}
+          </Link>
+          <Link
+            href="/orgs?tab=funding"
+            className={tabCls(activeTab === "funding")}
+          >
+            {tabFunding}
+          </Link>
+        </nav>
+        {filteredDirectory.length === 0 ? (
+          <div className="bg-white border border-line p-8 text-center">
+            <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
+            <p className="text-ink-muted">{directoryEmptyMsg}</p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-4">
+            {filteredDirectory.map((o) => (
+              <OrgCard
+                key={o.id}
+                org={o}
+                offerLabel={offerLabel}
+                seekingLabel={seekingLabel}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

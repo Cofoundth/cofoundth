@@ -29,6 +29,7 @@ export function CommentComposer({ postId }: { postId: string }) {
         rows={3}
         maxLength={2000}
         required
+        aria-label={tr("Add your comment…")}
         placeholder={tr("Add your comment…")}
         className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y"
       />

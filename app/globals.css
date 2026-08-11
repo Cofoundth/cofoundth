@@ -5,9 +5,13 @@
   --color-navy-dark: #0f2654;
   --color-gold: #b8941f;
   --color-gold-soft: #d4ab2f;
+  /* Gold is a borders/backgrounds/icons colour — as TEXT on white or cream it
+     only reaches ~2.9:1, well under AA. `gold-ink` is the same hue darkened to
+     ~5:1 on white/cream, for eyebrows, labels, links and counts. */
+  --color-gold-ink: #8a6a12;
   --color-cream: #fafaf7;
   --color-ink: #4a4a4a;
-  --color-ink-muted: #888888;
+  --color-ink-muted: #6b6b6b;
   --color-line: #e2e8f0;
 
   /* Per-glyph fallback: Latin renders Georgia (editorial feel),
@@ -60,6 +64,21 @@
      locale — the !important overrides Tailwind's inline tracking utilities. */
   html[lang="th"] * {
     letter-spacing: normal !important;
+  }
+
+  /* One global keyboard focus ring. Targets :focus-visible only, so mouse and
+     touch clicks stay ring-free while keyboard users always see where they are.
+     `!important` is load-bearing: ~30 controls carry Tailwind's
+     `focus:outline-none`, which lives in the `utilities` layer and therefore
+     beats any normal declaration in `base` regardless of specificity. For
+     important declarations the layer order reverses, so this wins — meaning the
+     existing `focus:outline-none` classes can stay exactly as they are (they
+     still suppress the ring for mouse users, which is all they were for).
+     `:where()` keeps specificity at 0 so a deliberate per-component focus style
+     can still override it. */
+  :where(a, button, [role="button"], input, textarea, select, summary):focus-visible {
+    outline: 2px solid var(--color-navy) !important;
+    outline-offset: 2px !important;
   }
 
   /* Tailwind v4 removed the default `cursor: pointer` on buttons —

@@ -150,7 +150,7 @@ export default async function LandingPage() {
             <div className="lg:col-span-7">
               <div className="text-xs uppercase tracking-[0.25em] text-ink-muted mb-6 flex items-center gap-3 flex-wrap">
                 <span className="inline-flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse motion-reduce:animate-none" />
                   {tr("Thailand's startup community")}
                 </span>
                 {(totalFounders ?? 0) >= 25 && (
@@ -164,7 +164,7 @@ export default async function LandingPage() {
                 {(foundersThisWeek ?? 0) > 0 && (
                   <>
                     <span className="text-line">·</span>
-                    <span className="normal-case tracking-normal text-gold text-xs">
+                    <span className="normal-case tracking-normal text-gold-ink text-xs">
                       +{foundersThisWeek}{" "}
                       {tr("joined this week")}
                     </span>
@@ -180,15 +180,16 @@ export default async function LandingPage() {
                   </>
                 )}
               </div>
-              <h1 className="text-5xl lg:text-7xl leading-[1.05] tracking-tight mb-3">
+              {/* Wordmark stays visible, but the h1 carries the pitch. */}
+              <div className="font-serif text-navy text-3xl lg:text-4xl leading-none tracking-tight mb-5">
                 Cofoundee<span className="text-gold">.</span>
-              </h1>
-              <div className="font-serif text-2xl lg:text-4xl text-navy/80 tracking-tight mb-8">
-                {tr("Community of co-founders")}
               </div>
+              <h1 className="text-4xl lg:text-6xl leading-[1.08] tracking-tight mb-6">
+                {tr("The bridge for Thailand's startup ecosystem")}
+              </h1>
               <p className="text-lg text-ink leading-relaxed max-w-2xl mb-10">
                 {tr(
-                  "Meet other Thai founders, share what you're building, and find the partners, co-founders, and advisors you need — starting from real community, not cold matching.",
+                  "Community, partners, capital, and legal — in one place. Meet the founders building in Thailand, then find the B2B partners, advisors, investors, and co-founders you need.",
                 )}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -199,11 +200,13 @@ export default async function LandingPage() {
                   {tr("Join the community")}{" "}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
+                {/* /browse is auth-gated and /login ignores a `next` param,
+                    so send cold visitors straight to signup instead of a wall. */}
                 <Link
-                  href="/browse"
+                  href="/signup"
                   className="px-8 py-4 border border-line hover:border-navy text-navy text-sm tracking-wide transition-colors inline-flex items-center justify-center"
                 >
-                  {tr("Browse founders")}
+                  {tr("Join to browse founders")}
                 </Link>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink">
@@ -222,7 +225,7 @@ export default async function LandingPage() {
               <div className="relative">
                 <div className="bg-white border border-line p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="text-xs uppercase tracking-[0.2em] text-gold">
+                    <div className="text-xs uppercase tracking-[0.2em] text-gold-ink">
                       {tr("In the community now")}
                     </div>
                     <div className="text-xs text-ink-muted">
@@ -235,11 +238,12 @@ export default async function LandingPage() {
                     </div>
                   ) : (
                     <div className="divide-y divide-line">
+                      {/* Plain rows, not links — /browse is gated, so a cold
+                          visitor clicking a name would hit the login wall. */}
                       {featured.slice(0, 5).map((f) => (
-                        <Link
+                        <div
                           key={f.id as string}
-                          href={`/browse`}
-                          className="flex items-start gap-3 py-3 group"
+                          className="flex items-start gap-3 py-3"
                         >
                           <Avatar
                             name={f.full_name as string}
@@ -247,7 +251,7 @@ export default async function LandingPage() {
                             size="sm"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm text-navy font-medium truncate group-hover:text-gold transition-colors">
+                            <div className="text-sm text-navy font-medium truncate">
                               {f.full_name as string}
                             </div>
                             <div className="text-xs text-ink-muted truncate">
@@ -261,15 +265,15 @@ export default async function LandingPage() {
                                 : ""}
                             </div>
                           </div>
-                        </Link>
+                        </div>
                       ))}
                     </div>
                   )}
                   <Link
-                    href="/browse"
-                    className="mt-4 pt-3 border-t border-line text-xs text-navy hover:text-gold inline-flex items-center gap-1 transition-colors"
+                    href="/signup"
+                    className="mt-4 pt-3 border-t border-line text-xs text-navy hover:text-gold-ink inline-flex items-center gap-1 transition-colors"
                   >
-                    {tr("Browse all founders")}
+                    {tr("Join to see all founders")}
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -289,8 +293,8 @@ export default async function LandingPage() {
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="flex items-end justify-between gap-6 mb-8 flex-wrap">
               <div>
-                <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse motion-reduce:animate-none" />
                   {tr("Recent wins")}
                 </div>
                 <h2 className="text-2xl lg:text-3xl leading-tight">
@@ -301,6 +305,8 @@ export default async function LandingPage() {
             <div className="grid md:grid-cols-3 gap-4">
               {(recentMilestones ?? []).map((m) => {
                 const author = milestoneAuthorMap.get(m.author_id as string);
+                const authorName =
+                  (author?.full_name as string) ?? tr("A founder");
                 const isMilestone = m.kind === "milestone";
                 return (
                   <div
@@ -319,7 +325,7 @@ export default async function LandingPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={m.image_url as string}
-                          alt=""
+                          alt={`${tr("Photo shared by")} ${authorName}`}
                           loading="lazy"
                           className="w-full h-full object-cover"
                         />
@@ -330,7 +336,7 @@ export default async function LandingPage() {
                         href={m.link_url as string}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 break-all mb-3"
+                        className="inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 break-all mb-3"
                       >
                         {(() => {
                           try {
@@ -343,9 +349,7 @@ export default async function LandingPage() {
                         })()}
                       </a>
                     ) : null}
-                    <div className="text-xs text-ink-muted">
-                      {(author?.full_name as string) ?? "A founder"}
-                    </div>
+                    <div className="text-xs text-ink-muted">{authorName}</div>
                   </div>
                 );
               })}
@@ -359,7 +363,7 @@ export default async function LandingPage() {
       <section className="py-24 lg:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-20">
-            <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("Where we're headed")}
             </div>
             <h2 className="text-4xl lg:text-5xl leading-tight">
@@ -379,15 +383,15 @@ export default async function LandingPage() {
               >
                 <p.icon className="w-6 h-6 text-gold mb-4" strokeWidth={1.5} />
                 <div className="flex items-center justify-between mb-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-gold">
+                  <div className="text-xs uppercase tracking-[0.2em] text-gold-ink">
                     {tr(p.label)}
                   </div>
                   <span
                     className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
                       p.status === "Live"
-                        ? "border-gold text-gold"
+                        ? "border-gold text-gold-ink"
                         : p.status === "Beta"
-                          ? "border-gold/60 text-gold/80"
+                          ? "border-gold/60 text-gold-ink/80"
                           : "border-line text-ink-muted"
                     }`}
                   >
@@ -408,7 +412,7 @@ export default async function LandingPage() {
       <section className="py-24 bg-white border-t border-line">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-16">
-            <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("Who it's for")}
             </div>
             <h2 className="text-4xl lg:text-5xl leading-tight">
@@ -417,7 +421,7 @@ export default async function LandingPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
             <div className="bg-white border border-line p-8">
-              <div className="font-serif text-4xl text-gold mb-4 leading-none">
+              <div className="font-serif text-4xl text-gold-ink mb-4 leading-none">
                 I
               </div>
               <h3 className="text-xl mb-3">
@@ -430,7 +434,7 @@ export default async function LandingPage() {
               </p>
             </div>
             <div className="bg-white border border-line p-8">
-              <div className="font-serif text-4xl text-gold mb-4 leading-none">
+              <div className="font-serif text-4xl text-gold-ink mb-4 leading-none">
                 II
               </div>
               <h3 className="text-xl mb-3">
@@ -443,7 +447,7 @@ export default async function LandingPage() {
               </p>
             </div>
             <div className="bg-white border border-line p-8">
-              <div className="font-serif text-4xl text-gold mb-4 leading-none">
+              <div className="font-serif text-4xl text-gold-ink mb-4 leading-none">
                 III
               </div>
               <h3 className="text-xl mb-3">
@@ -465,7 +469,7 @@ export default async function LandingPage() {
       <section className="py-24 bg-cream border-y border-line">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="max-w-3xl mb-20">
-            <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("How it works")}
             </div>
             <h2 className="text-4xl lg:text-5xl leading-tight">
@@ -475,7 +479,7 @@ export default async function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8">
             {processSteps.map((step) => (
               <div key={step.num}>
-                <div className="font-serif text-5xl text-gold mb-4 leading-none">
+                <div className="font-serif text-5xl text-gold-ink mb-4 leading-none">
                   {step.num}
                 </div>
                 <h3 className="text-xl mb-3">{tr(step.title)}</h3>
@@ -525,7 +529,7 @@ export default async function LandingPage() {
       {/* FAQ */}
       <section className="py-24 bg-white border-t border-line">
         <div className="max-w-3xl mx-auto px-6 lg:px-10">
-          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
             {tr("Questions")}
           </div>
           <h2 className="text-4xl lg:text-5xl leading-tight mb-12">

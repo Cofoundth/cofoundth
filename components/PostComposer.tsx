@@ -131,11 +131,14 @@ export function PostComposer() {
       <textarea
         name="content"
         rows={3}
-        maxLength={5200}
+        // Must match the 5000 the counter above enforces — the old 5200 let the
+        // browser accept 200 chars the submit button had already disabled.
+        maxLength={5000}
         required
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder={placeholder}
+        aria-label={placeholder}
         className="w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy resize-none"
       />
 

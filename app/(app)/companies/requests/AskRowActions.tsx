@@ -24,7 +24,7 @@ export function AskRowActions({ askId, status }: Props) {
               await updateAskStatusAction(askId, "filled");
             });
           }}
-          className="text-xs px-3 py-1.5 border border-gold text-gold hover:bg-gold/10 transition-colors"
+          className="text-xs px-3 py-1.5 border border-gold text-gold-ink hover:bg-gold/10 transition-colors"
         >
           {tr("Mark as filled")}
         </button>

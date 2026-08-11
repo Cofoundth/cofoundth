@@ -260,7 +260,7 @@ export default async function ConnectionsPage({
 
       {tab === "company" ? (
         <section>
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
             {await tServer("Company conversations")}
           </h2>
           {companyConvos.length === 0 ? (
@@ -333,7 +333,7 @@ export default async function ConnectionsPage({
           {/* ---- Requests (pending interest) ---- */}
           {hasRequests && (
             <section className="mb-12">
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
                 {await tServer("Requests")}
               </h2>
 
@@ -362,7 +362,7 @@ export default async function ConnectionsPage({
                             size="md"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="font-serif text-lg text-navy group-hover:text-gold transition-colors">
+                            <div className="font-serif text-lg text-navy group-hover:text-gold-ink transition-colors">
                               {displayName(p)}
                             </div>
                             <div className="text-xs text-ink-muted">
@@ -409,7 +409,7 @@ export default async function ConnectionsPage({
                             size="sm"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm text-navy font-medium group-hover:text-gold transition-colors">
+                            <div className="text-sm text-navy font-medium group-hover:text-gold-ink transition-colors">
                               {displayName(p)}
                             </div>
                             <div className="text-xs text-ink-muted">
@@ -431,7 +431,7 @@ export default async function ConnectionsPage({
           {/* ---- Conversations (matches) ---- */}
           <section>
             <div className="flex items-baseline justify-between mb-4">
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
+              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">
                 {await tServer("Conversations")}
               </h2>
               {(matches?.length ?? 0) > 0 && (
@@ -506,7 +506,7 @@ export default async function ConnectionsPage({
                               <>
                                 {" "}
                                 &middot;{" "}
-                                <span className="text-gold">
+                                <span className="text-gold-ink">
                                   {((p?.intent as string[] | null) ?? [])
                                     .map((x) => t(INTENT_LABELS[x], locale))
                                     .join(" · ")}

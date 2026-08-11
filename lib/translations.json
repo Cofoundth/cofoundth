@@ -986,5 +986,15 @@
   "No companies in this tab yet.": "ยังไม่มีบริษัทในแท็บนี้",
   "{name} proposed a partnership deal": "{name} ส่งข้อเสนอดีลพาร์ทเนอร์ชิป",
   "{name} sent a funding proposal": "{name} ส่งข้อเสนอระดมทุน",
-  "A company": "บริษัทหนึ่ง"
+  "A company": "บริษัทหนึ่ง",
+  "Skip to content": "ข้ามไปยังเนื้อหาหลัก",
+  "Unread": "ยังไม่ได้อ่าน",
+  "No companies to show yet — check back soon.": "ยังไม่มีบริษัทให้ดูตอนนี้ เดี๋ยวแวะกลับมาใหม่นะ",
+  "No companies yet — check back soon.": "ยังไม่มีบริษัท เดี๋ยวแวะกลับมาใหม่นะ",
+  "Search founders": "ค้นหา founder",
+  "The bridge for Thailand's startup ecosystem": "สะพานเชื่อมวงการ startup ไทย",
+  "Community, partners, capital, and legal — in one place. Meet the founders building in Thailand, then find the B2B partners, advisors, investors, and co-founders you need.": "ชุมชน พาร์ตเนอร์ เงินทุน และกฎหมาย ครบในที่เดียว — มาเจอ founder ที่กำลังสร้างอะไรกันอยู่ในไทย แล้วหาพาร์ตเนอร์ B2B ที่ปรึกษา นักลงทุน และ co-founder ที่ใช่",
+  "Join to browse founders": "สมัครเพื่อดู founder ทั้งหมด",
+  "Join to see all founders": "สมัครเพื่อดูทั้งหมด",
+  "Photo shared by": "รูปจาก"
 }

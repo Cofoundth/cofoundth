@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
+import { tServer } from "@/lib/i18n-server";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
 import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
@@ -54,8 +55,16 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
+      {/* First tab stop on every app page: lets keyboard users jump the ~8-item
+          nav instead of tabbing through it on each navigation. */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-cream focus:text-navy focus:border focus:border-navy focus:px-4 focus:py-2 focus:text-sm focus:tracking-wide"
+      >
+        {await tServer("Skip to content")}
+      </a>
       <AppHeader />
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         <IncompleteProfileBanner
           complete={isInvestor || !!profile?.profile_complete}
         />

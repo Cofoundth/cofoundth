@@ -134,7 +134,7 @@ function ScheduleDialog({
       >
         <div className="flex items-start justify-between mb-6">
           <div>
-            <div className="text-xs uppercase tracking-[0.25em] text-gold mb-2">
+            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
               {tr("Schedule")}
             </div>
             <h2 className="text-2xl">{tr("Co-founder intro call")}</h2>

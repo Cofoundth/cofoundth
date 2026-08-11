@@ -337,7 +337,7 @@ function StepIndicator({ current, tr }: { current: number; tr: TR }) {
                 i < current
                   ? "bg-gold border-gold text-white"
                   : i === current
-                    ? "border-gold text-gold"
+                    ? "border-gold text-gold-ink"
                     : "border-line text-ink-muted"
               }`}
             >

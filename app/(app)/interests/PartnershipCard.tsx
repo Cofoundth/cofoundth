@@ -29,7 +29,7 @@ const TYPE_LABEL: Record<string, { en: string }> = {
 };
 
 const STATUS_LABEL: Record<string, { en: string; tone: string }> = {
-  open: { en: "Open", tone: "border-gold text-gold" },
+  open: { en: "Open", tone: "border-gold text-gold-ink" },
   accepted: {
     en: "Accepted",
     tone: "border-gold bg-gold text-white",
@@ -102,7 +102,7 @@ export function PartnershipCard({ row, locale }: Props) {
           <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-xs text-ink-muted flex-wrap mb-1">
-                <span className="inline-flex items-center gap-1 text-gold">
+                <span className="inline-flex items-center gap-1 text-gold-ink">
                   <HandshakeIcon className="w-3 h-3" strokeWidth={1.5} />
                   {tr(type.en)}
                 </span>
@@ -111,7 +111,7 @@ export function PartnershipCard({ row, locale }: Props) {
                   {row.direction === "received" ? tr("from") : tr("to")}{" "}
                   <Link
                     href={profileHref}
-                    className="text-navy hover:text-gold font-medium"
+                    className="text-navy hover:text-gold-ink font-medium"
                   >
                     {row.counterparty?.company_name ?? "—"}
                   </Link>
@@ -257,7 +257,7 @@ export function PartnershipCard({ row, locale }: Props) {
           {row.status === "accepted" && row.matchId && (
             <Link
               href={`/messages/${row.matchId}`}
-              className="mt-4 pt-3 border-t border-line inline-flex items-center gap-1.5 text-sm text-navy hover:text-gold transition-colors"
+              className="mt-4 pt-3 border-t border-line inline-flex items-center gap-1.5 text-sm text-navy hover:text-gold-ink transition-colors"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               {tr("Open conversation")}

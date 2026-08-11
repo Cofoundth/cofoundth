@@ -13,7 +13,7 @@ export default function NewPostPage() {
       </Link>
 
       <div className="mb-8">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
           Community
         </div>
         <h1 className="text-4xl mb-2">New post</h1>

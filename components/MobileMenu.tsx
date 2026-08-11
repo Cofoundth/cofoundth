@@ -52,7 +52,7 @@ export function MobileMenu({
                 >
                   <span>{l.label}</span>
                   {l.badge && l.badge > 0 ? (
-                    <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-gold text-white inline-flex items-center justify-center font-medium">
+                    <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white inline-flex items-center justify-center font-medium">
                       {l.badge > 9 ? "9+" : l.badge}
                     </span>
                   ) : null}

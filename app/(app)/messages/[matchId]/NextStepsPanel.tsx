@@ -71,7 +71,7 @@ export function NextStepsPanel({ social }: { social?: Social }) {
             className="w-4 h-4 text-gold"
             strokeWidth={1.5}
           />
-          <div className="text-xs uppercase tracking-[0.2em] text-gold">
+          <div className="text-xs uppercase tracking-[0.2em] text-gold-ink">
             {tr("Quick replies")}
           </div>
         </div>

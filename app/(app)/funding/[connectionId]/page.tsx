@@ -21,6 +21,18 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Withdrawn",
 };
 
+// Terminal states read at a glance: signed is the win (filled gold), dead deals
+// are struck through and muted, everything still in play keeps the navy outline.
+const PILL_BASE =
+  "text-[11px] uppercase tracking-wider px-2 py-0.5 shrink-0 border";
+function pillCls(status: string) {
+  if (status === "signed") return `${PILL_BASE} bg-gold border-gold text-navy`;
+  if (status === "declined" || status === "cancelled") {
+    return `${PILL_BASE} bg-cream border-line text-ink-muted line-through`;
+  }
+  return `${PILL_BASE} bg-cream border-navy text-navy`;
+}
+
 type Props = { params: Promise<{ connectionId: string }> };
 
 export default async function FundingDetailPage({ params }: Props) {
@@ -98,7 +110,6 @@ export default async function FundingDetailPage({ params }: Props) {
       status: d.status as string,
       equity: d.equity_pct as number | null,
       monthly: d.monthly_amount as number | null,
-      currency: (d.monthly_currency as string) ?? "THB",
       months: d.contract_months as number | null,
       payment: d.payment_terms as string | null,
       description: d.description as string | null,
@@ -132,7 +143,7 @@ export default async function FundingDetailPage({ params }: Props) {
 
       {/* Propose */}
       <div className="bg-white border border-line p-6 mb-8">
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
           {await tServer("Send a proposal")}
         </h2>
         <FundingProposalForm connectionId={connectionId} />
@@ -141,7 +152,7 @@ export default async function FundingDetailPage({ params }: Props) {
       {/* Existing proposals */}
       {dealsView.length > 0 && (
         <div>
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
             {await tServer("Proposals")}
           </h2>
           <div className="space-y-3">
@@ -156,8 +167,8 @@ export default async function FundingDetailPage({ params }: Props) {
                     )}
                     {d.monthly != null && (
                       <span>
-                        {d.equity != null ? " · " : ""}
-                        {Number(d.monthly).toLocaleString()} {d.currency}
+                        {d.equity != null ? " · " : ""}฿
+                        {Number(d.monthly).toLocaleString()}
                         {perMonthLabel}
                       </span>
                     )}
@@ -168,15 +179,13 @@ export default async function FundingDetailPage({ params }: Props) {
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] uppercase tracking-wider text-navy border border-navy bg-cream px-2 py-0.5 shrink-0">
-                    {d.statusLabel}
-                  </span>
+                  <span className={pillCls(d.status)}>{d.statusLabel}</span>
                 </div>
                 {d.payment && (
                   <div className="text-xs text-ink-muted mt-1">{d.payment}</div>
                 )}
                 {d.fee != null && (
-                  <div className="text-xs text-gold mt-1">
+                  <div className="text-xs text-gold-ink mt-1">
                     {feeLabel}: ฿{Number(d.fee).toLocaleString()}
                   </div>
                 )}

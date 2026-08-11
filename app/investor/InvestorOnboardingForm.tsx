@@ -8,18 +8,10 @@ import {
 } from "./actions";
 import { useT } from "@/lib/i18n-client";
 import { LONG_TEXT_MAX } from "@/lib/limits";
+import { INVESTOR_TYPES } from "@/lib/investor";
 
 const INITIAL: InvestorFormState = null;
 const THESIS_MAX = LONG_TEXT_MAX;
-
-const TYPES: { value: string; en: string }[] = [
-  { value: "angel", en: "Angel" },
-  { value: "vc", en: "VC fund" },
-  { value: "corporate", en: "Corporate VC" },
-  { value: "family_office", en: "Family office" },
-  { value: "syndicate", en: "Syndicate" },
-  { value: "other", en: "Other" },
-];
 
 const STAGE_OPTS: { value: string; en: string }[] = [
   { value: "pre_seed", en: "Pre-seed" },
@@ -46,7 +38,7 @@ function Field({
     <div>
       <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
         {label}
-        {required && <span className="text-gold ml-1">*</span>}
+        {required && <span className="text-gold-ink ml-1">*</span>}
       </label>
       {children}
       {hint && <p className="text-xs text-ink-muted mt-1.5">{hint}</p>}
@@ -95,7 +87,7 @@ export function InvestorOnboardingForm({
           <option value="" disabled>
             {tr("Select…")}
           </option>
-          {TYPES.map((t) => (
+          {INVESTOR_TYPES.map((t) => (
             <option key={t.value} value={t.value}>
               {tr(t.en)}
             </option>

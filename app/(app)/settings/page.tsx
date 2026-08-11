@@ -78,7 +78,7 @@ export default async function SettingsPage() {
         <h1 className="text-3xl">{t.title}</h1>
         <Link
           href={profileHref}
-          className="text-sm text-navy hover:text-gold tracking-wide"
+          className="text-sm text-navy hover:text-gold-ink tracking-wide"
         >
           {t.view} →
         </Link>
@@ -86,7 +86,7 @@ export default async function SettingsPage() {
       <p className="text-sm text-ink-muted mb-8">{t.sub}</p>
 
       <div className="mb-10">
-        <div className="text-xs uppercase tracking-[0.2em] text-gold border-b border-line pb-2 mb-4">
+        <div className="text-xs uppercase tracking-[0.2em] text-gold-ink border-b border-line pb-2 mb-4">
           {t.photo}
         </div>
         <AvatarUploader
@@ -99,7 +99,7 @@ export default async function SettingsPage() {
       <EditProfileFormClient initial={initial} />
 
       <div className="mt-14 pt-8 border-t border-line">
-        <div className="text-xs uppercase tracking-[0.2em] text-gold border-b border-line pb-2 mb-4">
+        <div className="text-xs uppercase tracking-[0.2em] text-gold-ink border-b border-line pb-2 mb-4">
           {await tServer("Password")}
         </div>
         <p className="text-sm text-ink-muted mb-5 max-w-lg leading-relaxed">

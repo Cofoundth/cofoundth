@@ -113,7 +113,7 @@ export function PartnershipRequestDialog({
             size="md"
           />
           <div className="min-w-0">
-            <div className="text-xs uppercase tracking-[0.2em] text-gold mb-1 inline-flex items-center gap-1.5">
+            <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-1 inline-flex items-center gap-1.5">
               <HandshakeIcon className="w-3 h-3" />
               {tr("Partnership request")}
             </div>
@@ -199,7 +199,7 @@ export function PartnershipRequestDialog({
               className={`text-xs tabular-nums ${
                 contextTooLong || contextTooShort
                   ? "text-ink-muted"
-                  : "text-gold"
+                  : "text-gold-ink"
               }`}
             >
               {context.length} / {LONG_TEXT_MAX}

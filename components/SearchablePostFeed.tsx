@@ -133,6 +133,7 @@ export function SearchablePostFeed({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={tr("Search posts…")}
+          aria-label={tr("Search posts…")}
           className="w-full pl-10 pr-10 py-2.5 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
         />
         {searching && (

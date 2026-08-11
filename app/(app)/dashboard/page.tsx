@@ -129,7 +129,7 @@ export default async function DashboardPage() {
                 <span className="text-sm text-ink-muted">
                   {await tServer("Profile views")}
                 </span>
-                <span className="text-navy font-medium">
+                <span className="font-serif text-base text-navy font-medium tabular-nums">
                   {profileViewsCount ?? 0}
                 </span>
               </div>
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                 <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
                   {await tServer("Interests")}
                 </span>
-                <span className="text-navy font-medium">
+                <span className="font-serif text-base text-navy font-medium tabular-nums">
                   {pendingReceivedCount ?? 0}
                 </span>
               </Link>
@@ -151,7 +151,7 @@ export default async function DashboardPage() {
                 <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
                   {await tServer("Matches")}
                 </span>
-                <span className="text-navy font-medium">
+                <span className="font-serif text-base text-navy font-medium tabular-nums">
                   {matchesCount ?? 0}
                 </span>
               </Link>
@@ -188,7 +188,7 @@ export default async function DashboardPage() {
           />
 
           <div className="flex items-center justify-between">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
+            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">
               {await tServer("Latest from the community")}
             </h2>
             <Link
@@ -210,7 +210,7 @@ export default async function DashboardPage() {
         {/* RIGHT — new founders */}
         <aside className="lg:col-span-3 lg:sticky lg:top-24 self-start">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold">
+            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">
               {await tServer("New founders")}
             </h2>
             <Link
@@ -246,7 +246,7 @@ export default async function DashboardPage() {
                         size="sm"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm text-navy font-medium truncate group-hover:text-gold transition-colors">
+                        <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
                           {f.full_name as string}
                         </div>
                         <div className="text-xs text-ink-muted mt-0.5 truncate">

@@ -28,7 +28,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<AskStatus, { en: string; tone: string }> = {
-  open: { en: "Open", tone: "border-gold text-gold" },
+  open: { en: "Open", tone: "border-gold text-gold-ink" },
   filled: { en: "Filled", tone: "border-gold bg-gold text-white" },
   closed: { en: "Closed", tone: "border-line text-ink-muted" },
 };
@@ -135,7 +135,7 @@ export default async function PartnershipRequestsBoardPage() {
       {/* Header */}
       <div className="mb-10 pb-8 border-b border-line flex items-start justify-between gap-6 flex-wrap">
         <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3 inline-flex items-center gap-2">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
             {await tServer("B2B Partnership board")}
             <span className="text-line">·</span>
@@ -168,7 +168,7 @@ export default async function PartnershipRequestsBoardPage() {
             <br />
             <Link
               href="/onboarding"
-              className="text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 mt-1 inline-block"
+              className="text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 mt-1 inline-block"
             >
               {await tServer("Edit profile →")}
             </Link>
@@ -239,7 +239,7 @@ export default async function PartnershipRequestsBoardPage() {
                     <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
                       <div className="min-w-0">
                         <div className="text-xs flex items-center gap-2 flex-wrap mb-1">
-                          <span className="text-gold inline-flex items-center gap-1">
+                          <span className="text-gold-ink inline-flex items-center gap-1">
                             <HandshakeIcon
                               className="w-3 h-3"
                               strokeWidth={1.5}
@@ -249,7 +249,7 @@ export default async function PartnershipRequestsBoardPage() {
                           <span className="text-ink-muted">·</span>
                           <Link
                             href={authorHref}
-                            className="text-navy font-medium hover:text-gold"
+                            className="text-navy font-medium hover:text-gold-ink"
                           >
                             {(author?.company_name as string) ??
                               (author?.full_name as string) ??
@@ -321,7 +321,7 @@ export default async function PartnershipRequestsBoardPage() {
                         {!canRespond && !isMine && (
                           <Link
                             href={authorHref}
-                            className="text-sm text-navy hover:text-gold inline-flex items-center gap-1"
+                            className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1"
                           >
                             {labels.viewProfile}
                             <ArrowRight className="w-3.5 h-3.5" />

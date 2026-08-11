@@ -67,6 +67,8 @@ export function BrowseClient({ others }: Props) {
   const [industryFilters, setIndustryFilters] = useState<string[]>([]);
   const [stageFilter, setStageFilter] = useState<string>("");
   const [commitmentFilter, setCommitmentFilter] = useState<string>("");
+  // Mobile-only collapse. On lg+ the panel is always shown via CSS (and the
+  // toggle is hidden) — a breakpoint-aware initial state would hydrate wrong.
   const [filtersOpen, setFiltersOpen] = useState(false);
   // Top-level split: founders who already have an idea vs. those still exploring.
   const [ideaTab, setIdeaTab] = useState<"idea" | "exploring">("idea");
@@ -220,6 +222,7 @@ export function BrowseClient({ others }: Props) {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label={tr("Search founders")}
                 placeholder={tr("Name or keyword")}
                 className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
               />
@@ -228,8 +231,9 @@ export function BrowseClient({ others }: Props) {
             <button
               type="button"
               onClick={() => setFiltersOpen((v) => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 border border-line bg-white text-sm text-ink hover:border-navy transition-colors"
+              className="lg:hidden w-full flex items-center justify-between px-4 py-3 border border-line bg-white text-sm text-ink hover:border-navy transition-colors"
               aria-expanded={filtersOpen}
+              aria-controls="browse-filters"
             >
               <span className="inline-flex items-center gap-2">
                 <SlidersHorizontal
@@ -250,7 +254,10 @@ export function BrowseClient({ others }: Props) {
               />
             </button>
 
-            <div className={filtersOpen ? "space-y-6" : "hidden"}>
+            <div
+              id="browse-filters"
+              className={`space-y-6 ${filtersOpen ? "" : "hidden lg:block"}`}
+            >
               <FilterGroup label={tr("Looking for (Role)")}>
               {ROLE_OPTIONS.map(([value, label]) => (
                 <FilterChip
@@ -389,7 +396,7 @@ function LabeledRow({
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-1 sm:gap-3">
-      <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-gold leading-tight sm:pt-1">
+      <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-gold-ink leading-tight sm:pt-1">
         {Icon && <Icon className="w-3 h-3" strokeWidth={2} />}
         {label}
       </div>
@@ -424,7 +431,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
 
         <div className="flex-1 min-w-0">
           {/* Who */}
-          <h3 className="font-serif text-xl text-navy leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold transition-colors">
+          <h3 className="font-serif text-xl text-navy leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors">
             {isCompany && profile.company_name
               ? profile.company_name
               : profile.full_name}
@@ -435,13 +442,13 @@ function ProfileCard({ profile }: { profile: Profile }) {
               />
             )}
             {isNew && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold font-sans">
-                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold-ink font-sans">
+                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse motion-reduce:animate-none" />
                 {tr("New")}
               </span>
             )}
             {isCompany && (
-              <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold">
+              <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold-ink">
                 <Building2 className="w-2.5 h-2.5" strokeWidth={2} />
                 {tr("Company")}
               </span>
@@ -460,7 +467,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
               </span>
             )}
             {intent.length > 0 && (
-              <span className="text-gold">{intent.join(" · ")}</span>
+              <span className="text-gold-ink">{intent.join(" · ")}</span>
             )}
           </div>
 
@@ -577,7 +584,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                   {lookingFor.map((r) => (
                     <span
                       key={r}
-                      className="px-2 py-0.5 text-xs border border-gold/50 text-gold bg-gold/5"
+                      className="px-2 py-0.5 text-xs border border-gold/50 text-gold-ink bg-gold/5"
                     >
                       {r}
                     </span>
@@ -597,7 +604,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
             {profile.industry.length > 3 && (
               <span>+{profile.industry.length - 3}</span>
             )}
-            <span className="ml-auto inline-flex items-center gap-1 text-navy group-hover:text-gold transition-colors">
+            <span className="ml-auto inline-flex items-center gap-1 text-navy group-hover:text-gold-ink transition-colors">
               {tr("View profile")} <ArrowRight className="w-3 h-3" />
             </span>
           </div>

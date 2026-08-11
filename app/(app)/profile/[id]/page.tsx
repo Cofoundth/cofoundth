@@ -58,11 +58,11 @@ const COLUMNS =
 const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   open_to_partnerships: {
     en: "Open to partnerships",
-    tone: "border-gold/60 text-gold bg-gold/5",
+    tone: "border-gold/60 text-gold-ink bg-gold/5",
   },
   open_to_cofounder: {
     en: "Open to co-founder",
-    tone: "border-gold/60 text-gold bg-gold/5",
+    tone: "border-gold/60 text-gold-ink bg-gold/5",
   },
   hiring: {
     en: "Hiring",
@@ -235,7 +235,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                 />
               )}
               {isCompany && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold font-sans">
+                <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold-ink font-sans">
                   <Building2 className="w-3 h-3" strokeWidth={2} />
                   {t("Company", locale)}
                 </span>
@@ -260,7 +260,9 @@ export default async function ProfileDetailPage({ params }: Props) {
               {rolesLabel && (
                 <span className="text-navy font-medium">{rolesLabel}</span>
               )}
-              {intentLabel && <span className="text-gold">· {intentLabel}</span>}
+              {intentLabel && (
+                <span className="text-gold-ink">· {intentLabel}</span>
+              )}
               {profile.location && (
                 <span className="inline-flex items-center gap-1 text-ink-muted">
                   <MapPin className="w-3.5 h-3.5" />{" "}
@@ -298,7 +300,7 @@ export default async function ProfileDetailPage({ params }: Props) {
             projectImages.length > 0 ||
             projectUrl) && (
             <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
+              <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
                 {t("What I'm building", locale)}
               </div>
               {profile.pitch && (
@@ -338,7 +340,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                   href={projectUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center gap-2 text-sm text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 break-all"
+                  className="mt-5 inline-flex items-center gap-2 text-sm text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 break-all"
                 >
                   <ExternalLink className="w-4 h-4 shrink-0" strokeWidth={1.75} />
                   {(() => {
@@ -364,7 +366,7 @@ export default async function ProfileDetailPage({ params }: Props) {
           {/* Who I am */}
           {hasAbout && (
             <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold mb-5">
+              <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {t("Background & experience", locale)}
               </div>
               <div className="space-y-5">
@@ -407,7 +409,7 @@ export default async function ProfileDetailPage({ params }: Props) {
           {/* Recent milestones */}
           {(recentMilestones?.length ?? 0) > 0 && (
             <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold mb-5">
+              <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {t("Recent milestones & launches", locale)}
               </div>
               <div className="space-y-4">
@@ -423,7 +425,9 @@ export default async function ProfileDetailPage({ params }: Props) {
                       }`}
                     >
                       <div className="text-[10px] uppercase tracking-[0.2em] mb-1.5">
-                        <span className={isMilestone ? "text-gold" : "text-navy"}>
+                        <span
+                          className={isMilestone ? "text-gold-ink" : "text-navy"}
+                        >
                           {t(isMilestone ? "Milestone" : "Shipped", locale)}
                         </span>
                         <span className="text-ink-muted ml-2">
@@ -441,7 +445,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                           href={m.link_url as string}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-2 text-xs text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 break-all inline-block"
+                          className="mt-2 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 break-all inline-block"
                         >
                           {(() => {
                             try {

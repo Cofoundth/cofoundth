@@ -137,7 +137,10 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
       </div>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div
+          role="alert"
+          className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800"
+        >
           {tr(state.error)}
         </div>
       )}
@@ -146,6 +149,7 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
         <button
           type="submit"
           disabled={isPending}
+          aria-busy={isPending}
           className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm tracking-wide transition-colors"
         >
           <HandshakeIcon className="w-4 h-4" />
