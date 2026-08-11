@@ -10,7 +10,9 @@ import {
 } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { ROLE_LABELS } from "@/lib/matching";
 import { provinceLabel } from "@/lib/provinces";
+import { listPublicFounders } from "@/lib/public-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Avatar } from "@/components/Avatar";
 import { msAgoISO, DAY_MS } from "@/lib/time";
@@ -71,15 +73,6 @@ const processSteps = [
   },
 ];
 
-const ROLE_LABEL_EN: Record<string, string> = {
-  technical: "Technical",
-  business: "Business",
-  product: "Product",
-  marketing: "Marketing",
-  finance: "Finance",
-  legal: "Legal",
-};
-
 export default async function LandingPage() {
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);
@@ -89,19 +82,15 @@ export default async function LandingPage() {
   const sevenDaysAgo = msAgoISO(7 * DAY_MS);
   const thirtyDaysAgo = msAgoISO(30 * DAY_MS);
   const [
-    { data: featured },
+    featured,
     { data: recentMilestones },
     { count: totalFounders },
     { count: foundersThisWeek },
     { count: postsThisWeek },
   ] = await Promise.all([
-    admin
-      .from("profiles")
-      .select("id, full_name, photo_url, i_am, intent, slug, location, pitch")
-      .eq("profile_complete", true)
-      .eq("suspended", false)
-      .order("created_at", { ascending: false })
-      .limit(6),
+    // Logged-out surface → goes through the public allowlist, which also keeps
+    // investors (whose presence is confidential) out of this list.
+    listPublicFounders(6),
     admin
       .from("forum_posts")
       .select("id, author_id, content, kind, image_url, link_url, created_at")
@@ -200,13 +189,13 @@ export default async function LandingPage() {
                   {tr("Join the community")}{" "}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                {/* /browse is auth-gated and /login ignores a `next` param,
-                    so send cold visitors straight to signup instead of a wall. */}
+                {/* /browse is still auth-gated; /founders is the public
+                    preview, so cold visitors get to look before signing up. */}
                 <Link
-                  href="/signup"
+                  href="/founders"
                   className="px-8 py-4 border border-line hover:border-navy text-navy text-sm tracking-wide transition-colors inline-flex items-center justify-center"
                 >
-                  {tr("Join to browse founders")}
+                  {tr("Browse founders")}
                 </Link>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink">
@@ -232,48 +221,51 @@ export default async function LandingPage() {
                       {totalFounders ?? 0} {tr("total")}
                     </div>
                   </div>
-                  {!featured?.length ? (
+                  {!featured.length ? (
                     <div className="py-8 text-center text-sm text-ink-muted">
                       {tr("Be the first to join.")}
                     </div>
                   ) : (
                     <div className="divide-y divide-line">
-                      {/* Plain rows, not links — /browse is gated, so a cold
-                          visitor clicking a name would hit the login wall. */}
+                      {/* Rows link into the public preview at /founders/{slug}
+                          — no login wall, and only allowlisted fields there. */}
                       {featured.slice(0, 5).map((f) => (
-                        <div
-                          key={f.id as string}
-                          className="flex items-start gap-3 py-3"
+                        <Link
+                          key={f.slug}
+                          href={`/founders/${f.slug}`}
+                          className="group flex items-start gap-3 py-3"
                         >
                           <Avatar
-                            name={f.full_name as string}
-                            url={f.photo_url as string | null}
+                            name={f.fullName}
+                            url={f.photoUrl}
                             size="sm"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm text-navy font-medium truncate">
-                              {f.full_name as string}
+                            <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
+                              {f.fullName}
                             </div>
                             <div className="text-xs text-ink-muted truncate">
-                              {((f.i_am as string[] | null) ?? []).length > 0
-                                ? ((f.i_am as string[] | null) ?? [])
-                                    .map((r) => ROLE_LABEL_EN[r] ?? r)
+                              {f.roles.length > 0
+                                ? f.roles
+                                    .map((r) =>
+                                      ROLE_LABELS[r] ? tr(ROLE_LABELS[r]) : r,
+                                    )
                                     .join(" · ")
                                 : "—"}
                               {f.location
-                                ? ` · ${provinceLabel(f.location as string, locale)}`
+                                ? ` · ${provinceLabel(f.location, locale)}`
                                 : ""}
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}
                   <Link
-                    href="/signup"
+                    href="/founders"
                     className="mt-4 pt-3 border-t border-line text-xs text-navy hover:text-gold-ink inline-flex items-center gap-1 transition-colors"
                   >
-                    {tr("Join to see all founders")}
+                    {tr("Browse all founders")}
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
