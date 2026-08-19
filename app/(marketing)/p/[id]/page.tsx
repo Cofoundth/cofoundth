@@ -162,7 +162,7 @@ export default async function PublicPostPage({ params }: Props) {
         </div>
 
         {post.title && (
-          <h1 className="font-serif text-d2 text-navy leading-tight mb-3">
+          <h1 className="font-serif text-d2 lg:text-d3 text-navy leading-tight mb-3">
             {post.title as string}
           </h1>
         )}
