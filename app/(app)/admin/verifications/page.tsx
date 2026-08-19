@@ -38,7 +38,7 @@ export default async function AdminVerificationsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
           Admin
         </div>
-        <h1 className="text-d3 mb-2">Verifications</h1>
+        <h1 className="text-d2 mb-2">Verifications</h1>
         <p className="text-ink leading-relaxed max-w-2xl">
           Verify profiles after manual checks (Thai company registration via{" "}
           <a

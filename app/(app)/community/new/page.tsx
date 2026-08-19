@@ -16,7 +16,7 @@ export default function NewPostPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
           Community
         </div>
-        <h1 className="text-d3 mb-2">New post</h1>
+        <h1 className="text-d2 mb-2">New post</h1>
         <p className="text-ink-muted">
           Share what you&rsquo;re building, ask a question, or request feedback.
         </p>

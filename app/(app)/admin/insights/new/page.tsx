@@ -24,7 +24,7 @@ export default async function NewInsightPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
           Admin
         </div>
-        <h1 className="text-d3">New insight</h1>
+        <h1 className="text-d2">New insight</h1>
       </div>
 
       <InsightForm action={createInsightAction} submitLabel="Create" />

@@ -49,7 +49,7 @@ export default async function AdminUsersPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
           Admin
         </div>
-        <h1 className="text-d3 mb-2">Users</h1>
+        <h1 className="text-d2 mb-2">Users</h1>
         <p className="text-ink">
           {total} total · {active} active · {hidden} hidden
         </p>

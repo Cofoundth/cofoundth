@@ -166,7 +166,7 @@ export function BrowseClient({ others }: Props) {
       <div className="mb-6">
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-d2 lg:text-d3 mb-2">{tr("All founders")}</h1>
+            <h1 className="text-d2 mb-2">{tr("All founders")}</h1>
             <p className="text-ink">
               {filtered.length}{" "}
               {tr(filtered.length === 1 ? "founder" : "founders")}
