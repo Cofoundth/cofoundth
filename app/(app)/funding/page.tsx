@@ -71,7 +71,7 @@ export default async function FundingPage() {
     return (
       <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
         <div className="mb-8">
-          <h1 className="text-3xl mb-2">{heading}</h1>
+          <h1 className="text-d2 mb-2">{heading}</h1>
           <p className="text-ink">
             {await tServer("Companies you've connected with, and new ones to back.")}
           </p>
@@ -170,7 +170,7 @@ export default async function FundingPage() {
   if (myOrgIds.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
-        <h1 className="text-3xl mb-2">{heading}</h1>
+        <h1 className="text-d2 mb-2">{heading}</h1>
         <div className="bg-white border border-line p-12 text-center mt-6">
           <p className="text-ink-muted mb-6">
             {await tServer("Create a company to raise funding from investors.")}
@@ -235,7 +235,7 @@ export default async function FundingPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">{heading}</h1>
+        <h1 className="text-d2 mb-2">{heading}</h1>
         <p className="text-ink">
           {await tServer("Investors who've reached out to your company.")}
         </p>

@@ -166,7 +166,7 @@ export function BrowseClient({ others }: Props) {
       <div className="mb-6">
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-4xl lg:text-5xl mb-2">{tr("All founders")}</h1>
+            <h1 className="text-d2 lg:text-d3 mb-2">{tr("All founders")}</h1>
             <p className="text-ink">
               {filtered.length}{" "}
               {tr(filtered.length === 1 ? "founder" : "founders")}
@@ -320,7 +320,7 @@ export function BrowseClient({ others }: Props) {
         <div className="lg:col-span-9 min-w-0">
           {filtered.length === 0 ? (
             <div className="bg-white border border-line p-12 text-center">
-              <h3 className="text-2xl mb-2">{tr("No matches yet")}</h3>
+              <h3 className="text-d1 mb-2">{tr("No matches yet")}</h3>
               <p className="text-ink-muted">
                 {tr(
                   "Try widening your filters, or check back as more founders onboard.",

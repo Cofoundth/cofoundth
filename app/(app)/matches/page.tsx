@@ -236,7 +236,7 @@ export default async function ConnectionsPage({
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <div className="mb-6">
-        <h1 className="text-4xl lg:text-5xl mb-2">
+        <h1 className="text-d2 lg:text-d3 mb-2">
           {await tServer("Connections")}
         </h1>
         <p className="text-ink">
@@ -265,7 +265,7 @@ export default async function ConnectionsPage({
           </h2>
           {companyConvos.length === 0 ? (
             <div className="bg-white border border-line p-12 text-center">
-              <h3 className="text-2xl mb-2">
+              <h3 className="text-d1 mb-2">
                 {await tServer("No company chats yet")}
               </h3>
               <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
@@ -444,7 +444,7 @@ export default async function ConnectionsPage({
 
             {!matches?.length ? (
               <div className="bg-white border border-line p-12 text-center">
-                <h3 className="text-2xl mb-2">
+                <h3 className="text-d1 mb-2">
                   {await tServer("No conversations yet")}
                 </h3>
                 <p className="text-ink-muted leading-relaxed max-w-md mx-auto">

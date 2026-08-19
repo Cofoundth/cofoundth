@@ -14,6 +14,37 @@
   --color-ink-muted: #6b6b6b;
   --color-line: #e2e8f0;
 
+  /* ── Display type ladder ──────────────────────────────────────────────
+     A golden-ratio scale anchored at the 16px body text, stepping by
+     sqrt(phi) ≈ 1.272 (a half-step of φ, so two steps = one full 1.618):
+
+       16px  body (unchanged)
+       20px  no token — stays in the functional text-lg/text-xl range
+       26px  text-d1
+       33px  text-d2
+       42px  text-d3
+       53px  text-d4
+       68px  text-d5
+
+     DISPLAY TEXT ONLY — page titles, hero copy, standalone section
+     headings, big serif numerals, pull-quotes. Never use these on
+     functional text: dense list/card rows, table cells, labels,
+     eyebrows, buttons, badges, inputs or helper text keep the existing
+     text-xs…text-xl utilities, where density beats the ladder.
+
+     Line heights tighten as size grows (1.3 → 1.05) so large serif
+     headings stay optically set rather than airy. */
+  --text-d1: 1.625rem; /* 26px */
+  --text-d1--line-height: 1.3;
+  --text-d2: 2.0625rem; /* 33px */
+  --text-d2--line-height: 1.25;
+  --text-d3: 2.625rem; /* 42px */
+  --text-d3--line-height: 1.15;
+  --text-d4: 3.3125rem; /* 53px */
+  --text-d4--line-height: 1.1;
+  --text-d5: 4.25rem; /* 68px */
+  --text-d5--line-height: 1.05;
+
   /* Per-glyph fallback: Latin renders Georgia (editorial feel),
      Thai falls through to Noto Sans Thai (Georgia has no Thai glyphs). */
   --font-serif:

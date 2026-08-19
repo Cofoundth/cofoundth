@@ -101,7 +101,7 @@ export default async function LegalTemplatesPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
           {resources}
         </div>
-        <h1 className="text-4xl lg:text-5xl leading-tight mb-4">{heading}</h1>
+        <h1 className="text-d2 lg:text-d3 leading-tight mb-4">{heading}</h1>
         <p className="text-lg text-ink leading-relaxed">{intro}</p>
         <div className="mt-6 px-4 py-3 border border-gold/40 bg-cream text-sm text-ink leading-relaxed">
           <strong className="text-navy">{importantLabel}</strong> {disclaimer}
@@ -111,7 +111,7 @@ export default async function LegalTemplatesPage() {
       <div className="space-y-12">
         {sections.map((section) => (
           <section key={section.key}>
-            <h2 className="text-2xl mb-6 pb-3 border-b border-line">
+            <h2 className="text-d1 mb-6 pb-3 border-b border-line">
               {section.label}
             </h2>
             <div className="grid md:grid-cols-2 gap-4">

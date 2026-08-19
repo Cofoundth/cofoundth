@@ -23,12 +23,12 @@ export default function Loading() {
               <div className="w-1.5 h-1.5 rounded-full bg-line" />
               <div className="h-3 w-56 bg-line/70" />
             </div>
-            {/* wordmark */}
-            <div className="h-8 lg:h-10 w-48 bg-line/70 mb-5" />
-            {/* headline — two lines */}
+            {/* wordmark — tracks text-d2 (33px) / lg:text-d3 (42px) */}
+            <div className="h-9 lg:h-11 w-48 bg-line/70 mb-5" />
+            {/* headline — two lines, tracks text-d3 (42px) / lg:text-d5 (68px) */}
             <div className="space-y-3 mb-6">
-              <div className="h-10 lg:h-14 w-full max-w-2xl bg-line/70" />
-              <div className="h-10 lg:h-14 w-3/4 max-w-xl bg-line/70" />
+              <div className="h-11 lg:h-16 w-full max-w-2xl bg-line/70" />
+              <div className="h-11 lg:h-16 w-3/4 max-w-xl bg-line/70" />
             </div>
             {/* paragraph — three lines */}
             <div className="max-w-2xl space-y-2.5 mb-10">

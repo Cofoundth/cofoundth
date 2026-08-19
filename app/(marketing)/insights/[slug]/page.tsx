@@ -64,7 +64,7 @@ export default async function InsightPage({ params }: Props) {
       <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
         {insight.category}
       </div>
-      <h1 className="text-4xl lg:text-5xl leading-tight mb-6">
+      <h1 className="text-d2 lg:text-d3 leading-tight mb-6">
         {insight.title}
       </h1>
       <div className="text-sm text-ink-muted pb-10 mb-10 border-b border-line">

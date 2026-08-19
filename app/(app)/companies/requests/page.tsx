@@ -143,7 +143,7 @@ export default async function PartnershipRequestsBoardPage() {
               Beta
             </span>
           </div>
-          <h1 className="text-4xl lg:text-5xl mb-2">
+          <h1 className="text-d2 lg:text-d3 mb-2">
             {await tServer("What companies are looking for")}
           </h1>
           <p className="text-ink max-w-2xl">
@@ -182,7 +182,7 @@ export default async function PartnershipRequestsBoardPage() {
             className="w-8 h-8 text-ink-muted mx-auto mb-4"
             strokeWidth={1}
           />
-          <h3 className="text-2xl mb-2">{await tServer("No asks yet")}</h3>
+          <h3 className="text-d1 mb-2">{await tServer("No asks yet")}</h3>
           <p className="text-ink-muted leading-relaxed max-w-md mx-auto mb-6">
             {await tServer(
               "Be the first to post. Describe the partner you need — other companies will see it and reach out.",

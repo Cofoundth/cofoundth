@@ -38,7 +38,7 @@ export default async function AdminVerificationsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
           Admin
         </div>
-        <h1 className="text-4xl mb-2">Verifications</h1>
+        <h1 className="text-d3 mb-2">Verifications</h1>
         <p className="text-ink leading-relaxed max-w-2xl">
           Verify profiles after manual checks (Thai company registration via{" "}
           <a
@@ -89,7 +89,7 @@ function Section({
     <section>
       <div className="flex items-center gap-3 mb-5">
         <Icon className="w-5 h-5 text-gold" strokeWidth={1.5} />
-        <h2 className="text-2xl">{title}</h2>
+        <h2 className="text-d1">{title}</h2>
         <span className="text-sm text-ink-muted ml-auto">
           {verifiedCount} / {profiles.length} verified
         </span>

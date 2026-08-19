@@ -74,7 +74,7 @@ export default async function AdminReportsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
           {await tServer("Admin")}
         </div>
-        <h1 className="text-4xl mb-2">{await tServer("Reports")}</h1>
+        <h1 className="text-d3 mb-2">{await tServer("Reports")}</h1>
         <p className="text-ink">
           {(await tServer("{n} reports total")).replace(
             "{n}",
@@ -91,7 +91,7 @@ export default async function AdminReportsPage() {
         </div>
       ) : !reports?.length ? (
         <div className="bg-white border border-line p-12 text-center">
-          <h3 className="text-2xl mb-2">{await tServer("No reports")}</h3>
+          <h3 className="text-d1 mb-2">{await tServer("No reports")}</h3>
           <p className="text-ink-muted">
             {await tServer("Everyone’s behaving. For now.")}
           </p>

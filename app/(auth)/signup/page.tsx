@@ -9,7 +9,7 @@ export default async function SignupPage() {
   const tr = (en: string) => tServer(en);
   return (
     <div className="bg-white border border-line p-8 lg:p-10">
-      <h1 className="text-3xl mb-8">{await tr("Create your profile")}</h1>
+      <h1 className="text-d2 mb-8">{await tr("Create your profile")}</h1>
 
       <SignupForm />
 

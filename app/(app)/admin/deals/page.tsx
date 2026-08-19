@@ -154,10 +154,10 @@ export default async function AdminDealsPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
       <AdminTabs />
-      <p className="text-xs uppercase tracking-[0.25em] text-gold mb-2">
+      <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
         {await tServer("Admin")}
       </p>
-      <h1 className="font-serif text-3xl text-navy leading-tight mb-1">
+      <h1 className="font-serif text-d2 text-navy leading-tight mb-1">
         {await tServer("Deals")}
       </h1>
       <p className="text-ink-muted mb-8">
@@ -174,7 +174,7 @@ export default async function AdminDealsPage() {
         <div className="space-y-10">
           {dealsView.length > 0 && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
                 {await tServer("Partnership deals")}
               </h2>
               <div className="bg-white border border-line divide-y divide-line">
@@ -225,7 +225,7 @@ export default async function AdminDealsPage() {
 
           {fundingView.length > 0 && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
                 {await tServer("Funding deals")}
               </h2>
               <div className="bg-white border border-line divide-y divide-line">

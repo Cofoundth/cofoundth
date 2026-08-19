@@ -109,7 +109,7 @@ export default async function AdminOverviewPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
           Admin
         </div>
-        <h1 className="text-4xl mb-2">Overview</h1>
+        <h1 className="text-d3 mb-2">Overview</h1>
         <p className="text-ink">
           {openReports ?? 0} open report{openReports === 1 ? "" : "s"} · last{" "}
           {DAYS} days
@@ -123,7 +123,7 @@ export default async function AdminOverviewPage() {
               {c.label}
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="font-serif text-3xl text-navy">{c.total}</span>
+              <span className="font-serif text-d2 text-navy">{c.total}</span>
               <span className="text-xs text-gold">+{c.week} this week</span>
             </div>
           </div>

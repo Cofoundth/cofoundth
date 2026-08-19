@@ -94,7 +94,7 @@ export function PartnershipRequestDialog({
           <div className="w-12 h-12 mx-auto mb-4 bg-gold/10 border border-gold/40 inline-flex items-center justify-center">
             <Check className="w-6 h-6 text-gold" strokeWidth={1.5} />
           </div>
-          <h2 id={sentTitleId} className="text-2xl mb-2">
+          <h2 id={sentTitleId} className="text-d1 mb-2">
             {tr("Request sent")}
           </h2>
           <p className="text-sm text-ink-muted leading-relaxed max-w-sm mx-auto">

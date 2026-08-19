@@ -243,7 +243,7 @@ export function OnboardingForm({ initial }: Props) {
       <StepIndicator current={step} tr={tr} />
 
       <div className="bg-white border border-line p-8 lg:p-12">
-        <h1 className="text-3xl mb-8">{tr(STEPS[step].title)}</h1>
+        <h1 className="text-d2 mb-8">{tr(STEPS[step].title)}</h1>
 
         {step === 0 && (
           <StepRole

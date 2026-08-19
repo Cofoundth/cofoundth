@@ -162,7 +162,7 @@ export default async function PublicPostPage({ params }: Props) {
         </div>
 
         {post.title && (
-          <h1 className="font-serif text-3xl text-navy leading-tight mb-3">
+          <h1 className="font-serif text-d2 text-navy leading-tight mb-3">
             {post.title as string}
           </h1>
         )}
@@ -288,7 +288,7 @@ export default async function PublicPostPage({ params }: Props) {
 
       {/* Join CTA */}
       <div className="mt-6 bg-navy text-white p-8 text-center">
-        <h2 className="font-serif text-2xl mb-2">
+        <h2 className="font-serif text-d1 mb-2">
           {await tServer("Where Thai founders connect")}
         </h2>
         <p className="text-sm text-white/70 leading-relaxed max-w-md mx-auto mb-5">

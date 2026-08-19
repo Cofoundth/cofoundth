@@ -75,7 +75,7 @@ export default async function SettingsPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
       <div className="flex items-center justify-between mb-1">
-        <h1 className="text-3xl">{t.title}</h1>
+        <h1 className="text-d2">{t.title}</h1>
         <Link
           href={profileHref}
           className="text-sm text-navy hover:text-gold-ink tracking-wide"

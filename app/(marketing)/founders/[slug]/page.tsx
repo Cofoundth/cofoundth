@@ -65,7 +65,7 @@ export default async function PublicFounderPage({ params }: Props) {
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <Avatar name={founder.fullName} url={founder.photoUrl} size="xl" />
           <div className="min-w-0 flex-1">
-            <h1 className="text-3xl lg:text-4xl leading-tight inline-flex items-center gap-2 flex-wrap">
+            <h1 className="text-d2 lg:text-d3 leading-tight inline-flex items-center gap-2 flex-wrap">
               {founder.fullName}
               {founder.verified && (
                 <VerifiedBadge label={tr("Verified")} size="lg" />
@@ -123,7 +123,7 @@ export default async function PublicFounderPage({ params }: Props) {
           <Lock className="w-3.5 h-3.5" strokeWidth={2} />
           {tr("Members only")}
         </Eyebrow>
-        <h2 className="text-2xl leading-tight mb-3">
+        <h2 className="text-d1 leading-tight mb-3">
           {tr("This is a preview of the full profile")}
         </h2>
         <p className="text-ink leading-relaxed mb-8">

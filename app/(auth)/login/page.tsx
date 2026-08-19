@@ -12,7 +12,7 @@ export default async function LoginPage() {
       <div className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
         {await tr("Welcome back")}
       </div>
-      <h1 className="text-3xl mb-2">{await tr("Sign in")}</h1>
+      <h1 className="text-d2 mb-2">{await tr("Sign in")}</h1>
       <p className="text-sm text-ink-muted mb-8">
         {await tr("Continue building with your co-founder community.")}
       </p>

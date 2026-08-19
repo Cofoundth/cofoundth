@@ -34,7 +34,7 @@ export default async function NewAskPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
           {await tServer("B2B Partnership board")}
         </div>
-        <h1 className="text-4xl mb-2">
+        <h1 className="text-d3 mb-2">
           {await tServer("Post a partnership ask")}
         </h1>
         <p className="text-ink">

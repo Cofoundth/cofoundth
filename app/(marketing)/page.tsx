@@ -170,10 +170,10 @@ export default async function LandingPage() {
                 )}
               </div>
               {/* Wordmark stays visible, but the h1 carries the pitch. */}
-              <div className="font-serif text-navy text-3xl lg:text-4xl leading-none tracking-tight mb-5">
+              <div className="font-serif text-navy text-d2 lg:text-d3 leading-none tracking-tight mb-5">
                 Cofoundee<span className="text-gold">.</span>
               </div>
-              <h1 className="text-4xl lg:text-6xl leading-[1.08] tracking-tight mb-6">
+              <h1 className="text-d3 lg:text-d5 leading-[1.08] tracking-tight mb-6">
                 {tr("The bridge for Thailand's startup ecosystem")}
               </h1>
               <p className="text-lg text-ink leading-relaxed max-w-2xl mb-10">
@@ -289,7 +289,7 @@ export default async function LandingPage() {
                   <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse motion-reduce:animate-none" />
                   {tr("Recent wins")}
                 </div>
-                <h2 className="text-2xl lg:text-3xl leading-tight">
+                <h2 className="text-d1 lg:text-d2 leading-tight">
                   {tr("What founders in the community just shipped.")}
                 </h2>
               </div>
@@ -358,7 +358,7 @@ export default async function LandingPage() {
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("Where we're headed")}
             </div>
-            <h2 className="text-4xl lg:text-5xl leading-tight">
+            <h2 className="text-d2 lg:text-d3 leading-tight">
               {tr("Where we want this to go — built one honest step at a time.")}
             </h2>
             <p className="mt-6 text-lg text-ink leading-relaxed">
@@ -407,13 +407,13 @@ export default async function LandingPage() {
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("Who it's for")}
             </div>
-            <h2 className="text-4xl lg:text-5xl leading-tight">
+            <h2 className="text-d2 lg:text-d3 leading-tight">
               {tr("If you're building something in Thailand, you belong here.")}
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
             <div className="bg-white border border-line p-8">
-              <div className="font-serif text-4xl text-gold-ink mb-4 leading-none">
+              <div className="font-serif text-d3 text-gold-ink mb-4 leading-none">
                 I
               </div>
               <h3 className="text-xl mb-3">
@@ -426,7 +426,7 @@ export default async function LandingPage() {
               </p>
             </div>
             <div className="bg-white border border-line p-8">
-              <div className="font-serif text-4xl text-gold-ink mb-4 leading-none">
+              <div className="font-serif text-d3 text-gold-ink mb-4 leading-none">
                 II
               </div>
               <h3 className="text-xl mb-3">
@@ -439,7 +439,7 @@ export default async function LandingPage() {
               </p>
             </div>
             <div className="bg-white border border-line p-8">
-              <div className="font-serif text-4xl text-gold-ink mb-4 leading-none">
+              <div className="font-serif text-d3 text-gold-ink mb-4 leading-none">
                 III
               </div>
               <h3 className="text-xl mb-3">
@@ -464,14 +464,14 @@ export default async function LandingPage() {
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("How it works")}
             </div>
-            <h2 className="text-4xl lg:text-5xl leading-tight">
+            <h2 className="text-d2 lg:text-d3 leading-tight">
               {tr("Trust first. Everything else follows.")}
             </h2>
           </div>
           <div className="grid md:grid-cols-4 gap-8">
             {processSteps.map((step) => (
               <div key={step.num}>
-                <div className="font-serif text-5xl text-gold-ink mb-4 leading-none">
+                <div className="font-serif text-d4 text-gold-ink mb-4 leading-none">
                   {step.num}
                 </div>
                 <h3 className="text-xl mb-3">{tr(step.title)}</h3>
@@ -495,7 +495,7 @@ export default async function LandingPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold mb-8">
             {tr("A note from the founder")}
           </div>
-          <div className="font-serif text-2xl lg:text-3xl leading-relaxed space-y-6">
+          <div className="font-serif text-d1 lg:text-d2 leading-relaxed space-y-6">
             <p>
               {tr(
                 "Building a startup is easier than ever — AI, less capital, two or three people can start. The hard part now is finding the right people to build it with.",
@@ -524,7 +524,7 @@ export default async function LandingPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
             {tr("Questions")}
           </div>
-          <h2 className="text-4xl lg:text-5xl leading-tight mb-12">
+          <h2 className="text-d2 lg:text-d3 leading-tight mb-12">
             {tr("What founders usually ask.")}
           </h2>
           <dl className="border-t border-line">
@@ -565,7 +565,7 @@ export default async function LandingPage() {
       {/* CTA */}
       <section className="py-24 bg-cream border-t border-line">
         <div className="max-w-4xl mx-auto px-6 lg:px-10 text-center">
-          <h2 className="text-4xl lg:text-5xl mb-6 leading-tight">
+          <h2 className="text-d2 lg:text-d3 mb-6 leading-tight">
             {tr("It's still early — which is the best reason to join now.")}
           </h2>
           <p className="text-lg text-ink mb-10 max-w-2xl mx-auto">

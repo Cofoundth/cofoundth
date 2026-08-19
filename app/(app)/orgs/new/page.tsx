@@ -22,7 +22,7 @@ export default async function NewOrgPage() {
       <p className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
         {await tServer("Create a company")}
       </p>
-      <h1 className="font-serif text-3xl text-navy leading-tight mb-2">
+      <h1 className="font-serif text-d2 text-navy leading-tight mb-2">
         {await tServer("Set up your company page")}
       </h1>
       <p className="text-ink-muted leading-relaxed mb-8">

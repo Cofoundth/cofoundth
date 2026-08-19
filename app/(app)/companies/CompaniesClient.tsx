@@ -142,7 +142,7 @@ export function CompaniesClient({
                 Beta
               </span>
             </div>
-            <h1 className="text-4xl lg:text-5xl mb-2">
+            <h1 className="text-d2 lg:text-d3 mb-2">
               {tr("Companies in the community")}
             </h1>
             <p className="text-ink max-w-2xl">
@@ -160,7 +160,7 @@ export function CompaniesClient({
               {tr("Partnership board")}
             </Link>
             <div className="text-right">
-              <div className="font-serif text-3xl text-navy leading-none">
+              <div className="font-serif text-d2 text-navy leading-none">
                 {companies.length}
               </div>
               <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mt-1">
@@ -276,7 +276,7 @@ export function CompaniesClient({
                 className="w-8 h-8 text-ink-muted mx-auto mb-4"
                 strokeWidth={1}
               />
-              <h3 className="text-2xl mb-2">
+              <h3 className="text-d1 mb-2">
                 {companies.length === 0
                   ? tr("No companies yet")
                   : tr("Nothing matches")}

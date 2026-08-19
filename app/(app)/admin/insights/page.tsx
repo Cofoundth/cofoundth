@@ -32,7 +32,7 @@ export default async function AdminInsightsPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
             Admin
           </div>
-          <h1 className="text-4xl mb-2">Insights</h1>
+          <h1 className="text-d3 mb-2">Insights</h1>
           <p className="text-ink">
             {insights.length} row{insights.length === 1 ? "" : "s"} across{" "}
             {bySlug.size} post{bySlug.size === 1 ? "" : "s"}.
@@ -48,7 +48,7 @@ export default async function AdminInsightsPage() {
 
       {bySlug.size === 0 ? (
         <div className="bg-white border border-line p-12 text-center">
-          <h3 className="text-2xl mb-2">No insights yet</h3>
+          <h3 className="text-d1 mb-2">No insights yet</h3>
           <p className="text-ink-muted mb-6">
             Did you apply migration{" "}
             <code>0008_insights.sql</code>? Then create your first post.

@@ -279,7 +279,7 @@ export default async function ProfileDetailPage({ params }: Props) {
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
           <div className="flex-1 min-w-0">
-            <h1 className="font-serif text-3xl sm:text-4xl text-navy leading-tight flex items-center gap-2.5 flex-wrap">
+            <h1 className="font-serif text-d2 sm:text-d3 text-navy leading-tight flex items-center gap-2.5 flex-wrap">
               {otherName}
               {profile.verified && (
                 <BadgeCheck
@@ -359,7 +359,7 @@ export default async function ProfileDetailPage({ params }: Props) {
               </div>
               {profile.pitch && (
                 <div className="border-l-2 border-gold pl-5">
-                  <p className="font-serif text-xl sm:text-2xl text-navy leading-relaxed">
+                  <p className="font-serif text-xl sm:text-d1 text-navy leading-relaxed">
                     {profile.pitch}
                   </p>
                 </div>

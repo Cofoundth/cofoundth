@@ -7,7 +7,7 @@ export default function ForgotPasswordPage() {
       <div className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
         Account recovery
       </div>
-      <h1 className="text-3xl mb-2">Reset your password</h1>
+      <h1 className="text-d2 mb-2">Reset your password</h1>
       <p className="text-sm text-ink-muted mb-8">
         Enter your email and we&rsquo;ll send a 6-digit code to verify it&rsquo;s
         you.

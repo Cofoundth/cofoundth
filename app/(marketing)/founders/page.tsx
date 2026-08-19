@@ -40,7 +40,7 @@ export default async function PublicFoundersPage() {
       {/* Header */}
       <div className="max-w-3xl mb-12">
         <Eyebrow className="mb-6">{tr("Community")}</Eyebrow>
-        <h1 className="text-4xl lg:text-5xl leading-tight mb-4">
+        <h1 className="text-d2 lg:text-d3 leading-tight mb-4">
           {tr("Founders")}
         </h1>
         <p className="text-lg text-ink leading-relaxed">
@@ -130,7 +130,7 @@ export default async function PublicFoundersPage() {
 
       {/* Conversion — the whole point of the preview. */}
       <div className="mt-16 bg-navy text-white p-10 lg:p-12 text-center">
-        <h2 className="text-3xl lg:text-4xl text-white leading-tight mb-4">
+        <h2 className="text-d2 lg:text-d3 text-white leading-tight mb-4">
           {tr("Where Thai founders connect")}
         </h2>
         <p className="text-white/70 leading-relaxed max-w-xl mx-auto mb-8">

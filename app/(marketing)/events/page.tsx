@@ -43,7 +43,7 @@ export default function EventsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
           Community
         </div>
-        <h1 className="text-4xl lg:text-5xl leading-tight mb-4">Events</h1>
+        <h1 className="text-d2 lg:text-d3 leading-tight mb-4">Events</h1>
         <p className="text-lg text-ink leading-relaxed">
           In-person and online gatherings for Thailand&rsquo;s founder
           community.
@@ -59,7 +59,7 @@ export default function EventsPage() {
               className="bg-white border border-line p-6 lg:p-8 flex flex-col md:flex-row gap-6"
             >
               <div className="md:w-32 shrink-0">
-                <div className="font-serif text-4xl text-gold leading-none">
+                <div className="font-serif text-d3 text-gold leading-none">
                   {d.toLocaleDateString("en-GB", { day: "numeric" })}
                 </div>
                 <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mt-1">
