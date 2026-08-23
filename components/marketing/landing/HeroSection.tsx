@@ -54,7 +54,7 @@ export function HeroSection({
 
           <p className="text-lg text-ink-muted leading-relaxed max-w-[560px] mx-auto mb-9">
             {tr(
-              "Community, partners, capital, and co-founders — in one place. Build trust first, and everything else follows.",
+              "Community, partners, capital, and co-founders — in one place.",
             )}
           </p>
 

@@ -5,22 +5,22 @@ const personas = [
   {
     Icon: Code2,
     title: "You can build",
-    body: "A technical founder looking for someone to own the business, sales, or growth alongside you.",
+    body: "You build. You need someone to own business and growth.",
   },
   {
     Icon: Lightbulb,
     title: "You have the vision",
-    body: "You've got the idea and the market — you need a partner to actually build the product.",
+    body: "You have the idea and the market. You need someone to build it.",
   },
   {
     Icon: Compass,
     title: "You're exploring",
-    body: "Not sure what to build yet — but you want to be around other founders and find the right thing together.",
+    body: "Not sure what to build yet. You want to be around founders who are.",
   },
   {
     Icon: Building2,
     title: "You're already a company",
-    body: "You're past the co-founder stage — here for partners, vendors, and distribution from teams building next to you.",
+    body: "Past the co-founder stage. Here for partners and distribution.",
   },
 ];
 

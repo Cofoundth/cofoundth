@@ -45,7 +45,7 @@ export function HappeningSection({
           </h2>
           <p className="text-base text-ink-muted leading-relaxed">
             {tr(
-              "Real milestones and launches posted by real people in the community — not a curated highlight reel.",
+              "Posted by real people here — not a curated highlight reel.",
             )}
           </p>
         </div>

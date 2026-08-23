@@ -29,23 +29,30 @@ export const revalidate = 60; // refresh live numbers every minute
 // four-figure member count — we keep the shape and fill it with what is true.
 //
 // The feature copy is the four pillars this page used to render as a 2x2 card
-// grid. Reusing the exact English strings keeps their existing Thai.
+// grid, since edited down: one idea per paragraph, and the two longest runs
+// split in two so the 488px column reads light instead of dense.
 const PILLARS = {
   community: {
     label: "Community",
     title: "Where Thai founders meet",
-    body: "Forum, content, and events for serious Thai startup builders. Ask questions, share what you're shipping, and meet the people who'll shape your journey.",
+    body: [
+      "Forum, content, and events for people serious about building.",
+      "Ask, share what you're shipping, meet the people who'll shape it.",
+    ],
   },
   b2b: {
     label: "B2B Network",
     title: "Companies finding companies",
-    body: "Startups partner with startups — vendors, integrations, distribution, co-marketing. Send a partnership request, get a response, unlock messaging. No mutual-interest gate.",
+    body: [
+      "Startups partner with startups — vendors, integrations, distribution.",
+      "Send a request, get a reply, start talking. No mutual-interest gate.",
+    ],
   },
   advisors: {
-    body: "Partnered with vetted Thai law firms and accountants. Get advice on incorporation, contracts, fundraising structure — without paying for a full retainer.",
+    body: "Vetted Thai law firms and accountants, without a full retainer.",
   },
   capital: {
-    body: "Not cold algorithmic matching. Once you're active in the community, we make warm introductions to angel networks and VCs that fit your stage.",
+    body: "And warm intros to investors who fit your stage — once you're known here.",
   },
 };
 
@@ -128,7 +135,7 @@ export default async function LandingPage() {
       <FeatureBlock
         eyebrow={tr(PILLARS.community.label)}
         title={tr(PILLARS.community.title)}
-        paragraphs={[tr(PILLARS.community.body)]}
+        paragraphs={PILLARS.community.body.map(tr)}
         ctaLabel={tr("Browse founders")}
         ctaHref="/founders"
         visual={<DirectoryVisual locale={locale} />}
@@ -140,7 +147,7 @@ export default async function LandingPage() {
         reverse
         eyebrow={tr(PILLARS.b2b.label)}
         title={tr(PILLARS.b2b.title)}
-        paragraphs={[tr(PILLARS.b2b.body)]}
+        paragraphs={PILLARS.b2b.body.map(tr)}
         visual={<PartnershipVisual />}
       />
 

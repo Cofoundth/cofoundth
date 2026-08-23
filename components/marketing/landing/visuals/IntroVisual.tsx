@@ -74,7 +74,7 @@ export function IntroVisual({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
         />
         <p className="text-xs text-ink-muted leading-relaxed">
           {tr(
-            "Intros come to you. Investors and advisors find companies through the community — no cold pitching, no applications.",
+            "Intros come to you. No cold pitching, no applications.",
           )}
         </p>
       </div>

@@ -36,7 +36,7 @@ export function LandingCta({
 
         <p className="mx-auto mt-6 max-w-[600px] text-lg leading-relaxed text-ink-muted">
           {tr(
-            "We're just getting started, and the people who join now shape what this becomes. Come be one of them — free to join.",
+            "The people who join now shape what this becomes.",
           )}
         </p>
 
