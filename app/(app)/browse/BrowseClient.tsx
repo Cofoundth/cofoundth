@@ -162,7 +162,7 @@ export function BrowseClient({ others }: Props) {
     (searchTerm ? 1 : 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <div className="mb-6">
         <div className="flex items-end justify-between">
           <div>

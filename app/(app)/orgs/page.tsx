@@ -98,9 +98,9 @@ export default async function OrgsPage({
   const roleLabel = (r: string) => roleLabels[r] ?? r;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <div className="flex items-end justify-between mb-8">
-        <div>
+        <div className="max-w-[640px]">
           <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
             {await tServer(isInvestor ? "Discover" : "B2B")}
           </p>
@@ -177,7 +177,7 @@ export default async function OrgsPage({
             </Link>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {myOrgs.map((m) => (
               <OrgCard
                 key={m.org!.id}
@@ -221,7 +221,7 @@ export default async function OrgsPage({
             <p className="text-ink-muted">{directoryEmptyMsg}</p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredDirectory.map((o) => (
               <OrgCard
                 key={o.id}
