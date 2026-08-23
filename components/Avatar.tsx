@@ -40,7 +40,7 @@ export function Avatar({ name, url, size = "md" }: Props) {
 
   if (url) {
     return (
-      <div className={`${cls} bg-navy overflow-hidden shrink-0`}>
+      <div className={`${cls} rounded-full bg-navy overflow-hidden shrink-0`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={url}
@@ -53,7 +53,7 @@ export function Avatar({ name, url, size = "md" }: Props) {
 
   return (
     <div
-      className={`${cls} flex items-center justify-center text-white font-serif tracking-wide shrink-0`}
+      className={`${cls} rounded-full flex items-center justify-center text-white font-serif tracking-wide shrink-0`}
       style={{ backgroundColor: colorFor(name) }}
     >
       {getInitials(name)}

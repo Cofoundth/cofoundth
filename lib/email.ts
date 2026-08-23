@@ -44,16 +44,21 @@ async function send({ to, subject, html }: SendOptions) {
 
 // ---- Templates ------------------------------------------------------
 
+// Email is the one surface that cannot read the design tokens, so the palette is
+// restated here by hand. Keep it in step with app/globals.css @theme:
+//   cream #F3F0E9 · white #FFFFFF · ink #1B1A17 · muted #6A655D · line #DDDBD4
+// `gold` (#E9E2D4) is a SURFACE, never text — .gold/.badge use the muted
+// foreground instead, and the note rule uses ink so it survives a 1px render.
 const BASE_STYLES = `
-  body { background: #FAFAF7; color: #4A4A4A; font-family: system-ui, -apple-system, sans-serif; }
+  body { background: #F3F0E9; color: #1B1A17; font-family: system-ui, -apple-system, sans-serif; }
   .container { max-width: 560px; margin: 0 auto; padding: 32px 24px; }
-  .card { background: #FFFFFF; border: 1px solid #E2E8F0; padding: 32px; }
-  h1 { font-family: Georgia, serif; color: #0A1F44; font-size: 28px; margin: 0 0 16px; }
-  .gold { color: #B8941F; }
-  .badge { display: inline-block; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #B8941F; margin-bottom: 16px; }
-  .button { display: inline-block; background: #0A1F44; color: #FFFFFF !important; padding: 14px 28px; text-decoration: none; font-size: 14px; letter-spacing: 0.05em; margin-top: 24px; }
-  .note { padding: 16px; background: #FAFAF7; border-left: 2px solid #B8941F; margin: 20px 0; font-style: italic; color: #4A4A4A; }
-  .footer { text-align: center; font-size: 11px; color: #888; margin-top: 32px; }
+  .card { background: #FFFFFF; border: 1px solid #DDDBD4; border-radius: 14px; padding: 32px; }
+  h1 { color: #1B1A17; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 16px; }
+  .gold { color: #6A655D; }
+  .badge { display: inline-block; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #6A655D; margin-bottom: 16px; }
+  .button { display: inline-block; background: #1B1A17; color: #FFFFFF !important; padding: 14px 28px; border-radius: 9999px; text-decoration: none; font-size: 14px; letter-spacing: 0.05em; margin-top: 24px; }
+  .note { padding: 16px; background: #F3F0E9; border-left: 2px solid #1B1A17; border-radius: 8px; margin: 20px 0; font-style: italic; color: #1B1A17; }
+  .footer { text-align: center; font-size: 11px; color: #6A655D; margin-top: 32px; }
 `;
 
 function wrap(title: string, body: string) {

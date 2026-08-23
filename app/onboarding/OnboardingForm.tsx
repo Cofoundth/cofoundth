@@ -333,11 +333,13 @@ function StepIndicator({ current, tr }: { current: number; tr: TR }) {
         {STEPS.map((s, i) => (
           <Fragment key={s.num}>
             <div
-              className={`w-10 h-10 border flex items-center justify-center font-serif text-base transition-colors shrink-0 ${
+              className={`w-10 h-10 rounded-full border flex items-center justify-center font-serif text-base transition-colors shrink-0 ${
                 i < current
-                  ? "bg-gold border-line text-white"
+                  ? // a white check on the gold SURFACE is 1.3:1 — every done
+                    // step read as an empty box, inverting the progress
+                    "bg-navy border-navy text-white"
                   : i === current
-                    ? "border-line text-gold-ink"
+                    ? "border-navy text-navy"
                     : "border-line text-ink-muted"
               }`}
             >
@@ -346,7 +348,9 @@ function StepIndicator({ current, tr }: { current: number; tr: TR }) {
             {i < STEPS.length - 1 && (
               <div
                 className={`flex-1 h-px mx-2 ${
-                  i < current ? "bg-gold" : "bg-line"
+                  // bg-gold is 1.13:1 on cream, FAINTER than bg-line's 1.22:1 —
+                  // the finished segment was less visible than the unfinished one
+                  i < current ? "bg-navy" : "bg-line"
                 }`}
               />
             )}
@@ -493,7 +497,9 @@ function StepRole({
                 key={i.value}
                 type="button"
                 onClick={() => toggleIntent(i.value)}
-                className={`w-full text-left p-4 border transition-colors ${
+                // rounded-xl, not the base pill: these are ~90px selection
+                // cards, and a pill gives them ~45px end-caps
+                className={`w-full text-left p-4 rounded-xl border transition-colors ${
                   sel
                     ? "border-navy bg-navy"
                     : "border-line bg-white hover:border-navy"

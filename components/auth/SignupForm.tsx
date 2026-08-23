@@ -81,7 +81,9 @@ export function SignupForm() {
               type="button"
               onClick={() => setAccountType(opt.value)}
               aria-pressed={accountType === opt.value}
-              className={`text-left p-3 border transition-colors ${
+              // two-line selection cards, not pills — the base rule would give
+              // these ~32px end-caps
+              className={`text-left p-3 rounded-xl border transition-colors ${
                 accountType === opt.value
                   ? "bg-cream border-navy"
                   : "bg-white border-line hover:border-navy"

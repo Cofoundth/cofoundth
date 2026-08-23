@@ -49,12 +49,28 @@ function hrefFor(n: NotifItem): string {
   }
 }
 
+// Where the panel opens from. "down-right" suits a top bar (the marketing
+// header, the mobile app bar). "up-right" is for the desktop sidebar rail,
+// where the bell sits in the bottom-left corner: opening down-and-left there
+// puts most of the panel off the left edge and below the fold, and the rail is
+// `fixed`, so nothing can be scrolled into view.
+export type BellPlacement = "down-right" | "up-right";
+
+const PANEL_PLACEMENT: Record<BellPlacement, string> = {
+  "down-right":
+    "sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:bottom-auto sm:mt-2 sm:w-96",
+  "up-right":
+    "sm:absolute sm:right-auto sm:left-0 sm:top-auto sm:bottom-full sm:mb-2 sm:w-80",
+};
+
 export function NotificationBell({
   items: initialItems,
   unreadCount,
+  placement = "down-right",
 }: {
   items: NotifItem[];
   unreadCount: number;
+  placement?: BellPlacement;
 }) {
   const tr = useT();
   const locale = useLocale();
@@ -209,14 +225,16 @@ export function NotificationBell({
           />
         </svg>
         {unread > 0 && (
-          <span className="absolute top-0.5 right-0 min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white inline-flex items-center justify-center font-medium">
+          <span className="absolute top-0.5 right-0 min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="fixed left-2 right-2 top-16 w-auto sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 max-h-[28rem] overflow-y-auto bg-white border border-line shadow-lg z-50 rounded-xl">
+        <div
+          className={`fixed left-2 right-2 top-16 w-auto ${PANEL_PLACEMENT[placement]} max-h-[28rem] overflow-y-auto bg-white border border-line shadow-lg z-50 rounded-xl`}
+        >
           <div className="flex items-center justify-between px-4 py-3 border-b border-line">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted">
               {tr("Notifications")}
@@ -257,7 +275,7 @@ export function NotificationBell({
                     {!n.readAt && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-1.5 top-4 w-1.5 h-1.5 bg-navy"
+                        className="absolute left-1.5 top-4 w-1.5 h-1.5 rounded-full bg-navy"
                       />
                     )}
                     <Avatar

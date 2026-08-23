@@ -177,7 +177,7 @@ export default async function OrgsPage({
             </Link>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {myOrgs.map((m) => (
               <OrgCard
                 key={m.org!.id}
@@ -221,7 +221,7 @@ export default async function OrgsPage({
             <p className="text-ink-muted">{directoryEmptyMsg}</p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {filteredDirectory.map((o) => (
               <OrgCard
                 key={o.id}

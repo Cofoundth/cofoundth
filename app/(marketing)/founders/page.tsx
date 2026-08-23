@@ -143,7 +143,7 @@ export default async function PublicFoundersPage() {
             bg-navy with bg-white would be a coin flip on stylesheet order. */}
         <Link
           href="/signup"
-          className="inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-8 py-4 text-sm tracking-wide transition-colors"
+          className="inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-8 py-4 text-sm tracking-wide transition-colors rounded-full"
         >
           {tr("Sign up to connect")}
           <ArrowRight className="w-4 h-4" />

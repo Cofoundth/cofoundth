@@ -49,7 +49,7 @@ export default async function OrgChatPage({ params }: Props) {
   const messages = await fetchOrgMessagesAction(connectionId);
 
   return (
-    <div className="max-w-3xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
+    <div className="max-w-3xl mx-auto h-[calc(100vh-4rem)] lg:h-dvh flex flex-col">
       <header className="border-b border-line bg-white px-6 py-4">
         <Link
           href={`/orgs/${slug}`}

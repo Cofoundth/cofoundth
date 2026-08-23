@@ -55,7 +55,7 @@ export default async function AdminInsightsPage() {
           </p>
           <Link
             href="/admin/insights/new"
-            className="inline-block px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm"
+            className="inline-block px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm rounded-full"
           >
             Create first insight
           </Link>

@@ -10,7 +10,7 @@ export const revalidate = 60;
 // a NARROW intro block (640px) sitting above a WIDE card grid (1120px), 88px
 // section rhythm, ~328px cards with a 16px gutter, and each card stacked
 // meta-row → title → excerpt → footer-row.
-// The skin stays ours: cream/navy/gold, Georgia serif headings, sharp corners.
+// The skin is the Onfound system: warm sand ground, Rethink Sans, rounded cards.
 export default async function InsightsPage() {
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);

@@ -11,7 +11,7 @@ export default function Loading() {
         <div className="h-4 w-1/2 bg-line/50 rounded-full" />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mb-10">
         <div className="bg-white border border-line p-5 h-28 rounded-xl" />
         <div className="bg-white border border-line p-5 h-28 rounded-xl" />
         <div className="bg-white border border-line p-5 h-28 rounded-xl" />

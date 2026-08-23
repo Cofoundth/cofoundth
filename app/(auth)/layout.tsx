@@ -21,7 +21,7 @@ export default async function AuthLayout({
   return (
     <div className="min-h-screen flex flex-col bg-cream">
       <header className="border-b border-line bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center">
+        <div className="max-w-[1120px] mx-auto px-6 lg:px-10 h-20 flex items-center">
           <Link href="/" className="flex items-center gap-3">
             <BrandMark size="md" />
             <Wordmark />

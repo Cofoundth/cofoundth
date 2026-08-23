@@ -51,7 +51,7 @@ export default async function AdminVerificationsPage() {
               DBD lookup
             </a>{" "}
             for companies, LinkedIn cross-check for individuals). Verified
-            profiles show a gold checkmark across the platform.
+            profiles show a verified mark across the platform.
           </p>
         </div>
       </div>

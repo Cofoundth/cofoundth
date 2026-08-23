@@ -56,14 +56,7 @@ export const metadata: Metadata = {
     description:
       "Community, partners, capital, and co-founders for Thailand's startup ecosystem — in one place.",
     url: SITE_URL,
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Cofoundee — Where Thai startups build together",
-      },
-    ],
+    // images: supplied by app/opengraph-image.tsx (generated from live tokens)
     locale: "en_US",
     alternateLocale: ["th_TH"],
   },
@@ -72,12 +65,11 @@ export const metadata: Metadata = {
     title: "Cofoundee — Where Thai startups build together",
     description:
       "Community, partners, capital, and co-founders for Thailand's startup ecosystem — in one place.",
-    images: ["/og-image.png"],
+    // images: supplied by app/opengraph-image.tsx
   },
-  icons: {
-    icon: "/icon.svg",
-    apple: "/apple-touch-icon.png",
-  },
+  // icons: intentionally absent. An explicit `icons` block SUPPRESSES Next's
+  // file-convention icons, which is how the apple-touch-icon link went missing.
+  // app/icon.svg and app/apple-icon.tsx are auto-wired when this is omitted.
   robots: {
     index: true,
     follow: true,

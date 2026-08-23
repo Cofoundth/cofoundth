@@ -575,7 +575,7 @@ export default async function LandingPage() {
           </p>
           <Link
             href="/signup"
-            className="inline-block px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+            className="inline-block px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
           >
             {tr("Join us — it's free")}
           </Link>

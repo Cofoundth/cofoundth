@@ -167,6 +167,7 @@ export async function AppSidebar() {
             <NotificationBell
               items={notifItems}
               unreadCount={unreadNotifs ?? 0}
+              placement="up-right"
             />
           </div>
           <Link
@@ -218,6 +219,7 @@ export async function AppSidebar() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            {activeOrgId && <OrgSwitcher orgs={myOrgs} activeId={activeOrgId} />}
             <LanguageSwitcher />
             <NotificationBell
               items={notifItems}

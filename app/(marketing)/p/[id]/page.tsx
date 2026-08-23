@@ -273,7 +273,7 @@ export default async function PublicPostPage({ params }: Props) {
               <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white via-white to-transparent flex items-end justify-center">
                 <Link
                   href="/signup"
-                  className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+                  className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
                 >
                   {(await tServer("Sign in to see all {n} comments")).replace(
                     "{n}",
@@ -298,7 +298,7 @@ export default async function PublicPostPage({ params }: Props) {
         </p>
         <Link
           href="/signup"
-          className="inline-block bg-white text-navy px-6 py-3 text-sm tracking-wide hover:bg-cream transition-colors"
+          className="inline-block bg-white text-navy px-6 py-3 text-sm tracking-wide hover:bg-cream transition-colors rounded-full"
         >
           {await tServer("Create your profile")}
         </Link>
@@ -323,7 +323,7 @@ export default async function PublicPostPage({ params }: Props) {
             </Link>
             <Link
               href="/signup"
-              className="px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors whitespace-nowrap"
+              className="px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors whitespace-nowrap rounded-full"
             >
               {await tServer("Join free")}
             </Link>

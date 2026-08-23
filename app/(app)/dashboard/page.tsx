@@ -97,9 +97,9 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
 
-      <div className="grid lg:grid-cols-12 gap-8">
+      <div className="grid xl:grid-cols-12 gap-8">
         {/* LEFT — identity + stats */}
-        <aside className="lg:col-span-3 space-y-6 lg:sticky lg:top-24 self-start">
+        <aside className="xl:col-span-3 space-y-6 xl:sticky xl:top-24 self-start">
           {/* Identity card */}
           <div className="bg-white border border-line p-6 rounded-xl">
             <Avatar
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
         </aside>
 
         {/* CENTER — the merged feed */}
-        <section className="lg:col-span-6 space-y-4">
+        <section className="xl:col-span-6 space-y-4">
           {profile?.onboarded && <PostComposer />}
 
           <RealtimeRefresh
@@ -208,7 +208,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* RIGHT — new founders */}
-        <aside className="lg:col-span-3 lg:sticky lg:top-24 self-start">
+        <aside className="xl:col-span-3 xl:sticky xl:top-24 self-start">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">
               {await tServer("New founders")}

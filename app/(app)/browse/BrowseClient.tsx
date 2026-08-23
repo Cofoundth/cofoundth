@@ -206,10 +206,10 @@ export function BrowseClient({ others }: Props) {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-10">
+      <div className="grid xl:grid-cols-12 gap-10">
         {/* Filter sidebar */}
-        <aside className="lg:col-span-3 min-w-0">
-          <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto space-y-4 pr-1">
+        <aside className="xl:col-span-3 min-w-0">
+          <div className="xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto space-y-4 pr-1">
             <div>
               <label
                 htmlFor="search"
@@ -242,7 +242,7 @@ export function BrowseClient({ others }: Props) {
                 />
                 {tr("Filters")}
                 {filterCount > 0 && (
-                  <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white inline-flex items-center justify-center font-medium">
+                  <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
                     {filterCount}
                   </span>
                 )}
@@ -317,7 +317,7 @@ export function BrowseClient({ others }: Props) {
         </aside>
 
         {/* Results */}
-        <div className="lg:col-span-9 min-w-0">
+        <div className="xl:col-span-9 min-w-0">
           {filtered.length === 0 ? (
             <div className="bg-white border border-line p-12 text-center rounded-xl">
               <h3 className="text-d1 mb-2">{tr("No matches yet")}</h3>

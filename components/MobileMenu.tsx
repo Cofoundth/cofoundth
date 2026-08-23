@@ -48,11 +48,11 @@ export function MobileMenu({
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-between py-3.5 text-ink hover:text-navy border-b border-line/60 last:border-b-0"
+                  className="flex items-center justify-between -mx-3 px-3 py-3.5 rounded-lg text-ink hover:bg-cream border-b border-line/60 last:border-b-0"
                 >
                   <span>{l.label}</span>
                   {l.badge && l.badge > 0 ? (
-                    <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white inline-flex items-center justify-center font-medium">
+                    <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
                       {l.badge > 9 ? "9+" : l.badge}
                     </span>
                   ) : null}

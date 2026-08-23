@@ -7,7 +7,7 @@ const LINKEDIN_URL = "https://www.linkedin.com/company/cofoundee";
 export function AppFooter() {
   return (
     <footer className="border-t border-line bg-cream">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-6 flex items-center justify-between gap-4">
+      <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-6 flex items-center justify-between gap-4">
         <span className="text-xs text-ink-muted">&copy; 2026 Cofoundee</span>
         <div className="flex items-center gap-4">
           <a

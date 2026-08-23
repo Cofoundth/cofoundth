@@ -58,7 +58,7 @@ export function ProjectImagesField({
             <button
               type="button"
               onClick={() => onChange(value.filter((u) => u !== url))}
-              className="absolute top-1 right-1 bg-navy/80 hover:bg-navy text-white p-0.5 rounded-xl"
+              className="absolute top-1 right-1 bg-navy/80 hover:bg-navy text-white p-0.5 rounded-full"
               aria-label={tr("Remove")}
             >
               <X className="w-3 h-3" />
@@ -70,7 +70,7 @@ export function ProjectImagesField({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={pending}
-            className="w-24 h-24 border border-dashed border-line hover:border-navy text-ink-muted hover:text-navy flex flex-col items-center justify-center gap-1 text-xs disabled:opacity-50 transition-colors"
+            className="w-24 h-24 rounded-xl border border-dashed border-line hover:border-navy text-ink-muted hover:text-navy flex flex-col items-center justify-center gap-1 text-xs disabled:opacity-50 transition-colors"
           >
             {pending ? (
               <Loader2 className="w-5 h-5 animate-spin" />

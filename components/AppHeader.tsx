@@ -136,11 +136,14 @@ export async function AppHeader() {
 
   return (
     <header className="bg-white border-b border-line relative">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10">
+      {/* 1120 to sit flush with the marketing section container below it. */}
+      <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-3 lg:gap-8">
+          <div className="flex items-center gap-3 xl:gap-8">
+            {/* The horizontal nav needs xl, not lg: eight Thai labels plus the
+                language/bell/avatar/sign-out cluster wrap mid-word at 1024. */}
             <MobileMenu
-              className="lg:hidden"
+              className="xl:hidden"
               links={navItems}
               footer={
                 <form action={signOutAction}>
@@ -157,7 +160,7 @@ export async function AppHeader() {
               <BrandMark size="sm" />
               <Wordmark className="text-base hidden sm:inline" />
             </Link>
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav className="hidden xl:flex items-center gap-1">
               {navItems.map((i) => (
                 <NavLink key={i.href} href={i.href} badge={i.badge}>
                   {i.label}
@@ -186,7 +189,7 @@ export async function AppHeader() {
                 size="sm"
               />
             </Link>
-            <form action={signOutAction} className="hidden lg:block">
+            <form action={signOutAction} className="hidden xl:block">
               <button
                 type="submit"
                 className="text-sm text-ink-muted hover:text-navy tracking-wide"
@@ -213,11 +216,11 @@ function NavLink({
   return (
     <Link
       href={href}
-      className="relative px-4 py-2 text-sm text-ink hover:text-navy tracking-wide"
+      className="relative px-4 py-2 rounded-lg text-sm text-ink hover:bg-cream tracking-wide whitespace-nowrap transition-colors"
     >
       {children}
       {badge !== undefined && badge > 0 && (
-        <span className="absolute top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white inline-flex items-center justify-center font-medium">
+        <span className="absolute top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
           {badge > 9 ? "9+" : badge}
         </span>
       )}

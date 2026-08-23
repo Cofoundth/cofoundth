@@ -369,9 +369,9 @@ export default async function OrgPage({ params }: Props) {
         </div>
       </header>
 
-      <div className="grid lg:grid-cols-12 gap-8 lg:gap-10">
+      <div className="grid xl:grid-cols-12 gap-8 xl:gap-10">
         {/* ---- Main column ---- */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="xl:col-span-8 space-y-6">
           {pitch && (
             <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
@@ -442,7 +442,7 @@ export default async function OrgPage({ params }: Props) {
         </div>
 
         {/* ---- Sidebar — connect + deals + team ---- */}
-        <aside className="lg:col-span-4 space-y-5">
+        <aside className="xl:col-span-4 space-y-5">
           {connState !== "self" && !isInvestor && (
             <div
               id="connect"

@@ -187,9 +187,9 @@ export function CompaniesClient({
         )}
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-8">
+      <div className="grid xl:grid-cols-12 gap-8">
         {/* Filter sidebar */}
-        <aside className="lg:col-span-3">
+        <aside className="xl:col-span-3">
           <div className="lg:sticky lg:top-6 space-y-8">
             <div>
               <label
@@ -269,7 +269,7 @@ export function CompaniesClient({
         </aside>
 
         {/* Results */}
-        <div className="lg:col-span-9">
+        <div className="xl:col-span-9">
           {filtered.length === 0 ? (
             <div className="bg-white border border-line p-12 text-center rounded-xl">
               <Building2

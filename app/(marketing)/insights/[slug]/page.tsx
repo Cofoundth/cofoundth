@@ -87,7 +87,7 @@ export default async function InsightPage({ params }: Props) {
       <div className="mt-16 pt-8 border-t border-line">
         <Link
           href="/signup"
-          className="inline-block px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+          className="inline-block px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
         >
           {tr("Join Cofoundee · Free")}
         </Link>

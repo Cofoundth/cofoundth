@@ -25,6 +25,13 @@ export default async function AppLayout({
 
   const pathname = (await headers()).get("x-pathname") ?? "";
 
+  // Conversation views are full-height by design: they own the viewport and
+  // scroll internally. A marketing-style footer underneath just adds a strip of
+  // page scroll below a pane that is already exactly one screen tall, so these
+  // routes drop it and take the full height instead.
+  const isConversation =
+    pathname.startsWith("/messages/") || pathname.endsWith("/chat");
+
   // Investors are funding actors + read-first community members: they can reach
   // funding, the community feed, the founder directory, profiles, and settings.
   // Everything else (dashboard, B2B/orgs, connections/DMs) — and posting a new
@@ -66,14 +73,14 @@ export default async function AppLayout({
       </a>
       {/* Persistent left rail on desktop, slim top bar on mobile. */}
       <AppSidebar />
-      <div className="lg:pl-64 min-h-screen flex flex-col">
+      <div className="lg:pl-64 min-h-[calc(100vh-4rem)] lg:min-h-screen flex flex-col">
         <main id="main" className="flex-1">
           <IncompleteProfileBanner
             complete={isInvestor || !!profile?.profile_complete}
           />
           {children}
         </main>
-        <AppFooter />
+        {!isConversation && <AppFooter />}
       </div>
     </div>
   );

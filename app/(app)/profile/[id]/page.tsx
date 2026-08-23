@@ -345,9 +345,9 @@ export default async function ProfileDetailPage({ params }: Props) {
         </div>
       </header>
 
-      <div className="grid lg:grid-cols-12 gap-8 lg:gap-10">
+      <div className="grid xl:grid-cols-12 gap-8 xl:gap-10">
         {/* ---- Main column ---- */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="xl:col-span-8 space-y-6">
           {/* What I'm building */}
           {(profile.pitch ||
             capabilities.length > 0 ||
@@ -530,7 +530,7 @@ export default async function ProfileDetailPage({ params }: Props) {
         </div>
 
         {/* ---- Sidebar ---- */}
-        <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-24 self-start">
+        <aside className="xl:col-span-4 space-y-5 xl:sticky xl:top-24 self-start">
           {/* What I'm looking for — the headline ask */}
           {seeking.length > 0 && (
             <div className="bg-navy p-6 rounded-xl">

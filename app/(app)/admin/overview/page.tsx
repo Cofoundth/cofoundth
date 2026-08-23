@@ -77,21 +77,21 @@ export default async function AdminOverviewPage() {
       total: totalUsers ?? 0,
       week: usersWeek ?? 0,
       data: dailyBuckets((userRows ?? []) as { created_at: string }[]),
-      color: "#0A1F44",
+      color: "#1B1A17",
     },
     {
       label: "New posts",
       total: totalPosts ?? 0,
       week: postsWeek ?? 0,
       data: dailyBuckets((postRows ?? []) as { created_at: string }[]),
-      color: "#1F4E4A",
+      color: "#1B1A17",
     },
     {
       label: "New matches",
       total: totalMatches ?? 0,
       week: matchesWeek ?? 0,
       data: dailyBuckets((matchRows ?? []) as { created_at: string }[]),
-      color: "#B8941F",
+      color: "#1B1A17",
     },
   ];
 
@@ -118,7 +118,7 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((c) => (
           <div key={c.label} className="bg-white border border-line p-5 rounded-xl">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-1">

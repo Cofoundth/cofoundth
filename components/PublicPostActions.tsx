@@ -77,13 +77,13 @@ export function PublicPostActions({
             <div className="space-y-3">
               <Link
                 href="/signup"
-                className="block bg-navy hover:bg-navy-dark text-white py-3 text-sm tracking-wide transition-colors"
+                className="block rounded-full bg-navy hover:bg-navy-dark text-white py-3 text-sm tracking-wide transition-colors text-center"
               >
                 {tr("Create your profile")}
               </Link>
               <Link
                 href="/login"
-                className="block border border-line hover:border-navy text-ink hover:text-navy py-3 text-sm tracking-wide transition-colors rounded-xl"
+                className="block border border-line hover:border-navy text-ink hover:text-navy py-3 text-sm tracking-wide transition-colors rounded-full text-center"
               >
                 {tr("Sign in")}
               </Link>

@@ -80,10 +80,10 @@ export default async function MessagePage({ params }: Props) {
     // so with the URL bar showing, the last 60-100px of this column — the
     // composer — sat underneath the browser chrome and was unreachable. `dvh`
     // tracks the visible viewport and keeps the composer on screen.
-    <div className="max-w-7xl mx-auto h-[calc(100dvh-4rem)] grid lg:grid-cols-12">
+    <div className="max-w-[1120px] mx-auto h-[calc(100dvh-4rem)] lg:h-dvh grid xl:grid-cols-12">
       <ReadOnMount matchId={matchId} />
       {/* Conversation column */}
-      <div className="lg:col-span-8 flex flex-col h-full min-h-0 border-r border-line">
+      <div className="xl:col-span-8 flex flex-col h-full min-h-0 border-r border-line">
         <header className="border-b border-line bg-white px-6 py-4">
           <Link
             href="/matches"
@@ -165,7 +165,7 @@ export default async function MessagePage({ params }: Props) {
       </div>
 
       {/* Sidebar — desktop only */}
-      <aside className="hidden lg:flex lg:col-span-4 flex-col bg-white overflow-y-auto p-6 rounded-xl">
+      <aside className="hidden xl:flex xl:col-span-4 flex-col bg-white overflow-y-auto p-6 rounded-xl">
         <NextStepsPanel
           social={{
             linkedin: (me?.linkedin_url as string | null) ?? null,

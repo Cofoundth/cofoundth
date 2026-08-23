@@ -99,7 +99,7 @@ export function AvatarUploader({ initialUrl, name }: Props) {
   return (
     <div className="flex items-center gap-5">
       <div
-        className="relative w-20 h-20 flex items-center justify-center text-white font-serif text-3xl shrink-0 overflow-hidden"
+        className="relative w-20 h-20 rounded-full flex items-center justify-center text-white font-serif text-3xl shrink-0 overflow-hidden"
         style={{ backgroundColor: colorFor(name) }}
       >
         {url ? (

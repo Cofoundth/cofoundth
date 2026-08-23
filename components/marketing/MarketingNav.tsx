@@ -20,7 +20,7 @@ export async function MarketingNav() {
 
   return (
     <nav className="bg-white border-b border-line">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+      <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
           <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
             <BrandMark size="md" />
@@ -42,7 +42,7 @@ export async function MarketingNav() {
             </Link>
             <Link
               href="/signup"
-              className="px-3 sm:px-5 py-2 sm:py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors whitespace-nowrap"
+              className="px-3 sm:px-5 py-2 sm:py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors whitespace-nowrap rounded-full"
             >
               {tr("Join Cofoundee")}
             </Link>
