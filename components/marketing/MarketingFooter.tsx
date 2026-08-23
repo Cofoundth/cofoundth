@@ -29,7 +29,10 @@ const columns = [
   },
   {
     title: "Company",
-    items: [{ label: "Contact", href: "mailto:chayanonr@cofoundee.co" }],
+    items: [
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+    ],
   },
 ];
 
@@ -45,7 +48,7 @@ export async function MarketingFooter() {
             <div className="mb-4">
               <Wordmark variant="light" className="text-2xl" />
             </div>
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm text-white/70 leading-relaxed">
               {tr(
                 "Community, partners, and co-founders — in one place. Free to join.",
               )}
@@ -53,7 +56,7 @@ export async function MarketingFooter() {
           </div>
           {columns.map((col) => (
             <div key={col.title}>
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-4">
+              <div className="text-xs uppercase tracking-[0.2em] text-white/50 mb-4">
                 {tr(col.title)}
               </div>
               <ul className="space-y-2.5">
@@ -64,14 +67,14 @@ export async function MarketingFooter() {
                       {isExternal ? (
                         <a
                           href={item.href}
-                          className="text-sm text-slate-200 hover:text-white"
+                          className="text-sm text-white/80 hover:text-white"
                         >
                           {tr(item.label)}
                         </a>
                       ) : (
                         <Link
                           href={item.href}
-                          className="text-sm text-slate-200 hover:text-white"
+                          className="text-sm text-white/80 hover:text-white"
                         >
                           {tr(item.label)}
                         </Link>
@@ -83,7 +86,7 @@ export async function MarketingFooter() {
             </div>
           ))}
         </div>
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between gap-4 text-xs text-slate-400">
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between gap-4 text-xs text-white/50">
           <div>&copy; 2026 Cofoundee Co., Ltd. All rights reserved.</div>
           <div className="flex gap-6">
             <Link href="/privacy" className="hover:text-white">

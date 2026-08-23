@@ -14,7 +14,7 @@ export async function LanguageSwitcher({
 
   const colorClass =
     variant === "dark"
-      ? "text-slate-200 hover:text-white"
+      ? "text-white/80 hover:text-white"
       : "text-ink hover:text-navy";
 
   return (
