@@ -1,6 +1,9 @@
 import { getLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
-import { listPublicFounders } from "@/lib/public-profile";
+import {
+  listPublicFounders,
+  countPublicFounders,
+} from "@/lib/public-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { msAgoISO, DAY_MS } from "@/lib/time";
 import { HeroSection } from "@/components/marketing/landing/HeroSection";
@@ -67,7 +70,7 @@ export default async function LandingPage() {
   const [
     featured,
     { data: recentMilestones },
-    { count: totalFounders },
+    totalFounders,
     { count: foundersThisWeek },
   ] = await Promise.all([
     // Logged-out surface → goes through the public allowlist, which also keeps
@@ -81,11 +84,9 @@ export default async function LandingPage() {
       .gte("created_at", thirtyDaysAgo)
       .order("created_at", { ascending: false })
       .limit(3),
-    admin
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("profile_complete", true)
-      .eq("suspended", false),
+    // Same allowlist the directory uses, so the number on this page agrees
+    // with the number of founders a visitor can actually open.
+    countPublicFounders(),
     admin
       .from("profiles")
       .select("id", { count: "exact", head: true })
@@ -126,7 +127,7 @@ export default async function LandingPage() {
       <HeroSection
         locale={locale}
         founders={featured}
-        totalFounders={totalFounders ?? 0}
+        totalFounders={totalFounders}
         foundersThisWeek={foundersThisWeek ?? 0}
       />
 
@@ -164,7 +165,7 @@ export default async function LandingPage() {
 
       <FaqSection locale={locale} />
 
-      <LandingCta locale={locale} founderCount={totalFounders ?? 0} />
+      <LandingCta locale={locale} founderCount={totalFounders} />
     </>
   );
 }

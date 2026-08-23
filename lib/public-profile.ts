@@ -104,6 +104,28 @@ function publicQuery() {
     .not("slug", "is", null);
 }
 
+/**
+ * How many founders a visitor can ACTUALLY see, using the identical row filters
+ * as listPublicFounders.
+ *
+ * The landing page and /about used to count `profile_complete AND NOT suspended`
+ * directly, which silently included seeded bot profiles — 22 against 19 real
+ * ones. Publishing the larger number is inflated social proof, and it also
+ * disagreed with the count printed on /founders, which reads this allowlist.
+ * One query, one number, everywhere.
+ */
+export async function countPublicFounders(): Promise<number> {
+  const { count } = await createAdminClient()
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_complete", true)
+    .eq("suspended", false)
+    .not("is_bot", "is", true)
+    .eq("account_type", "founder")
+    .not("slug", "is", null);
+  return count ?? 0;
+}
+
 /** Newest-first founders safe to show a logged-out visitor. */
 export async function listPublicFounders(limit = 48): Promise<PublicProfile[]> {
   const { data } = await publicQuery()

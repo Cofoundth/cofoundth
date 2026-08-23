@@ -3,7 +3,7 @@ import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { QuoteBand } from "@/components/marketing/landing/QuoteBand";
 import { LandingCta } from "@/components/marketing/landing/LandingCta";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { countPublicFounders } from "@/lib/public-profile";
 
 export const revalidate = 300;
 
@@ -38,12 +38,8 @@ export default async function AboutPage() {
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);
 
-  const admin = createAdminClient();
-  const { count: totalFounders } = await admin
-    .from("profiles")
-    .select("id", { count: "exact", head: true })
-    .eq("profile_complete", true)
-    .eq("suspended", false);
+  // The public allowlist, not a raw profiles count — see countPublicFounders.
+  const totalFounders = await countPublicFounders();
 
   return (
     <>
@@ -114,7 +110,7 @@ export default async function AboutPage() {
               <dt className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-2">
                 {tr("Founders here")}
               </dt>
-              <dd className="text-d1">{totalFounders ?? 0}</dd>
+              <dd className="text-d1">{totalFounders}</dd>
             </div>
             <div className="rounded-[22px] border border-line p-6">
               <dt className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-2">
@@ -132,7 +128,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <LandingCta locale={locale} founderCount={totalFounders ?? 0} />
+      <LandingCta locale={locale} founderCount={totalFounders} />
     </>
   );
 }
