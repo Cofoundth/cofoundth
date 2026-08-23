@@ -18,7 +18,9 @@
 // `hoverable` adds `hover:border-navy transition-colors`, the treatment used by
 // every card that is itself a link (browse results, matches, org list).
 //
-// SHARP CORNERS ALWAYS — never add a rounded-* utility here.
+// ROUNDED ALWAYS (`rounded-xl` = 14px, part of the base class list). Card
+// renders a <div>, which no @layer base geometry rule matches, so the radius
+// has to live here — a call site can still override it via className.
 
 import type { ComponentProps } from "react";
 import { cn } from "./cn";
@@ -49,7 +51,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "bg-white border border-line",
+        "bg-white border border-line rounded-xl",
         PADDING_CLASSES[padding],
         hoverable && "hover:border-navy transition-colors",
         className,

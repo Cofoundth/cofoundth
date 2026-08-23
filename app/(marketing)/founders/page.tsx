@@ -107,12 +107,12 @@ export default async function PublicFoundersPage() {
 
                   <div className="mt-auto pt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-ink-muted">
                     {f.industry.slice(0, 2).map((i) => (
-                      <span key={i} className="px-2 py-0.5 border border-line rounded-xl">
+                      <span key={i} className="px-2 py-0.5 border border-line rounded-full">
                         {i}
                       </span>
                     ))}
                     {stageLabel && (
-                      <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-xl">
+                      <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full">
                         {tr(stageLabel)}
                       </span>
                     )}

@@ -31,7 +31,7 @@
 //   2. `aria-label`       → for fields whose visible label is elsewhere.
 //   3. `aria-labelledby`  → for fields named by existing visible text.
 //
-// SHARP CORNERS ALWAYS — never add a rounded-* utility here.
+// ROUNDED ALWAYS — see the Visual Language section of CLAUDE.md.
 
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "./cn";

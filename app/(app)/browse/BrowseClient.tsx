@@ -597,7 +597,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-muted mt-4 pt-4 border-t border-line">
             {profile.industry.slice(0, 3).map((i) => (
-              <span key={i} className="px-2 py-0.5 border border-line rounded-xl">
+              <span key={i} className="px-2 py-0.5 border border-line rounded-full">
                 {i}
               </span>
             ))}

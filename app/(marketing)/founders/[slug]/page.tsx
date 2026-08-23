@@ -101,12 +101,12 @@ export default async function PublicFounderPage({ params }: Props) {
         {(founder.industry.length > 0 || stageLabel) && (
           <div className="mt-8 pt-6 border-t border-line flex flex-wrap items-center gap-2 text-xs text-ink-muted">
             {founder.industry.map((i) => (
-              <span key={i} className="px-2 py-0.5 border border-line rounded-xl">
+              <span key={i} className="px-2 py-0.5 border border-line rounded-full">
                 {i}
               </span>
             ))}
             {stageLabel && (
-              <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-xl">
+              <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full">
                 {tr(stageLabel)}
               </span>
             )}

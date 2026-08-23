@@ -137,7 +137,7 @@ export function CompaniesClient({
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
               <Building2 className="w-3 h-3" strokeWidth={1.5} />
               {tr("B2B Network")}
-              <span className="text-ink-muted/50">·</span>
+              <span className="text-ink-muted/70">·</span>
               <span className="normal-case tracking-normal text-ink-muted">
                 Beta
               </span>

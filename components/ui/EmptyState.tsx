@@ -17,7 +17,7 @@
 // `dense` drops the description to text-sm, matching the p-8 variants that
 // render as a single muted line with no icon and no title.
 //
-// SHARP CORNERS ALWAYS — never add a rounded-* utility here.
+// ROUNDED ALWAYS — see the Visual Language section of CLAUDE.md.
 
 import type { ComponentType, ReactNode } from "react";
 import { cn } from "./cn";

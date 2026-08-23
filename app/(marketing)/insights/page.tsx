@@ -57,7 +57,7 @@ export default async function InsightsPage() {
               {/* meta row */}
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] mb-4">
                 <span className="text-gold-ink">{i.category}</span>
-                <span className="text-ink-muted/50" aria-hidden="true">
+                <span className="text-ink-muted/70" aria-hidden="true">
                   ·
                 </span>
                 <span className="text-ink-muted normal-case tracking-normal text-xs">

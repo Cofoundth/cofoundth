@@ -415,7 +415,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                     {capabilities.map((c) => (
                       <span
                         key={c}
-                        className="px-3 py-1.5 border border-line text-sm text-ink rounded-xl"
+                        className="px-3 py-1.5 border border-line text-sm text-ink rounded-full"
                       >
                         {c}
                       </span>
@@ -457,7 +457,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                       {skills.map((s) => (
                         <span
                           key={s}
-                          className="px-3 py-1.5 border border-line text-sm text-ink rounded-xl"
+                          className="px-3 py-1.5 border border-line text-sm text-ink rounded-full"
                         >
                           {s}
                         </span>

@@ -91,7 +91,7 @@ export function MessageThread({
             className={`flex ${mine ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[75%] px-4 py-3 ${
+              className={`max-w-[75%] px-4 py-3 rounded-2xl ${
                 mine
                   ? "bg-navy text-white"
                   : "bg-white text-ink border border-line"

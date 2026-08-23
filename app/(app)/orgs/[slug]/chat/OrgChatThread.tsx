@@ -85,7 +85,7 @@ export function OrgChatThread({
                 {m.sender_org_name ? ` · ${m.sender_org_name}` : ""}
               </div>
               <div
-                className={`px-4 py-2.5 ${
+                className={`px-4 py-2.5 rounded-2xl ${
                   mine
                     ? "bg-navy text-white"
                     : "bg-white text-ink border border-line"

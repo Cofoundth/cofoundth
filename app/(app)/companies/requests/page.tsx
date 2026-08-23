@@ -138,7 +138,7 @@ export default async function PartnershipRequestsBoardPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse" />
             {await tServer("B2B Partnership board")}
-            <span className="text-ink-muted/50">·</span>
+            <span className="text-ink-muted/70">·</span>
             <span className="normal-case tracking-normal text-ink-muted">
               Beta
             </span>

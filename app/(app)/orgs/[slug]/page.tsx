@@ -56,7 +56,7 @@ function Chips({ items }: { items: string[] }) {
       {items.map((c) => (
         <span
           key={c}
-          className="px-3 py-1.5 border border-line text-sm text-ink rounded-xl"
+          className="px-3 py-1.5 border border-line text-sm text-ink rounded-full"
         >
           {c}
         </span>

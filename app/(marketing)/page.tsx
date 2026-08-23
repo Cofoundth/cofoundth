@@ -144,7 +144,7 @@ export default async function LandingPage() {
                 </span>
                 {(totalFounders ?? 0) >= 25 && (
                   <>
-                    <span className="text-ink-muted/50">·</span>
+                    <span className="text-ink-muted/70">·</span>
                     <span className="normal-case tracking-normal text-ink-muted text-xs">
                       {totalFounders} {tr("founders")}
                     </span>
@@ -152,7 +152,7 @@ export default async function LandingPage() {
                 )}
                 {(foundersThisWeek ?? 0) > 0 && (
                   <>
-                    <span className="text-ink-muted/50">·</span>
+                    <span className="text-ink-muted/70">·</span>
                     <span className="normal-case tracking-normal text-gold-ink text-xs">
                       +{foundersThisWeek}{" "}
                       {tr("joined this week")}
@@ -161,7 +161,7 @@ export default async function LandingPage() {
                 )}
                 {(postsThisWeek ?? 0) > 0 && (
                   <>
-                    <span className="text-ink-muted/50">·</span>
+                    <span className="text-ink-muted/70">·</span>
                     <span className="normal-case tracking-normal text-ink-muted text-xs">
                       {postsThisWeek}{" "}
                       {tr("new posts in 7d")}
