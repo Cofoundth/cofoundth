@@ -6,15 +6,30 @@ import { getLocale } from "@/lib/i18n-server";
 
 export const revalidate = 60;
 
+// Layout borrowed from onfound's content grid (measured from their live DOM):
+// a NARROW intro block (640px) sitting above a WIDE card grid (1120px), 88px
+// section rhythm, ~328px cards with a 16px gutter, and each card stacked
+// meta-row → title → excerpt → footer-row.
+// The skin stays ours: cream/navy/gold, Georgia serif headings, sharp corners.
 export default async function InsightsPage() {
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);
   const insights = await listInsights(locale);
 
+  const fmtDate = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "";
+
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-20">
-      <div className="max-w-3xl mb-16">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      {/* Narrow intro over a wide grid — their editorial rhythm. */}
+      <div className="max-w-[640px] mb-14">
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tr("Insights")}
         </div>
         <h1 className="text-d2 lg:text-d3 leading-tight mb-4">
@@ -32,38 +47,43 @@ export default async function InsightsPage() {
           {tr("No insights yet — check back soon.")}
         </div>
       ) : (
-        <div className="space-y-12">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {insights.map((i) => (
             <Link
               key={i.slug}
               href={`/insights/${i.slug}`}
-              className="block group pb-12 border-b border-line last:border-0"
+              className="group flex flex-col bg-white border border-line p-6 hover:border-navy transition-colors"
             >
-              <div className="grid lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-3">
-                  <div className="text-xs uppercase tracking-[0.2em] text-gold mb-2">
-                    {i.category}
-                  </div>
-                  <div className="text-xs text-ink-muted">
-                    {i.published_at
-                      ? new Date(i.published_at).toLocaleDateString(
-                          locale === "th" ? "th-TH" : "en-GB",
-                          { day: "numeric", month: "short", year: "numeric" },
-                        )
-                      : ""}
-                    {" · "}
-                    {i.reading_time} {tr("min read")}
-                  </div>
-                </div>
-                <div className="lg:col-span-9">
-                  <h2 className="text-d2 text-navy mb-3 leading-tight group-hover:text-gold transition-colors">
-                    {i.title}
-                  </h2>
-                  <p className="text-ink leading-relaxed mb-4">{i.excerpt}</p>
-                  <div className="text-sm text-navy inline-flex items-center gap-1.5 group-hover:text-gold transition-colors">
-                    {tr("Read insight")} <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
+              {/* meta row */}
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] mb-4">
+                <span className="text-gold-ink">{i.category}</span>
+                <span className="text-line" aria-hidden="true">
+                  ·
+                </span>
+                <span className="text-ink-muted normal-case tracking-normal text-xs">
+                  {fmtDate(i.published_at)}
+                </span>
+              </div>
+
+              {/* title */}
+              <h2 className="font-serif text-xl text-navy leading-snug mb-3 group-hover:text-gold-ink transition-colors">
+                {i.title}
+              </h2>
+
+              {/* excerpt — clamped so every card in a row squares off */}
+              <p className="text-sm text-ink leading-relaxed line-clamp-3 mb-6">
+                {i.excerpt}
+              </p>
+
+              {/* footer row, pinned to the card bottom */}
+              <div className="mt-auto pt-5 flex items-center justify-between border-t border-line">
+                <span className="text-xs text-ink-muted">
+                  {i.reading_time} {tr("min read")}
+                </span>
+                <span className="text-sm text-navy inline-flex items-center gap-1.5 group-hover:text-gold-ink transition-colors">
+                  {tr("Read insight")}
+                  <ArrowRight className="w-4 h-4" />
+                </span>
               </div>
             </Link>
           ))}
