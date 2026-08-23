@@ -105,7 +105,7 @@ export function NewAskForm() {
           minLength={5}
           maxLength={200}
           placeholder={tr('e.g. "Logistics partner covering Northern Thailand"')}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
       </div>
 
@@ -137,7 +137,7 @@ export function NewAskForm() {
           placeholder={tr(
             "Describe your business, why you need this kind of partner, expected volume, timeline, and any key conditions.",
           )}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y rounded-xl"
         />
         {tooShort && context.length > 0 && (
           <p className="text-xs text-ink-muted mt-1">
@@ -161,12 +161,12 @@ export function NewAskForm() {
           name="deadline_at"
           type="date"
           min={new Date().toISOString().slice(0, 10)}
-          className="px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
       </div>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
           {state.error}
         </div>
       )}

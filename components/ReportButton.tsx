@@ -47,7 +47,7 @@ export function ReportButton({
         rows={2}
         maxLength={1000}
         placeholder={tr("What’s wrong with this?")}
-        className="w-full px-2 py-1.5 border border-line bg-white text-ink text-xs focus:outline-none focus:border-navy resize-none"
+        className="w-full px-2 py-1.5 border border-line bg-white text-ink text-xs focus:outline-none focus:border-navy resize-none rounded-full"
       />
       {error && <div className="text-[11px] text-red-700">{error}</div>}
       <div className="flex gap-2">
@@ -55,7 +55,7 @@ export function ReportButton({
           type="button"
           onClick={() => setOpen(false)}
           disabled={pending}
-          className="px-2 py-1 border border-line text-[11px] text-ink hover:border-navy"
+          className="px-2 py-1 border border-line text-[11px] text-ink hover:border-navy rounded-full"
         >
           {tr("Cancel")}
         </button>

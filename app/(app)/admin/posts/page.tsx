@@ -48,26 +48,28 @@ export default async function AdminPostsPage() {
   const hiddenCount = posts.filter((p) => p.hidden).length;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <AdminTabs />
       <div className="mb-8 pb-6 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Admin
+        <div className="max-w-[640px]">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
+            Admin
+          </div>
+          <h1 className="text-d2 mb-2">Posts</h1>
+          <p className="text-ink">
+            {posts.length} total · {hiddenCount} hidden
+          </p>
         </div>
-        <h1 className="text-d2 mb-2">Posts</h1>
-        <p className="text-ink">
-          {posts.length} total · {hiddenCount} hidden
-        </p>
       </div>
 
       {posts.length === 0 ? (
-        <div className="bg-white border border-line p-12 text-center text-ink-muted">
+        <div className="bg-white border border-line p-12 text-center text-ink-muted rounded-xl">
           No posts yet.
         </div>
       ) : (
         <Paginated
           pageSize={20}
-          className="bg-white border border-line divide-y divide-line"
+          className="bg-white border border-line divide-y divide-line rounded-xl"
         >
           {posts.map((p) => (
             <PostRow key={p.id} post={p} />

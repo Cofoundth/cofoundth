@@ -46,7 +46,7 @@ export function OrgChatComposer({ connectionId }: { connectionId: string }) {
           maxLength={MESSAGE_MAX}
           placeholder={tr("Write a message…")}
           aria-label={tr("Message")}
-          className="flex-1 resize-none px-4 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="flex-1 resize-none px-4 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
         <button
           type="button"

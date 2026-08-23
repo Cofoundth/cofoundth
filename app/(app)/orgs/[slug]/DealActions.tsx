@@ -48,7 +48,7 @@ export function DealActions({
             type="button"
             disabled={pending}
             onClick={() => run(() => declineDealAction(dealId))}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors rounded-full"
           >
             <X className="w-3.5 h-3.5" />
             {pending ? tr("Declining…") : tr("Decline")}

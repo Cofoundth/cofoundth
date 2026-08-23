@@ -118,7 +118,7 @@ export default async function OrgsPage({
         {!isInvestor && (
           <Link
             href="/orgs/new"
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors shrink-0"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors shrink-0 rounded-full"
           >
             <Plus className="w-4 h-4" />
             {await tServer("Create company")}
@@ -136,7 +136,7 @@ export default async function OrgsPage({
             {invites.map((inv) => (
               <div
                 key={inv.id}
-                className="bg-white border border-gold/40 p-5 flex items-center justify-between gap-4"
+                className="bg-white border border-line p-5 flex items-center justify-between gap-4 rounded-xl"
               >
                 <div className="flex items-center gap-4 min-w-0">
                   <OrgLogo org={{ name: inv.org!.name, logo_url: null }} />
@@ -163,14 +163,14 @@ export default async function OrgsPage({
             {await tServer("Your companies")}
           </h2>
         {myOrgs.length === 0 ? (
-          <div className="bg-white border border-line p-8 text-center">
+          <div className="bg-white border border-line p-8 text-center rounded-xl">
             <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
             <p className="text-ink-muted mb-4">
               {await tServer("You're not part of any company yet.")}
             </p>
             <Link
               href="/orgs/new"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
             >
               <Plus className="w-4 h-4" />
               {await tServer("Create company")}
@@ -216,7 +216,7 @@ export default async function OrgsPage({
           </Link>
         </nav>
         {filteredDirectory.length === 0 ? (
-          <div className="bg-white border border-line p-8 text-center">
+          <div className="bg-white border border-line p-8 text-center rounded-xl">
             <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
             <p className="text-ink-muted">{directoryEmptyMsg}</p>
           </div>

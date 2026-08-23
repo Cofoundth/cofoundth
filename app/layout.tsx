@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Thai } from "next/font/google";
+import { Noto_Sans_Thai, Inter, Rethink_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { getLocale } from "@/lib/i18n-server";
 import { LocaleProvider } from "@/lib/i18n-client";
@@ -9,6 +9,22 @@ const notoSansThai = Noto_Sans_Thai({
   subsets: ["thai", "latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-noto-thai",
+  display: "swap",
+});
+
+// Body face. Latin renders Inter; Thai falls through to Noto Sans Thai
+// per-glyph (Inter has no Thai coverage).
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+// Heading face — Onfound uses Rethink Sans. Same per-glyph Thai fallback.
+const rethinkSans = Rethink_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-rethink",
   display: "swap",
 });
 
@@ -77,7 +93,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${notoSansThai.variable} h-full antialiased`}
+      className={`${notoSansThai.variable} ${inter.variable} ${rethinkSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <LocaleProvider locale={locale}>{children}</LocaleProvider>

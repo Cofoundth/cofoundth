@@ -134,17 +134,17 @@ export default async function LandingPage() {
     <>
       {/* Hero */}
       <section className="bg-cream border-b border-line">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20 lg:py-28">
+        <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7">
               <div className="text-xs uppercase tracking-[0.25em] text-ink-muted mb-6 flex items-center gap-3 flex-wrap">
                 <span className="inline-flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse motion-reduce:animate-none" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse motion-reduce:animate-none" />
                   {tr("Thailand's startup community")}
                 </span>
                 {(totalFounders ?? 0) >= 25 && (
                   <>
-                    <span className="text-line">·</span>
+                    <span className="text-ink-muted/50">·</span>
                     <span className="normal-case tracking-normal text-ink-muted text-xs">
                       {totalFounders} {tr("founders")}
                     </span>
@@ -152,7 +152,7 @@ export default async function LandingPage() {
                 )}
                 {(foundersThisWeek ?? 0) > 0 && (
                   <>
-                    <span className="text-line">·</span>
+                    <span className="text-ink-muted/50">·</span>
                     <span className="normal-case tracking-normal text-gold-ink text-xs">
                       +{foundersThisWeek}{" "}
                       {tr("joined this week")}
@@ -161,7 +161,7 @@ export default async function LandingPage() {
                 )}
                 {(postsThisWeek ?? 0) > 0 && (
                   <>
-                    <span className="text-line">·</span>
+                    <span className="text-ink-muted/50">·</span>
                     <span className="normal-case tracking-normal text-ink-muted text-xs">
                       {postsThisWeek}{" "}
                       {tr("new posts in 7d")}
@@ -171,7 +171,7 @@ export default async function LandingPage() {
               </div>
               {/* Wordmark stays visible, but the h1 carries the pitch. */}
               <div className="font-serif text-navy text-d2 lg:text-d3 leading-none tracking-tight mb-5">
-                Cofoundee<span className="text-gold">.</span>
+                Cofoundee<span className="text-gold-ink">.</span>
               </div>
               <h1 className="text-d3 lg:text-d5 leading-[1.08] tracking-tight mb-6">
                 {tr("The bridge for Thailand's startup ecosystem")}
@@ -184,7 +184,7 @@ export default async function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/signup"
-                  className="px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
+                  className="px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2 rounded-full"
                 >
                   {tr("Join the community")}{" "}
                   <ArrowRight className="w-4 h-4" />
@@ -193,17 +193,17 @@ export default async function LandingPage() {
                     preview, so cold visitors get to look before signing up. */}
                 <Link
                   href="/founders"
-                  className="px-8 py-4 border border-line hover:border-navy text-navy text-sm tracking-wide transition-colors inline-flex items-center justify-center"
+                  className="px-8 py-4 border border-line hover:border-navy text-navy text-sm tracking-wide transition-colors inline-flex items-center justify-center rounded-xl"
                 >
                   {tr("Browse founders")}
                 </Link>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-gold" /> {tr("Free to join")}
+                  <Check className="w-4 h-4 text-gold-ink" /> {tr("Free to join")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-gold" />{" "}
+                  <Check className="w-4 h-4 text-gold-ink" />{" "}
                   {tr("Built for Thailand")}
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default async function LandingPage() {
             {/* Right column — REAL founders */}
             <div className="lg:col-span-5">
               <div className="relative">
-                <div className="bg-white border border-line p-6">
+                <div className="bg-white border border-line p-6 rounded-xl">
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-xs uppercase tracking-[0.2em] text-gold-ink">
                       {tr("In the community now")}
@@ -270,7 +270,7 @@ export default async function LandingPage() {
                   </Link>
                 </div>
                 <div
-                  className="absolute -bottom-3 -right-3 w-full h-full border border-gold"
+                  className="absolute -bottom-3 -right-3 w-full h-full border border-line rounded-xl"
                   style={{ zIndex: -1 }}
                 />
               </div>
@@ -281,12 +281,12 @@ export default async function LandingPage() {
 
       {/* Recent wins from the community — only render if there are any */}
       {(recentMilestones?.length ?? 0) > 0 && (
-        <section className="py-16 bg-white border-b border-line">
-          <div className="max-w-7xl mx-auto px-6 lg:px-10">
+        <section className="py-[88px] bg-white border-b border-line">
+          <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
             <div className="flex items-end justify-between gap-6 mb-8 flex-wrap">
               <div>
                 <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse motion-reduce:animate-none" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse motion-reduce:animate-none" />
                   {tr("Recent wins")}
                 </div>
                 <h2 className="text-d1 lg:text-d2 leading-tight">
@@ -294,7 +294,7 @@ export default async function LandingPage() {
                 </h2>
               </div>
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {(recentMilestones ?? []).map((m) => {
                 const author = milestoneAuthorMap.get(m.author_id as string);
                 const authorName =
@@ -305,7 +305,7 @@ export default async function LandingPage() {
                     key={m.id as string}
                     className={`border p-5 ${
                       isMilestone
-                        ? "bg-gold/5 border-gold/40"
+                        ? "bg-gold-soft border-line"
                         : "bg-cream border-line"
                     }`}
                   >
@@ -313,7 +313,7 @@ export default async function LandingPage() {
                       {m.content as string}
                     </p>
                     {m.image_url ? (
-                      <div className="aspect-[3/2] w-full overflow-hidden border border-line bg-cream mb-3">
+                      <div className="aspect-[3/2] w-full overflow-hidden border border-line bg-cream mb-3 rounded-xl">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={m.image_url as string}
@@ -328,7 +328,7 @@ export default async function LandingPage() {
                         href={m.link_url as string}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 break-all mb-3"
+                        className="inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all mb-3"
                       >
                         {(() => {
                           try {
@@ -352,9 +352,9 @@ export default async function LandingPage() {
 
       {/* Four pillars — hidden for now */}
       {false && (
-      <section className="py-24 lg:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="max-w-3xl mb-20">
+      <section className="py-[88px] bg-white">
+        <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
+          <div className="max-w-[640px] mb-20">
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("Where we're headed")}
             </div>
@@ -371,9 +371,9 @@ export default async function LandingPage() {
             {pillars.map((p) => (
               <div
                 key={p.title}
-                className="bg-cream border border-line p-8 lg:p-10 relative"
+                className="bg-cream border border-line p-8 lg:p-10 relative rounded-xl"
               >
-                <p.icon className="w-6 h-6 text-gold mb-4" strokeWidth={1.5} />
+                <p.icon className="w-6 h-6 text-gold-ink mb-4" strokeWidth={1.5} />
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-xs uppercase tracking-[0.2em] text-gold-ink">
                     {tr(p.label)}
@@ -381,9 +381,9 @@ export default async function LandingPage() {
                   <span
                     className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
                       p.status === "Live"
-                        ? "border-gold text-gold-ink"
+                        ? "border-line text-gold-ink"
                         : p.status === "Beta"
-                          ? "border-gold/60 text-gold-ink/80"
+                          ? "border-line text-gold-ink/80"
                           : "border-line text-ink-muted"
                     }`}
                   >
@@ -401,9 +401,9 @@ export default async function LandingPage() {
 
       {/* Who it's for — hidden for now */}
       {false && (
-      <section className="py-24 bg-white border-t border-line">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="max-w-3xl mb-16">
+      <section className="py-[88px] bg-white border-t border-line">
+        <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
+          <div className="max-w-[640px] mb-16">
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("Who it's for")}
             </div>
@@ -412,7 +412,7 @@ export default async function LandingPage() {
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-            <div className="bg-white border border-line p-8">
+            <div className="bg-white border border-line p-8 rounded-xl">
               <div className="font-serif text-d3 text-gold-ink mb-4 leading-none">
                 I
               </div>
@@ -425,7 +425,7 @@ export default async function LandingPage() {
                 )}
               </p>
             </div>
-            <div className="bg-white border border-line p-8">
+            <div className="bg-white border border-line p-8 rounded-xl">
               <div className="font-serif text-d3 text-gold-ink mb-4 leading-none">
                 II
               </div>
@@ -438,7 +438,7 @@ export default async function LandingPage() {
                 )}
               </p>
             </div>
-            <div className="bg-white border border-line p-8">
+            <div className="bg-white border border-line p-8 rounded-xl">
               <div className="font-serif text-d3 text-gold-ink mb-4 leading-none">
                 III
               </div>
@@ -458,9 +458,9 @@ export default async function LandingPage() {
 
       {/* Process — hidden for now */}
       {false && (
-      <section className="py-24 bg-cream border-y border-line">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="max-w-3xl mb-20">
+      <section className="py-[88px] bg-cream border-y border-line">
+        <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
+          <div className="max-w-[640px] mb-20">
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("How it works")}
             </div>
@@ -486,7 +486,7 @@ export default async function LandingPage() {
       )}
 
       {/* A note from the founder — authentic, not a fabricated testimonial */}
-      <section className="py-24 lg:py-28 bg-navy text-white">
+      <section className="py-[88px] bg-navy text-white">
         <div className="max-w-3xl mx-auto px-6 lg:px-10">
           <Quote
             className="w-10 h-10 text-gold mb-8"
@@ -519,7 +519,7 @@ export default async function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 bg-white border-t border-line">
+      <section className="py-[88px] bg-white border-t border-line">
         <div className="max-w-3xl mx-auto px-6 lg:px-10">
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
             {tr("Questions")}
@@ -563,7 +563,7 @@ export default async function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 bg-cream border-t border-line">
+      <section className="py-[88px] bg-cream border-t border-line">
         <div className="max-w-4xl mx-auto px-6 lg:px-10 text-center">
           <h2 className="text-d2 lg:text-d3 mb-6 leading-tight">
             {tr("It's still early — which is the best reason to join now.")}

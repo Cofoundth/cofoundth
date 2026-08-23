@@ -43,16 +43,18 @@ export default async function AdminUsersPage() {
   }));
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <AdminTabs />
       <div className="mb-8 pb-6 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Admin
+        <div className="max-w-[640px]">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
+            Admin
+          </div>
+          <h1 className="text-d2 mb-2">Users</h1>
+          <p className="text-ink">
+            {total} total · {active} active · {hidden} hidden
+          </p>
         </div>
-        <h1 className="text-d2 mb-2">Users</h1>
-        <p className="text-ink">
-          {total} total · {active} active · {hidden} hidden
-        </p>
       </div>
 
       <UsersAdmin users={users} selfId={user!.id} />

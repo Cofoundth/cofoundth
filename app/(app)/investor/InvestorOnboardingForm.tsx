@@ -133,7 +133,7 @@ export function InvestorOnboardingForm({
                     : "bg-white border-line text-ink hover:border-navy"
                 }`}
               >
-                {on && <Check className="w-3.5 h-3.5 text-gold" />}
+                {on && <Check className="w-3.5 h-3.5 text-gold-ink" />}
                 {tr(s.en)}
               </button>
             );
@@ -183,7 +183,7 @@ export function InvestorOnboardingForm({
       </Field>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
           {tr(state.error)}
         </div>
       )}

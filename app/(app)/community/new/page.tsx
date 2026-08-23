@@ -4,7 +4,7 @@ import { PostComposer } from "./PostComposer";
 
 export default function NewPostPage() {
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/community"
         className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
@@ -22,7 +22,7 @@ export default function NewPostPage() {
         </p>
       </div>
 
-      <div className="bg-white border border-line p-8 lg:p-10">
+      <div className="bg-white border border-line p-8 lg:p-10 rounded-xl">
         <PostComposer />
       </div>
     </div>

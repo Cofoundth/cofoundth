@@ -30,7 +30,7 @@ const KIND_META: Record<
   { icon: typeof Trophy; en: string; tone: string } | null
 > = {
   post: null,
-  milestone: { icon: Trophy, en: "hit a milestone", tone: "text-gold" },
+  milestone: { icon: Trophy, en: "hit a milestone", tone: "text-gold-ink" },
   show_and_tell: { icon: Rocket, en: "shipped", tone: "text-navy" },
 };
 
@@ -103,7 +103,7 @@ export default async function PostPage({ params }: Props) {
   const commentsLabel = await tServer("Comments");
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/community"
         className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
@@ -111,7 +111,7 @@ export default async function PostPage({ params }: Props) {
         <ArrowLeft className="w-4 h-4" /> {await tServer("Back to community")}
       </Link>
 
-      <article className="bg-white border border-line p-8 lg:p-12">
+      <article className="bg-white border border-line p-8 lg:p-12 rounded-xl">
         {meta && KindIcon && (
           <div
             className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] mb-4 ${meta.tone}`}
@@ -132,7 +132,7 @@ export default async function PostPage({ params }: Props) {
             {((post.tags ?? []) as string[]).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] uppercase tracking-[0.15em] px-2 py-1 border border-gold/40 text-gold-ink"
+                className="text-[10px] uppercase tracking-[0.15em] px-2 py-1 border border-line text-gold-ink rounded-full"
               >
                 #{tag}
               </span>
@@ -182,7 +182,7 @@ export default async function PostPage({ params }: Props) {
         {post.image_url ? (
           // Fixed ratio reserves the space so the page doesn't shift on load;
           // object-contain keeps the whole image visible on its own page.
-          <div className="mt-4 aspect-[3/2] w-full overflow-hidden border border-line bg-cream">
+          <div className="mt-4 aspect-[3/2] w-full overflow-hidden border border-line bg-cream rounded-xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={post.image_url as string}
@@ -197,7 +197,7 @@ export default async function PostPage({ params }: Props) {
             href={post.link_url as string}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1 text-sm text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 break-all"
+            className="mt-3 inline-flex items-center gap-1 text-sm text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             {(() => {
@@ -251,7 +251,7 @@ export default async function PostPage({ params }: Props) {
         />
 
         {comments?.length ? (
-          <div className="bg-white border border-line divide-y divide-line px-6 mb-6">
+          <div className="bg-white border border-line divide-y divide-line px-6 mb-6 rounded-xl">
             {comments.map((c) => {
               const a = authorMap.get(c.author_id as string);
               return (

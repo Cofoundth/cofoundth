@@ -56,13 +56,13 @@ export function ConnectActions({
   if (state === "connected") {
     return (
       <div className="space-y-2">
-        <span className="inline-flex items-center gap-1.5 text-sm text-gold">
+        <span className="inline-flex items-center gap-1.5 text-sm text-gold-ink">
           <Check className="w-4 h-4" />
           {tr("Connected")}
         </span>
         <Link
           href={`/orgs/${slug}/chat`}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
         >
           <MessageCircle className="w-4 h-4" />
           {tr("Message")}
@@ -104,7 +104,7 @@ export function ConnectActions({
             onClick={() =>
               run(() => respondConnectionAction(connectionId ?? "", false))
             }
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy disabled:opacity-50 text-ink text-sm transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy disabled:opacity-50 text-ink text-sm transition-colors rounded-xl"
           >
             <X className="w-4 h-4" />
             {tr("Decline")}

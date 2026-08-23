@@ -134,31 +134,74 @@ Browse filter lets users view All / Individuals / Companies separately.
 
 ## 🎨 Design Principles
 
-**Conservative, professional, trustworthy. Editorial — not dating-app.**
+**Warm, modern, quietly confident. Neutral — hierarchy from weight and surface, never from colour.**
+
+> **Restyled Aug 2026 to Onfound's design system** (app.onfound.com), at the
+> founder's explicit direction after being shown the tradeoff twice. This
+> REPLACES the previous "law firm / private bank, navy + gold, Georgia serif,
+> sharp corners" language entirely. Do not revert the rounding, do not
+> reintroduce a brand accent hue, do not restore the serif.
+> Values were measured off their live CSS custom properties, not eyeballed.
 
 ### Brand
-- Law firm / private bank aesthetic (McKinsey, Baker McKenzie)
-- Founders are making serious business decisions; the platform should feel that way
+- Warm-neutral product aesthetic: sand ground, white cards, one near-black primary
+- Restraint does the trust work — no ornament, no accent hue
 
-### Colors
-- Primary: Navy `#0A1F44`
-- Accent: Gold `#B8941F`
-- Background: Cream `#FAFAF7`
-- Ink (body): `#4A4A4A`
-- Ink muted: `#888888`
-- Border line: `#E2E8F0`
+### Colors — token NAMES are legacy, read them semantically
+| Token | Value | Means |
+|---|---|---|
+| `navy` | `#1B1A17` | **primary** — buttons, headings, body ink |
+| `navy-dark` | `#0D0C0A` | primary hover |
+| `gold` | `#E9E2D4` | **accent SURFACE** (bg/border) — never text on light |
+| `gold-soft` | `#F1ECE1` | lighter accent surface |
+| `gold-ink` | `#6A655D` | muted foreground — eyebrows, labels, meta |
+| `cream` | `#F3F0E9` | app background (warm sand) |
+| `ink` | `#1B1A17` | body text |
+| `ink-muted` | `#6A655D` | secondary text (5.1:1 on cream — AA) |
+| `line` | `#DDDBD4` | warm hairline border |
+
+Their `--accent` equals their `--muted`: there is deliberately **no brand hue**.
+Emphasis comes from weight, size, or the tan surface — never colour.
 
 ### Typography
-- Headings: Georgia serif (English) / Noto Sans Thai (Thai locale)
-- Body: Noto Sans Thai + system UI (covers Thai + Latin)
-- Numbers/stats: Serif (elegant, like a finance report)
+- Headings: **Rethink Sans** (still exposed as the `font-serif` class — legacy name, not a serif), weight 600, tracking `-0.02em`
+- Body: **Inter**; Thai falls through to **Noto Sans Thai** per-glyph in both faces
+- Display ladder `text-d1..d5` (26/33/42/53/68px) — display text only
+- App page titles sit flat at `text-d2` (33px); larger steps are for marketing
+
+### Layout — measured from their live DOM
+- Section container **`max-w-[1120px]`**, vertical rhythm **`py-[88px]`**
+- Intro/header block **`max-w-[640px]`** — a narrow intro above a wide grid
+- Card grid **`gap-4 sm:grid-cols-2 lg:grid-cols-3`** (renders 328.4px columns at 1120px, identical to their `.lm-grid`)
+- Card body order: meta row → title → excerpt → footer row
+- Reading/article pages keep a narrow column; only the rhythm applies
+- Chat/conversation views are full-height and take no vertical rhythm
+
+### App chrome — sidebar, not top nav
+Same split their product uses:
+- **App routes** (`app/(app)/*`, including `/investor`): `components/AppSidebar.tsx` — a
+  fixed `w-64` left rail on `lg+` (brand → vertical nav with badges → org switcher /
+  language / notifications / avatar / sign out), and a slim `sticky` top bar with the
+  hamburger below `lg`. The layout offsets content with `lg:pl-64`.
+- **Marketing routes**: keep the horizontal `AppHeader` (rendered by `MarketingNav`).
+- Adding an app route that investors may read means adding it to the allowlist in
+  `app/(app)/layout.tsx` **and** to `navItems` in `AppSidebar`.
 
 ### Visual Language
-- Sharp corners, no rounded buttons
-- Generous whitespace, editorial layout
-- Roman numerals for steps (I, II, III)
-- Thin gold accent lines as section dividers
-- Verified badges in gold (not blue checkmarks)
+- **Rounded everything** — buttons + `[role=button]` are pills, inputs/textareas/selects 14px (both enforced globally in `globals.css`); cards/panels `rounded-xl`; chips/badges `rounded-full`
+- `Button`/`LinkButton` carry `rounded-full` in `BASE` — the base-layer rule only matches
+  `<button>`, and `LinkButton` renders an `<a>`
+- ⚠️ **Do not wrap the geometry rules in `:where()`.** Tailwind v4 preflight ships
+  `button, input, select, optgroup, textarea { border-radius: 0 }` at specificity (0,0,1);
+  a `:where()` wrapper sits at 0 and silently loses to it. Plain element selectors are
+  correct here — call sites still win, because `utilities` is a later cascade layer than
+  `base` and layer order outranks specificity.
+- Prose elements get `overflow-wrap: break-word` globally — one member pitch with a long
+  unbroken run used to widen the whole document inside the 3-up grid
+- Radius scale: `sm 6 / md 8 / lg 10 / xl 14`
+- Generous whitespace, white cards on warm sand
+- Verified badges neutral, not coloured
+- No swipes, no gamification, no urgency hacks (unchanged)
 
 ### Language Rules
 - Thai users naturally code-switch — keep English loanwords (`founder`, `co-founder`, `pitch`, `MVP`, `startup`) where they sound natural in Thai

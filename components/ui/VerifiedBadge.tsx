@@ -58,7 +58,7 @@ export function VerifiedBadge({
       role="img"
       aria-label={label}
       strokeWidth={STROKE_WIDTH[size]}
-      className={cn(SIZE_CLASSES[size], "text-gold shrink-0", className)}
+      className={cn(SIZE_CLASSES[size], "text-gold-ink shrink-0", className)}
     />
   );
 }

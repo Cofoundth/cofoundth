@@ -83,7 +83,7 @@ export function OrgLogoField({
 
   return (
     <div className="flex items-center gap-5">
-      <div className="relative w-20 h-20 bg-cream border border-line flex items-center justify-center shrink-0 overflow-hidden">
+      <div className="relative w-20 h-20 bg-cream border border-line flex items-center justify-center shrink-0 overflow-hidden rounded-xl">
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={value} alt="" className="w-full h-full object-cover" />
@@ -101,7 +101,7 @@ export function OrgLogoField({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-line bg-white hover:border-navy text-ink text-sm transition-colors disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2 border border-line bg-white hover:border-navy text-ink text-sm transition-colors disabled:opacity-60 rounded-xl"
         >
           <ImagePlus className="w-4 h-4" />
           {value ? tr("Change logo") : tr("Upload logo")}
@@ -159,7 +159,7 @@ export function OrgProductImagesField({
         {value.map((url) => (
           <div
             key={url}
-            className="relative w-24 h-20 border border-line overflow-hidden group"
+            className="relative w-24 h-20 border border-line overflow-hidden group rounded-xl"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt={tr("Product image")} className="w-full h-full object-cover" />

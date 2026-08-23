@@ -51,7 +51,7 @@ export default async function PublicFounderPage({ params }: Props) {
   const stageLabel = founder.stage ? STAGE_LABELS[founder.stage] : null;
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/founders"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy transition-colors mb-8"
@@ -77,7 +77,7 @@ export default async function PublicFounderPage({ params }: Props) {
                 {roles.map((r) => (
                   <span
                     key={r}
-                    className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03]"
+                    className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03] rounded-full"
                   >
                     {r}
                   </span>
@@ -101,12 +101,12 @@ export default async function PublicFounderPage({ params }: Props) {
         {(founder.industry.length > 0 || stageLabel) && (
           <div className="mt-8 pt-6 border-t border-line flex flex-wrap items-center gap-2 text-xs text-ink-muted">
             {founder.industry.map((i) => (
-              <span key={i} className="px-2 py-0.5 border border-line">
+              <span key={i} className="px-2 py-0.5 border border-line rounded-xl">
                 {i}
               </span>
             ))}
             {stageLabel && (
-              <span className="px-2 py-0.5 border border-gold/50 text-gold-ink bg-gold/5">
+              <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-xl">
                 {tr(stageLabel)}
               </span>
             )}
@@ -118,7 +118,7 @@ export default async function PublicFounderPage({ params }: Props) {
           not <Card>: Card is bg-white and cn() does not de-duplicate Tailwind
           utilities, so bg-cream on top of it would be a coin flip on
           stylesheet order. */}
-      <div className="mt-4 bg-cream border border-line p-8 lg:p-10">
+      <div className="mt-4 bg-cream border border-line p-8 lg:p-10 rounded-xl">
         <Eyebrow className="mb-4 inline-flex items-center gap-2">
           <Lock className="w-3.5 h-3.5" strokeWidth={2} />
           {tr("Members only")}
@@ -134,14 +134,14 @@ export default async function PublicFounderPage({ params }: Props) {
         <div className="flex flex-col sm:flex-row gap-4">
           <Link
             href="/signup"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
           >
             {tr("Join free to see the full profile")}
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/login"
-            className="inline-flex items-center justify-center px-8 py-4 border border-line hover:border-navy text-navy text-sm tracking-wide transition-colors"
+            className="inline-flex items-center justify-center px-8 py-4 border border-line hover:border-navy text-navy text-sm tracking-wide transition-colors rounded-xl"
           >
             {tr("Sign in")}
           </Link>

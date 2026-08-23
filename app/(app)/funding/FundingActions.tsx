@@ -80,7 +80,7 @@ export function FundingRespond({ connectionId }: { connectionId: string }) {
           disabled={pending}
           aria-busy={pending}
           onClick={() => go(false)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors rounded-full"
         >
           <X className="w-3.5 h-3.5" />
           {tr("Decline")}

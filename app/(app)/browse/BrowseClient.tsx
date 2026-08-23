@@ -224,14 +224,14 @@ export function BrowseClient({ others }: Props) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 aria-label={tr("Search founders")}
                 placeholder={tr("Name or keyword")}
-                className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
+                className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
               />
             </div>
 
             <button
               type="button"
               onClick={() => setFiltersOpen((v) => !v)}
-              className="lg:hidden w-full flex items-center justify-between px-4 py-3 border border-line bg-white text-sm text-ink hover:border-navy transition-colors"
+              className="lg:hidden w-full flex items-center justify-between px-4 py-3 border border-line bg-white text-sm text-ink hover:border-navy transition-colors rounded-xl"
               aria-expanded={filtersOpen}
               aria-controls="browse-filters"
             >
@@ -242,7 +242,7 @@ export function BrowseClient({ others }: Props) {
                 />
                 {tr("Filters")}
                 {filterCount > 0 && (
-                  <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-gold text-white inline-flex items-center justify-center font-medium">
+                  <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white inline-flex items-center justify-center font-medium">
                     {filterCount}
                   </span>
                 )}
@@ -319,7 +319,7 @@ export function BrowseClient({ others }: Props) {
         {/* Results */}
         <div className="lg:col-span-9 min-w-0">
           {filtered.length === 0 ? (
-            <div className="bg-white border border-line p-12 text-center">
+            <div className="bg-white border border-line p-12 text-center rounded-xl">
               <h3 className="text-d1 mb-2">{tr("No matches yet")}</h3>
               <p className="text-ink-muted">
                 {tr(
@@ -424,7 +424,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
   return (
     <Link
       href={`/profile/${profile.slug}`}
-      className="group block bg-white border border-line hover:border-navy transition-colors"
+      className="group block bg-white border border-line hover:border-navy transition-colors rounded-xl"
     >
       <div className="flex items-start gap-4 sm:gap-5 p-5 sm:p-6">
         <Avatar name={profile.full_name} url={profile.photo_url} size="lg" />
@@ -437,18 +437,18 @@ function ProfileCard({ profile }: { profile: Profile }) {
               : profile.full_name}
             {profile.verified && (
               <BadgeCheck
-                className="w-4 h-4 text-gold shrink-0"
+                className="w-4 h-4 text-gold-ink shrink-0"
                 strokeWidth={2}
               />
             )}
             {isNew && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold-ink font-sans">
-                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse motion-reduce:animate-none" />
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-line text-gold-ink font-sans rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse motion-reduce:animate-none" />
                 {tr("New")}
               </span>
             )}
             {isCompany && (
-              <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-gold/60 text-gold-ink">
+              <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-line text-gold-ink rounded-full">
                 <Building2 className="w-2.5 h-2.5" strokeWidth={2} />
                 {tr("Company")}
               </span>
@@ -488,7 +488,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                     {roles.map((r) => (
                       <span
                         key={r}
-                        className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03]"
+                        className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03] rounded-full"
                       >
                         {r}
                       </span>
@@ -523,7 +523,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                           {profile.project_images.map((url, i) => (
                             <div
                               key={i}
-                              className="w-20 h-14 overflow-hidden border border-line shrink-0 bg-cream"
+                              className="w-20 h-14 overflow-hidden border border-line shrink-0 bg-cream rounded-xl"
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
@@ -561,7 +561,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                       {profile.skills.slice(0, 6).map((s) => (
                         <span
                           key={s}
-                          className="px-2 py-0.5 text-xs border border-line text-ink"
+                          className="px-2 py-0.5 text-xs border border-line text-ink rounded-full"
                         >
                           {s}
                         </span>
@@ -584,7 +584,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                   {lookingFor.map((r) => (
                     <span
                       key={r}
-                      className="px-2 py-0.5 text-xs border border-gold/50 text-gold-ink bg-gold/5"
+                      className="px-2 py-0.5 text-xs border border-line text-gold-ink bg-gold-soft rounded-full"
                     >
                       {r}
                     </span>
@@ -597,7 +597,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-muted mt-4 pt-4 border-t border-line">
             {profile.industry.slice(0, 3).map((i) => (
-              <span key={i} className="px-2 py-0.5 border border-line">
+              <span key={i} className="px-2 py-0.5 border border-line rounded-xl">
                 {i}
               </span>
             ))}

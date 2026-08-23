@@ -22,7 +22,7 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
   if (complete || pathname?.startsWith("/messages/")) return null;
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-8">
-      <div className="bg-navy border border-gold/50 p-6 lg:p-8">
+      <div className="bg-navy border border-gold/50 p-6 lg:p-8 rounded-xl">
         <div className="flex items-start gap-5">
           <div className="w-12 h-12 bg-gold/15 border border-gold/50 flex items-center justify-center shrink-0">
             <TriangleAlert
@@ -48,7 +48,7 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
             </p>
             <Link
               href="/settings"
-              className="px-5 py-2.5 bg-gold hover:bg-gold-soft text-navy font-medium text-sm tracking-wide transition-colors inline-flex items-center gap-2"
+              className="px-5 py-2.5 bg-gold hover:bg-gold-soft text-navy font-medium text-sm tracking-wide transition-colors inline-flex items-center gap-2 rounded-full"
             >
               {tr("Complete profile")} <ArrowRight className="w-4 h-4" />
             </Link>

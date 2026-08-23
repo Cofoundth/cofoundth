@@ -31,7 +31,7 @@ export function CommentComposer({ postId }: { postId: string }) {
         required
         aria-label={tr("Add your comment…")}
         placeholder={tr("Add your comment…")}
-        className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y"
+        className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y rounded-xl"
       />
       {state?.error && (
         <div className="text-xs text-red-700">{state.error}</div>

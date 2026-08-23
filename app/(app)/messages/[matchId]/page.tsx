@@ -165,7 +165,7 @@ export default async function MessagePage({ params }: Props) {
       </div>
 
       {/* Sidebar — desktop only */}
-      <aside className="hidden lg:flex lg:col-span-4 flex-col bg-white overflow-y-auto p-6">
+      <aside className="hidden lg:flex lg:col-span-4 flex-col bg-white overflow-y-auto p-6 rounded-xl">
         <NextStepsPanel
           social={{
             linkedin: (me?.linkedin_url as string | null) ?? null,

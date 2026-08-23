@@ -40,7 +40,7 @@ function Field({
         className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
       >
         {label}
-        {required && <span className="text-gold ml-1">*</span>}
+        {required && <span className="text-gold-ink ml-1">*</span>}
       </label>
       {children}
       {hint && <p className="text-xs text-ink-muted mt-1.5">{hint}</p>}
@@ -182,8 +182,8 @@ export function DealProposalForm({
         </Field>
       </div>
 
-      <div className="flex items-start gap-3 p-4 bg-cream border border-line">
-        <ShieldCheck className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 p-4 bg-cream border border-line rounded-xl">
+        <ShieldCheck className="w-5 h-5 text-gold-ink shrink-0 mt-0.5" />
         <p className="text-xs text-ink leading-relaxed">
           {tr(
             "Cofoundee charges 1% of the deal value (minimum ฿2,000) per signed deal. A partner law firm drafts and handles the contract; signing happens in person.",
@@ -192,7 +192,7 @@ export function DealProposalForm({
       </div>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
           {tr(state.error)}
         </div>
       )}

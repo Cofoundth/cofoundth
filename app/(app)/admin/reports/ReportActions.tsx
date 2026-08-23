@@ -34,7 +34,7 @@ export function ReportActions({
         type="button"
         disabled={pending}
         onClick={() => act("resolve")}
-        className="px-3 py-1.5 text-xs border border-line text-ink hover:border-navy disabled:opacity-50"
+        className="px-3 py-1.5 text-xs border border-line text-ink hover:border-navy disabled:opacity-50 rounded-full"
       >
         {tr("Mark resolved")}
       </button>
@@ -42,7 +42,7 @@ export function ReportActions({
         type="button"
         disabled={pending}
         onClick={() => act("dismiss")}
-        className="px-3 py-1.5 text-xs border border-line text-ink-muted hover:border-navy disabled:opacity-50"
+        className="px-3 py-1.5 text-xs border border-line text-ink-muted hover:border-navy disabled:opacity-50 rounded-full"
       >
         {tr("Dismiss")}
       </button>

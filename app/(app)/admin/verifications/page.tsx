@@ -32,26 +32,28 @@ export default async function AdminVerificationsPage() {
     profiles?.filter((p) => p.type !== "company") ?? [];
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <AdminTabs />
       <div className="mb-10 pb-8 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Admin
+        <div className="max-w-[640px]">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
+            Admin
+          </div>
+          <h1 className="text-d2 mb-2">Verifications</h1>
+          <p className="text-ink leading-relaxed">
+            Verify profiles after manual checks (Thai company registration via{" "}
+            <a
+              href="https://datawarehouse.dbd.go.th/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-navy hover:text-gold-ink underline underline-offset-4 decoration-line"
+            >
+              DBD lookup
+            </a>{" "}
+            for companies, LinkedIn cross-check for individuals). Verified
+            profiles show a gold checkmark across the platform.
+          </p>
         </div>
-        <h1 className="text-d2 mb-2">Verifications</h1>
-        <p className="text-ink leading-relaxed max-w-2xl">
-          Verify profiles after manual checks (Thai company registration via{" "}
-          <a
-            href="https://datawarehouse.dbd.go.th/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-navy hover:text-gold underline underline-offset-4 decoration-gold/30"
-          >
-            DBD lookup
-          </a>{" "}
-          for companies, LinkedIn cross-check for individuals). Verified
-          profiles show a gold checkmark across the platform.
-        </p>
       </div>
 
       <Section
@@ -88,7 +90,7 @@ function Section({
   return (
     <section>
       <div className="flex items-center gap-3 mb-5">
-        <Icon className="w-5 h-5 text-gold" strokeWidth={1.5} />
+        <Icon className="w-5 h-5 text-gold-ink" strokeWidth={1.5} />
         <h2 className="text-d1">{title}</h2>
         <span className="text-sm text-ink-muted ml-auto">
           {verifiedCount} / {profiles.length} verified
@@ -96,11 +98,11 @@ function Section({
       </div>
 
       {profiles.length === 0 ? (
-        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted">
+        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
           {emptyMessage}
         </div>
       ) : (
-        <div className="bg-white border border-line divide-y divide-line">
+        <div className="bg-white border border-line divide-y divide-line rounded-xl">
           {profiles.map((p) => (
             <div
               key={p.id as string}
@@ -117,13 +119,13 @@ function Section({
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link
                     href={`/profile/${(p.slug as string) ?? p.id}`}
-                    className="text-navy font-medium hover:text-gold"
+                    className="text-navy font-medium hover:text-gold-ink"
                   >
                     {(p.company_name as string) ?? (p.full_name as string)}
                   </Link>
                   {!!p.verified && (
                     <BadgeCheck
-                      className="w-4 h-4 text-gold"
+                      className="w-4 h-4 text-gold-ink"
                       strokeWidth={2}
                     />
                   )}
@@ -138,7 +140,7 @@ function Section({
                       href={p.linkedin_url as string}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-navy hover:text-gold"
+                      className="text-navy hover:text-gold-ink"
                     >
                       LinkedIn ↗
                     </a>

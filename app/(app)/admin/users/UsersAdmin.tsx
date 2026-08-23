@@ -61,7 +61,7 @@ export function UsersAdmin({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search name or email…"
-          className="flex-1 px-3 py-2 border border-line bg-white text-sm text-ink focus:outline-none focus:border-navy"
+          className="flex-1 px-3 py-2 border border-line bg-white text-sm text-ink focus:outline-none focus:border-navy rounded-xl"
         />
         <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
@@ -82,14 +82,14 @@ export function UsersAdmin({
       </div>
       <p className="text-xs text-ink-muted">{filtered.length} shown</p>
       {filtered.length === 0 ? (
-        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted">
+        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
           No users match.
         </div>
       ) : (
         <Paginated
           key={`${filter}:${query}`}
           pageSize={20}
-          className="bg-white border border-line divide-y divide-line"
+          className="bg-white border border-line divide-y divide-line rounded-xl"
         >
           {filtered.map((u) => (
             <UserRow key={u.id} user={u} selfId={selfId} />

@@ -39,8 +39,8 @@ export function SignupForm() {
   if (state.step === "check_email") {
     return (
       <div className="space-y-5">
-        <div className="flex items-start gap-4 p-5 bg-cream border border-line">
-          <Mail className="w-6 h-6 text-gold shrink-0 mt-0.5" strokeWidth={1.5} />
+        <div className="flex items-start gap-4 p-5 bg-cream border border-line rounded-xl">
+          <Mail className="w-6 h-6 text-gold-ink shrink-0 mt-0.5" strokeWidth={1.5} />
           <div className="space-y-2">
             <div className="text-navy font-medium">{tr("Check your email")}</div>
             <div className="text-sm text-ink leading-relaxed">
@@ -114,7 +114,7 @@ export function SignupForm() {
             required
             autoComplete="given-name"
             autoFocus
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
         </div>
         <div>
@@ -129,7 +129,7 @@ export function SignupForm() {
             name="lastName"
             type="text"
             autoComplete="family-name"
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
         </div>
       </div>
@@ -147,7 +147,7 @@ export function SignupForm() {
           type="email"
           required
           autoComplete="email"
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
       </div>
 
@@ -168,7 +168,7 @@ export function SignupForm() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 pr-11 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="w-full px-4 py-3 pr-11 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
           <button
             type="button"
@@ -214,12 +214,12 @@ export function SignupForm() {
             passwordsMismatch
               ? "border-red-400 focus:border-red-500"
               : passwordsMatch
-                ? "border-gold focus:border-gold"
+                ? "border-line focus:border-line"
                 : "border-line focus:border-navy"
           }`}
         />
         {passwordsMatch && (
-          <p className="text-xs text-gold mt-2 inline-flex items-center gap-1.5">
+          <p className="text-xs text-gold-ink mt-2 inline-flex items-center gap-1.5">
             <Check className="w-3 h-3" /> {tr("Passwords match")}
           </p>
         )}
@@ -231,7 +231,7 @@ export function SignupForm() {
       </div>
 
       {state.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
           {state.error}
         </div>
       )}
@@ -252,7 +252,7 @@ function RuleRow({ ok, label }: { ok: boolean; label: string }) {
   return (
     <li
       className={`inline-flex items-center gap-2 ${
-        ok ? "text-gold" : "text-ink-muted"
+        ok ? "text-gold-ink" : "text-ink-muted"
       }`}
     >
       {ok ? (

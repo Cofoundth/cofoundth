@@ -58,3 +58,6 @@ next-env.d.ts
 
 # Local scratch (translator export, etc.)
 /cofoundee_translations.csv
+
+# Dev-only helper route — never ship
+/app/dev/

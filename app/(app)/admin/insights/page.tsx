@@ -25,11 +25,11 @@ export default async function AdminInsightsPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <AdminTabs />
       <div className="mb-10 pb-8 border-b border-line flex items-end justify-between gap-4">
-        <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+        <div className="max-w-[640px]">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
             Admin
           </div>
           <h1 className="text-d2 mb-2">Insights</h1>
@@ -40,14 +40,14 @@ export default async function AdminInsightsPage() {
         </div>
         <Link
           href="/admin/insights/new"
-          className="inline-flex items-center gap-2 px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
         >
           <Plus className="w-4 h-4" /> New insight
         </Link>
       </div>
 
       {bySlug.size === 0 ? (
-        <div className="bg-white border border-line p-12 text-center">
+        <div className="bg-white border border-line p-12 text-center rounded-xl">
           <h3 className="text-d1 mb-2">No insights yet</h3>
           <p className="text-ink-muted mb-6">
             Did you apply migration{" "}
@@ -63,7 +63,7 @@ export default async function AdminInsightsPage() {
       ) : (
         <div className="space-y-4">
           {Array.from(bySlug.entries()).map(([slug, rows]) => (
-            <div key={slug} className="bg-white border border-line">
+            <div key={slug} className="bg-white border border-line rounded-xl">
               <div className="px-5 py-3 border-b border-line bg-cream">
                 <div className="text-xs uppercase tracking-[0.2em] text-ink-muted">
                   {slug}
@@ -77,13 +77,13 @@ export default async function AdminInsightsPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-navy border border-line px-2 py-0.5">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-navy border border-line px-2 py-0.5 rounded-full">
                           {r.locale}
                         </span>
                         <span
                           className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
                             r.status === "published"
-                              ? "border-gold text-gold"
+                              ? "border-line text-gold-ink"
                               : "border-line text-ink-muted"
                           }`}
                         >
@@ -108,14 +108,14 @@ export default async function AdminInsightsPage() {
                       >
                         <button
                           type="submit"
-                          className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy transition-colors"
+                          className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy transition-colors rounded-full"
                         >
                           {r.status === "published" ? "Unpublish" : "Publish"}
                         </button>
                       </form>
                       <Link
                         href={`/admin/insights/${r.id}/edit`}
-                        className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy transition-colors inline-flex items-center gap-1"
+                        className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy transition-colors inline-flex items-center gap-1 rounded-full"
                       >
                         <Edit3 className="w-3 h-3" /> Edit
                       </Link>
@@ -124,7 +124,7 @@ export default async function AdminInsightsPage() {
                       >
                         <button
                           type="submit"
-                          className="text-xs px-3 py-1.5 border border-red-300 text-red-700 hover:bg-red-50 transition-colors"
+                          className="text-xs px-3 py-1.5 border border-red-300 text-red-700 hover:bg-red-50 transition-colors rounded-full"
                         >
                           Delete
                         </button>

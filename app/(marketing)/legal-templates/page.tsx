@@ -96,14 +96,14 @@ export default async function LegalTemplatesPage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-20">
-      <div className="mb-16 max-w-3xl">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <div className="mb-16 max-w-[640px]">
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {resources}
         </div>
         <h1 className="text-d2 lg:text-d3 leading-tight mb-4">{heading}</h1>
         <p className="text-lg text-ink leading-relaxed">{intro}</p>
-        <div className="mt-6 px-4 py-3 border border-gold/40 bg-cream text-sm text-ink leading-relaxed">
+        <div className="mt-6 px-4 py-3 border border-line bg-cream text-sm text-ink leading-relaxed rounded-xl">
           <strong className="text-navy">{importantLabel}</strong> {disclaimer}
         </div>
       </div>
@@ -114,14 +114,14 @@ export default async function LegalTemplatesPage() {
             <h2 className="text-d1 mb-6 pb-3 border-b border-line">
               {section.label}
             </h2>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {section.items.map((t) => (
                 <div
                   key={t.key}
-                  className="bg-white border border-line p-6 flex items-start gap-4"
+                  className="bg-white border border-line p-6 flex items-start gap-4 rounded-xl"
                 >
                   <FileText
-                    className="w-5 h-5 text-gold shrink-0 mt-0.5"
+                    className="w-5 h-5 text-gold-ink shrink-0 mt-0.5"
                     strokeWidth={1.5}
                   />
                   <div className="flex-1">

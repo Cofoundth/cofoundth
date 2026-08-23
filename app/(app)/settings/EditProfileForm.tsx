@@ -367,7 +367,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
               e.currentTarget.value = "";
             }
           }}
-          className="mt-2 w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:border-navy"
+          className="mt-2 w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:border-navy rounded-xl"
         />
 
         <Label>{tr("Your stage")}</Label>

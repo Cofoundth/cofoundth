@@ -29,7 +29,7 @@ export function Paginated({
             type="button"
             disabled={p === 0}
             onClick={() => setPage(p - 1)}
-            className="px-3 py-1.5 border border-line text-ink hover:border-navy disabled:opacity-40 disabled:cursor-not-allowed tracking-wide"
+            className="px-3 py-1.5 border border-line text-ink hover:border-navy disabled:opacity-40 disabled:cursor-not-allowed tracking-wide rounded-xl"
           >
             ← Prev
           </button>
@@ -40,7 +40,7 @@ export function Paginated({
             type="button"
             disabled={p >= pages - 1}
             onClick={() => setPage(p + 1)}
-            className="px-3 py-1.5 border border-line text-ink hover:border-navy disabled:opacity-40 disabled:cursor-not-allowed tracking-wide"
+            className="px-3 py-1.5 border border-line text-ink hover:border-navy disabled:opacity-40 disabled:cursor-not-allowed tracking-wide rounded-xl"
           >
             Next →
           </button>

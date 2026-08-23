@@ -38,7 +38,7 @@ export function ForgotPasswordForm() {
             autoComplete="one-time-code"
             autoFocus
             placeholder="••••••"
-            className="w-full px-4 py-4 border border-line bg-white text-ink text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-navy font-serif"
+            className="w-full px-4 py-4 border border-line bg-white text-ink text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-navy font-serif rounded-xl"
           />
         </div>
 
@@ -56,13 +56,13 @@ export function ForgotPasswordForm() {
             required
             autoComplete="new-password"
             minLength={8}
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
           <p className="text-xs text-ink-muted mt-2">8+ characters.</p>
         </div>
 
         {state.error && (
-          <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+          <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
             {state.error}
           </div>
         )}
@@ -95,12 +95,12 @@ export function ForgotPasswordForm() {
           required
           autoFocus
           autoComplete="email"
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
       </div>
 
       {state.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
           {state.error}
         </div>
       )}

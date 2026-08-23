@@ -43,7 +43,7 @@ export default async function InsightsPage() {
       </div>
 
       {insights.length === 0 ? (
-        <div className="bg-white border border-line p-12 text-center text-ink-muted">
+        <div className="bg-white border border-line p-12 text-center text-ink-muted rounded-xl">
           {tr("No insights yet — check back soon.")}
         </div>
       ) : (
@@ -52,12 +52,12 @@ export default async function InsightsPage() {
             <Link
               key={i.slug}
               href={`/insights/${i.slug}`}
-              className="group flex flex-col bg-white border border-line p-6 hover:border-navy transition-colors"
+              className="group flex flex-col bg-white border border-line p-6 hover:border-navy transition-colors rounded-xl"
             >
               {/* meta row */}
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] mb-4">
                 <span className="text-gold-ink">{i.category}</span>
-                <span className="text-line" aria-hidden="true">
+                <span className="text-ink-muted/50" aria-hidden="true">
                   ·
                 </span>
                 <span className="text-ink-muted normal-case tracking-normal text-xs">

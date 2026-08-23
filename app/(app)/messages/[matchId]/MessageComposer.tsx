@@ -64,7 +64,7 @@ export function MessageComposer({ matchId }: { matchId: string }) {
     <form
       ref={formRef}
       action={formAction}
-      className="border-t border-line bg-white p-4"
+      className="border-t border-line bg-white p-4 rounded-xl"
     >
       <input type="hidden" name="matchId" value={matchId} />
       <div className="flex gap-3 items-end">
@@ -77,7 +77,7 @@ export function MessageComposer({ matchId }: { matchId: string }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={tr("Write a message…")}
-          className="flex-1 px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
+          className="flex-1 px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
           onKeyDown={(e) => {
             // Enter sends; Shift+Enter inserts a newline.
             // Don't submit if the user is composing IME (Thai, etc.) text.

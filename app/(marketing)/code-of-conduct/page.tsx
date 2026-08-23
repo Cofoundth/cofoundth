@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function CodeOfConductPage() {
   return (
-    <article className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
+    <article className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/"
         className="text-sm text-ink-muted hover:text-navy mb-10 inline-flex items-center gap-1.5"
@@ -15,7 +15,7 @@ export default function CodeOfConductPage() {
         <ArrowLeft className="w-4 h-4" /> Back to home
       </Link>
 
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
         Community
       </div>
       <h1 className="text-d2 lg:text-d3 leading-tight mb-4">
@@ -92,7 +92,7 @@ export default function CodeOfConductPage() {
             For urgent issues (threats, ongoing harassment), email{" "}
             <a
               href="mailto:chayanonr@cofoundee.co"
-              className="text-navy hover:text-gold"
+              className="text-navy hover:text-gold-ink"
             >
               chayanonr@cofoundee.co
             </a>{" "}
@@ -132,11 +132,11 @@ export default function CodeOfConductPage() {
           <p>
             By using Cofoundee, you agree to abide by this Code of Conduct.
             Read alongside the{" "}
-            <Link href="/terms" className="text-navy hover:text-gold">
+            <Link href="/terms" className="text-navy hover:text-gold-ink">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="text-navy hover:text-gold">
+            <Link href="/privacy" className="text-navy hover:text-gold-ink">
               Privacy Policy
             </Link>
             .

@@ -24,7 +24,9 @@
 // Disabled state was three different opacities in the wild (40 / 50 / 60);
 // `disabled:opacity-50` is now the single answer, always applied.
 //
-// SHARP CORNERS ALWAYS — never add a rounded-* utility here or via className.
+// PILL CORNERS ALWAYS (`rounded-full`, part of BASE). @layer base already
+// rounds every <button>; BASE carries it explicitly so LinkButton — an <a>,
+// which the base rule does not match — comes out identical.
 //
 // ⚠️ `type` defaults to "button" (matching the app's dominant idiom: 97 of 141
 // buttons already write type="button" explicitly). A submit button MUST pass
@@ -51,7 +53,7 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
 };
 
 const BASE =
-  "inline-flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
 type StyleProps = {
   variant?: ButtonVariant;

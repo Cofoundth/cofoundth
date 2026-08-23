@@ -76,7 +76,7 @@ export function InsightForm({ initial, action, submitLabel }: Props) {
       />
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
           {state.error}
         </div>
       )}
@@ -91,7 +91,7 @@ export function InsightForm({ initial, action, submitLabel }: Props) {
         </button>
         <Link
           href="/admin/insights"
-          className="px-6 py-3 border border-line hover:border-navy text-ink hover:text-navy text-sm tracking-wide"
+          className="px-6 py-3 border border-line hover:border-navy text-ink hover:text-navy text-sm tracking-wide rounded-xl"
         >
           Cancel
         </Link>
@@ -115,7 +115,7 @@ function Field({
       </div>
       <input
         {...props}
-        className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+        className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
       />
       {hint && <div className="text-xs text-ink-muted mt-1">{hint}</div>}
     </label>
@@ -163,7 +163,7 @@ function Select({
       </div>
       <select
         {...props}
-        className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+        className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

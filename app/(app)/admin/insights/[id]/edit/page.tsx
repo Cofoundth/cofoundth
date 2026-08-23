@@ -21,7 +21,7 @@ export default async function EditInsightPage({ params }: Props) {
   const action = updateInsightAction.bind(null, id);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-4xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/admin/insights"
         className="text-sm text-ink-muted hover:text-navy mb-6 inline-flex items-center gap-1.5"
@@ -31,7 +31,7 @@ export default async function EditInsightPage({ params }: Props) {
 
       <div className="mb-10 pb-8 border-b border-line flex items-end justify-between gap-4">
         <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
             Admin
           </div>
           <h1 className="text-d2">Edit insight</h1>
@@ -42,7 +42,7 @@ export default async function EditInsightPage({ params }: Props) {
         {insight.status === "published" && (
           <Link
             href={`/insights/${insight.slug}`}
-            className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy"
+            className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy rounded-full"
             target="_blank"
             rel="noopener"
           >

@@ -103,35 +103,37 @@ export default async function AdminOverviewPage() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <AdminTabs />
       <div className="mb-8 pb-6 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
-          Admin
+        <div className="max-w-[640px]">
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
+            Admin
+          </div>
+          <h1 className="text-d2 mb-2">Overview</h1>
+          <p className="text-ink">
+            {openReports ?? 0} open report{openReports === 1 ? "" : "s"} · last{" "}
+            {DAYS} days
+          </p>
         </div>
-        <h1 className="text-d2 mb-2">Overview</h1>
-        <p className="text-ink">
-          {openReports ?? 0} open report{openReports === 1 ? "" : "s"} · last{" "}
-          {DAYS} days
-        </p>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
-          <div key={c.label} className="bg-white border border-line p-5">
+          <div key={c.label} className="bg-white border border-line p-5 rounded-xl">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-1">
               {c.label}
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-serif text-d2 text-navy">{c.total}</span>
-              <span className="text-xs text-gold">+{c.week} this week</span>
+              <span className="text-xs text-gold-ink">+{c.week} this week</span>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white border border-line p-5 mt-4">
-        <div className="text-xs uppercase tracking-[0.2em] text-gold mb-4">
+      <div className="bg-white border border-line p-5 mt-4 rounded-xl">
+        <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
           Daily activity · last {DAYS} days
         </div>
         <TrendTabs

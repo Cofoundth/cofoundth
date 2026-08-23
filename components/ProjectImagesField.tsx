@@ -51,14 +51,14 @@ export function ProjectImagesField({
         {value.map((url) => (
           <div
             key={url}
-            className="relative w-24 h-24 border border-line overflow-hidden"
+            className="relative w-24 h-24 border border-line overflow-hidden rounded-xl"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="w-full h-full object-cover" />
             <button
               type="button"
               onClick={() => onChange(value.filter((u) => u !== url))}
-              className="absolute top-1 right-1 bg-navy/80 hover:bg-navy text-white p-0.5"
+              className="absolute top-1 right-1 bg-navy/80 hover:bg-navy text-white p-0.5 rounded-xl"
               aria-label={tr("Remove")}
             >
               <X className="w-3 h-3" />

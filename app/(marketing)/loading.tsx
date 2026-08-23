@@ -1,6 +1,6 @@
 // Suspense fallback for the marketing shell. It mirrors the hero in
 // app/(marketing)/page.tsx block-for-block — same cream section + bottom rule,
-// same max-w-7xl / px-6 lg:px-10 / py-20 lg:py-28 frame, same 12-column split
+// same max-w-[1120px] / px-6 lg:px-10 / py-[88px] frame, same 12-column split
 // (7 = eyebrow + wordmark + headline + paragraph + two CTAs, 5 = founders card
 // with its offset gold outline). The old three-bar skeleton bore no relation to
 // the real layout, so the page visibly jumped as it hydrated.
@@ -14,7 +14,7 @@ export default function Loading() {
       aria-hidden="true"
       className="bg-cream border-b border-line animate-pulse motion-reduce:animate-none"
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20 lg:py-28">
+      <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           {/* Left column */}
           <div className="lg:col-span-7">
@@ -39,7 +39,7 @@ export default function Loading() {
             {/* two CTA blocks — px-8 py-4 text-sm ≈ 52px tall */}
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="h-[52px] w-full sm:w-56 bg-line/70" />
-              <div className="h-[52px] w-full sm:w-56 border border-line" />
+              <div className="h-[52px] w-full sm:w-56 border border-line rounded-xl" />
             </div>
             {/* the two "Free to join" / "Built for Thailand" ticks */}
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
@@ -51,7 +51,7 @@ export default function Loading() {
           {/* Right column — founders card */}
           <div className="lg:col-span-5">
             <div className="relative">
-              <div className="bg-white border border-line p-6">
+              <div className="bg-white border border-line p-6 rounded-xl">
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-3 w-40 bg-line/70" />
                   <div className="h-3 w-14 bg-line/50" />
@@ -72,7 +72,7 @@ export default function Loading() {
                 </div>
               </div>
               <div
-                className="absolute -bottom-3 -right-3 w-full h-full border border-gold"
+                className="absolute -bottom-3 -right-3 w-full h-full border border-line rounded-xl"
                 style={{ zIndex: -1 }}
               />
             </div>

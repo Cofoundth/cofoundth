@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<string, string> = {
 const PILL_BASE =
   "text-[11px] uppercase tracking-wider px-2 py-0.5 shrink-0 border";
 function pillCls(status: string) {
-  if (status === "signed") return `${PILL_BASE} bg-gold border-gold text-navy`;
+  if (status === "signed") return `${PILL_BASE} bg-gold border-line text-navy`;
   if (status === "declined" || status === "cancelled") {
     return `${PILL_BASE} bg-cream border-line text-ink-muted line-through`;
   }
@@ -129,7 +129,7 @@ export default async function FundingDetailPage({ params }: Props) {
   const bookSigning = await tServer("Book your signing slot");
 
   return (
-    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/funding"
         className="text-xs text-ink-muted hover:text-navy mb-3 inline-flex items-center gap-1.5"
@@ -142,7 +142,7 @@ export default async function FundingDetailPage({ params }: Props) {
       </p>
 
       {/* Propose */}
-      <div className="bg-white border border-line p-6 mb-8">
+      <div className="bg-white border border-line p-6 mb-8 rounded-xl">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
           {await tServer("Send a proposal")}
         </h2>
@@ -157,7 +157,7 @@ export default async function FundingDetailPage({ params }: Props) {
           </h2>
           <div className="space-y-3">
             {dealsView.map((d) => (
-              <div key={d.id} className="bg-white border border-line p-5">
+              <div key={d.id} className="bg-white border border-line p-5 rounded-xl">
                 <div className="flex items-start justify-between gap-3">
                   <div className="text-sm text-navy">
                     {d.equity != null && (
@@ -206,7 +206,7 @@ export default async function FundingDetailPage({ params }: Props) {
                       href={COFOUNDEE_CALENDLY_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark text-white text-xs transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark text-white text-xs transition-colors rounded-full"
                     >
                       <CalendarClock className="w-3.5 h-3.5" />
                       {bookSigning}

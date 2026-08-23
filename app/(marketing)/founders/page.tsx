@@ -51,7 +51,7 @@ export default async function PublicFoundersPage() {
       </div>
 
       {/* Thin gold rule — the editorial section divider used across the site. */}
-      <div className="w-16 h-px bg-gold mb-12" />
+      <div className="w-16 h-px bg-line mb-12" />
 
       {founders.length === 0 ? (
         <EmptyState
@@ -107,12 +107,12 @@ export default async function PublicFoundersPage() {
 
                   <div className="mt-auto pt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-ink-muted">
                     {f.industry.slice(0, 2).map((i) => (
-                      <span key={i} className="px-2 py-0.5 border border-line">
+                      <span key={i} className="px-2 py-0.5 border border-line rounded-xl">
                         {i}
                       </span>
                     ))}
                     {stageLabel && (
-                      <span className="px-2 py-0.5 border border-gold/50 text-gold-ink bg-gold/5">
+                      <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-xl">
                         {tr(stageLabel)}
                       </span>
                     )}
@@ -129,7 +129,7 @@ export default async function PublicFoundersPage() {
       )}
 
       {/* Conversion — the whole point of the preview. */}
-      <div className="mt-16 bg-navy text-white p-10 lg:p-12 text-center">
+      <div className="mt-16 bg-navy text-white p-10 lg:p-12 text-center rounded-xl">
         <h2 className="text-d2 lg:text-d3 text-white leading-tight mb-4">
           {tr("Where Thai founders connect")}
         </h2>

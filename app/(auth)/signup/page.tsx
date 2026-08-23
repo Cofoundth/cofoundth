@@ -8,7 +8,7 @@ import { tServer } from "@/lib/i18n-server";
 export default async function SignupPage() {
   const tr = (en: string) => tServer(en);
   return (
-    <div className="bg-white border border-line p-8 lg:p-10">
+    <div className="bg-white border border-line p-8 lg:p-10 rounded-xl">
       <h1 className="text-d2 mb-8">{await tr("Create your profile")}</h1>
 
       <SignupForm />
@@ -34,7 +34,7 @@ export default async function SignupPage() {
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">
         {await tr("Already on Cofoundee?")}{" "}
-        <Link href="/login" className="text-navy hover:text-gold">
+        <Link href="/login" className="text-navy hover:text-gold-ink">
           {await tr("Sign in")}
         </Link>
       </div>

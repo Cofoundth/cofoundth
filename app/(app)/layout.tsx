@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
-import { AppHeader } from "@/components/AppHeader";
+import { AppSidebar } from "@/components/AppSidebar";
 import { AppFooter } from "@/components/AppFooter";
 import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 
@@ -33,6 +33,7 @@ export default async function AppLayout({
 
   if (isInvestor) {
     const readable =
+      pathname === "/investor" ||
       pathname === "/funding" ||
       pathname.startsWith("/funding/") ||
       pathname === "/community" ||
@@ -54,7 +55,7 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
+    <div className="min-h-screen bg-cream">
       {/* First tab stop on every app page: lets keyboard users jump the ~8-item
           nav instead of tabbing through it on each navigation. */}
       <a
@@ -63,14 +64,17 @@ export default async function AppLayout({
       >
         {await tServer("Skip to content")}
       </a>
-      <AppHeader />
-      <main id="main" className="flex-1">
-        <IncompleteProfileBanner
-          complete={isInvestor || !!profile?.profile_complete}
-        />
-        {children}
-      </main>
-      <AppFooter />
+      {/* Persistent left rail on desktop, slim top bar on mobile. */}
+      <AppSidebar />
+      <div className="lg:pl-64 min-h-screen flex flex-col">
+        <main id="main" className="flex-1">
+          <IncompleteProfileBanner
+            complete={isInvestor || !!profile?.profile_complete}
+          />
+          {children}
+        </main>
+        <AppFooter />
+      </div>
     </div>
   );
 }

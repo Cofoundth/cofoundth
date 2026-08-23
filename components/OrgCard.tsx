@@ -53,12 +53,12 @@ export function OrgLogo({
       <img
         src={org.logo_url}
         alt={org.name}
-        className="w-12 h-12 object-cover border border-line shrink-0"
+        className="w-12 h-12 object-cover border border-line shrink-0 rounded-xl"
       />
     );
   }
   return (
-    <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center shrink-0">
+    <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center shrink-0 rounded-xl">
       <span className="font-serif text-lg text-navy">
         {org.name.trim().charAt(0).toUpperCase() || "?"}
       </span>
@@ -79,7 +79,7 @@ function CardTags({ label, items }: { label: string; items: string[] }) {
         {shown.map((c) => (
           <span
             key={c}
-            className="text-[11px] text-ink border border-line bg-cream px-2 py-0.5"
+            className="text-[11px] text-ink border border-line bg-cream px-2 py-0.5 rounded-full"
           >
             {c}
           </span>
@@ -155,7 +155,7 @@ export function OrgCard({
           </h3>
           {org.verified && <VerifiedBadge label={verifiedLabel} />}
           {role && (
-            <span className="text-[10px] uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 shrink-0">
+            <span className="text-[10px] uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 shrink-0 rounded-full">
               {role}
             </span>
           )}
@@ -167,7 +167,7 @@ export function OrgCard({
           <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted">
             {org.location && (
               <span className="inline-flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-gold" />
+                <MapPin className="w-3 h-3 text-gold-ink" />
                 {org.location}
               </span>
             )}
@@ -191,7 +191,7 @@ export function OrgCard({
   return (
     <Link
       href={target}
-      className="block bg-white border border-line p-5 hover:border-navy transition-colors group"
+      className="block bg-white border border-line p-5 hover:border-navy transition-colors group rounded-xl"
     >
       {body}
     </Link>

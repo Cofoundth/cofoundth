@@ -8,8 +8,8 @@ import { tServer } from "@/lib/i18n-server";
 export default async function LoginPage() {
   const tr = (en: string) => tServer(en);
   return (
-    <div className="bg-white border border-line p-8 lg:p-10">
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+    <div className="bg-white border border-line p-8 lg:p-10 rounded-xl">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
         {await tr("Welcome back")}
       </div>
       <h1 className="text-d2 mb-2">{await tr("Sign in")}</h1>
@@ -34,7 +34,7 @@ export default async function LoginPage() {
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">
         {await tr("New to Cofoundee?")}{" "}
-        <Link href="/signup" className="text-navy hover:text-gold">
+        <Link href="/signup" className="text-navy hover:text-gold-ink">
           {await tr("Create your profile")}
         </Link>
       </div>

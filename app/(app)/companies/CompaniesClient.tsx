@@ -129,15 +129,15 @@ export function CompaniesClient({
     capabilityFilters.length + seekingFilters.length + (searchTerm ? 1 : 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       {/* Header */}
       <div className="mb-10 pb-8 border-b border-line">
         <div className="flex items-end justify-between gap-6 flex-wrap">
-          <div>
+          <div className="max-w-[640px]">
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
               <Building2 className="w-3 h-3" strokeWidth={1.5} />
               {tr("B2B Network")}
-              <span className="text-line">·</span>
+              <span className="text-ink-muted/50">·</span>
               <span className="normal-case tracking-normal text-ink-muted">
                 Beta
               </span>
@@ -154,7 +154,7 @@ export function CompaniesClient({
           <div className="flex items-center gap-6">
             <Link
               href="/companies/requests"
-              className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors"
+              className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors rounded-xl"
             >
               <HandshakeIcon className="w-4 h-4" strokeWidth={1.5} />
               {tr("Partnership board")}
@@ -171,14 +171,14 @@ export function CompaniesClient({
         </div>
 
         {!currentUserIsCompany && (
-          <div className="mt-6 bg-cream border-l-2 border-gold p-4">
+          <div className="mt-6 bg-cream border-l-2 border-navy p-4 rounded-xl">
             <p className="text-sm text-ink leading-relaxed">
               {tr(
                 "Want to send partnership requests? Your profile must be a Company type first. ",
               )}
               <Link
                 href="/onboarding"
-                className="text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30"
+                className="text-navy hover:text-gold-ink underline underline-offset-4 decoration-line"
               >
                 {tr("Edit profile")}
               </Link>
@@ -209,7 +209,7 @@ export function CompaniesClient({
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={tr("Name, capability…")}
-                  className="w-full pl-9 pr-3 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
+                  className="w-full pl-9 pr-3 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
                 />
               </div>
             </div>
@@ -271,7 +271,7 @@ export function CompaniesClient({
         {/* Results */}
         <div className="lg:col-span-9">
           {filtered.length === 0 ? (
-            <div className="bg-white border border-line p-12 text-center">
+            <div className="bg-white border border-line p-12 text-center rounded-xl">
               <Building2
                 className="w-8 h-8 text-ink-muted mx-auto mb-4"
                 strokeWidth={1}
@@ -355,7 +355,7 @@ function CompanyCard({
   const fresh = isWithinMs(c.created_at, 7 * DAY_MS);
 
   return (
-    <div className="bg-white border border-line p-6 hover:border-navy transition-colors">
+    <div className="bg-white border border-line p-6 hover:border-navy transition-colors rounded-xl">
       <div className="flex items-start gap-5">
         <Link href={`/profile/${c.slug}`} className="shrink-0">
           <Avatar name={c.company_name} url={c.photo_url} size="lg" />
@@ -372,13 +372,13 @@ function CompanyCard({
                 </h3>
                 {c.verified && (
                   <BadgeCheck
-                    className="w-4 h-4 text-gold shrink-0"
+                    className="w-4 h-4 text-gold-ink shrink-0"
                     strokeWidth={2}
                   />
                 )}
                 {fresh && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-gold text-gold-ink">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-line text-gold-ink rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse" />
                     {tr("New")}
                   </span>
                 )}
@@ -402,7 +402,7 @@ function CompanyCard({
                 return (
                   <span
                     key={t}
-                    className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border border-gold/60 text-gold-ink bg-gold/5"
+                    className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full"
                   >
                     {tr(label)}
                   </span>
@@ -426,7 +426,7 @@ function CompanyCard({
                 {c.capabilities.slice(0, 8).map((cap) => (
                   <span
                     key={cap}
-                    className="text-xs px-2 py-0.5 bg-cream border border-line text-ink"
+                    className="text-xs px-2 py-0.5 bg-cream border border-line text-ink rounded-full"
                   >
                     {cap}
                   </span>
@@ -449,7 +449,7 @@ function CompanyCard({
                 {c.partnership_seeking.slice(0, 8).map((s) => (
                   <span
                     key={s}
-                    className="text-xs px-2 py-0.5 bg-gold/10 border border-gold/40 text-gold-ink"
+                    className="text-xs px-2 py-0.5 bg-gold-soft border border-line text-gold-ink rounded-full"
                   >
                     {s}
                   </span>

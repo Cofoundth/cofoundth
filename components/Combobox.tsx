@@ -175,7 +175,7 @@ export default function Combobox({
           ref={listRef}
           id={listId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-60 w-full overflow-auto border border-line bg-white shadow-lg"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-auto border border-line bg-white shadow-lg rounded-xl"
         >
           {filtered.length === 0 ? (
             <li className="px-4 py-2.5 text-sm text-ink-muted">{emptyText}</li>
@@ -200,7 +200,7 @@ export default function Combobox({
                 >
                   <span>{option}</span>
                   {selected && (
-                    <Check aria-hidden className="h-4 w-4 shrink-0 text-gold" />
+                    <Check aria-hidden className="h-4 w-4 shrink-0 text-gold-ink" />
                   )}
                 </li>
               );

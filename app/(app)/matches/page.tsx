@@ -234,8 +234,8 @@ export default async function ConnectionsPage({
     }`;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
-      <div className="mb-6">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <div className="max-w-[640px] mb-6">
         <h1 className="text-d2 mb-2">
           {await tServer("Connections")}
         </h1>
@@ -264,7 +264,7 @@ export default async function ConnectionsPage({
             {await tServer("Company conversations")}
           </h2>
           {companyConvos.length === 0 ? (
-            <div className="bg-white border border-line p-12 text-center">
+            <div className="bg-white border border-line p-12 text-center rounded-xl">
               <h3 className="text-d1 mb-2">
                 {await tServer("No company chats yet")}
               </h3>
@@ -275,7 +275,7 @@ export default async function ConnectionsPage({
               </p>
               <Link
                 href="/orgs"
-                className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+                className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
               >
                 {await tServer("Browse companies")}{" "}
                 <ArrowRight className="w-4 h-4" />
@@ -287,7 +287,7 @@ export default async function ConnectionsPage({
                 <Link
                   key={c.connectionId}
                   href={`/orgs/${c.slug}/chat`}
-                  className="block bg-white border border-line hover:border-navy transition-colors p-5 group"
+                  className="block bg-white border border-line hover:border-navy transition-colors p-5 group rounded-xl"
                 >
                   <div className="flex items-start gap-4">
                     {c.logo_url ? (
@@ -295,10 +295,10 @@ export default async function ConnectionsPage({
                       <img
                         src={c.logo_url}
                         alt={c.name}
-                        className="w-12 h-12 object-cover border border-line shrink-0"
+                        className="w-12 h-12 object-cover border border-line shrink-0 rounded-xl"
                       />
                     ) : (
-                      <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center shrink-0 rounded-xl">
                         <Building2 className="w-5 h-5 text-ink-muted" />
                       </div>
                     )}
@@ -347,14 +347,14 @@ export default async function ConnectionsPage({
                       )
                     ).replace("{n}", String(received.length))}
                   </div>
-                  <div className="bg-white border border-line divide-y divide-line">
+                  <div className="bg-white border border-line divide-y divide-line rounded-xl">
                     {received.map((r) => {
                       const p = profiles.get(r.from_profile_id as string);
                       return (
                         <Link
                           key={r.id as string}
                           href={profileHref(p, r.from_profile_id as string)}
-                          className="flex items-start gap-4 p-5 hover:bg-cream transition-colors group"
+                          className="flex items-start gap-4 p-5 hover:bg-cream transition-colors group rounded-xl"
                         >
                           <Avatar
                             name={p?.full_name as string}
@@ -394,14 +394,14 @@ export default async function ConnectionsPage({
                       String(sent.length),
                     )}
                   </div>
-                  <div className="bg-white border border-line divide-y divide-line">
+                  <div className="bg-white border border-line divide-y divide-line rounded-xl">
                     {sent.map((s) => {
                       const p = profiles.get(s.to_profile_id as string);
                       return (
                         <Link
                           key={s.id as string}
                           href={profileHref(p, s.to_profile_id as string)}
-                          className="flex items-center gap-4 p-4 hover:bg-cream transition-colors group"
+                          className="flex items-center gap-4 p-4 hover:bg-cream transition-colors group rounded-xl"
                         >
                           <Avatar
                             name={p?.full_name as string}
@@ -443,7 +443,7 @@ export default async function ConnectionsPage({
             </div>
 
             {!matches?.length ? (
-              <div className="bg-white border border-line p-12 text-center">
+              <div className="bg-white border border-line p-12 text-center rounded-xl">
                 <h3 className="text-d1 mb-2">
                   {await tServer("No conversations yet")}
                 </h3>
@@ -454,7 +454,7 @@ export default async function ConnectionsPage({
                 </p>
                 <Link
                   href="/browse"
-                  className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+                  className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
                 >
                   {await tServer("Open directory")}{" "}
                   <ArrowRight className="w-4 h-4" />
@@ -473,7 +473,7 @@ export default async function ConnectionsPage({
                     <Link
                       key={m.id as string}
                       href={`/messages/${m.id}`}
-                      className="block bg-white border border-line hover:border-navy transition-colors p-5 group"
+                      className="block bg-white border border-line hover:border-navy transition-colors p-5 group rounded-xl"
                     >
                       <div className="flex items-start gap-4">
                         <Avatar
@@ -493,7 +493,7 @@ export default async function ConnectionsPage({
                                 </span>
                               )}
                               {msg?.unread ? (
-                                <span className="text-[10px] uppercase tracking-[0.2em] bg-gold text-white px-2 py-0.5">
+                                <span className="text-[10px] uppercase tracking-[0.2em] bg-navy text-white px-2 py-0.5">
                                   {msg.unread} {newLabel}
                                 </span>
                               ) : null}

@@ -124,7 +124,7 @@ export function AvatarUploader({ initialUrl, name }: Props) {
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-line bg-white hover:border-navy text-ink text-sm tracking-wide transition-colors disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2 border border-line bg-white hover:border-navy text-ink text-sm tracking-wide transition-colors disabled:opacity-60 rounded-xl"
         >
           <Camera className="w-4 h-4" />
           {url ? tr("Change photo") : tr("Add photo")}

@@ -152,22 +152,24 @@ export default async function AdminDealsPage() {
   const empty = dealsView.length === 0 && fundingView.length === 0;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <AdminTabs />
-      <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
-        {await tServer("Admin")}
-      </p>
-      <h1 className="font-serif text-d2 text-navy leading-tight mb-1">
-        {await tServer("Deals")}
-      </h1>
-      <p className="text-ink-muted mb-8">
-        {await tServer(
-          "Agreed deals waiting for Cofoundee to coordinate the contract signing.",
-        )}
-      </p>
+      <div className="max-w-[640px] mb-8">
+        <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
+          {await tServer("Admin")}
+        </p>
+        <h1 className="font-serif text-d2 text-navy leading-tight mb-1">
+          {await tServer("Deals")}
+        </h1>
+        <p className="text-ink-muted">
+          {await tServer(
+            "Agreed deals waiting for Cofoundee to coordinate the contract signing.",
+          )}
+        </p>
+      </div>
 
       {empty ? (
-        <div className="bg-white border border-line p-8 text-center text-ink-muted">
+        <div className="bg-white border border-line p-8 text-center text-ink-muted rounded-xl">
           {await tServer("No agreed deals yet.")}
         </div>
       ) : (
@@ -177,7 +179,7 @@ export default async function AdminDealsPage() {
               <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
                 {await tServer("Partnership deals")}
               </h2>
-              <div className="bg-white border border-line divide-y divide-line">
+              <div className="bg-white border border-line divide-y divide-line rounded-xl">
                 {dealsView.map((d) => (
                   <div key={d.id} className="p-5">
                     <div className="flex items-start justify-between gap-4">
@@ -209,7 +211,7 @@ export default async function AdminDealsPage() {
                           )}
                         </div>
                       </div>
-                      <span className="text-[11px] uppercase tracking-wider text-navy border border-navy bg-cream px-2 py-0.5 shrink-0">
+                      <span className="text-[11px] uppercase tracking-wider text-navy border border-navy bg-cream px-2 py-0.5 shrink-0 rounded-full">
                         {d.statusLabel}
                       </span>
                     </div>
@@ -228,7 +230,7 @@ export default async function AdminDealsPage() {
               <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
                 {await tServer("Funding deals")}
               </h2>
-              <div className="bg-white border border-line divide-y divide-line">
+              <div className="bg-white border border-line divide-y divide-line rounded-xl">
                 {fundingView.map((f) => (
                   <div key={f.id} className="p-5">
                     <div className="flex items-start justify-between gap-4">
@@ -237,7 +239,7 @@ export default async function AdminDealsPage() {
                           {f.org?.slug ? (
                             <Link
                               href={`/orgs/${f.org.slug}`}
-                              className="hover:text-gold"
+                              className="hover:text-gold-ink"
                             >
                               {f.org?.name}
                             </Link>
@@ -249,7 +251,7 @@ export default async function AdminDealsPage() {
                           {investorW}: {f.invName}
                         </div>
                       </div>
-                      <span className="text-[11px] uppercase tracking-wider text-navy border border-navy bg-cream px-2 py-0.5 shrink-0">
+                      <span className="text-[11px] uppercase tracking-wider text-navy border border-navy bg-cream px-2 py-0.5 shrink-0 rounded-full">
                         {f.statusLabel}
                       </span>
                     </div>
@@ -257,7 +259,7 @@ export default async function AdminDealsPage() {
                       <div className="text-xs text-ink-muted mt-2">{f.terms}</div>
                     )}
                     {f.fee != null && (
-                      <div className="text-xs text-gold mt-1">
+                      <div className="text-xs text-gold-ink mt-1">
                         {feeW}: ฿{Number(f.fee).toLocaleString()}
                       </div>
                     )}

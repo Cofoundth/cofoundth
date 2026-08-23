@@ -56,7 +56,7 @@ function Chips({ items }: { items: string[] }) {
       {items.map((c) => (
         <span
           key={c}
-          className="px-3 py-1.5 border border-line text-sm text-ink"
+          className="px-3 py-1.5 border border-line text-sm text-ink rounded-xl"
         >
           {c}
         </span>
@@ -289,7 +289,7 @@ export default async function OrgPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-[88px]">
       <Link
         href="/orgs"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"
@@ -299,17 +299,17 @@ export default async function OrgPage({ params }: Props) {
       </Link>
 
       {/* ---- Hero ---- */}
-      <header className="bg-cream border border-line p-6 sm:p-8 lg:p-10 mb-6">
+      <header className="bg-cream border border-line p-6 sm:p-8 lg:p-10 mb-6 rounded-xl">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           {org.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={org.logo_url as string}
               alt={org.name as string}
-              className="w-24 h-24 object-cover border border-line shrink-0"
+              className="w-24 h-24 object-cover border border-line shrink-0 rounded-xl"
             />
           ) : (
-            <div className="w-24 h-24 bg-white border border-line flex items-center justify-center shrink-0">
+            <div className="w-24 h-24 bg-white border border-line flex items-center justify-center shrink-0 rounded-xl">
               <span className="font-serif text-3xl text-navy">
                 {(org.name as string).trim().charAt(0).toUpperCase()}
               </span>
@@ -325,7 +325,7 @@ export default async function OrgPage({ params }: Props) {
                 />
               )}
               {stageLabel && (
-                <span className="text-[10px] uppercase tracking-[0.15em] px-2 py-1 border border-navy text-navy bg-cream font-sans">
+                <span className="text-[10px] uppercase tracking-[0.15em] px-2 py-1 border border-navy text-navy bg-cream font-sans rounded-full">
                   {stageLabel}
                 </span>
               )}
@@ -338,7 +338,7 @@ export default async function OrgPage({ params }: Props) {
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-muted">
               {org.location && (
                 <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-gold" />
+                  <MapPin className="w-4 h-4 text-gold-ink" />
                   {org.location as string}
                 </span>
               )}
@@ -349,7 +349,7 @@ export default async function OrgPage({ params }: Props) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 hover:text-navy"
                 >
-                  <ExternalLink className="w-4 h-4 text-gold" />
+                  <ExternalLink className="w-4 h-4 text-gold-ink" />
                   {await tServer("View product")}
                 </a>
               )}
@@ -360,7 +360,7 @@ export default async function OrgPage({ params }: Props) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 hover:text-navy"
                 >
-                  <ExternalLink className="w-4 h-4 text-gold" />
+                  <ExternalLink className="w-4 h-4 text-gold-ink" />
                   {await tServer("Website")}
                 </a>
               )}
@@ -373,7 +373,7 @@ export default async function OrgPage({ params }: Props) {
         {/* ---- Main column ---- */}
         <div className="lg:col-span-8 space-y-6">
           {pitch && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("What this company does")}
               </h2>
@@ -384,7 +384,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {productImages.length > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Product")}
               </h2>
@@ -395,7 +395,7 @@ export default async function OrgPage({ params }: Props) {
                     key={src}
                     src={src}
                     alt={`${org.name} — ${t("Product image", locale)} ${i + 1}`}
-                    className="w-full aspect-[4/3] object-cover border border-line"
+                    className="w-full aspect-[4/3] object-cover border border-line rounded-xl"
                   />
                 ))}
               </div>
@@ -414,7 +414,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {industry.length > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Industry")}
               </h2>
@@ -423,7 +423,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {capabilities.length > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("What we offer")}
               </h2>
@@ -432,7 +432,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {seeking.length > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10">
+            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Partnerships we're seeking")}
               </h2>
@@ -446,7 +446,7 @@ export default async function OrgPage({ params }: Props) {
           {connState !== "self" && !isInvestor && (
             <div
               id="connect"
-              className="bg-white border border-line p-6 scroll-mt-6"
+              className="bg-white border border-line p-6 scroll-mt-6 rounded-xl"
             >
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Connect")}
@@ -460,13 +460,13 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
           {connState === "connected" && (
-            <div className="bg-white border border-line p-6">
+            <div className="bg-white border border-line p-6 rounded-xl">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Deals")}
               </h2>
               <Link
                 href={`/orgs/${org.slug as string}/propose`}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-navy text-navy hover:bg-navy hover:text-white text-sm transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-navy text-navy hover:bg-navy hover:text-white text-sm transition-colors rounded-xl"
               >
                 <HandshakeIcon className="w-4 h-4" />
                 {proposeLabel}
@@ -495,7 +495,7 @@ export default async function OrgPage({ params }: Props) {
                             href={COFOUNDEE_CALENDLY_URL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark text-white text-xs transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark text-white text-xs transition-colors rounded-full"
                           >
                             <CalendarClock className="w-3.5 h-3.5" />
                             {bookSigningLabel}
@@ -509,7 +509,7 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
 
-          <div className="bg-white border border-line p-6">
+          <div className="bg-white border border-line p-6 rounded-xl">
             <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
               {(await tServer("Team ({n})")).replace(
                 "{n}",

@@ -28,7 +28,7 @@ export function OrgSwitcher({
           router.refresh();
         });
       }}
-      className="text-xs px-2 py-1 border border-line bg-white text-ink focus:outline-none focus:border-navy disabled:opacity-50 max-w-[10rem]"
+      className="text-xs px-2 py-1 border border-line bg-white text-ink focus:outline-none focus:border-navy disabled:opacity-50 max-w-[10rem] rounded-full"
       aria-label="Acting as company"
     >
       {orgs.map((o) => (

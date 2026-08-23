@@ -34,7 +34,7 @@ export function CommentText({
         <Link
           key={key++}
           href={`/community?q=${encodeURIComponent(word)}`}
-          className="text-navy hover:text-gold"
+          className="text-navy hover:text-gold-ink"
         >
           #{word}
         </Link>,
@@ -46,7 +46,7 @@ export function CommentText({
           <Link
             key={key++}
             href={href}
-            className="text-navy font-medium hover:text-gold"
+            className="text-navy font-medium hover:text-gold-ink"
           >
             @{word}
           </Link>

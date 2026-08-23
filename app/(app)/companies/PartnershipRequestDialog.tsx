@@ -91,8 +91,8 @@ export function PartnershipRequestDialog({
     return (
       <DialogShell onClose={onClose} labelledBy={sentTitleId}>
         <div className="text-center py-8">
-          <div className="w-12 h-12 mx-auto mb-4 bg-gold/10 border border-gold/40 inline-flex items-center justify-center">
-            <Check className="w-6 h-6 text-gold" strokeWidth={1.5} />
+          <div className="w-12 h-12 mx-auto mb-4 bg-gold-soft border border-line inline-flex items-center justify-center rounded-xl">
+            <Check className="w-6 h-6 text-gold-ink" strokeWidth={1.5} />
           </div>
           <h2 id={sentTitleId} className="text-d1 mb-2">
             {tr("Request sent")}
@@ -235,12 +235,12 @@ export function PartnershipRequestDialog({
             name="deadline_at"
             type="date"
             min={new Date().toISOString().slice(0, 10)}
-            className="px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
         </div>
 
         {state?.error && (
-          <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+          <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
             {state.error}
           </div>
         )}
@@ -360,7 +360,7 @@ function DialogShell({
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelledBy}
-      className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto rounded-xl"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -372,7 +372,7 @@ function DialogShell({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="bg-white border border-line p-6 lg:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white border border-line p-6 lg:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl"
       >
         {children}
       </div>

@@ -55,7 +55,7 @@ export function ReportForm({ targetId }: { targetId: string }) {
         maxLength={1000}
         required
         placeholder={tr("Spam, fake profile, harassment, etc.")}
-        className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
+        className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
       />
       {state?.error && (
         <div className="text-xs text-red-700">{state.error}</div>
@@ -65,7 +65,7 @@ export function ReportForm({ targetId }: { targetId: string }) {
           type="button"
           onClick={() => setOpen(false)}
           disabled={isPending}
-          className="flex-1 px-3 py-2 border border-line text-xs text-ink hover:border-navy"
+          className="flex-1 px-3 py-2 border border-line text-xs text-ink hover:border-navy rounded-xl"
         >
           {tr("Cancel")}
         </button>

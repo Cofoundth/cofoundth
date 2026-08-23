@@ -3,8 +3,8 @@ import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="bg-white border border-line p-8 lg:p-10">
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+    <div className="bg-white border border-line p-8 lg:p-10 rounded-xl">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
         Account recovery
       </div>
       <h1 className="text-d2 mb-2">Reset your password</h1>
@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">
         Remembered it?{" "}
-        <Link href="/login" className="text-navy hover:text-gold">
+        <Link href="/login" className="text-navy hover:text-gold-ink">
           Sign in
         </Link>
       </div>

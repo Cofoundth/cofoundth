@@ -51,8 +51,8 @@ const KIND_META: Record<
   milestone: {
     icon: Trophy,
     en: "hit a milestone",
-    tone: "text-gold",
-    bg: "bg-gold/5",
+    tone: "text-gold-ink",
+    bg: "bg-gold-soft",
   },
   show_and_tell: {
     icon: Rocket,
@@ -154,7 +154,7 @@ export function PostCard({
   }
 
   return (
-    <article className={`bg-white border border-line ${meta?.bg ?? ""}`}>
+    <article className={`bg-white border border-line rounded-xl ${meta?.bg ?? ""}`}>
       <div className="p-5">
         <div className="flex items-start gap-3">
           <Link href={authorHref} className="shrink-0">
@@ -186,7 +186,7 @@ export function PostCard({
                   {timeAgo(post.created_at, locale)}
                 </span>
                 {fresh && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-gold inline-block" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-navy inline-block" />
                 )}
               </div>
               {post.isOwn && (
@@ -224,7 +224,7 @@ export function PostCard({
               // post page.
               <Link
                 href={`/community/${post.id}`}
-                className="block mt-3 aspect-[3/2] w-full overflow-hidden border border-line bg-cream"
+                className="block mt-3 aspect-[3/2] w-full overflow-hidden border border-line bg-cream rounded-xl"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -241,7 +241,7 @@ export function PostCard({
                 href={post.link_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 break-all"
+                className="mt-2 inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all"
               >
                 <ExternalLink className="w-3 h-3" />
                 {(() => {
@@ -263,7 +263,7 @@ export function PostCard({
                   <Link
                     key={tag}
                     href={`/community?q=${encodeURIComponent(tag)}`}
-                    className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted hover:border-navy hover:text-navy transition-colors"
+                    className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted hover:border-navy hover:text-navy transition-colors rounded-full"
                   >
                     #{tag}
                   </Link>
@@ -344,7 +344,7 @@ export function PostCard({
                     doSubmitComment();
                   }
                 }}
-                className="flex-1 px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
+                className="flex-1 px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
               />
               <button
                 type="submit"

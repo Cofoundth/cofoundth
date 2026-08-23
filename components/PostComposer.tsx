@@ -83,7 +83,7 @@ export function PostComposer() {
     <form
       ref={formRef}
       action={formAction}
-      className="bg-white border border-line p-4"
+      className="bg-white border border-line p-4 rounded-xl"
     >
       <input type="hidden" name="kind" value={kind} />
       <input
@@ -124,7 +124,7 @@ export function PostComposer() {
           type="text"
           maxLength={200}
           placeholder={tr("Add a title (optional)")}
-          className="mb-2 w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy"
+          className="mb-2 w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
         />
       )}
 
@@ -139,7 +139,7 @@ export function PostComposer() {
         onChange={(e) => setContent(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy resize-none"
+        className="w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
       />
 
       {showLink && (
@@ -147,7 +147,7 @@ export function PostComposer() {
           name="link_url"
           type="url"
           placeholder="https://"
-          className="mt-2 w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy"
+          className="mt-2 w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
         />
       )}
 
@@ -157,7 +157,7 @@ export function PostComposer() {
           type="text"
           maxLength={200}
           placeholder={tr("tags: fundraising, hiring, thai-market")}
-          className="mt-2 w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy"
+          className="mt-2 w-full px-3 py-2 border border-line bg-cream text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
         />
       )}
 
@@ -167,7 +167,7 @@ export function PostComposer() {
           <img
             src={imagePreview}
             alt=""
-            className="max-h-48 w-auto border border-line"
+            className="max-h-48 w-auto border border-line rounded-xl"
           />
           <button
             type="button"

@@ -28,8 +28,8 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<AskStatus, { en: string; tone: string }> = {
-  open: { en: "Open", tone: "border-gold text-gold-ink" },
-  filled: { en: "Filled", tone: "border-gold bg-gold text-white" },
+  open: { en: "Open", tone: "border-line text-gold-ink" },
+  filled: { en: "Filled", tone: "border-line bg-navy text-white" },
   closed: { en: "Closed", tone: "border-line text-ink-muted" },
 };
 
@@ -131,14 +131,14 @@ export default async function PartnershipRequestsBoardPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       {/* Header */}
       <div className="mb-10 pb-8 border-b border-line flex items-start justify-between gap-6 flex-wrap">
-        <div>
+        <div className="max-w-[640px]">
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse" />
             {await tServer("B2B Partnership board")}
-            <span className="text-line">·</span>
+            <span className="text-ink-muted/50">·</span>
             <span className="normal-case tracking-normal text-ink-muted">
               Beta
             </span>
@@ -155,20 +155,20 @@ export default async function PartnershipRequestsBoardPage() {
         {canPost ? (
           <Link
             href="/companies/requests/new"
-            className="px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2 shrink-0"
+            className="px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2 shrink-0 rounded-full"
           >
             <Plus className="w-4 h-4" />
             {await tServer("Post an ask")}
           </Link>
         ) : (
-          <div className="bg-cream border-l-2 border-gold p-4 text-sm text-ink max-w-md">
+          <div className="bg-cream border-l-2 border-navy p-4 text-sm text-ink max-w-md rounded-xl">
             {await tServer(
               "Switch your profile type to Company to post partnership asks.",
             )}
             <br />
             <Link
               href="/onboarding"
-              className="text-navy hover:text-gold-ink underline underline-offset-4 decoration-gold/30 mt-1 inline-block"
+              className="text-navy hover:text-gold-ink underline underline-offset-4 decoration-line mt-1 inline-block"
             >
               {await tServer("Edit profile →")}
             </Link>
@@ -177,7 +177,7 @@ export default async function PartnershipRequestsBoardPage() {
       </div>
 
       {allAsks.length === 0 ? (
-        <div className="bg-white border border-line p-12 text-center">
+        <div className="bg-white border border-line p-12 text-center rounded-xl">
           <HandshakeIcon
             className="w-8 h-8 text-ink-muted mx-auto mb-4"
             strokeWidth={1}
@@ -191,7 +191,7 @@ export default async function PartnershipRequestsBoardPage() {
           {canPost && (
             <Link
               href="/companies/requests/new"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm rounded-full"
             >
               <Plus className="w-4 h-4" />
               {await tServer("Post the first ask")}
@@ -220,7 +220,7 @@ export default async function PartnershipRequestsBoardPage() {
                 key={ask.id as string}
                 className={`bg-white border p-5 ${
                   ask.status === "open"
-                    ? "border-gold/30"
+                    ? "border-line"
                     : "border-line opacity-80"
                 }`}
               >
@@ -264,7 +264,7 @@ export default async function PartnershipRequestsBoardPage() {
                             )}
                           </span>
                           {fresh && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-gold inline-block" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-navy inline-block" />
                           )}
                         </div>
                         <h3 className="font-serif text-xl text-navy leading-tight">
@@ -298,7 +298,7 @@ export default async function PartnershipRequestsBoardPage() {
 
                     <div className="pt-3 border-t border-line flex items-center justify-between gap-3 flex-wrap">
                       <div className="text-xs text-ink-muted flex items-center gap-1.5">
-                        <Sparkles className="w-3 h-3 text-gold" strokeWidth={1.5} />
+                        <Sparkles className="w-3 h-3 text-gold-ink" strokeWidth={1.5} />
                         {labels.respondHint}
                       </div>
                       <div className="flex items-center gap-3">
@@ -312,7 +312,7 @@ export default async function PartnershipRequestsBoardPage() {
                         {canRespond && (
                           <Link
                             href={`/companies?focus=${ask.author_id}`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
                           >
                             {labels.respond}
                             <ArrowRight className="w-3.5 h-3.5" />

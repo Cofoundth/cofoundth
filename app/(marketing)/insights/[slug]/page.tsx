@@ -53,7 +53,7 @@ export default async function InsightPage({ params }: Props) {
   if (!insight) notFound();
 
   return (
-    <article className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
+    <article className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/insights"
         className="text-sm text-ink-muted hover:text-navy mb-10 inline-flex items-center gap-1.5"
@@ -61,7 +61,7 @@ export default async function InsightPage({ params }: Props) {
         <ArrowLeft className="w-4 h-4" /> {tr("All insights")}
       </Link>
 
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
         {insight.category}
       </div>
       <h1 className="text-d2 lg:text-d3 leading-tight mb-6">

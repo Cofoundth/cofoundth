@@ -38,9 +38,9 @@ const EVENTS: Event[] = [
 
 export default function EventsPage() {
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-10 py-20">
-      <div className="mb-16 max-w-3xl">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <div className="mb-16 max-w-[640px]">
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           Community
         </div>
         <h1 className="text-d2 lg:text-d3 leading-tight mb-4">Events</h1>
@@ -56,10 +56,10 @@ export default function EventsPage() {
           return (
             <div
               key={e.title}
-              className="bg-white border border-line p-6 lg:p-8 flex flex-col md:flex-row gap-6"
+              className="bg-white border border-line p-6 lg:p-8 flex flex-col md:flex-row gap-6 rounded-xl"
             >
               <div className="md:w-32 shrink-0">
-                <div className="font-serif text-d3 text-gold leading-none">
+                <div className="font-serif text-d3 text-gold-ink leading-none">
                   {d.toLocaleDateString("en-GB", { day: "numeric" })}
                 </div>
                 <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mt-1">
@@ -108,7 +108,7 @@ export default function EventsPage() {
         })}
       </div>
 
-      <div className="mt-16 p-6 bg-cream border border-line">
+      <div className="mt-16 p-6 bg-cream border border-line rounded-xl">
         <h3 className="font-serif text-xl text-navy mb-2">
           Want to host an event?
         </h3>
@@ -118,7 +118,7 @@ export default function EventsPage() {
         </p>
         <Link
           href="/signup"
-          className="text-sm text-navy hover:text-gold inline-flex items-center gap-1.5"
+          className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1.5"
         >
           Join Cofoundee to propose an event &rarr;
         </Link>

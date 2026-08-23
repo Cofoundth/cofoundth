@@ -5,7 +5,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
 import { signOutAction } from "../(auth)/actions";
 import { OnboardingRoleSwitch } from "./OnboardingRoleSwitch";
-import type { InvestorInitial } from "../investor/InvestorOnboardingForm";
+import type { InvestorInitial } from "@/app/(app)/investor/InvestorOnboardingForm";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();

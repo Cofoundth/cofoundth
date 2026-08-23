@@ -72,7 +72,7 @@ const KIND_META: Record<
   { icon: typeof Trophy; en: string; tone: string } | null
 > = {
   post: null,
-  milestone: { icon: Trophy, en: "hit a milestone", tone: "text-gold" },
+  milestone: { icon: Trophy, en: "hit a milestone", tone: "text-gold-ink" },
   show_and_tell: { icon: Rocket, en: "shipped", tone: "text-navy" },
 };
 
@@ -137,8 +137,8 @@ export default async function PublicPostPage({ params }: Props) {
   const commentsGated = (comments ?? []).length > 2;
 
   return (
-    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-12 pb-28">
-      <article className="bg-white border border-line p-8 lg:p-10">
+    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-[88px] pb-28">
+      <article className="bg-white border border-line p-8 lg:p-10 rounded-xl">
         {/* Author */}
         <div className="flex items-center gap-3 mb-5">
           <Avatar
@@ -174,7 +174,7 @@ export default async function PublicPostPage({ params }: Props) {
         {post.image_url && (
           // Reserve space (fixed ratio) so the page doesn't shift when the image
           // loads; object-contain keeps the full image visible on its own page.
-          <div className="mt-4 aspect-[3/2] w-full overflow-hidden border border-line bg-cream">
+          <div className="mt-4 aspect-[3/2] w-full overflow-hidden border border-line bg-cream rounded-xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={post.image_url as string}
@@ -189,7 +189,7 @@ export default async function PublicPostPage({ params }: Props) {
             href={post.link_url as string}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1 text-sm text-navy hover:text-gold underline underline-offset-4 decoration-gold/30 break-all"
+            className="mt-3 inline-flex items-center gap-1 text-sm text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             {(() => {
@@ -210,7 +210,7 @@ export default async function PublicPostPage({ params }: Props) {
             {tags.slice(0, 5).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted"
+                className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted rounded-full"
               >
                 #{tag}
               </span>
@@ -234,8 +234,8 @@ export default async function PublicPostPage({ params }: Props) {
 
       {/* Comments (read-only) */}
       {(comments ?? []).length > 0 && (
-        <section className="mt-6 bg-white border border-line p-6 lg:p-8">
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold mb-5">
+        <section className="mt-6 bg-white border border-line p-6 lg:p-8 rounded-xl">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-5">
             {await tServer("Comments")}
           </h2>
           <div className="relative">
@@ -287,7 +287,7 @@ export default async function PublicPostPage({ params }: Props) {
       )}
 
       {/* Join CTA */}
-      <div className="mt-6 bg-navy text-white p-8 text-center">
+      <div className="mt-6 bg-navy text-white p-8 text-center rounded-xl">
         <h2 className="font-serif text-d1 mb-2">
           {await tServer("Where Thai founders connect")}
         </h2>

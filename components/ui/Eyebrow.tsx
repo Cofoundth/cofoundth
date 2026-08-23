@@ -7,10 +7,10 @@
 // ── THE CANONICAL EYEBROW ─────────────────────────────────────────────────
 //   text-xs uppercase tracking-[0.25em] text-gold-ink
 //
-// ~40 sites carry this. Roughly half still say `text-gold`, which is the
+// ~40 sites carry this. Roughly half still say `text-gold-ink`, which is the
 // pre-gold-ink spelling: gold as TEXT on cream/white only reaches ~2.9:1
 // contrast, under AA (see the note in globals.css). This primitive is
-// gold-ink only — migrating a `text-gold` eyebrow to <Eyebrow> darkens it
+// gold-ink only — migrating a `text-gold-ink` eyebrow to <Eyebrow> darkens it
 // slightly and is an intentional accessibility fix, not a regression.
 //
 // Thai is handled globally: `html[lang="th"] *` forces letter-spacing to

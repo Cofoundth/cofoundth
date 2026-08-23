@@ -29,7 +29,7 @@ const btn =
 function Badge({ tone, children }: { tone: "gold" | "red" | "muted"; children: React.ReactNode }) {
   const cls =
     tone === "gold"
-      ? "border-gold text-gold"
+      ? "border-line text-gold-ink"
       : tone === "red"
         ? "border-red-300 text-red-700"
         : "border-line text-ink-muted";
@@ -115,7 +115,7 @@ export function UserRow({ user, selfId }: { user: AdminUser; selfId: string }) {
             <button
               disabled={pending}
               onClick={() => setConfirmDelete(true)}
-              className="px-2 py-1 text-[11px] border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
+              className="px-2 py-1 text-[11px] border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 rounded-full"
             >
               Delete
             </button>

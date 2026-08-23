@@ -36,7 +36,7 @@ function Field({
     <div>
       <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
         {label}
-        {required && <span className="text-gold ml-1">*</span>}
+        {required && <span className="text-gold-ink ml-1">*</span>}
       </label>
       {children}
       {hint && <p className="text-xs text-ink-muted mt-1.5">{hint}</p>}
@@ -220,7 +220,7 @@ export function CreateOrgForm() {
       </div>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
           {tr(state.error)}
         </div>
       )}

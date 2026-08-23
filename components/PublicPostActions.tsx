@@ -23,7 +23,7 @@ export function PublicPostActions({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-1.5 text-ink-muted hover:text-gold transition-colors"
+          className="inline-flex items-center gap-1.5 text-ink-muted hover:text-gold-ink transition-colors"
         >
           <Heart className="w-4 h-4" strokeWidth={1.5} />
           <span className="tabular-nums">{likeCount}</span>
@@ -39,7 +39,7 @@ export function PublicPostActions({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-1.5 text-navy hover:text-gold transition-colors ml-auto"
+          className="inline-flex items-center gap-1.5 text-navy hover:text-gold-ink transition-colors ml-auto"
         >
           <UserPlus className="w-4 h-4" strokeWidth={1.5} />
           {tr("Connect")}
@@ -48,11 +48,11 @@ export function PublicPostActions({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 p-4 rounded-xl"
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative bg-white border border-line max-w-sm w-full p-8 text-center"
+            className="relative bg-white border border-line max-w-sm w-full p-8 text-center rounded-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -63,7 +63,7 @@ export function PublicPostActions({
             >
               <X className="w-4 h-4" />
             </button>
-            <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               Cofoundee
             </div>
             <h3 className="font-serif text-2xl text-navy mb-2">
@@ -83,7 +83,7 @@ export function PublicPostActions({
               </Link>
               <Link
                 href="/login"
-                className="block border border-line hover:border-navy text-ink hover:text-navy py-3 text-sm tracking-wide transition-colors"
+                className="block border border-line hover:border-navy text-ink hover:text-navy py-3 text-sm tracking-wide transition-colors rounded-xl"
               >
                 {tr("Sign in")}
               </Link>

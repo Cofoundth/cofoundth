@@ -70,7 +70,7 @@ export function ManagePanel({
   const ownerCount = members.filter((m) => m.role === "owner").length;
 
   return (
-    <div className="bg-white border border-line p-6 space-y-6">
+    <div className="bg-white border border-line p-6 space-y-6 rounded-xl">
       <h2 className="font-serif text-xl text-navy">{tr("Manage team")}</h2>
 
       {/* Invite */}
@@ -84,12 +84,12 @@ export function ManagePanel({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={tr("teammate@email.com")}
-            className="flex-1 px-4 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="flex-1 px-4 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as "member" | "admin")}
-            className="px-3 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="px-3 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           >
             <option value="member">{tr("Member")}</option>
             <option value="admin">{tr("Admin")}</option>
@@ -105,7 +105,7 @@ export function ManagePanel({
         </div>
         {msg && (
           <p
-            className={`text-xs ${msg.kind === "ok" ? "text-gold" : "text-red-700"}`}
+            className={`text-xs ${msg.kind === "ok" ? "text-gold-ink" : "text-red-700"}`}
           >
             {tr(msg.text)}
           </p>
@@ -118,7 +118,7 @@ export function ManagePanel({
           <p className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
             {tr("Pending invites")}
           </p>
-          <ul className="divide-y divide-line border border-line">
+          <ul className="divide-y divide-line border border-line rounded-xl">
             {invites.map((inv) => (
               <li
                 key={inv.id}
@@ -127,7 +127,7 @@ export function ManagePanel({
                 <span className="inline-flex items-center gap-2 text-sm text-ink min-w-0">
                   <Mail className="w-3.5 h-3.5 text-ink-muted shrink-0" />
                   <span className="truncate">{inv.email}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5">
+                  <span className="text-[10px] uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 rounded-full">
                     {tr(inv.role === "admin" ? "Admin" : "Member")}
                   </span>
                 </span>
@@ -150,7 +150,7 @@ export function ManagePanel({
         <p className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
           {tr("Members")}
         </p>
-        <ul className="divide-y divide-line border border-line">
+        <ul className="divide-y divide-line border border-line rounded-xl">
           {members.map((m) => {
             const isSelf = m.userId === myUserId;
             const isOwner = m.role === "owner";
@@ -168,7 +168,7 @@ export function ManagePanel({
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
                   {isOwner ? (
-                    <span className="text-[10px] uppercase tracking-wider text-gold border border-gold/40 px-1.5 py-0.5">
+                    <span className="text-[10px] uppercase tracking-wider text-gold-ink border border-line px-1.5 py-0.5 rounded-full">
                       {tr("owner")}
                     </span>
                   ) : (
@@ -184,7 +184,7 @@ export function ManagePanel({
                           ),
                         )
                       }
-                      className="text-xs px-2 py-1 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+                      className="text-xs px-2 py-1 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-full"
                     >
                       <option value="member">{tr("Member")}</option>
                       <option value="admin">{tr("Admin")}</option>

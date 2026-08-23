@@ -29,10 +29,10 @@ const TYPE_LABEL: Record<string, { en: string }> = {
 };
 
 const STATUS_LABEL: Record<string, { en: string; tone: string }> = {
-  open: { en: "Open", tone: "border-gold text-gold-ink" },
+  open: { en: "Open", tone: "border-line text-gold-ink" },
   accepted: {
     en: "Accepted",
-    tone: "border-gold bg-gold text-white",
+    tone: "border-line bg-navy text-white",
   },
   declined: { en: "Declined", tone: "border-line text-ink-muted" },
   withdrawn: {
@@ -84,9 +84,9 @@ export function PartnershipCard({ row, locale }: Props) {
     <div
       className={`bg-white border p-5 ${
         row.status === "accepted"
-          ? "border-gold/40"
+          ? "border-line"
           : row.status === "open"
-            ? "border-gold/30"
+            ? "border-line"
             : "border-line"
       }`}
     >
@@ -151,7 +151,7 @@ export function PartnershipCard({ row, locale }: Props) {
           )}
 
           {row.response_note && (
-            <div className="mt-3 mb-3 p-3 bg-cream border-l-2 border-line">
+            <div className="mt-3 mb-3 p-3 bg-cream border-l-2 border-line rounded-xl">
               <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-1">
                 {tr("Response")}
               </div>
@@ -174,7 +174,7 @@ export function PartnershipCard({ row, locale }: Props) {
                     placeholder={tr(
                       "Optional note — let them know why you're accepting or declining.",
                     )}
-                    className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none"
+                    className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
                   />
                   <div className="flex flex-wrap items-center gap-2">
                     <form

@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <article className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
+    <article className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/"
         className="text-sm text-ink-muted hover:text-navy mb-10 inline-flex items-center gap-1.5"
@@ -15,7 +15,7 @@ export default function TermsPage() {
         <ArrowLeft className="w-4 h-4" /> Back to home
       </Link>
 
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
         Legal
       </div>
       <h1 className="text-d2 lg:text-d3 leading-tight mb-4">
@@ -95,7 +95,7 @@ export default function TermsPage() {
             We may remove content that violates these Terms or our{" "}
             <Link
               href="/code-of-conduct"
-              className="text-navy hover:text-gold"
+              className="text-navy hover:text-gold-ink"
             >
               Code of Conduct
             </Link>
@@ -128,7 +128,7 @@ export default function TermsPage() {
             We may suspend or terminate accounts that violate these Terms, our
             Code of Conduct, or applicable law. On termination, your data is
             handled per the{" "}
-            <Link href="/privacy" className="text-navy hover:text-gold">
+            <Link href="/privacy" className="text-navy hover:text-gold-ink">
               Privacy Policy
             </Link>
             .
@@ -173,7 +173,7 @@ export default function TermsPage() {
           <p>
             <a
               href="mailto:chayanonr@cofoundee.co"
-              className="text-navy hover:text-gold"
+              className="text-navy hover:text-gold-ink"
             >
               chayanonr@cofoundee.co
             </a>

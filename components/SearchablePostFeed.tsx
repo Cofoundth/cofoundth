@@ -134,7 +134,7 @@ export function SearchablePostFeed({
           onChange={(e) => setQ(e.target.value)}
           placeholder={tr("Search posts…")}
           aria-label={tr("Search posts…")}
-          className="w-full pl-10 pr-10 py-2.5 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
+          className="w-full pl-10 pr-10 py-2.5 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
         />
         {searching && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted animate-spin" />
@@ -144,11 +144,11 @@ export function SearchablePostFeed({
       {!searchActive && composer}
 
       {searchActive && searching && results === null ? (
-        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted">
+        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
           {tr("Searching…")}
         </div>
       ) : list.length === 0 ? (
-        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted">
+        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
           {searchActive
             ? tr("No posts match your search.")
             : (emptyMessage ?? tr("No posts yet — be the first."))}
@@ -172,7 +172,7 @@ export function SearchablePostFeed({
             type="button"
             onClick={() => void loadMore()}
             disabled={loadingMore}
-            className="px-5 py-2 border border-line bg-white hover:border-navy text-sm text-ink tracking-wide transition-colors disabled:opacity-60"
+            className="px-5 py-2 border border-line bg-white hover:border-navy text-sm text-ink tracking-wide transition-colors disabled:opacity-60 rounded-xl"
           >
             {loadingMore ? tr("Loading…") : tr("Load more")}
           </button>

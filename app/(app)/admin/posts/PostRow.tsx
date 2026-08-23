@@ -29,12 +29,12 @@ export function PostRow({ post }: { post: AdminPost }) {
           <div className="text-xs text-ink-muted mb-1 flex items-center gap-2">
             <Link
               href={`/profile/${post.authorSlug ?? post.authorId}`}
-              className="text-navy hover:text-gold font-medium"
+              className="text-navy hover:text-gold-ink font-medium"
             >
               {post.authorName ?? "—"}
             </Link>
             {post.hidden && (
-              <span className="text-[9px] uppercase tracking-[0.12em] border border-red-300 text-red-700 px-1 py-0.5">
+              <span className="text-[9px] uppercase tracking-[0.12em] border border-red-300 text-red-700 px-1 py-0.5 rounded-full">
                 Hidden
               </span>
             )}
@@ -74,7 +74,7 @@ export function PostRow({ post }: { post: AdminPost }) {
             <button
               disabled={pending}
               onClick={() => setConfirmDelete(true)}
-              className="px-2 py-1 text-[11px] border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
+              className="px-2 py-1 text-[11px] border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 rounded-full"
             >
               Delete
             </button>

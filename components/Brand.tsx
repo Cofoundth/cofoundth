@@ -47,7 +47,7 @@ export function Wordmark({ variant = "dark", className }: WordmarkProps) {
     <span
       className={`font-serif text-xl tracking-tight leading-none ${textColor} ${className ?? ""}`}
     >
-      cofoundee<span className="text-gold font-bold">.</span>
+      cofoundee<span className="text-gold-ink font-bold">.</span>
     </span>
   );
 }

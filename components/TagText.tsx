@@ -26,7 +26,7 @@ export function TagText({ text }: { text: string }) {
       <Link
         key={key++}
         href={`/community?q=${encodeURIComponent(tag)}`}
-        className="text-navy hover:text-gold"
+        className="text-navy hover:text-gold-ink"
       >
         #{tag}
       </Link>,

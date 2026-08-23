@@ -26,14 +26,16 @@ export default async function CommunityPage({
   const canWrite = !!user && !(await isInvestorAccount(supabase, user.id));
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <div className="mb-8 pb-8 border-b border-line">
-        <h1 className="text-d2 mb-2">
-          {await tServer("Community")}
-        </h1>
-        <p className="text-ink">
-          {await tServer("Ask, share, and learn from other Thai founders.")}
-        </p>
+        <div className="max-w-[640px]">
+          <h1 className="text-d2 mb-2">
+            {await tServer("Community")}
+          </h1>
+          <p className="text-ink">
+            {await tServer("Ask, share, and learn from other Thai founders.")}
+          </p>
+        </div>
       </div>
 
       <RealtimeRefresh

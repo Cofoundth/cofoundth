@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <article className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
+    <article className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/"
         className="text-sm text-ink-muted hover:text-navy mb-10 inline-flex items-center gap-1.5"
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
         <ArrowLeft className="w-4 h-4" /> Back to home
       </Link>
 
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
         Legal &middot; PDPA compliant
       </div>
       <h1 className="text-d2 lg:text-d3 leading-tight mb-4">
@@ -120,7 +120,7 @@ export default function PrivacyPage() {
             To exercise any of these rights, email{" "}
             <a
               href="mailto:chayanonr@cofoundee.co"
-              className="text-navy hover:text-gold"
+              className="text-navy hover:text-gold-ink"
             >
               chayanonr@cofoundee.co
             </a>
@@ -154,7 +154,7 @@ export default function PrivacyPage() {
             <br />
             <a
               href="mailto:chayanonr@cofoundee.co"
-              className="text-navy hover:text-gold"
+              className="text-navy hover:text-gold-ink"
             >
               chayanonr@cofoundee.co
             </a>

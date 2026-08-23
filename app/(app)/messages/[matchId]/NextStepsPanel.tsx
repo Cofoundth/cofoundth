@@ -65,10 +65,10 @@ export function NextStepsPanel({ social }: { social?: Social }) {
   return (
     <div className="space-y-6">
       {/* Quick-reply templates */}
-      <div className="bg-white border border-line p-5">
+      <div className="bg-white border border-line p-5 rounded-xl">
         <div className="flex items-center gap-2 mb-4">
           <MessageSquareQuote
-            className="w-4 h-4 text-gold"
+            className="w-4 h-4 text-gold-ink"
             strokeWidth={1.5}
           />
           <div className="text-xs uppercase tracking-[0.2em] text-gold-ink">
@@ -84,7 +84,7 @@ export function NextStepsPanel({ social }: { social?: Social }) {
               <button
                 type="button"
                 onClick={() => insert(idx, c.body)}
-                className="w-full text-left p-3 border border-line bg-white hover:border-navy transition-colors flex items-start gap-3 group"
+                className="w-full text-left p-3 border border-line bg-white hover:border-navy transition-colors flex items-start gap-3 group rounded-xl"
               >
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-navy mb-1">
@@ -95,7 +95,7 @@ export function NextStepsPanel({ social }: { social?: Social }) {
                   </div>
                 </div>
                 {copiedIdx === idx ? (
-                  <Check className="w-3.5 h-3.5 text-gold shrink-0 mt-0.5" />
+                  <Check className="w-3.5 h-3.5 text-gold-ink shrink-0 mt-0.5" />
                 ) : (
                   <Plus className="w-3.5 h-3.5 text-ink-muted group-hover:text-navy shrink-0 mt-0.5" />
                 )}

@@ -41,7 +41,7 @@ export default async function ProposePage({
   if (!conn || conn.status !== "accepted") redirect(`/orgs/${slug}`);
 
   return (
-    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href={`/orgs/${slug}`}
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"
@@ -65,7 +65,7 @@ export default async function ProposePage({
         )}
       </p>
 
-      <div className="bg-white border border-line p-6 lg:p-8">
+      <div className="bg-white border border-line p-6 lg:p-8 rounded-xl">
         <DealProposalForm
           targetOrgId={org.id as string}
           targetSlug={org.slug as string}

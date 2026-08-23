@@ -239,10 +239,10 @@ export function OnboardingForm({ initial }: Props) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-12">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-12 pb-[88px]">
       <StepIndicator current={step} tr={tr} />
 
-      <div className="bg-white border border-line p-8 lg:p-12">
+      <div className="bg-white border border-line p-8 lg:p-12 rounded-xl">
         <h1 className="text-d2 mb-8">{tr(STEPS[step].title)}</h1>
 
         {step === 0 && (
@@ -274,7 +274,7 @@ export function OnboardingForm({ initial }: Props) {
         )}
 
         {error && (
-          <div className="mt-6 px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+          <div className="mt-6 px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
             {error}
           </div>
         )}
@@ -335,9 +335,9 @@ function StepIndicator({ current, tr }: { current: number; tr: TR }) {
             <div
               className={`w-10 h-10 border flex items-center justify-center font-serif text-base transition-colors shrink-0 ${
                 i < current
-                  ? "bg-gold border-gold text-white"
+                  ? "bg-gold border-line text-white"
                   : i === current
-                    ? "border-gold text-gold-ink"
+                    ? "border-line text-gold-ink"
                     : "border-line text-ink-muted"
               }`}
             >
@@ -404,7 +404,7 @@ function StepRole({
             value={data.first_name}
             onChange={(e) => set("first_name", e.target.value)}
             maxLength={40}
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
         </div>
         <div>
@@ -416,7 +416,7 @@ function StepRole({
             value={data.last_name}
             onChange={(e) => set("last_name", e.target.value)}
             maxLength={40}
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
         </div>
       </div>
@@ -453,7 +453,7 @@ function StepRole({
               onChange={(e) => set("company_name", e.target.value)}
               maxLength={100}
               placeholder="e.g. Acme Studios Co. Ltd."
-              className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+              className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
             />
           </div>
         )}
@@ -594,7 +594,7 @@ function StepContext({
               e.currentTarget.value = "";
             }
           }}
-          className="mt-3 w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:border-navy"
+          className="mt-3 w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:border-navy rounded-xl"
         />
       </div>
 
@@ -747,7 +747,7 @@ function StepPitch({
           placeholder={tr(
             "e.g. I’m a programmer, 5 years in tech, built an online shopping app. Got a cool idea? Pitch it — I’d love to hear it.",
           )}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none rounded-xl"
         />
       </div>
 
@@ -760,7 +760,7 @@ function StepPitch({
           value={data.project_url}
           onChange={(e) => set("project_url", e.target.value)}
           placeholder="https://"
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
       </div>
 
@@ -790,7 +790,7 @@ function StepPitch({
           placeholder={tr(
             "e.g. I ran into this problem myself, and now's finally the right time to fix it.",
           )}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none rounded-xl"
         />
       </div>
 
@@ -810,7 +810,7 @@ function StepPitch({
           placeholder={tr(
             "e.g. Ex-engineer at Agoda, built and sold a logistics SaaS, CS at Chula.",
           )}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none rounded-xl"
         />
       </div>
 
@@ -830,7 +830,7 @@ function StepPitch({
           placeholder={tr(
             "Roles, companies, what you built. One per line is fine.",
           )}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none rounded-xl"
         />
       </div>
 
@@ -848,7 +848,7 @@ function StepPitch({
           rows={2}
           maxLength={LONG_TEXT_MAX}
           placeholder={tr("Degrees, schools, bootcamps.")}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-none rounded-xl"
         />
       </div>
 
@@ -886,7 +886,7 @@ function StepPitch({
               e.currentTarget.value = "";
             }
           }}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
         <datalist id="common-skills">
           {COMMON_SKILLS.map((s) => (
@@ -909,7 +909,7 @@ function StepPitch({
             value={data.capabilities}
             onChange={(e) => set("capabilities", e.target.value)}
             placeholder="API integrations, Logistics fulfilment, Manufacturing, Distribution"
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
           <p className="text-xs text-ink-muted mt-2">
             {tr(
@@ -933,7 +933,7 @@ function StepPitch({
             value={data.partnership_seeking}
             onChange={(e) => set("partnership_seeking", e.target.value)}
             placeholder="payments, logistics, distribution, white-label"
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
           <p className="text-xs text-ink-muted mt-2">
             {tr(

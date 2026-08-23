@@ -27,7 +27,7 @@ export function LeaveButton({
           if (!res?.error) router.push("/orgs");
         })
       }
-      className="inline-flex items-center gap-2 px-4 py-2 border border-line hover:border-red-400 hover:text-red-700 disabled:opacity-50 text-ink text-sm transition-colors"
+      className="inline-flex items-center gap-2 px-4 py-2 border border-line hover:border-red-400 hover:text-red-700 disabled:opacity-50 text-ink text-sm transition-colors rounded-xl"
     >
       <LogOut className="w-4 h-4" />
       {pending ? tr("Leaving…") : tr("Leave company")}

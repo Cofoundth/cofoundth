@@ -69,8 +69,8 @@ export default async function FundingPage() {
     const verifiedLabel = await tServer("Verified company");
 
     return (
-      <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
-        <div className="mb-8">
+      <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+        <div className="max-w-[640px] mb-8">
           <h1 className="text-d2 mb-2">{heading}</h1>
           <p className="text-ink">
             {await tServer("Companies you've connected with, and new ones to back.")}
@@ -86,7 +86,7 @@ export default async function FundingPage() {
               {await tServer("No connections yet — find a company below.")}
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               {connectedOrgs.map((o) => {
                 const c = connByOrg.get(o.id)!;
                 const respondable =
@@ -133,14 +133,14 @@ export default async function FundingPage() {
             {await tServer("Discover companies")}
           </h2>
           {discover.length === 0 ? (
-            <div className="bg-white border border-line p-12 text-center">
+            <div className="bg-white border border-line p-12 text-center rounded-xl">
               <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
               <p className="text-ink-muted">
                 {await tServer("No companies to show yet — check back soon.")}
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               {discover.map((o) => (
                 <OrgCard
                   key={o.id}
@@ -169,15 +169,15 @@ export default async function FundingPage() {
 
   if (myOrgIds.length === 0) {
     return (
-      <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+      <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
         <h1 className="text-d2 mb-2">{heading}</h1>
-        <div className="bg-white border border-line p-12 text-center mt-6">
+        <div className="bg-white border border-line p-12 text-center mt-6 rounded-xl">
           <p className="text-ink-muted mb-6">
             {await tServer("Create a company to raise funding from investors.")}
           </p>
           <Link
             href="/orgs/new"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
           >
             {await tServer("Create company")} <ArrowRight className="w-4 h-4" />
           </Link>
@@ -233,8 +233,8 @@ export default async function FundingPage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
-      <div className="mb-8">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <div className="max-w-[640px] mb-8">
         <h1 className="text-d2 mb-2">{heading}</h1>
         <p className="text-ink">
           {await tServer("Investors who've reached out to your company.")}
@@ -252,7 +252,7 @@ export default async function FundingPage() {
             )}
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {connected.map((i) => {
               const uid = i.user_id as string;
               const c = connByInvestor.get(uid)!;
@@ -261,7 +261,7 @@ export default async function FundingPage() {
               return (
                 <div
                   key={uid}
-                  className="bg-white border border-line p-5 flex items-start gap-4"
+                  className="bg-white border border-line p-5 flex items-start gap-4 rounded-xl"
                 >
                   <Avatar
                     name={personById.get(uid)?.full_name as string}
@@ -344,7 +344,7 @@ function StatusPill({
   // A declined connection stays in the list — say so, don't render nothing.
   if (status === "declined") {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-ink-muted border border-line bg-cream px-2 py-0.5 mb-1">
+      <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-ink-muted border border-line bg-cream px-2 py-0.5 mb-1 rounded-full">
         <X className="w-3 h-3" /> {declined}
       </span>
     );

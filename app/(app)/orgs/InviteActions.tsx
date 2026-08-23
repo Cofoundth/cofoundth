@@ -37,7 +37,7 @@ export function InviteActions({ inviteId }: { inviteId: string }) {
         type="button"
         disabled={pending}
         onClick={() => respond(false)}
-        className="inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy disabled:opacity-50 text-ink text-sm transition-colors"
+        className="inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy disabled:opacity-50 text-ink text-sm transition-colors rounded-xl"
       >
         <X className="w-4 h-4" />
         {tr("Decline")}

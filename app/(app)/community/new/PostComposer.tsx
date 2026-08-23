@@ -29,7 +29,7 @@ export function PostComposer() {
           maxLength={200}
           autoFocus
           placeholder="Ask a question, share a milestone, request feedback…"
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
       </div>
 
@@ -47,7 +47,7 @@ export function PostComposer() {
           maxLength={5000}
           rows={10}
           placeholder="Markdown welcome. Be specific — better questions get better answers."
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y rounded-xl"
         />
       </div>
 
@@ -64,7 +64,7 @@ export function PostComposer() {
           type="text"
           maxLength={200}
           placeholder="fundraising, sales, hiring, thai-market"
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy"
+          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
         <p className="text-xs text-ink-muted mt-2">
           Letters, digits, and hyphens — Thai works too. Helps others find your post.
@@ -72,7 +72,7 @@ export function PostComposer() {
       </div>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
           {state.error}
         </div>
       )}

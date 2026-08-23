@@ -28,7 +28,7 @@ export function ConversationActions({
           href="https://meet.google.com/new"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy text-xs text-ink tracking-wide transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy text-xs text-ink tracking-wide transition-colors rounded-full"
         >
           <Video className="w-3.5 h-3.5" strokeWidth={1.5} />
           {tr("Start Meet")}
@@ -36,7 +36,7 @@ export function ConversationActions({
         <button
           type="button"
           onClick={() => setScheduleOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy text-xs text-ink tracking-wide transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy text-xs text-ink tracking-wide transition-colors rounded-full"
         >
           <Calendar className="w-3.5 h-3.5" strokeWidth={1.5} />
           {tr("Schedule call")}
@@ -130,7 +130,7 @@ function ScheduleDialog({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white border border-line max-w-md w-full p-6 lg:p-8"
+        className="bg-white border border-line max-w-md w-full p-6 lg:p-8 rounded-xl"
       >
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -168,7 +168,7 @@ function ScheduleDialog({
                 min={formatDateInput(new Date())}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
+                className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
               />
             </div>
             <div>
@@ -184,7 +184,7 @@ function ScheduleDialog({
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
+                className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
               />
             </div>
           </div>
@@ -200,7 +200,7 @@ function ScheduleDialog({
               id="duration"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
-              className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy"
+              className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
             >
               <option value="15">{tr("15 minutes")}</option>
               <option value="30">{tr("30 minutes")}</option>
@@ -210,7 +210,7 @@ function ScheduleDialog({
             </select>
           </div>
 
-          <div className="bg-cream border-l-2 border-gold p-3 text-xs text-ink leading-relaxed">
+          <div className="bg-cream border-l-2 border-navy p-3 text-xs text-ink leading-relaxed rounded-xl">
             {tr("Opens Google Calendar with the event pre-filled.")}{" "}
             {otherEmail
               ? `${otherName} ${tr("will be added as an invitee.")} `

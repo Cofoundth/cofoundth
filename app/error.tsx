@@ -17,7 +17,7 @@ export default function GlobalError({
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-6">
       <div className="max-w-md text-center">
-        <div className="font-serif text-d5 text-gold mb-6 leading-none">
+        <div className="font-serif text-d5 text-gold-ink mb-6 leading-none">
           —
         </div>
         <h1 className="text-d2 mb-3">Something went wrong</h1>
@@ -33,7 +33,7 @@ export default function GlobalError({
           </button>
           <Link
             href="/"
-            className="px-6 py-3 border border-line hover:border-navy text-ink text-sm tracking-wide transition-colors"
+            className="px-6 py-3 border border-line hover:border-navy text-ink text-sm tracking-wide transition-colors rounded-xl"
           >
             Back to home
           </Link>

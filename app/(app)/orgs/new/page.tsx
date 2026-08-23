@@ -10,7 +10,7 @@ export default async function NewOrgPage() {
   await requireUser();
 
   return (
-    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/orgs"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"
@@ -19,7 +19,7 @@ export default async function NewOrgPage() {
         {await tServer("Companies")}
       </Link>
 
-      <p className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+      <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
         {await tServer("Create a company")}
       </p>
       <h1 className="font-serif text-d2 text-navy leading-tight mb-2">
@@ -31,7 +31,7 @@ export default async function NewOrgPage() {
         )}
       </p>
 
-      <div className="bg-white border border-line p-6 lg:p-8">
+      <div className="bg-white border border-line p-6 lg:p-8 rounded-xl">
         <CreateOrgForm />
       </div>
     </div>

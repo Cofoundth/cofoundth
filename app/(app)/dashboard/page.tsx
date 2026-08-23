@@ -95,13 +95,13 @@ export default async function DashboardPage() {
     .join(" · ");
 
   return (
-    <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
 
       <div className="grid lg:grid-cols-12 gap-8">
         {/* LEFT — identity + stats */}
         <aside className="lg:col-span-3 space-y-6 lg:sticky lg:top-24 self-start">
           {/* Identity card */}
-          <div className="bg-white border border-line p-6">
+          <div className="bg-white border border-line p-6 rounded-xl">
             <Avatar
               name={profile?.full_name as string}
               url={profile?.photo_url as string | null}
@@ -117,12 +117,12 @@ export default async function DashboardPage() {
             )}
             {profile?.location && (
               <p className="text-sm text-ink-muted mt-2 inline-flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-gold" strokeWidth={1.5} />
+                <MapPin className="w-3.5 h-3.5 text-gold-ink" strokeWidth={1.5} />
                 {provinceLabel(profile.location as string, locale)}
               </p>
             )}
 
-            <div className="border-t border-gold/30 my-4" />
+            <div className="border-t border-line my-4" />
 
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
               </Link>
               <Link
                 href="/settings"
-                className="block border border-line hover:border-navy text-ink hover:text-navy text-center py-2.5 text-sm transition-colors"
+                className="block border border-line hover:border-navy text-ink hover:text-navy text-center py-2.5 text-sm transition-colors rounded-xl"
               >
                 {await tServer("Edit profile")}
               </Link>
@@ -223,13 +223,13 @@ export default async function DashboardPage() {
           </div>
 
           {!newFounders?.length ? (
-            <div className="bg-white border border-line p-6 text-center">
+            <div className="bg-white border border-line p-6 text-center rounded-xl">
               <p className="text-sm text-ink-muted">
                 {await tServer("You're the first. Invite a friend.")}
               </p>
             </div>
           ) : (
-            <div className="bg-white border border-line divide-y divide-line">
+            <div className="bg-white border border-line divide-y divide-line rounded-xl">
               {newFounders.map((f) => {
                 const href = `/profile/${(f.slug as string | undefined) ?? f.id}`;
                 const fresh = isWithinMs(f.created_at as string, 7 * DAY_MS);
@@ -237,7 +237,7 @@ export default async function DashboardPage() {
                   <Link
                     key={f.id as string}
                     href={href}
-                    className="block p-4 hover:bg-cream transition-colors group"
+                    className="block p-4 hover:bg-cream transition-colors group rounded-xl"
                   >
                     <div className="flex items-start gap-3">
                       <Avatar
@@ -262,7 +262,7 @@ export default async function DashboardPage() {
                         <div className="text-[10px] text-ink-muted mt-1 inline-flex items-center gap-2">
                           {timeAgo(f.created_at as string, locale)}
                           {fresh && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-gold inline-block" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-navy inline-block" />
                           )}
                         </div>
                       </div>

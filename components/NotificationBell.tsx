@@ -216,7 +216,7 @@ export function NotificationBell({
       </button>
 
       {open && (
-        <div className="fixed left-2 right-2 top-16 w-auto sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 max-h-[28rem] overflow-y-auto bg-white border border-line shadow-lg z-50">
+        <div className="fixed left-2 right-2 top-16 w-auto sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 max-h-[28rem] overflow-y-auto bg-white border border-line shadow-lg z-50 rounded-xl">
           <div className="flex items-center justify-between px-4 py-3 border-b border-line">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted">
               {tr("Notifications")}
@@ -257,7 +257,7 @@ export function NotificationBell({
                     {!n.readAt && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-1.5 top-4 w-1.5 h-1.5 bg-gold"
+                        className="absolute left-1.5 top-4 w-1.5 h-1.5 bg-navy"
                       />
                     )}
                     <Avatar

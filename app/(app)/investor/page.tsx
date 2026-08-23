@@ -4,8 +4,6 @@ import { ArrowRight, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
-import { AppHeader } from "@/components/AppHeader";
-import { AppFooter } from "@/components/AppFooter";
 import { investorTypeLabel } from "@/lib/investor";
 import {
   InvestorOnboardingForm,
@@ -49,10 +47,7 @@ export default async function InvestorPage({
     : "";
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
-      <AppHeader />
-
-      <main className="flex-1 px-6 py-12">
+    <div className="px-6 lg:px-10 py-[88px]">
         {editing ? (
           <div className="max-w-2xl mx-auto">
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
@@ -66,7 +61,7 @@ export default async function InvestorPage({
                 "Tell us how you invest. This is separate from the founder profile — no company or co-founder details needed.",
               )}
             </p>
-            <div className="bg-white border border-line p-6 lg:p-8">
+            <div className="bg-white border border-line p-6 lg:p-8 rounded-xl">
               <InvestorOnboardingForm
                 initial={(inv as InvestorInitial | null) ?? undefined}
               />
@@ -93,7 +88,7 @@ export default async function InvestorPage({
             {/* The live investor surface — discovering + backing companies. */}
             <Link
               href="/funding"
-              className="flex items-center justify-between gap-4 bg-navy hover:bg-navy-dark text-white px-6 py-5 mb-8 transition-colors"
+              className="flex items-center justify-between gap-4 bg-navy hover:bg-navy-dark text-white px-6 py-5 mb-8 transition-colors rounded-full"
             >
               <span>
                 <span className="block font-serif text-lg">
@@ -108,7 +103,7 @@ export default async function InvestorPage({
               <ArrowRight className="w-5 h-5 shrink-0" />
             </Link>
 
-            <div className="bg-white border border-line p-6 lg:p-8 space-y-5">
+            <div className="bg-white border border-line p-6 lg:p-8 space-y-5 rounded-xl">
               {((inv?.focus_industries as string[] | null) ?? []).length > 0 && (
                 <div>
                   <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
@@ -119,7 +114,7 @@ export default async function InvestorPage({
                       (x) => (
                         <span
                           key={x}
-                          className="text-xs px-2 py-1 border border-line text-ink"
+                          className="text-xs px-2 py-1 border border-line text-ink rounded-full"
                         >
                           {x}
                         </span>
@@ -170,8 +165,6 @@ export default async function InvestorPage({
             </div>
           </div>
         )}
-      </main>
-      <AppFooter />
     </div>
   );
 }
