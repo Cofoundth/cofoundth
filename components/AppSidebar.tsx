@@ -106,12 +106,14 @@ export async function AppSidebar() {
     ? [
         { href: "/funding", label: await tServer("Funding") },
         { href: "/community", label: await tServer("Community") },
+        { href: "/meetups", label: await tServer("Meetups") },
         { href: "/orgs", label: await tServer("Companies") },
       ]
     : [
         { href: "/dashboard", label: await tServer("Dashboard") },
         { href: "/community", label: await tServer("Community") },
         { href: "/browse", label: await tServer("Founders") },
+        { href: "/meetups", label: await tServer("Meetups") },
         {
           href: "/matches",
           label: await tServer("Connections"),

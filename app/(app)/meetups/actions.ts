@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isInvestorAccount } from "@/lib/account";
 
 export type RsvpResult = { error?: string; going?: boolean; count?: number };
 
@@ -17,6 +18,13 @@ export async function rsvpAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+
+  // Investors read the founder community but do not act in it — the same rule
+  // the forum composer follows. Routing already hides the button; this is the
+  // boundary that actually holds.
+  if (await isInvestorAccount(supabase, user.id)) {
+    return { error: "Not authenticated." };
+  }
 
   // RLS hides drafts; a cancelled or already-passed meetup can't be joined.
   const { data: meetup } = await supabase

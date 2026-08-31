@@ -24,6 +24,7 @@ import { isPast } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
 import { LinkButton } from "@/components/ui";
 import { RsvpButton } from "../RsvpButton";
+import { isInvestorAccount } from "@/lib/account";
 
 export const dynamic = "force-dynamic";
 
@@ -65,13 +66,14 @@ export default async function MeetupDetailPage({ params }: Props) {
   if (!meetup) notFound();
   const m = meetup as Meetup;
 
-  const [{ data: attendeesRaw }, admin] = await Promise.all([
+  const [{ data: attendeesRaw }, admin, investor] = await Promise.all([
     supabase
       .from("meetup_rsvps")
       .select("user_id, profile:profiles(id, full_name, photo_url, slug)")
       .eq("meetup_id", m.id)
       .order("created_at", { ascending: true }),
     isAdminUser(supabase, user),
+    isInvestorAccount(supabase, user.id),
   ]);
 
   const attendees = (attendeesRaw ?? []) as unknown as AttendeeRow[];
@@ -215,12 +217,14 @@ export default async function MeetupDetailPage({ params }: Props) {
       {/* Actions */}
       {!cancelled && !past && (
         <div className="flex flex-wrap items-center gap-4 mb-12">
-          <RsvpButton
-            meetupId={m.id}
-            initialGoing={going}
-            goingCount={count}
-            capacity={m.capacity}
-          />
+          {!investor && (
+            <RsvpButton
+              meetupId={m.id}
+              initialGoing={going}
+              goingCount={count}
+              capacity={m.capacity}
+            />
+          )}
           <LinkButton
             href={meetupCalendarUrl(m)}
             target="_blank"

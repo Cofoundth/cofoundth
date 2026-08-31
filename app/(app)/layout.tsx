@@ -46,6 +46,11 @@ export default async function AppLayout({
       pathname === "/community" ||
       (pathname.startsWith("/community/") &&
         !pathname.startsWith("/community/new")) ||
+      // Meetups: same read-first terms as the community feed. Investors can see
+      // what is happening; RSVPing is a write and stays closed to them (also
+      // enforced server-side in app/(app)/meetups/actions.ts).
+      pathname === "/meetups" ||
+      pathname.startsWith("/meetups/") ||
       // Companies: investors browse the company directory + profiles (read), but
       // not the founder-to-founder B2B actions (create / propose / chat).
       pathname === "/orgs" ||
