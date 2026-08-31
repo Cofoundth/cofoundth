@@ -16,6 +16,17 @@ export function msAgoISO(ms: number): string {
   return new Date(Date.now() - ms).toISOString();
 }
 
+// "Now", as ISO — for server-side upcoming/past query bounds. Plain function so
+// the impure read doesn't trip the purity rule when called during render.
+export function nowISO(): string {
+  return new Date().toISOString();
+}
+
+// "Has this timestamp already passed?" — plain function, same purity reason.
+export function isPast(iso: string): boolean {
+  return new Date(iso).getTime() < Date.now();
+}
+
 // Compact relative time ("3h ago" / "3 ชั่วโมงที่แล้ว"), bilingual.
 export function timeAgo(iso: string, locale: string): string {
   const diff = Date.now() - new Date(iso).getTime();

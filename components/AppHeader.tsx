@@ -116,6 +116,7 @@ export async function AppHeader() {
       : [
           { href: "/dashboard", label: await tServer("Dashboard") },
           { href: "/community", label: await tServer("Community") },
+          { href: "/meetups", label: await tServer("Meetups") },
           { href: "/browse", label: await tServer("Founders") },
           {
             href: "/matches",
