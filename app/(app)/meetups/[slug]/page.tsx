@@ -122,7 +122,7 @@ export default async function MeetupDetailPage({ params }: Props) {
   const spotsFull = m.capacity != null && !going && count >= m.capacity;
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-12 lg:py-16">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <div className="flex items-center justify-between mb-8">
         <Link
           href="/meetups"
@@ -140,7 +140,7 @@ export default async function MeetupDetailPage({ params }: Props) {
         )}
       </div>
 
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-4">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
         {tCommunity}
       </div>
       <h1 className="text-d2 lg:text-d3 leading-tight mb-6">{m.title}</h1>
@@ -151,7 +151,7 @@ export default async function MeetupDetailPage({ params }: Props) {
         </div>
       )}
       {!cancelled && past && (
-        <div className="mb-6 px-4 py-3 border border-line bg-cream text-sm text-ink-muted">
+        <div className="mb-6 px-4 py-3 border border-line rounded-xl bg-cream text-sm text-ink-muted">
           {tEnded}
         </div>
       )}
@@ -163,7 +163,7 @@ export default async function MeetupDetailPage({ params }: Props) {
             {tWhen}
           </div>
           <div className="flex items-start gap-2 text-ink">
-            <CalendarClock className="w-4 h-4 mt-0.5 text-gold shrink-0" />
+            <CalendarClock className="w-4 h-4 mt-0.5 text-gold-ink shrink-0" />
             <div>
               {when.weekday}, {when.day} {when.monthYear}
               <br />
@@ -178,9 +178,9 @@ export default async function MeetupDetailPage({ params }: Props) {
           </div>
           <div className="flex items-start gap-2 text-ink">
             {m.format === "online" ? (
-              <Video className="w-4 h-4 mt-0.5 text-gold shrink-0" />
+              <Video className="w-4 h-4 mt-0.5 text-gold-ink shrink-0" />
             ) : (
-              <MapPin className="w-4 h-4 mt-0.5 text-gold shrink-0" />
+              <MapPin className="w-4 h-4 mt-0.5 text-gold-ink shrink-0" />
             )}
             <div>
               {m.format === "online" ? (
@@ -193,7 +193,7 @@ export default async function MeetupDetailPage({ params }: Props) {
                         href={m.online_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-navy hover:text-gold inline-flex items-center gap-1 break-all"
+                        className="text-navy hover:text-gold-ink inline-flex items-center gap-1 break-all"
                       >
                         {tJoinOnline} <ExternalLink className="w-3 h-3 shrink-0" />
                       </a>

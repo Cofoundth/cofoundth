@@ -101,9 +101,9 @@ export default async function MeetupsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-10 py-16 lg:py-20">
-      <div className="mb-14 max-w-3xl">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-6">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <div className="mb-14 max-w-[640px]">
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tEyebrow}
         </div>
         <h1 className="text-d2 lg:text-d3 leading-tight mb-4">{tTitle}</h1>
@@ -185,12 +185,12 @@ function MeetupItem({
   return (
     <Link
       href={`/meetups/${m.slug}`}
-      className={`bg-white border border-line p-6 lg:p-8 flex flex-col md:flex-row gap-6 hover:border-navy transition-colors ${
+      className={`bg-white border border-line rounded-xl p-6 lg:p-8 flex flex-col md:flex-row gap-6 hover:border-navy transition-colors ${
         past ? "opacity-70" : ""
       }`}
     >
       <div className="md:w-28 shrink-0">
-        <div className="font-serif text-d3 text-gold leading-none">
+        <div className="font-serif text-d3 text-navy leading-none">
           {when.day}
         </div>
         <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mt-1">

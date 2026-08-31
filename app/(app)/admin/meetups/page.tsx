@@ -47,8 +47,8 @@ export default async function AdminMeetupsPage() {
     countBy.set(r.meetup_id, (countBy.get(r.meetup_id) ?? 0) + 1);
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
-      <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
         Admin
       </div>
       <AdminTabs />
@@ -64,11 +64,11 @@ export default async function AdminMeetupsPage() {
       </div>
 
       {meetups.length === 0 ? (
-        <div className="bg-white border border-line p-12 text-center text-ink-muted">
+        <div className="bg-white border border-line rounded-xl p-12 text-center text-ink-muted">
           No meetups yet. Create the first one.
         </div>
       ) : (
-        <div className="border border-line divide-y divide-line bg-white">
+        <div className="border border-line rounded-xl overflow-hidden divide-y divide-line bg-white">
           {meetups.map((m) => {
             const when = meetupWhenParts(m.starts_at);
             const past = isPast(m.starts_at);
