@@ -236,7 +236,7 @@ export default async function ConnectionsPage({
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <div className="max-w-[640px] mb-6">
-        <h1 className="text-d2 mb-2">
+        <h1 className="text-d3 mb-2">
           {await tServer("Connections")}
         </h1>
         <p className="text-ink">
@@ -264,7 +264,7 @@ export default async function ConnectionsPage({
             {await tServer("Company conversations")}
           </h2>
           {companyConvos.length === 0 ? (
-            <div className="bg-white border border-line p-12 text-center rounded-xl">
+            <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
               <h3 className="text-d1 mb-2">
                 {await tServer("No company chats yet")}
               </h3>
@@ -287,7 +287,7 @@ export default async function ConnectionsPage({
                 <Link
                   key={c.connectionId}
                   href={`/orgs/${c.slug}/chat`}
-                  className="block bg-white border border-line hover:border-navy transition-colors p-5 group rounded-xl"
+                  className="block bg-white shadow-xs hover:shadow-sm transition-shadow p-5 group rounded-3xl"
                 >
                   <div className="flex items-start gap-4">
                     {c.logo_url ? (
@@ -347,14 +347,14 @@ export default async function ConnectionsPage({
                       )
                     ).replace("{n}", String(received.length))}
                   </div>
-                  <div className="bg-white border border-line divide-y divide-line rounded-xl">
+                  <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
                     {received.map((r) => {
                       const p = profiles.get(r.from_profile_id as string);
                       return (
                         <Link
                           key={r.id as string}
                           href={profileHref(p, r.from_profile_id as string)}
-                          className="flex items-start gap-4 p-5 hover:bg-cream transition-colors group rounded-xl"
+                          className="flex items-start gap-4 p-5 hover:bg-cream transition-colors group"
                         >
                           <Avatar
                             name={p?.full_name as string}
@@ -394,14 +394,14 @@ export default async function ConnectionsPage({
                       String(sent.length),
                     )}
                   </div>
-                  <div className="bg-white border border-line divide-y divide-line rounded-xl">
+                  <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
                     {sent.map((s) => {
                       const p = profiles.get(s.to_profile_id as string);
                       return (
                         <Link
                           key={s.id as string}
                           href={profileHref(p, s.to_profile_id as string)}
-                          className="flex items-center gap-4 p-4 hover:bg-cream transition-colors group rounded-xl"
+                          className="flex items-center gap-4 p-4 hover:bg-cream transition-colors group"
                         >
                           <Avatar
                             name={p?.full_name as string}
@@ -443,7 +443,7 @@ export default async function ConnectionsPage({
             </div>
 
             {!matches?.length ? (
-              <div className="bg-white border border-line p-12 text-center rounded-xl">
+              <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
                 <h3 className="text-d1 mb-2">
                   {await tServer("No conversations yet")}
                 </h3>
@@ -473,7 +473,7 @@ export default async function ConnectionsPage({
                     <Link
                       key={m.id as string}
                       href={`/messages/${m.id}`}
-                      className="block bg-white border border-line hover:border-navy transition-colors p-5 group rounded-xl"
+                      className="block bg-white shadow-xs hover:shadow-sm transition-shadow p-5 group rounded-3xl"
                     >
                       <div className="flex items-start gap-4">
                         <Avatar

@@ -22,7 +22,7 @@ export default function NewPostPage() {
         </p>
       </div>
 
-      <div className="bg-white border border-line p-8 lg:p-10 rounded-xl">
+      <div className="bg-white p-8 lg:p-10 rounded-3xl shadow-xs">
         <PostComposer />
       </div>
     </div>

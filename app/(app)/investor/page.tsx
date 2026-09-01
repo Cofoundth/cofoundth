@@ -61,7 +61,7 @@ export default async function InvestorPage({
                 "Tell us how you invest. This is separate from the founder profile — no company or co-founder details needed.",
               )}
             </p>
-            <div className="bg-white border border-line p-6 lg:p-8 rounded-xl">
+            <div className="bg-white rounded-3xl shadow-xs p-6 lg:p-8">
               <InvestorOnboardingForm
                 initial={(inv as InvestorInitial | null) ?? undefined}
               />
@@ -72,7 +72,7 @@ export default async function InvestorPage({
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               {await tServer("Investor")}
             </p>
-            <h1 className="font-serif text-d2 text-navy leading-tight mb-1">
+            <h1 className="font-serif text-d3 text-navy leading-tight mb-1">
               {(inv?.firm_name as string | null) ||
                 (firstName
                   ? (await tServer("Welcome, {name}")).replace(
@@ -103,7 +103,7 @@ export default async function InvestorPage({
               <ArrowRight className="w-5 h-5 shrink-0" />
             </Link>
 
-            <div className="bg-white border border-line p-6 lg:p-8 space-y-5 rounded-xl">
+            <div className="bg-white rounded-3xl shadow-xs p-6 lg:p-8 space-y-5">
               {((inv?.focus_industries as string[] | null) ?? []).length > 0 && (
                 <div>
                   <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">

@@ -110,7 +110,7 @@ export default async function AdminOverviewPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
             Admin
           </div>
-          <h1 className="text-d2 mb-2">Overview</h1>
+          <h1 className="text-d3 mb-2">Overview</h1>
           <p className="text-ink">
             {openReports ?? 0} open report{openReports === 1 ? "" : "s"} · last{" "}
             {DAYS} days
@@ -120,7 +120,7 @@ export default async function AdminOverviewPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((c) => (
-          <div key={c.label} className="bg-white border border-line p-5 rounded-xl">
+          <div key={c.label} className="bg-white p-5 rounded-3xl shadow-xs">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-1">
               {c.label}
             </div>
@@ -132,7 +132,7 @@ export default async function AdminOverviewPage() {
         ))}
       </div>
 
-      <div className="bg-white border border-line p-5 mt-4 rounded-xl">
+      <div className="bg-white p-5 mt-4 rounded-3xl shadow-xs">
         <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
           Daily activity · last {DAYS} days
         </div>

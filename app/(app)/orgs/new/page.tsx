@@ -31,7 +31,7 @@ export default async function NewOrgPage() {
         )}
       </p>
 
-      <div className="bg-white border border-line p-6 lg:p-8 rounded-xl">
+      <div className="bg-white p-6 lg:p-8 rounded-3xl shadow-xs">
         <CreateOrgForm />
       </div>
     </div>

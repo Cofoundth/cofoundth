@@ -166,7 +166,7 @@ export function BrowseClient({ others }: Props) {
       <div className="mb-6">
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-d2 mb-2">{tr("All founders")}</h1>
+            <h1 className="text-d3 mb-2">{tr("All founders")}</h1>
             <p className="text-ink">
               {filtered.length}{" "}
               {tr(filtered.length === 1 ? "founder" : "founders")}
@@ -319,7 +319,7 @@ export function BrowseClient({ others }: Props) {
         {/* Results */}
         <div className="xl:col-span-9 min-w-0">
           {filtered.length === 0 ? (
-            <div className="bg-white border border-line p-12 text-center rounded-xl">
+            <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
               <h3 className="text-d1 mb-2">{tr("No matches yet")}</h3>
               <p className="text-ink-muted">
                 {tr(
@@ -424,7 +424,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
   return (
     <Link
       href={`/profile/${profile.slug}`}
-      className="group block bg-white border border-line hover:border-navy transition-colors rounded-xl"
+      className="group block bg-white rounded-3xl shadow-xs hover:shadow-sm transition-shadow"
     >
       <div className="flex items-start gap-4 sm:gap-5 p-5 sm:p-6">
         <Avatar name={profile.full_name} url={profile.photo_url} size="lg" />

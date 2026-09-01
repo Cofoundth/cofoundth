@@ -70,7 +70,7 @@ export function ManagePanel({
   const ownerCount = members.filter((m) => m.role === "owner").length;
 
   return (
-    <div className="bg-white border border-line p-6 space-y-6 rounded-xl">
+    <div className="bg-white p-6 space-y-6 rounded-3xl shadow-xs">
       <h2 className="font-serif text-xl text-navy">{tr("Manage team")}</h2>
 
       {/* Invite */}

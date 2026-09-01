@@ -143,7 +143,7 @@ export default async function PartnershipRequestsBoardPage() {
               Beta
             </span>
           </div>
-          <h1 className="text-d2 mb-2">
+          <h1 className="text-d3 mb-2">
             {await tServer("What companies are looking for")}
           </h1>
           <p className="text-ink max-w-2xl">
@@ -177,7 +177,7 @@ export default async function PartnershipRequestsBoardPage() {
       </div>
 
       {allAsks.length === 0 ? (
-        <div className="bg-white border border-line p-12 text-center rounded-xl">
+        <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
           <HandshakeIcon
             className="w-8 h-8 text-ink-muted mx-auto mb-4"
             strokeWidth={1}
@@ -218,10 +218,8 @@ export default async function PartnershipRequestsBoardPage() {
             return (
               <div
                 key={ask.id as string}
-                className={`bg-white border rounded-xl p-5 ${
-                  ask.status === "open"
-                    ? "border-line"
-                    : "border-line opacity-80"
+                className={`bg-white rounded-3xl shadow-xs p-5 ${
+                  ask.status === "open" ? "" : "opacity-80"
                 }`}
               >
                 <div className="flex items-start gap-4">

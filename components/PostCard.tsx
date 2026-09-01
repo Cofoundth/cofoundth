@@ -154,7 +154,7 @@ export function PostCard({
   }
 
   return (
-    <article className={`bg-white border border-line rounded-xl ${meta?.bg ?? ""}`}>
+    <article className={`bg-white rounded-3xl shadow-xs overflow-hidden ${meta?.bg ?? ""}`}>
       <div className="p-5">
         <div className="flex items-start gap-3">
           <Link href={authorHref} className="shrink-0">

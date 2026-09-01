@@ -12,14 +12,14 @@ export default function Loading() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mb-10">
-        <div className="bg-white border border-line p-5 h-28 rounded-xl" />
-        <div className="bg-white border border-line p-5 h-28 rounded-xl" />
-        <div className="bg-white border border-line p-5 h-28 rounded-xl" />
+        <div className="bg-white rounded-3xl shadow-xs p-5 h-28" />
+        <div className="bg-white rounded-3xl shadow-xs p-5 h-28" />
+        <div className="bg-white rounded-3xl shadow-xs p-5 h-28" />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="bg-white border border-line p-6 h-40 rounded-xl" />
-        <div className="bg-white border border-line p-6 h-40 rounded-xl" />
+        <div className="bg-white rounded-3xl shadow-xs p-6 h-40" />
+        <div className="bg-white rounded-3xl shadow-xs p-6 h-40" />
       </div>
     </div>
   );

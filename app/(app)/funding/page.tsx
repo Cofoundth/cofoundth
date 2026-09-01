@@ -71,7 +71,7 @@ export default async function FundingPage() {
     return (
       <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
         <div className="max-w-[640px] mb-8">
-          <h1 className="text-d2 mb-2">{heading}</h1>
+          <h1 className="text-d3 mb-2">{heading}</h1>
           <p className="text-ink">
             {await tServer("Companies you've connected with, and new ones to back.")}
           </p>
@@ -133,7 +133,7 @@ export default async function FundingPage() {
             {await tServer("Discover companies")}
           </h2>
           {discover.length === 0 ? (
-            <div className="bg-white border border-line p-12 text-center rounded-xl">
+            <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
               <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
               <p className="text-ink-muted">
                 {await tServer("No companies to show yet — check back soon.")}
@@ -170,8 +170,8 @@ export default async function FundingPage() {
   if (myOrgIds.length === 0) {
     return (
       <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
-        <h1 className="text-d2 mb-2">{heading}</h1>
-        <div className="bg-white border border-line p-12 text-center mt-6 rounded-xl">
+        <h1 className="text-d3 mb-2">{heading}</h1>
+        <div className="bg-white p-12 text-center mt-6 rounded-3xl shadow-xs">
           <p className="text-ink-muted mb-6">
             {await tServer("Create a company to raise funding from investors.")}
           </p>
@@ -235,7 +235,7 @@ export default async function FundingPage() {
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <div className="max-w-[640px] mb-8">
-        <h1 className="text-d2 mb-2">{heading}</h1>
+        <h1 className="text-d3 mb-2">{heading}</h1>
         <p className="text-ink">
           {await tServer("Investors who've reached out to your company.")}
         </p>
@@ -261,7 +261,7 @@ export default async function FundingPage() {
               return (
                 <div
                   key={uid}
-                  className="bg-white border border-line p-5 flex items-start gap-4 rounded-xl"
+                  className="bg-white p-5 flex items-start gap-4 rounded-3xl shadow-xs"
                 >
                   <Avatar
                     name={personById.get(uid)?.full_name as string}

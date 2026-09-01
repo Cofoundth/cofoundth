@@ -55,7 +55,7 @@ export default async function AdminPostsPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
             Admin
           </div>
-          <h1 className="text-d2 mb-2">Posts</h1>
+          <h1 className="text-d3 mb-2">Posts</h1>
           <p className="text-ink">
             {posts.length} total · {hiddenCount} hidden
           </p>
@@ -63,13 +63,13 @@ export default async function AdminPostsPage() {
       </div>
 
       {posts.length === 0 ? (
-        <div className="bg-white border border-line p-12 text-center text-ink-muted rounded-xl">
+        <div className="bg-white p-12 text-center text-ink-muted rounded-3xl shadow-xs">
           No posts yet.
         </div>
       ) : (
         <Paginated
           pageSize={20}
-          className="bg-white border border-line divide-y divide-line rounded-xl"
+          className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden"
         >
           {posts.map((p) => (
             <PostRow key={p.id} post={p} />

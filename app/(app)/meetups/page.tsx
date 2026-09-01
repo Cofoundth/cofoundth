@@ -106,7 +106,7 @@ export default async function MeetupsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tEyebrow}
         </div>
-        <h1 className="text-d2 lg:text-d3 leading-tight mb-4">{tTitle}</h1>
+        <h1 className="text-d3 leading-tight mb-4">{tTitle}</h1>
         <p className="text-lg text-ink leading-relaxed">{tIntro}</p>
       </div>
 
@@ -185,7 +185,7 @@ function MeetupItem({
   return (
     <Link
       href={`/meetups/${m.slug}`}
-      className={`bg-white border border-line rounded-xl p-6 lg:p-8 flex flex-col md:flex-row gap-6 hover:border-navy transition-colors ${
+      className={`bg-white rounded-3xl shadow-xs p-6 lg:p-8 flex flex-col md:flex-row gap-6 hover:shadow-sm transition-shadow ${
         past ? "opacity-70" : ""
       }`}
     >

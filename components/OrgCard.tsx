@@ -191,7 +191,7 @@ export function OrgCard({
   return (
     <Link
       href={target}
-      className="block bg-white border border-line p-5 hover:border-navy transition-colors group rounded-xl"
+      className="block bg-white rounded-3xl shadow-xs p-5 hover:shadow-sm transition-shadow group"
     >
       {body}
     </Link>

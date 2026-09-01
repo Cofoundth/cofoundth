@@ -111,7 +111,7 @@ export default async function PostPage({ params }: Props) {
         <ArrowLeft className="w-4 h-4" /> {await tServer("Back to community")}
       </Link>
 
-      <article className="bg-white border border-line p-8 lg:p-12 rounded-xl">
+      <article className="bg-white p-8 lg:p-12 rounded-3xl shadow-xs">
         {meta && KindIcon && (
           <div
             className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] mb-4 ${meta.tone}`}
@@ -122,7 +122,7 @@ export default async function PostPage({ params }: Props) {
         )}
 
         {post.title ? (
-          <h1 className="text-d2 mb-4 leading-tight">
+          <h1 className="text-d3 mb-4 leading-tight">
             {post.title as string}
           </h1>
         ) : null}
@@ -251,7 +251,7 @@ export default async function PostPage({ params }: Props) {
         />
 
         {comments?.length ? (
-          <div className="bg-white border border-line divide-y divide-line px-6 mb-6 rounded-xl">
+          <div className="bg-white divide-y divide-line px-6 mb-6 rounded-3xl shadow-xs overflow-hidden">
             {comments.map((c) => {
               const a = authorMap.get(c.author_id as string);
               return (

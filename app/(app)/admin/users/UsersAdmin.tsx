@@ -82,14 +82,14 @@ export function UsersAdmin({
       </div>
       <p className="text-xs text-ink-muted">{filtered.length} shown</p>
       {filtered.length === 0 ? (
-        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
+        <div className="bg-white p-8 text-center text-sm text-ink-muted rounded-3xl shadow-xs">
           No users match.
         </div>
       ) : (
         <Paginated
           key={`${filter}:${query}`}
           pageSize={20}
-          className="bg-white border border-line divide-y divide-line rounded-xl"
+          className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden"
         >
           {filtered.map((u) => (
             <UserRow key={u.id} user={u} selfId={selfId} />

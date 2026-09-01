@@ -299,7 +299,7 @@ export default async function OrgPage({ params }: Props) {
       </Link>
 
       {/* ---- Hero ---- */}
-      <header className="bg-cream border border-line p-6 sm:p-8 lg:p-10 mb-6 rounded-xl">
+      <header className="bg-cream p-6 sm:p-8 lg:p-10 mb-6 rounded-3xl">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           {org.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -316,7 +316,7 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="font-serif text-d2 text-navy leading-tight flex items-center gap-2.5 flex-wrap">
+            <h1 className="font-serif text-d3 text-navy leading-tight flex items-center gap-2.5 flex-wrap">
               {org.name as string}
               {org.verified && (
                 <VerifiedBadge
@@ -373,7 +373,7 @@ export default async function OrgPage({ params }: Props) {
         {/* ---- Main column ---- */}
         <div className="xl:col-span-8 space-y-6">
           {pitch && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
+            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("What this company does")}
               </h2>
@@ -384,7 +384,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {productImages.length > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
+            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Product")}
               </h2>
@@ -414,7 +414,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {industry.length > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
+            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Industry")}
               </h2>
@@ -423,7 +423,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {capabilities.length > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
+            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("What we offer")}
               </h2>
@@ -432,7 +432,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {seeking.length > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
+            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {await tServer("Partnerships we're seeking")}
               </h2>
@@ -446,7 +446,7 @@ export default async function OrgPage({ params }: Props) {
           {connState !== "self" && !isInvestor && (
             <div
               id="connect"
-              className="bg-white border border-line p-6 scroll-mt-6 rounded-xl"
+              className="bg-white p-6 scroll-mt-6 rounded-3xl shadow-xs"
             >
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Connect")}
@@ -460,7 +460,7 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
           {connState === "connected" && (
-            <div className="bg-white border border-line p-6 rounded-xl">
+            <div className="bg-white p-6 rounded-3xl shadow-xs">
               <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
                 {await tServer("Deals")}
               </h2>
@@ -509,7 +509,7 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
 
-          <div className="bg-white border border-line p-6 rounded-xl">
+          <div className="bg-white p-6 rounded-3xl shadow-xs">
             <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
               {(await tServer("Team ({n})")).replace(
                 "{n}",

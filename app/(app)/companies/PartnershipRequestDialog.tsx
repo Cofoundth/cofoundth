@@ -372,7 +372,7 @@ function DialogShell({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="bg-white border border-line p-6 lg:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl"
+        className="bg-white p-6 lg:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-xs"
       >
         {children}
       </div>

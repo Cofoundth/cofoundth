@@ -54,7 +54,7 @@ export default async function AdminMeetupsPage() {
       <AdminTabs />
 
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-d2">Meetups</h1>
+        <h1 className="text-d3">Meetups</h1>
         <Link
           href="/admin/meetups/new"
           className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide inline-flex items-center gap-2"
@@ -64,11 +64,11 @@ export default async function AdminMeetupsPage() {
       </div>
 
       {meetups.length === 0 ? (
-        <div className="bg-white border border-line rounded-xl p-12 text-center text-ink-muted">
+        <div className="bg-white rounded-3xl shadow-xs p-12 text-center text-ink-muted">
           No meetups yet. Create the first one.
         </div>
       ) : (
-        <div className="border border-line rounded-xl overflow-hidden divide-y divide-line bg-white">
+        <div className="rounded-3xl shadow-xs overflow-hidden divide-y divide-line bg-white">
           {meetups.map((m) => {
             const when = meetupWhenParts(m.starts_at);
             const past = isPast(m.starts_at);

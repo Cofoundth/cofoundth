@@ -83,7 +83,7 @@ export function PostComposer() {
     <form
       ref={formRef}
       action={formAction}
-      className="bg-white border border-line p-4 rounded-xl"
+      className="bg-white rounded-3xl shadow-xs p-4"
     >
       <input type="hidden" name="kind" value={kind} />
       <input

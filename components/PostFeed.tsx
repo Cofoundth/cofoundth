@@ -17,7 +17,7 @@ export function PostFeed({
   const tr = useT();
   if (!items.length) {
     return (
-      <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
+      <div className="bg-white rounded-3xl shadow-xs p-8 text-center text-sm text-ink-muted">
         {emptyMessage ?? tr("No posts yet — be the first.")}
       </div>
     );

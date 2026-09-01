@@ -81,15 +81,7 @@ export function PartnershipCard({ row, locale }: Props) {
     : "#";
 
   return (
-    <div
-      className={`bg-white border rounded-xl p-5 ${
-        row.status === "accepted"
-          ? "border-line"
-          : row.status === "open"
-            ? "border-line"
-            : "border-line"
-      }`}
-    >
+    <div className="bg-white rounded-3xl shadow-xs p-5">
       <div className="flex items-start gap-4">
         <Link href={profileHref} className="shrink-0">
           <Avatar

@@ -101,7 +101,7 @@ export default async function DashboardPage() {
         {/* LEFT — identity + stats */}
         <aside className="xl:col-span-3 space-y-6 xl:sticky xl:top-24 self-start">
           {/* Identity card */}
-          <div className="bg-white border border-line p-6 rounded-xl">
+          <div className="bg-white p-6 rounded-3xl shadow-xs">
             <Avatar
               name={profile?.full_name as string}
               url={profile?.photo_url as string | null}
@@ -223,13 +223,13 @@ export default async function DashboardPage() {
           </div>
 
           {!newFounders?.length ? (
-            <div className="bg-white border border-line p-6 text-center rounded-xl">
+            <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
               <p className="text-sm text-ink-muted">
                 {await tServer("You're the first. Invite a friend.")}
               </p>
             </div>
           ) : (
-            <div className="bg-white border border-line divide-y divide-line rounded-xl">
+            <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
               {newFounders.map((f) => {
                 const href = `/profile/${(f.slug as string | undefined) ?? f.id}`;
                 const fresh = isWithinMs(f.created_at as string, 7 * DAY_MS);
@@ -237,7 +237,7 @@ export default async function DashboardPage() {
                   <Link
                     key={f.id as string}
                     href={href}
-                    className="block p-4 hover:bg-cream transition-colors group rounded-xl"
+                    className="block p-4 hover:bg-cream transition-colors group"
                   >
                     <div className="flex items-start gap-3">
                       <Avatar

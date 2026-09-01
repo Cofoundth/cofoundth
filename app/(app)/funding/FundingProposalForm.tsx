@@ -115,7 +115,7 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
         />
       </div>
 
-      <div className="flex items-start gap-3 p-4 bg-cream border border-line rounded-xl">
+      <div className="flex items-start gap-3 p-4 bg-cream rounded-3xl">
         <ShieldCheck className="w-5 h-5 text-gold-ink shrink-0 mt-0.5" />
         <div className="text-xs text-ink leading-relaxed">
           <p>

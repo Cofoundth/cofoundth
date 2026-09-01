@@ -142,7 +142,7 @@ export function CompaniesClient({
                 Beta
               </span>
             </div>
-            <h1 className="text-d2 mb-2">
+            <h1 className="text-d3 mb-2">
               {tr("Companies in the community")}
             </h1>
             <p className="text-ink max-w-2xl">
@@ -271,7 +271,7 @@ export function CompaniesClient({
         {/* Results */}
         <div className="xl:col-span-9">
           {filtered.length === 0 ? (
-            <div className="bg-white border border-line p-12 text-center rounded-xl">
+            <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
               <Building2
                 className="w-8 h-8 text-ink-muted mx-auto mb-4"
                 strokeWidth={1}
@@ -355,7 +355,7 @@ function CompanyCard({
   const fresh = isWithinMs(c.created_at, 7 * DAY_MS);
 
   return (
-    <div className="bg-white border border-line p-6 hover:border-navy transition-colors rounded-xl">
+    <div className="bg-white p-6 rounded-3xl shadow-xs hover:shadow-sm transition-shadow">
       <div className="flex items-start gap-5">
         <Link href={`/profile/${c.slug}`} className="shrink-0">
           <Avatar name={c.company_name} url={c.photo_url} size="lg" />

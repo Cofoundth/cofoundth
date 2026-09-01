@@ -144,11 +144,11 @@ export function SearchablePostFeed({
       {!searchActive && composer}
 
       {searchActive && searching && results === null ? (
-        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
+        <div className="bg-white rounded-3xl shadow-xs p-8 text-center text-sm text-ink-muted">
           {tr("Searching…")}
         </div>
       ) : list.length === 0 ? (
-        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
+        <div className="bg-white rounded-3xl shadow-xs p-8 text-center text-sm text-ink-muted">
           {searchActive
             ? tr("No posts match your search.")
             : (emptyMessage ?? tr("No posts yet — be the first."))}

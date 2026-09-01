@@ -32,7 +32,7 @@ export default async function AdminInsightsPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
             Admin
           </div>
-          <h1 className="text-d2 mb-2">Insights</h1>
+          <h1 className="text-d3 mb-2">Insights</h1>
           <p className="text-ink">
             {insights.length} row{insights.length === 1 ? "" : "s"} across{" "}
             {bySlug.size} post{bySlug.size === 1 ? "" : "s"}.
@@ -47,7 +47,7 @@ export default async function AdminInsightsPage() {
       </div>
 
       {bySlug.size === 0 ? (
-        <div className="bg-white border border-line p-12 text-center rounded-xl">
+        <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
           <h3 className="text-d1 mb-2">No insights yet</h3>
           <p className="text-ink-muted mb-6">
             Did you apply migration{" "}
@@ -63,7 +63,7 @@ export default async function AdminInsightsPage() {
       ) : (
         <div className="space-y-4">
           {Array.from(bySlug.entries()).map(([slug, rows]) => (
-            <div key={slug} className="bg-white border border-line rounded-xl">
+            <div key={slug} className="bg-white rounded-3xl shadow-xs overflow-hidden">
               <div className="px-5 py-3 border-b border-line bg-cream">
                 <div className="text-xs uppercase tracking-[0.2em] text-ink-muted">
                   {slug}

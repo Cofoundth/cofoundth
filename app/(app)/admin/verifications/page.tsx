@@ -39,7 +39,7 @@ export default async function AdminVerificationsPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
             Admin
           </div>
-          <h1 className="text-d2 mb-2">Verifications</h1>
+          <h1 className="text-d3 mb-2">Verifications</h1>
           <p className="text-ink leading-relaxed">
             Verify profiles after manual checks (Thai company registration via{" "}
             <a
@@ -98,11 +98,11 @@ function Section({
       </div>
 
       {profiles.length === 0 ? (
-        <div className="bg-white border border-line p-8 text-center text-sm text-ink-muted rounded-xl">
+        <div className="bg-white p-8 text-center text-sm text-ink-muted rounded-3xl shadow-xs">
           {emptyMessage}
         </div>
       ) : (
-        <div className="bg-white border border-line divide-y divide-line rounded-xl">
+        <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
           {profiles.map((p) => (
             <div
               key={p.id as string}

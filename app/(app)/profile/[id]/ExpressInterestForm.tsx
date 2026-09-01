@@ -37,7 +37,7 @@ export function ExpressInterestForm({
   // ── Connected (matched, or just accepted) ──────────────────────────
   if (relationship === "matched" || justConnected) {
     return (
-      <div className="bg-cream border border-line p-6 text-center rounded-xl">
+      <div className="bg-cream p-6 text-center rounded-3xl">
         <div className="w-12 h-12 bg-white border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Check className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
@@ -61,7 +61,7 @@ export function ExpressInterestForm({
   // ── Incoming interest → one-click accept ───────────────────────────
   if (relationship === "incoming") {
     return (
-      <div className="bg-cream border border-line p-6 rounded-xl">
+      <div className="bg-cream p-6 rounded-3xl">
         <div className="text-center mb-4">
           <div className="w-12 h-12 bg-white border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
             <Heart className="w-5 h-5 text-gold-ink" strokeWidth={2} />
@@ -99,7 +99,7 @@ export function ExpressInterestForm({
   // ── Outgoing interest already sent (waiting) ───────────────────────
   if (relationship === "outgoing" || state?.ok) {
     return (
-      <div className="bg-cream border border-line p-6 text-center rounded-xl">
+      <div className="bg-cream p-6 text-center rounded-3xl">
         <div className="w-12 h-12 bg-white border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Check className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
@@ -118,7 +118,7 @@ export function ExpressInterestForm({
   // ── No relationship yet → express interest ─────────────────────────
   if (!open) {
     return (
-      <div className="bg-cream border border-line p-6 text-center rounded-xl">
+      <div className="bg-cream p-6 text-center rounded-3xl">
         <div className="w-12 h-12 bg-white border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Heart className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
@@ -142,7 +142,7 @@ export function ExpressInterestForm({
   return (
     <form
       action={formAction}
-      className="bg-white border border-line p-6 space-y-4 rounded-xl"
+      className="bg-white p-6 space-y-4 rounded-3xl shadow-xs"
     >
       <input type="hidden" name="toId" value={toId} />
       <div>

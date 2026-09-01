@@ -130,7 +130,7 @@ function ScheduleDialog({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white border border-line max-w-md w-full p-6 lg:p-8 rounded-xl"
+        className="bg-white max-w-md w-full p-6 lg:p-8 rounded-3xl shadow-xs"
       >
         <div className="flex items-start justify-between mb-6">
           <div>

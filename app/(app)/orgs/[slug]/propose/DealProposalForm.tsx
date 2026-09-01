@@ -182,7 +182,7 @@ export function DealProposalForm({
         </Field>
       </div>
 
-      <div className="flex items-start gap-3 p-4 bg-cream border border-line rounded-xl">
+      <div className="flex items-start gap-3 p-4 bg-cream rounded-3xl">
         <ShieldCheck className="w-5 h-5 text-gold-ink shrink-0 mt-0.5" />
         <p className="text-xs text-ink leading-relaxed">
           {tr(

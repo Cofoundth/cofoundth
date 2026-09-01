@@ -104,7 +104,7 @@ export default async function OrgsPage({
           <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
             {await tServer(isInvestor ? "Discover" : "B2B")}
           </p>
-          <h1 className="font-serif text-d2 text-navy leading-tight">
+          <h1 className="font-serif text-d3 text-navy leading-tight">
             {await tServer("Companies")}
           </h1>
           <p className="text-ink-muted mt-1">
@@ -136,7 +136,7 @@ export default async function OrgsPage({
             {invites.map((inv) => (
               <div
                 key={inv.id}
-                className="bg-white border border-line p-5 flex items-center justify-between gap-4 rounded-xl"
+                className="bg-white p-5 flex items-center justify-between gap-4 rounded-3xl shadow-xs"
               >
                 <div className="flex items-center gap-4 min-w-0">
                   <OrgLogo org={{ name: inv.org!.name, logo_url: null }} />
@@ -163,7 +163,7 @@ export default async function OrgsPage({
             {await tServer("Your companies")}
           </h2>
         {myOrgs.length === 0 ? (
-          <div className="bg-white border border-line p-8 text-center rounded-xl">
+          <div className="bg-white p-8 text-center rounded-3xl shadow-xs">
             <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
             <p className="text-ink-muted mb-4">
               {await tServer("You're not part of any company yet.")}
@@ -216,7 +216,7 @@ export default async function OrgsPage({
           </Link>
         </nav>
         {filteredDirectory.length === 0 ? (
-          <div className="bg-white border border-line p-8 text-center rounded-xl">
+          <div className="bg-white p-8 text-center rounded-3xl shadow-xs">
             <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
             <p className="text-ink-muted">{directoryEmptyMsg}</p>
           </div>

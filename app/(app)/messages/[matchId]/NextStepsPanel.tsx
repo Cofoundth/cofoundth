@@ -65,7 +65,7 @@ export function NextStepsPanel({ social }: { social?: Social }) {
   return (
     <div className="space-y-6">
       {/* Quick-reply templates */}
-      <div className="bg-white border border-line p-5 rounded-xl">
+      <div className="bg-white p-5 rounded-3xl shadow-xs">
         <div className="flex items-center gap-2 mb-4">
           <MessageSquareQuote
             className="w-4 h-4 text-gold-ink"

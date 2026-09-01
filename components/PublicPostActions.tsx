@@ -52,7 +52,7 @@ export function PublicPostActions({
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative bg-white border border-line max-w-sm w-full p-8 text-center rounded-xl"
+            className="relative bg-white rounded-3xl shadow-xs max-w-sm w-full p-8 text-center"
             onClick={(e) => e.stopPropagation()}
           >
             <button

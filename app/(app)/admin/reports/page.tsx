@@ -75,7 +75,7 @@ export default async function AdminReportsPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
             {await tServer("Admin")}
           </div>
-          <h1 className="text-d2 mb-2">{await tServer("Reports")}</h1>
+          <h1 className="text-d3 mb-2">{await tServer("Reports")}</h1>
           <p className="text-ink">
             {(await tServer("{n} reports total")).replace(
               "{n}",
@@ -86,13 +86,13 @@ export default async function AdminReportsPage() {
       </div>
 
       {error?.message?.includes("reports") ? (
-        <div className="bg-white border border-line p-6 text-sm rounded-xl">
+        <div className="bg-white p-6 text-sm rounded-3xl shadow-xs">
           Reports table not ready. Apply{" "}
           <code>supabase/migrations/0002_community_forum.sql</code> in
           Supabase SQL Editor.
         </div>
       ) : !reports?.length ? (
-        <div className="bg-white border border-line p-12 text-center rounded-xl">
+        <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
           <h3 className="text-d1 mb-2">{await tServer("No reports")}</h3>
           <p className="text-ink-muted">
             {await tServer("Everyone’s behaving. For now.")}
@@ -103,7 +103,7 @@ export default async function AdminReportsPage() {
           {reports.map((r) => (
             <div
               key={r.id as string}
-              className="bg-white border border-line p-5 rounded-xl"
+              className="bg-white p-5 rounded-3xl shadow-xs"
             >
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div className="flex items-center gap-3">

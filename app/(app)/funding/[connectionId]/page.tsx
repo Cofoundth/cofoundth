@@ -136,13 +136,13 @@ export default async function FundingDetailPage({ params }: Props) {
       >
         <ArrowLeft className="w-3 h-3" /> {await tServer("Funding")}
       </Link>
-      <h1 className="font-serif text-d2 text-navy mb-1">{otherName}</h1>
+      <h1 className="font-serif text-d3 text-navy mb-1">{otherName}</h1>
       <p className="text-ink-muted mb-8">
         {await tServer("Agree on terms, then Cofoundee coordinates the signing.")}
       </p>
 
       {/* Propose */}
-      <div className="bg-white border border-line p-6 mb-8 rounded-xl">
+      <div className="bg-white p-6 mb-8 rounded-3xl shadow-xs">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
           {await tServer("Send a proposal")}
         </h2>
@@ -157,7 +157,7 @@ export default async function FundingDetailPage({ params }: Props) {
           </h2>
           <div className="space-y-3">
             {dealsView.map((d) => (
-              <div key={d.id} className="bg-white border border-line p-5 rounded-xl">
+              <div key={d.id} className="bg-white p-5 rounded-3xl shadow-xs">
                 <div className="flex items-start justify-between gap-3">
                   <div className="text-sm text-navy">
                     {d.equity != null && (

@@ -275,11 +275,11 @@ export default async function ProfileDetailPage({ params }: Props) {
       )}
 
       {/* ---- Hero ---- */}
-      <header className="bg-cream border border-line p-6 sm:p-8 lg:p-10 mb-6 rounded-xl">
+      <header className="bg-cream p-6 sm:p-8 lg:p-10 mb-6 rounded-3xl">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
           <div className="flex-1 min-w-0">
-            <h1 className="font-serif text-d2 text-navy leading-tight flex items-center gap-2.5 flex-wrap">
+            <h1 className="font-serif text-d3 text-navy leading-tight flex items-center gap-2.5 flex-wrap">
               {otherName}
               {profile.verified && (
                 <BadgeCheck
@@ -353,7 +353,7 @@ export default async function ProfileDetailPage({ params }: Props) {
             capabilities.length > 0 ||
             projectImages.length > 0 ||
             projectUrl) && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
+            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
               <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
                 {t("What I'm building", locale)}
               </div>
@@ -428,7 +428,7 @@ export default async function ProfileDetailPage({ params }: Props) {
 
           {/* Who I am */}
           {hasAbout && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
+            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
               <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {t("Background & experience", locale)}
               </div>
@@ -471,7 +471,7 @@ export default async function ProfileDetailPage({ params }: Props) {
 
           {/* Recent milestones */}
           {(recentMilestones?.length ?? 0) > 0 && (
-            <section className="bg-white border border-line p-6 sm:p-8 lg:p-10 rounded-xl">
+            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
               <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
                 {t("Recent milestones & launches", locale)}
               </div>
@@ -533,7 +533,7 @@ export default async function ProfileDetailPage({ params }: Props) {
         <aside className="xl:col-span-4 space-y-5 xl:sticky xl:top-24 self-start">
           {/* What I'm looking for — the headline ask */}
           {seeking.length > 0 && (
-            <div className="bg-navy p-6 rounded-xl">
+            <div className="bg-navy p-6 rounded-3xl">
               <div className="text-xs uppercase tracking-[0.2em] text-gold mb-2.5">
                 {t("Looking for", locale)}
               </div>
@@ -558,14 +558,14 @@ export default async function ProfileDetailPage({ params }: Props) {
                   />
                 </div>
               )}
-              <div className="bg-white border border-line p-4 rounded-xl">
+              <div className="bg-white p-4 rounded-3xl shadow-xs">
                 <ReportForm targetId={profile.id} />
               </div>
             </>
           )}
 
           {isOwnProfile && (
-            <div className="bg-cream border border-line p-6 text-center rounded-xl">
+            <div className="bg-cream p-6 text-center rounded-3xl">
               <p className="text-sm text-ink mb-3">
                 {t(
                   profile.onboarded
@@ -587,7 +587,7 @@ export default async function ProfileDetailPage({ params }: Props) {
           )}
 
           {/* Founder facts */}
-          <div className="bg-white border border-line p-6 space-y-4 text-sm rounded-xl">
+          <div className="bg-white p-6 space-y-4 text-sm rounded-3xl shadow-xs">
             <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-2">
               {t("Founder facts", locale)}
             </div>
@@ -635,7 +635,7 @@ export default async function ProfileDetailPage({ params }: Props) {
             profile.x_url ||
             profile.instagram_url ||
             profile.facebook_url) && (
-            <div className="bg-white border border-line p-6 rounded-xl">
+            <div className="bg-white p-6 rounded-3xl shadow-xs">
               <SocialLinks
                 linkedin={profile.linkedin_url as string | null}
                 x={profile.x_url as string | null}

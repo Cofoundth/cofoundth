@@ -158,7 +158,7 @@ export default async function AdminDealsPage() {
         <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
           {await tServer("Admin")}
         </p>
-        <h1 className="font-serif text-d2 text-navy leading-tight mb-1">
+        <h1 className="font-serif text-d3 text-navy leading-tight mb-1">
           {await tServer("Deals")}
         </h1>
         <p className="text-ink-muted">
@@ -169,7 +169,7 @@ export default async function AdminDealsPage() {
       </div>
 
       {empty ? (
-        <div className="bg-white border border-line p-8 text-center text-ink-muted rounded-xl">
+        <div className="bg-white p-8 text-center text-ink-muted rounded-3xl shadow-xs">
           {await tServer("No agreed deals yet.")}
         </div>
       ) : (
@@ -179,7 +179,7 @@ export default async function AdminDealsPage() {
               <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
                 {await tServer("Partnership deals")}
               </h2>
-              <div className="bg-white border border-line divide-y divide-line rounded-xl">
+              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
                 {dealsView.map((d) => (
                   <div key={d.id} className="p-5">
                     <div className="flex items-start justify-between gap-4">
@@ -230,7 +230,7 @@ export default async function AdminDealsPage() {
               <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
                 {await tServer("Funding deals")}
               </h2>
-              <div className="bg-white border border-line divide-y divide-line rounded-xl">
+              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
                 {fundingView.map((f) => (
                   <div key={f.id} className="p-5">
                     <div className="flex items-start justify-between gap-4">
