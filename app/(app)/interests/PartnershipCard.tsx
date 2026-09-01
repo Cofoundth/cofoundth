@@ -82,7 +82,7 @@ export function PartnershipCard({ row, locale }: Props) {
 
   return (
     <div
-      className={`bg-white border p-5 ${
+      className={`bg-white border rounded-xl p-5 ${
         row.status === "accepted"
           ? "border-line"
           : row.status === "open"
@@ -129,7 +129,7 @@ export function PartnershipCard({ row, locale }: Props) {
               </h3>
             </div>
             <span
-              className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border shrink-0 ${status.tone}`}
+              className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full shrink-0 ${status.tone}`}
             >
               {tr(status.en)}
             </span>

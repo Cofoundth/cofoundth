@@ -1,0 +1,108 @@
+# ---------------------------------------------------------------------------
+# Cofoundee CI — typecheck, eslint, design-lint, build.
+#
+# REPOSITORY SECRETS A MAINTAINER SHOULD CREATE
+#   Settings → Secrets and variables → Actions → "New repository secret"
+#
+#     NEXT_PUBLIC_SITE_URL                  e.g. https://www.cofoundee.co
+#     NEXT_PUBLIC_SUPABASE_URL              e.g. https://xxxxxxxx.supabase.co
+#     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  Supabase publishable ("anon") key
+#     SUPABASE_SECRET_KEY                   Supabase service-role key
+#
+#   NONE of them are strictly required for this workflow to go green: each one
+#   below falls back to a harmless placeholder when the secret is absent, so a
+#   fresh fork or a repo with zero secrets configured still passes. Create them
+#   when you want the build to exercise real configuration.
+#
+#   These are read by the app but are NOT needed by `next build` (measured — the
+#   build is green with all of them empty). Add them only if a build-time code
+#   path starts reading them:
+#     RESEND_API_KEY, RESEND_FROM_EMAIL, ADMIN_EMAILS,
+#     GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET,
+#     NEXT_PUBLIC_COFOUNDEE_CALENDLY_URL
+#
+# WHY THE PLACEHOLDER FALLBACKS EXIST (all three verified by running the build)
+#   1. SUPABASE_SECRET_KEY + NEXT_PUBLIC_SUPABASE_URL — lib/supabase/admin.ts
+#      throws when either is empty. `/insights/[slug]` calls it from
+#      generateStaticParams, which runs at build time with no request context
+#      and no dynamic-rendering escape hatch, so the build dies during
+#      "Collecting page data" with:
+#          Error: Missing SUPABASE_SECRET_KEY — required for admin writes.
+#   2. NEXT_PUBLIC_SITE_URL — app/layout.tsx computes metadataBase via
+#      `process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co"`. `??`
+#      only catches null/undefined, NOT "", so an empty value reaches
+#      `new URL("")` and the build dies with `TypeError: Invalid URL`.
+#
+#   An unset GitHub secret expands to an EMPTY STRING, not undefined — which is
+#   precisely the input that trips both traps. `${{ secrets.X || 'fallback' }}`
+#   is therefore load-bearing, not decoration. It also keeps the build working
+#   for `pull_request` runs from forks, where secrets are not exposed at all.
+#
+# WHY PLACEHOLDER VALUES ARE ENOUGH
+#   The build does not need working credentials. Nearly every route is
+#   force-dynamic (server-rendered on demand), and the two build-time Supabase
+#   readers both degrade quietly: lib/insights.ts destructures `{ data }` and
+#   ignores `error`, and app/sitemap.ts wraps its query in try/catch. An
+#   unauthorised response yields an empty list and the build still succeeds.
+#
+#   So prefer dummy values over real ones. The service-role key bypasses RLS and
+#   there is no reason to expose it to CI. The trade-off is that this build
+#   proves the app COMPILES and PRERENDERS; it does not validate real data
+#   fetching. That is the right gate for CI.
+#
+#   `build` is intentionally a hard gate (no continue-on-error): with the
+#   fallbacks below it is deterministic and does not depend on network reach to
+#   Supabase.
+# ---------------------------------------------------------------------------
+
+name: CI
+
+on:
+  push:
+    branches: [staging, main]
+  pull_request:
+    branches: [staging, main]
+
+# Superseded runs on the same ref are pointless; cancel them.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck, lint & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Lint (design system)
+        run: npm run lint:design
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://www.cofoundee.co' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'ci-placeholder-publishable-key' }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'ci-placeholder-secret-key' }}
+        run: npm run build

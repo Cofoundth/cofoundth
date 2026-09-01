@@ -24,7 +24,7 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 pt-8">
       <div className="bg-navy border border-gold/50 p-6 lg:p-8 rounded-xl">
         <div className="flex items-start gap-5">
-          <div className="w-12 h-12 bg-gold/15 border border-gold/50 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 bg-gold/15 border border-gold/50 rounded-xl flex items-center justify-center shrink-0">
             <TriangleAlert
               className="w-6 h-6 text-gold"
               strokeWidth={1.75}

@@ -97,7 +97,7 @@ export default async function AdminMeetupsPage() {
                   {m.capacity != null ? `/${m.capacity}` : ""}
                 </div>
                 <span
-                  className={`shrink-0 text-[11px] uppercase tracking-[0.15em] px-2 py-0.5 border ${
+                  className={`shrink-0 text-[11px] uppercase tracking-[0.15em] px-2 py-0.5 border rounded-full ${
                     STATUS_STYLE[m.status] ?? "text-ink-muted border-line"
                   }`}
                 >

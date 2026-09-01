@@ -146,7 +146,7 @@ export default async function MeetupDetailPage({ params }: Props) {
       <h1 className="text-d2 lg:text-d3 leading-tight mb-6">{m.title}</h1>
 
       {cancelled && (
-        <div className="mb-6 px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="mb-6 px-4 py-3 border border-red-300 rounded-xl bg-red-50 text-sm text-red-800">
           {tCancelledBanner}
         </div>
       )}

@@ -126,7 +126,7 @@ export function MeetupForm({ initial, action, submitLabel }: Props) {
       </div>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-red-300 rounded-xl bg-red-50 text-sm text-red-800">
           {state.error}
         </div>
       )}
@@ -141,7 +141,7 @@ export function MeetupForm({ initial, action, submitLabel }: Props) {
         </button>
         <Link
           href="/admin/meetups"
-          className="px-6 py-3 border border-line hover:border-navy text-ink hover:text-navy text-sm tracking-wide"
+          className="px-6 py-3 border border-line rounded-full hover:border-navy text-ink hover:text-navy text-sm tracking-wide"
         >
           Cancel
         </Link>

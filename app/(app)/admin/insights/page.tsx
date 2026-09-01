@@ -81,7 +81,7 @@ export default async function AdminInsightsPage() {
                           {r.locale}
                         </span>
                         <span
-                          className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
+                          className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full ${
                             r.status === "published"
                               ? "border-line text-gold-ink"
                               : "border-line text-ink-muted"

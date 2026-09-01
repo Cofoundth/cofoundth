@@ -34,7 +34,7 @@ function Badge({ tone, children }: { tone: "gold" | "red" | "muted"; children: R
         ? "border-red-300 text-red-700"
         : "border-line text-ink-muted";
   return (
-    <span className={`text-[9px] uppercase tracking-[0.12em] border px-1 py-0.5 ${cls}`}>
+    <span className={`text-[9px] uppercase tracking-[0.12em] border rounded-full px-1 py-0.5 ${cls}`}>
       {children}
     </span>
   );

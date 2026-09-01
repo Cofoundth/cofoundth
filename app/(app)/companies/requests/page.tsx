@@ -218,7 +218,7 @@ export default async function PartnershipRequestsBoardPage() {
             return (
               <div
                 key={ask.id as string}
-                className={`bg-white border p-5 ${
+                className={`bg-white border rounded-xl p-5 ${
                   ask.status === "open"
                     ? "border-line"
                     : "border-line opacity-80"
@@ -272,7 +272,7 @@ export default async function PartnershipRequestsBoardPage() {
                         </h3>
                       </div>
                       <span
-                        className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border shrink-0 ${statusTone}`}
+                        className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full shrink-0 ${statusTone}`}
                       >
                         {statusText}
                       </span>

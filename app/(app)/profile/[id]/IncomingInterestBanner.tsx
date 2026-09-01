@@ -23,10 +23,10 @@ export function IncomingInterestBanner({
   >(expressInterestAction, null);
 
   return (
-    <div className="mb-6 bg-navy border border-gold/50">
+    <div className="mb-6 bg-navy border border-gold/50 rounded-xl">
       <div className="flex items-center justify-between gap-5 flex-wrap p-6 lg:p-7">
         <div className="flex items-center gap-4 min-w-0">
-          <div className="w-12 h-12 bg-gold/15 border border-gold/50 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 bg-gold/15 border border-gold/50 rounded-xl flex items-center justify-center shrink-0">
             <Heart className="w-6 h-6 text-gold" strokeWidth={1.75} />
           </div>
           <div className="min-w-0">

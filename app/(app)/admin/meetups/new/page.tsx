@@ -25,7 +25,7 @@ export default async function NewMeetupPage() {
       </Link>
 
       <div className="mb-10 pb-8 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold mb-3">
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
           Admin
         </div>
         <h1 className="text-d2">New meetup</h1>

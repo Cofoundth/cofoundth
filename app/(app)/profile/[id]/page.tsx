@@ -333,7 +333,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                   return (
                     <span
                       key={tag}
-                      className={`text-[10px] uppercase tracking-[0.15em] px-2 py-1 border ${meta.tone}`}
+                      className={`text-[10px] uppercase tracking-[0.15em] px-2 py-1 border rounded-full ${meta.tone}`}
                     >
                       {t(meta.en, locale)}
                     </span>
