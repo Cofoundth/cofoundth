@@ -6,6 +6,10 @@ import { tServer } from "@/lib/i18n-server";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppFooter } from "@/components/AppFooter";
 import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
+import {
+  isInvestorReadableRoute,
+  INVESTOR_HOME,
+} from "@/lib/investor-routes";
 
 export default async function AppLayout({
   children,
@@ -39,28 +43,11 @@ export default async function AppLayout({
   const isInvestor = profile?.account_type === "investor";
 
   if (isInvestor) {
-    const readable =
-      pathname === "/investor" ||
-      pathname === "/funding" ||
-      pathname.startsWith("/funding/") ||
-      pathname === "/community" ||
-      (pathname.startsWith("/community/") &&
-        !pathname.startsWith("/community/new")) ||
-      // Meetups: same read-first terms as the community feed. Investors can see
-      // what is happening; RSVPing is a write and stays closed to them (also
-      // enforced server-side in app/(app)/meetups/actions.ts).
-      pathname === "/meetups" ||
-      pathname.startsWith("/meetups/") ||
-      // Companies: investors browse the company directory + profiles (read), but
-      // not the founder-to-founder B2B actions (create / propose / chat).
-      pathname === "/orgs" ||
-      (pathname.startsWith("/orgs/") &&
-        !pathname.startsWith("/orgs/new") &&
-        !pathname.endsWith("/propose") &&
-        !pathname.endsWith("/chat")) ||
-      pathname.startsWith("/profile/") ||
-      pathname === "/settings";
-    if (!readable) redirect("/funding");
+    // Defence in depth only — the REAL gate is proxy.ts. A layout redirect does
+    // not fire on client-side navigation, because Next does not re-render a
+    // shared layout between sibling routes. Same allowlist, one definition, so
+    // the two cannot drift apart.
+    if (!isInvestorReadableRoute(pathname)) redirect(INVESTOR_HOME);
   } else if (!profile?.onboarded) {
     // New founders must finish their profile before using the app.
     redirect("/onboarding");

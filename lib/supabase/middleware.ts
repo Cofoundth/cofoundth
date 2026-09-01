@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseEnv } from "./env";
 
+// Refreshes the auth cookie AND hands back the authenticated user, so the
+// middleware can enforce route access without re-authenticating.
 export async function updateSession(
   request: NextRequest,
   requestHeaders?: Headers,
@@ -37,6 +39,11 @@ export async function updateSession(
     },
   });
 
-  await supabase.auth.getUser();
-  return response;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // The caller (proxy.ts) needs the user and a client to decide route access.
+  // Returning them avoids a second round trip just to learn who this is.
+  return { response, supabase, user };
 }

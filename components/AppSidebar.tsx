@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
@@ -12,6 +11,7 @@ import { NotificationBell, type NotifItem } from "@/components/NotificationBell"
 import { MobileMenu } from "@/components/MobileMenu";
 import { OrgSwitcher } from "@/components/OrgSwitcher";
 import { getUserOrgs, getActiveOrgId } from "@/lib/active-org";
+import { SidebarNav } from "@/components/SidebarNav";
 
 // App chrome, Onfound-style: a persistent left rail on desktop, a slim top bar
 // on mobile. Public/marketing pages keep the horizontal AppHeader — the same
@@ -135,14 +135,6 @@ export async function AppSidebar() {
   const signOutLabel = await tServer("Sign out");
   const profileLabel = await tServer("Your profile");
 
-  // Which rail item is the current page. Same `x-pathname` header the (app)
-  // layout reads for the investor allowlist (set in proxy.ts), so this needs no
-  // client component. A section root also lights up for its children, e.g.
-  // /community/<id> keeps "Community" active.
-  const pathname = (await headers()).get("x-pathname") ?? "";
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`);
-
   return (
     <>
       {/* Desktop rail */}
@@ -154,27 +146,7 @@ export async function AppSidebar() {
           </Link>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {navItems.map((i) => (
-            <Link
-              key={i.href}
-              href={i.href}
-              aria-current={isActive(i.href) ? "page" : undefined}
-              className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm tracking-wide transition-colors ${
-                isActive(i.href)
-                  ? "bg-gold text-navy font-medium"
-                  : "text-ink hover:bg-cream hover:text-navy"
-              }`}
-            >
-              <span>{i.label}</span>
-              {i.badge !== undefined && i.badge > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
-                  {i.badge > 9 ? "9+" : i.badge}
-                </span>
-              )}
-            </Link>
-          ))}
-        </nav>
+        <SidebarNav items={navItems} />
 
         <div className="shrink-0 border-t border-line p-3 space-y-3">
           {activeOrgId && <OrgSwitcher orgs={myOrgs} activeId={activeOrgId} />}

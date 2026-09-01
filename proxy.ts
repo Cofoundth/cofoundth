@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import {
+  isInvestorReadableRoute,
+  isAppShellRoute,
+  INVESTOR_HOME,
+} from "@/lib/investor-routes";
 
 // Ship the CSP in report-only mode first to verify the policy + nonce
 // propagation against real prod without risking a blank app, then flip to
@@ -57,7 +62,45 @@ export async function proxy(request: NextRequest) {
   ) {
     response = NextResponse.next({ request: { headers: requestHeaders } });
   } else {
-    response = await updateSession(request, requestHeaders);
+    const session = await updateSession(request, requestHeaders);
+    response = session.response;
+
+    // ---- Investor route access -------------------------------------------
+    // This is the REAL gate, and it has to live here. app/(app)/layout.tsx also
+    // checks, but Next does not re-render a shared layout on a client-side
+    // navigation, so that redirect only fires on a full page load — an investor
+    // clicking through to /dashboard was served the founder dashboard. Verified
+    // against the running app. Middleware runs on every request, including the
+    // RSC fetches a soft navigation makes, so it is the only layer that sees
+    // every navigation.
+    //
+    // The account_type lookup is skipped entirely unless the path is inside the
+    // (app) shell AND someone is signed in, so marketing, auth and asset
+    // requests pay nothing for it.
+    const path = request.nextUrl.pathname;
+    if (session.user && isAppShellRoute(path) && !isInvestorReadableRoute(path)) {
+      const { data: profile } = await session.supabase
+        .from("profiles")
+        .select("account_type")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      if (profile?.account_type === "investor") {
+        const url = request.nextUrl.clone();
+        url.pathname = INVESTOR_HOME;
+        url.search = "";
+        const redirect = NextResponse.redirect(url);
+        // Carry the refreshed auth cookies onto the redirect, or the bounce
+        // silently signs the user out.
+        response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
+        redirect.headers.set(
+          CSP_REPORT_ONLY
+            ? "content-security-policy-report-only"
+            : "content-security-policy",
+          csp,
+        );
+        return redirect;
+      }
+    }
   }
 
   response.headers.set(

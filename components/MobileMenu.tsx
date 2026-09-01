@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 export type MobileLink = { href: string; label: string; badge?: number };
@@ -20,6 +21,11 @@ export function MobileMenu({
   footer?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  // Same reason as the desktop rail: the server layout does not re-render on a
+  // soft navigation, so the active item has to be derived on the client.
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <div className={className}>
@@ -48,7 +54,12 @@ export function MobileMenu({
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-between -mx-3 px-3 py-3.5 rounded-lg text-ink hover:bg-cream border-b border-line/60 last:border-b-0"
+                  aria-current={isActive(l.href) ? "page" : undefined}
+                  className={`flex items-center justify-between -mx-3 px-3 py-3.5 rounded-lg border-b border-line/60 last:border-b-0 ${
+                    isActive(l.href)
+                      ? "bg-gold text-navy font-medium"
+                      : "text-ink hover:bg-cream"
+                  }`}
                 >
                   <span>{l.label}</span>
                   {l.badge && l.badge > 0 ? (
