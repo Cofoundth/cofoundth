@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
@@ -134,6 +135,14 @@ export async function AppSidebar() {
   const signOutLabel = await tServer("Sign out");
   const profileLabel = await tServer("Your profile");
 
+  // Which rail item is the current page. Same `x-pathname` header the (app)
+  // layout reads for the investor allowlist (set in proxy.ts), so this needs no
+  // client component. A section root also lights up for its children, e.g.
+  // /community/<id> keeps "Community" active.
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
   return (
     <>
       {/* Desktop rail */}
@@ -150,7 +159,12 @@ export async function AppSidebar() {
             <Link
               key={i.href}
               href={i.href}
-              className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm text-ink hover:bg-cream hover:text-navy tracking-wide transition-colors"
+              aria-current={isActive(i.href) ? "page" : undefined}
+              className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm tracking-wide transition-colors ${
+                isActive(i.href)
+                  ? "bg-gold text-navy font-medium"
+                  : "text-ink hover:bg-cream hover:text-navy"
+              }`}
             >
               <span>{i.label}</span>
               {i.badge !== undefined && i.badge > 0 && (
