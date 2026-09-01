@@ -77,8 +77,8 @@ export default async function FundingPage() {
           </p>
         </div>
 
-        <section className="mb-12">
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
+        <section className="mb-14">
+          <h2 className="text-lg font-bold tracking-normal mb-5">
             {await tServer("Your companies")}
           </h2>
           {connectedOrgs.length === 0 ? (
@@ -129,7 +129,7 @@ export default async function FundingPage() {
         </section>
 
         <section>
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
+          <h2 className="text-lg font-bold tracking-normal mb-5">
             {await tServer("Discover companies")}
           </h2>
           {discover.length === 0 ? (
@@ -241,8 +241,8 @@ export default async function FundingPage() {
         </p>
       </div>
 
-      <section className="mb-12">
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
+      <section className="mb-14">
+        <h2 className="text-lg font-bold tracking-normal mb-5">
           {await tServer("Your investors")}
         </h2>
         {connected.length === 0 ? (

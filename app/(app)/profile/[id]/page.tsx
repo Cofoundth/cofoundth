@@ -275,7 +275,7 @@ export default async function ProfileDetailPage({ params }: Props) {
       )}
 
       {/* ---- Hero ---- */}
-      <header className="bg-cream p-6 sm:p-8 lg:p-10 mb-6 rounded-3xl">
+      <header className="bg-cream p-6 sm:p-8 lg:p-10 mb-8 rounded-3xl">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
           <div className="flex-1 min-w-0">

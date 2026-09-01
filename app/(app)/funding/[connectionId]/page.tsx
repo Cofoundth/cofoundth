@@ -143,7 +143,7 @@ export default async function FundingDetailPage({ params }: Props) {
 
       {/* Propose */}
       <div className="bg-white p-6 mb-8 rounded-3xl shadow-xs">
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
+        <h2 className="text-lg font-bold tracking-normal mb-5">
           {await tServer("Send a proposal")}
         </h2>
         <FundingProposalForm connectionId={connectionId} />
@@ -152,7 +152,7 @@ export default async function FundingDetailPage({ params }: Props) {
       {/* Existing proposals */}
       {dealsView.length > 0 && (
         <div>
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
+          <h2 className="text-lg font-bold tracking-normal mb-5">
             {await tServer("Proposals")}
           </h2>
           <div className="space-y-3">

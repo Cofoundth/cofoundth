@@ -96,6 +96,16 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      {/* The page had NO <h1> at all. That was invisible while section labels
+          were 12px eyebrows, but once they became 18px the largest heading on
+          the page was a 20px card title — no hierarchy, and no landmark for a
+          screen reader either. Their /home opens the same way ("Good evening,
+          <name>"), so the shape is theirs; the string is one we already ship. */}
+      <div className="mb-8 max-w-[640px]">
+        <h1 className="text-d2 lg:text-d3">
+          {(await tServer("Welcome, {name}")).replace("{name}", firstName)}
+        </h1>
+      </div>
 
       <div className="grid xl:grid-cols-12 gap-8">
         {/* LEFT — identity + stats */}
@@ -188,7 +198,7 @@ export default async function DashboardPage() {
           />
 
           <div className="flex items-center justify-between">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">
+            <h2 className="text-lg font-bold tracking-normal">
               {await tServer("Latest from the community")}
             </h2>
             <Link
@@ -210,7 +220,7 @@ export default async function DashboardPage() {
         {/* RIGHT — new founders */}
         <aside className="xl:col-span-3 xl:sticky xl:top-24 self-start">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">
+            <h2 className="text-lg font-bold tracking-normal">
               {await tServer("New founders")}
             </h2>
             <Link

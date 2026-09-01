@@ -558,7 +558,7 @@ function Section({
 }) {
   return (
     <section className="space-y-4">
-      <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink border-b border-line pb-2">
+      <h2 className="text-lg font-bold tracking-normal border-b border-line pb-2">
         {title}
       </h2>
       {children}

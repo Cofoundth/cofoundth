@@ -671,6 +671,53 @@ function checkRule1(src, lines, starts, mask, push) {
   }
 }
 
+// RULE 3 — the app's section-heading register.
+//
+// Section headings inside the app are 18px/700 with NORMAL letter-spacing,
+// measured off app.onfound.com. Both overrides are load-bearing: globals.css
+// @layer base sets every h1-h6 to `font-weight: 600` and `letter-spacing:
+// -0.02em`, so a bare `text-lg` h2 silently renders 600/-0.02em — it LOOKS
+// converted in the source and is wrong on screen. That is the exact failure
+// this rule exists to catch, because nothing else would.
+//
+// Only h2. h1 is display type and belongs on the golden ladder; h3 and below
+// are component-internal.
+function checkRule3(src, lines, starts, mask, push, relPath) {
+  // App routes ONLY. The 18px section register is an app concept: their app
+  // labels sections with 18px/700, their MARKETING uses small uppercase
+  // eyebrows (measured 11.8px/700), which is what ours already do. On a
+  // marketing page a `text-lg` h2 is a CARD TITLE, not a section heading —
+  // this rule flagged one on /founders the moment it was added, which is
+  // exactly the false positive that would have made it untrustworthy.
+  if (!/^app[\/]\(app\)[\/]/.test(relPath || "")) return;
+  const H2 = /<h2\b[^>]*className=\s*(?:"([^"]*)"|\{`([^`]*)`\})/g;
+  H2.lastIndex = 0;
+  let m;
+  while ((m = H2.exec(src))) {
+    const idx = m.index;
+    if (mask[idx]) continue;
+    const cls = m[1] ?? m[2] ?? "";
+    if (!/\btext-lg\b/.test(cls)) continue; // not the section register
+    const missing = [];
+    if (!/\bfont-bold\b/.test(cls)) missing.push("font-bold");
+    if (!/\btracking-normal\b/.test(cls)) missing.push("tracking-normal");
+    if (!missing.length) continue;
+    const { line, column } = positionOf(starts, idx);
+    push({
+      rule: "heading-register",
+      line,
+      column,
+      class: missing.join(" "),
+      element: "<h2>",
+      snippet: (lines[line - 1] ?? "").trim(),
+      message:
+        `18px section heading is missing \`${missing.join("` and `")}\`. ` +
+        `@layer base already sets h1-h6 to weight 600 / -0.02em, so without ` +
+        `these it renders 600/-0.02em instead of the measured 700/normal.`,
+    });
+  }
+}
+
 function checkRule2(src, lines, starts, mask, push) {
   const passthrough = passthroughComponentsOf(src);
   const symbols = symbolTableOf(src, mask);
@@ -814,6 +861,7 @@ function lintFile(absPath, relPath, errors) {
     const mask = commentMaskOf(src, starts, lines);
     checkRule1(src, lines, starts, mask, (v) => raw.push(v));
     checkRule2(src, lines, starts, mask, (v) => raw.push(v));
+    checkRule3(src, lines, starts, mask, (v) => raw.push(v), relPath);
   } catch (err) {
     errors.push({ path: relPath, message: `scan failed: ${err.message}` });
     return null;
@@ -866,7 +914,8 @@ const RULE_DOCS = {
   ],
   "unrounded-surface": [
     "unrounded-surface - a full box border with no radius is a square card in a",
-    "  rounded product. Cards/panels rounded-xl, chips/badges rounded-full,",
+    "  rounded product. APP cards rounded-3xl (24px) borderless + shadow-xs,",
+    "  marketing cards rounded-[22px] bordered, chips/badges rounded-full,",
     "  landing marketing cards rounded-[22px].",
     "  NOT reported: button / [role=button] / input / textarea / select (rounded",
     "  by element in app/globals.css @layer base), partial borders (border-t and",

@@ -30,7 +30,7 @@ export default async function NewAskPage() {
         {await tServer("Back to board")}
       </Link>
 
-      <div className="mb-10 pb-8 border-b border-line">
+      <div className="mb-8 pb-8 border-b border-line">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
           {await tServer("B2B Partnership board")}
         </div>

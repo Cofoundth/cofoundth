@@ -299,7 +299,7 @@ export default async function OrgPage({ params }: Props) {
       </Link>
 
       {/* ---- Hero ---- */}
-      <header className="bg-cream p-6 sm:p-8 lg:p-10 mb-6 rounded-3xl">
+      <header className="bg-cream p-6 sm:p-8 lg:p-10 mb-8 rounded-3xl">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           {org.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -374,7 +374,7 @@ export default async function OrgPage({ params }: Props) {
         <div className="xl:col-span-8 space-y-6">
           {pitch && (
             <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("What this company does")}
               </h2>
               <p className="text-ink leading-relaxed whitespace-pre-wrap">
@@ -385,7 +385,7 @@ export default async function OrgPage({ params }: Props) {
 
           {productImages.length > 0 && (
             <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Product")}
               </h2>
               <div className="grid grid-cols-2 gap-3">
@@ -415,7 +415,7 @@ export default async function OrgPage({ params }: Props) {
 
           {industry.length > 0 && (
             <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Industry")}
               </h2>
               <Chips items={industry} />
@@ -424,7 +424,7 @@ export default async function OrgPage({ params }: Props) {
 
           {capabilities.length > 0 && (
             <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("What we offer")}
               </h2>
               <Chips items={capabilities} />
@@ -433,7 +433,7 @@ export default async function OrgPage({ params }: Props) {
 
           {seeking.length > 0 && (
             <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Partnerships we're seeking")}
               </h2>
               <Chips items={seeking} />
@@ -448,7 +448,7 @@ export default async function OrgPage({ params }: Props) {
               id="connect"
               className="bg-white p-6 scroll-mt-6 rounded-3xl shadow-xs"
             >
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Connect")}
               </h2>
               <ConnectActions
@@ -461,7 +461,7 @@ export default async function OrgPage({ params }: Props) {
           )}
           {connState === "connected" && (
             <div className="bg-white p-6 rounded-3xl shadow-xs">
-              <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-3">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Deals")}
               </h2>
               <Link
@@ -510,7 +510,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           <div className="bg-white p-6 rounded-3xl shadow-xs">
-            <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
+            <h2 className="text-lg font-bold tracking-normal mb-5">
               {(await tServer("Team ({n})")).replace(
                 "{n}",
                 String(members.length),

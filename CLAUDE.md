@@ -163,11 +163,39 @@ Browse filter lets users view All / Individuals / Companies separately.
 Their `--accent` equals their `--muted`: there is deliberately **no brand hue**.
 Emphasis comes from weight, size, or the tan surface — never colour.
 
-### Typography
-- Headings: **Rethink Sans** (still exposed as the `font-serif` class — legacy name, not a serif), weight 600, tracking `-0.02em`
+### Typography — TWO registers, and they are not the same scale
+- Headings: **Rethink Sans** (still exposed as the `font-serif` class — legacy name, not a
+  serif), weight 600, tracking `-0.02em`
 - Body: **Inter**; Thai falls through to **Noto Sans Thai** per-glyph in both faces
-- Display ladder `text-d1..d5` (26/33/42/53/68px) — display text only
-- App page titles sit flat at `text-d2` (33px); larger steps are for marketing
+
+**Display register — the golden ladder.** `text-d1..d5` = 26/33/42/53/68px, stepping by
+√φ ≈ 1.272 off the 16px body. Each step ships its OWN paired line-height (1.3 → 1.05),
+which tightens as the size grows. **Never override line-height on a ladder heading** —
+`leading-tight` is 1.25 and so LOOSENS `text-d3`, and an over-tight value risks a Thai
+descender colliding with the tone mark on the next line. Display register is for PAGE
+titles and marketing only.
+
+**UI register — off-ladder on purpose.** Section headings inside the app are
+`text-lg font-bold tracking-normal` (18px/700/normal), measured off app.onfound.com's app.
+These are labels, not display type, so they do not belong on the golden ladder. Both
+overrides are load-bearing: @layer base sets every h1–h6 to weight 600 and `-0.02em`, so
+without `font-bold tracking-normal` you silently get the wrong thing.
+
+Before this, the app had NO section register — 27 section headings were 12px all-caps
+eyebrows doing an 18px label's job.
+
+### Vertical rhythm — Fibonacci
+Fibonacci lands on Tailwind's scale within 2% at every step, so the rhythm uses only these:
+
+| fib | 8 | 13 | 21 | 34 | 55 | 89 |
+|---|---|---|---|---|---|---|
+| class | `mb-2` | `mb-3` | `mb-5` | `mb-8` | `mb-14` | `py-[88px]` |
+| px | 8 | 12 | 20 | 32 | 56 | 88 |
+
+`py-[88px]` was already the 89 step — it came from measuring their section rhythm before
+anyone noticed it was Fibonacci. Structural use only: page-header block → `mb-8`, below a
+section heading → `mb-5`, between major sections → `mb-14`. Intra-component spacing is
+tuned per component and is deliberately NOT on this scale.
 
 ### Layout — measured from their live DOM
 - Section container **`max-w-[1120px]`**, vertical rhythm **`py-[88px]`**

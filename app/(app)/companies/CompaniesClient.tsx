@@ -131,7 +131,7 @@ export function CompaniesClient({
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       {/* Header */}
-      <div className="mb-10 pb-8 border-b border-line">
+      <div className="mb-8 pb-8 border-b border-line">
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[640px]">
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">

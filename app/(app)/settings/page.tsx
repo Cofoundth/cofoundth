@@ -85,7 +85,7 @@ export default async function SettingsPage() {
       </div>
       <p className="text-sm text-ink-muted mb-8">{t.sub}</p>
 
-      <div className="mb-10">
+      <div className="mb-14">
         <div className="text-xs uppercase tracking-[0.2em] text-gold-ink border-b border-line pb-2 mb-4">
           {t.photo}
         </div>

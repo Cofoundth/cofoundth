@@ -173,10 +173,10 @@ export default async function AdminDealsPage() {
           {await tServer("No agreed deals yet.")}
         </div>
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-14">
           {dealsView.length > 0 && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Partnership deals")}
               </h2>
               <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
@@ -227,7 +227,7 @@ export default async function AdminDealsPage() {
 
           {fundingView.length > 0 && (
             <section>
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Funding deals")}
               </h2>
               <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">

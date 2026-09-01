@@ -102,7 +102,7 @@ export default async function MeetupsPage() {
 
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
-      <div className="mb-14 max-w-[640px]">
+      <div className="mb-8 max-w-[640px]">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tEyebrow}
         </div>
@@ -111,7 +111,7 @@ export default async function MeetupsPage() {
       </div>
 
       <section>
-        <h2 className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-4">
+        <h2 className="text-lg font-bold tracking-normal mb-5">
           {tUpcoming}
         </h2>
         {upcoming.length === 0 ? (
@@ -136,8 +136,8 @@ export default async function MeetupsPage() {
       </section>
 
       {past.length > 0 && (
-        <section className="mt-16">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-4">
+        <section className="mt-14">
+          <h2 className="text-lg font-bold tracking-normal mb-5">
             {tPast}
           </h2>
           <div className="space-y-4">

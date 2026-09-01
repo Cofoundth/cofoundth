@@ -237,8 +237,8 @@ export default async function PostPage({ params }: Props) {
       </article>
 
       {/* Comments thread */}
-      <section className="mt-10">
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
+      <section className="mt-14">
+        <h2 className="text-lg font-bold tracking-normal mb-5">
           {commentsLabel}
         </h2>
 

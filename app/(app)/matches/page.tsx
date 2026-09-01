@@ -235,7 +235,7 @@ export default async function ConnectionsPage({
 
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
-      <div className="max-w-[640px] mb-6">
+      <div className="max-w-[640px] mb-8">
         <h1 className="text-d3 mb-2">
           {await tServer("Connections")}
         </h1>
@@ -260,7 +260,7 @@ export default async function ConnectionsPage({
 
       {tab === "company" ? (
         <section>
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
+          <h2 className="text-lg font-bold tracking-normal mb-5">
             {await tServer("Company conversations")}
           </h2>
           {companyConvos.length === 0 ? (
@@ -332,8 +332,8 @@ export default async function ConnectionsPage({
         <>
           {/* ---- Requests (pending interest) ---- */}
           {hasRequests && (
-            <section className="mb-12">
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
+            <section className="mb-14">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Requests")}
               </h2>
 
@@ -430,8 +430,8 @@ export default async function ConnectionsPage({
 
           {/* ---- Conversations (matches) ---- */}
           <section>
-            <div className="flex items-baseline justify-between mb-4">
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">
+            <div className="flex items-baseline justify-between mb-5">
+              <h2 className="text-lg font-bold tracking-normal">
                 {await tServer("Conversations")}
               </h2>
               {(matches?.length ?? 0) > 0 && (

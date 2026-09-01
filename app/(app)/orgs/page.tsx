@@ -128,8 +128,8 @@ export default async function OrgsPage({
 
       {/* Pending invites */}
       {!isInvestor && invites.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
+        <section className="mb-14">
+          <h2 className="text-lg font-bold tracking-normal mb-5">
             {await tServer("Invitations")}
           </h2>
           <div className="space-y-3">
@@ -158,8 +158,8 @@ export default async function OrgsPage({
 
       {/* Your companies (founders only) */}
       {!isInvestor && (
-        <section className="mb-10">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
+        <section className="mb-14">
+          <h2 className="text-lg font-bold tracking-normal mb-5">
             {await tServer("Your companies")}
           </h2>
         {myOrgs.length === 0 ? (
@@ -195,7 +195,7 @@ export default async function OrgsPage({
 
       {/* Directory */}
       <section>
-        <h2 className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
+        <h2 className="text-lg font-bold tracking-normal mb-5">
           {await tServer("All companies")}
         </h2>
         <nav className="flex items-center gap-1 mb-5 border-b border-line">

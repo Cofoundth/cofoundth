@@ -20,7 +20,7 @@ export default async function NewInsightPage() {
         <ArrowLeft className="w-4 h-4" /> All insights
       </Link>
 
-      <div className="mb-10 pb-8 border-b border-line">
+      <div className="mb-8 pb-8 border-b border-line">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
           Admin
         </div>
