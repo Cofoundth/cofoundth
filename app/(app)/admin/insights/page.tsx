@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus, Edit3 } from "lucide-react";
+import { Plus, Edit3, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin";
+import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
+import { EmptyState, LinkButton } from "@/components/ui";
 import { adminListAll } from "@/lib/insights";
 import { togglePublishAction, deleteInsightAction } from "./actions";
 
@@ -47,19 +49,21 @@ export default async function AdminInsightsPage() {
       </div>
 
       {bySlug.size === 0 ? (
-        <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
-          <h3 className="text-d1 mb-2">No insights yet</h3>
-          <p className="text-ink-muted mb-6">
-            Did you apply migration{" "}
-            <code>0008_insights.sql</code>? Then create your first post.
-          </p>
-          <Link
-            href="/admin/insights/new"
-            className="inline-block px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm rounded-full"
-          >
-            Create first insight
-          </Link>
-        </div>
+        // KIND A — nothing written yet, and writing it is the admin's job, so
+        // this one gets a real CTA. The old copy asked whether a migration had
+        // been applied; that is a dev-time question, not an empty state.
+        <EmptyState
+          icon={FileText}
+          title={await tServer("No insights yet")}
+          description={await tServer(
+            "Nothing is published, so the public Insights page is empty for every visitor.",
+          )}
+          action={
+            <LinkButton href="/admin/insights/new">
+              <Plus className="w-4 h-4" /> {await tServer("New insight")}
+            </LinkButton>
+          }
+        />
       ) : (
         <div className="space-y-4">
           {Array.from(bySlug.entries()).map(([slug, rows]) => (

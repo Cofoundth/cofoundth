@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
+import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
+import { EmptyState, LinkButton } from "@/components/ui";
 import { meetupWhenParts, type Meetup } from "@/lib/meetups";
 import { isPast } from "@/lib/time";
 
@@ -64,9 +66,20 @@ export default async function AdminMeetupsPage() {
       </div>
 
       {meetups.length === 0 ? (
-        <div className="bg-white rounded-3xl shadow-xs p-12 text-center text-ink-muted">
-          No meetups yet. Create the first one.
-        </div>
+        // KIND A — nothing scheduled, and the admin is the only person who can
+        // schedule anything, so the CTA is the real one.
+        <EmptyState
+          icon={Calendar}
+          title={await tServer("No meetups yet")}
+          description={await tServer(
+            "The public meetups page stays empty until you schedule one.",
+          )}
+          action={
+            <LinkButton href="/admin/meetups/new">
+              <Plus className="w-4 h-4" /> {await tServer("New meetup")}
+            </LinkButton>
+          }
+        />
       ) : (
         <div className="rounded-3xl shadow-xs overflow-hidden divide-y divide-line bg-white">
           {meetups.map((m) => {

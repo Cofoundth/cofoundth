@@ -22,7 +22,7 @@ import {
 } from "@/lib/meetups";
 import { isPast } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
-import { LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton } from "@/components/ui";
 import { RsvpButton } from "../RsvpButton";
 import { isInvestorAccount } from "@/lib/account";
 
@@ -98,6 +98,8 @@ export default async function MeetupDetailPage({ params }: Props) {
     tWhosGoing,
     tGoing,
     tNobody,
+    tNobodyClosed,
+    tNobodyReadOnly,
     tAddCal,
     tFull,
     tEdit,
@@ -114,6 +116,8 @@ export default async function MeetupDetailPage({ params }: Props) {
     tServer("Who's going"),
     tServer("going"),
     tServer("Be the first to RSVP."),
+    tServer("Nobody RSVP'd to this one."),
+    tServer("No one has RSVP'd yet."),
     tServer("Add to Calendar"),
     tServer("This meetup is full."),
     tServer("Edit"),
@@ -250,7 +254,20 @@ export default async function MeetupDetailPage({ params }: Props) {
           )}
         </div>
         {count === 0 ? (
-          <p className="text-sm text-ink-muted">{tNobody}</p>
+          // KIND A — no attendees yet. "Be the first" is only honest when the
+          // reader can actually RSVP: a past or cancelled meetup can't be
+          // joined, and investors have RSVP refused server-side.
+          <EmptyState
+            dense
+            padding="lg"
+            description={
+              past || cancelled
+                ? tNobodyClosed
+                : investor
+                  ? tNobodyReadOnly
+                  : tNobody
+            }
+          />
         ) : (
           <div className="flex flex-wrap gap-3">
             {attendees.map((a) => {

@@ -10,6 +10,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { isInvestorAccount } from "@/lib/account";
 import { Avatar } from "@/components/Avatar";
+import { EmptyState } from "@/components/ui";
 import { ROLE_LABELS } from "@/lib/matching";
 import { t } from "@/lib/i18n";
 import { getLocale, tServer } from "@/lib/i18n-server";
@@ -276,9 +277,22 @@ export default async function PostPage({ params }: Props) {
             })}
           </div>
         ) : (
-          <p className="text-sm text-ink-muted mb-6">
-            {await tServer("No comments yet. Be the first.")}
-          </p>
+          // KIND A — no replies yet. The composer renders directly below for
+          // anyone who may write, so the copy names two easy openings instead
+          // of repeating a button. Investors can read this thread but cannot
+          // comment in it, so they get the plain statement of fact.
+          <EmptyState
+            padding="lg"
+            dense
+            className="mb-6"
+            description={
+              canWrite
+                ? await tServer(
+                    "No comments yet. Ask a question or add what you know.",
+                  )
+                : await tServer("No comments yet.")
+            }
+          />
         )}
 
         {canWrite && <CommentComposer postId={post.id as string} />}

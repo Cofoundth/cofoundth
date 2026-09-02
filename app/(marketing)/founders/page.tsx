@@ -54,10 +54,16 @@ export default async function PublicFoundersPage() {
       <div className="w-16 h-px bg-line mb-12" />
 
       {founders.length === 0 ? (
+        // An unfiltered list, so this is genuinely "nobody here yet" rather than
+        // "your filter matched nothing" — which makes "be the first" the honest
+        // ask. It does not render today (the directory has real people in it),
+        // but it is the first thing a visitor would see if it ever did.
         <EmptyState
           icon={Users}
           title={tr("No founders yet")}
-          description={tr("Be the first to join.")}
+          description={tr(
+            "This is where founders building in Thailand show up. Create your profile and be the first.",
+          )}
           action={
             <LinkButton href="/signup" size="lg">
               {tr("Join the community")}

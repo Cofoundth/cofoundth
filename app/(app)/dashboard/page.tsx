@@ -9,6 +9,7 @@ import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { provinceLabel } from "@/lib/provinces";
 import { PostComposer } from "@/components/PostComposer";
 import { PostFeed } from "@/components/PostFeed";
+import { EmptyState } from "@/components/ui";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { getFeedPosts } from "@/lib/posts";
 import { isWithinMs, DAY_MS } from "@/lib/time";
@@ -210,11 +211,10 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <PostFeed
-            items={feed}
-            locale={locale}
-            emptyMessage={await tServer("No posts yet — be the first.")}
-          />
+          {/* KIND A — nothing posted yet. PostFeed's own state says so and
+              hands over three easy openings; the composer above is the action,
+              so it deliberately carries no button. */}
+          <PostFeed items={feed} locale={locale} />
         </section>
 
         {/* RIGHT — new founders */}
@@ -233,11 +233,18 @@ export default async function DashboardPage() {
           </div>
 
           {!newFounders?.length ? (
-            <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
-              <p className="text-sm text-ink-muted">
-                {await tServer("You're the first. Invite a friend.")}
-              </p>
-            </div>
+            // KIND A — and deliberately CTA-less. This query is byte-identical
+            // to the one /browse runs (profile_complete, not suspended, not
+            // me), so when it comes back empty the directory is empty too: a
+            // "Browse founders" button would land on the same nothing. The
+            // header above already links to /browse for the normal case.
+            <EmptyState
+              padding="md"
+              dense
+              description={await tServer(
+                "You’re the first here. Invite a friend and this list fills up.",
+              )}
+            />
           ) : (
             <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
               {newFounders.map((f) => {

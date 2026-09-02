@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, MessageCircle, Search } from "lucide-react";
 import type { PostItem } from "@/lib/post-types";
 import type { Locale } from "@/lib/i18n";
 import { useT } from "@/lib/i18n-client";
 import { loadMoreFeedAction, searchFeedAction } from "@/lib/post-actions";
+import { Button, EmptyState } from "@/components/ui";
 import { PostCard } from "./PostCard";
 
 const LOAD_MORE_PAGE = 20;
@@ -15,7 +16,7 @@ const LOAD_MORE_PAGE = 20;
 export function SearchablePostFeed({
   items,
   locale,
-  emptyMessage,
+  emptyState,
   composer,
   initialQuery,
   canLoadMore = false,
@@ -23,7 +24,12 @@ export function SearchablePostFeed({
 }: {
   items: PostItem[];
   locale: Locale;
-  emptyMessage?: string;
+  /**
+   * Replaces the default "nothing posted yet" state. The page owns this one
+   * because only the page knows whether the reader may post (founder) or is
+   * here to read (investor) — the two need different copy and different CTAs.
+   */
+  emptyState?: React.ReactNode;
   composer?: React.ReactNode;
   initialQuery?: string;
   canLoadMore?: boolean;
@@ -148,11 +154,37 @@ export function SearchablePostFeed({
           {tr("Searching…")}
         </div>
       ) : list.length === 0 ? (
-        <div className="bg-white rounded-3xl shadow-xs p-8 text-center text-sm text-ink-muted">
-          {searchActive
-            ? tr("No posts match your search.")
-            : (emptyMessage ?? tr("No posts yet — be the first."))}
-        </div>
+        searchActive ? (
+          // KIND B — the posts exist, this query just missed them. Never offer
+          // "write the first post" here: the fix is to widen the search, not to
+          // add content.
+          <EmptyState
+            padding="lg"
+            icon={Search}
+            title={tr("No posts match your search.")}
+            description={tr(
+              "Try a different word, or clear the search to see every post.",
+            )}
+            action={
+              <Button variant="secondary" size="sm" onClick={() => setQ("")}>
+                {tr("Clear search")}
+              </Button>
+            }
+          />
+        ) : (
+          // KIND A — nothing posted yet. The composer sits directly above, so
+          // the default carries no CTA; pages that need one pass `emptyState`.
+          (emptyState ?? (
+            <EmptyState
+              padding="lg"
+              icon={MessageCircle}
+              title={tr("No posts yet")}
+              description={tr(
+                "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
+              )}
+            />
+          ))
+        )
       ) : (
         <div className="space-y-3">
           {list.map((p) => (

@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useT } from "@/lib/i18n-client";
+import { Button, EmptyState } from "@/components/ui";
 import { Paginated } from "@/components/Paginated";
 import { UserRow, type AdminUser } from "./UserRow";
 
@@ -22,6 +24,7 @@ export function UsersAdmin({
   users: AdminUser[];
   selfId: string;
 }) {
+  const tr = useT();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
   const query = q.trim().toLowerCase();
@@ -82,9 +85,26 @@ export function UsersAdmin({
       </div>
       <p className="text-xs text-ink-muted">{filtered.length} shown</p>
       {filtered.length === 0 ? (
-        <div className="bg-white p-8 text-center text-sm text-ink-muted rounded-3xl shadow-xs">
-          No users match.
-        </div>
+        // KIND B — the accounts exist, the search box or the filter tab is
+        // hiding them. So the action is "show me everything again", never
+        // "create the first one".
+        <EmptyState
+          padding="lg"
+          title={tr("No users match")}
+          description={tr("Your search or filter is hiding every account.")}
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setQ("");
+                setFilter("all");
+              }}
+            >
+              {tr("Show all users")}
+            </Button>
+          }
+        />
       ) : (
         <Paginated
           key={`${filter}:${query}`}

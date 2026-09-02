@@ -14,6 +14,7 @@ import { tServer, getLocale } from "@/lib/i18n-server";
 import { provinceLabel } from "@/lib/provinces";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
+import { EmptyState, LinkButton } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -226,6 +227,23 @@ export default async function ConnectionsPage({
   const mutualLabel = await tServer("Mutual interest! Start the conversation.");
   const startConvoLabel = await tServer("Start the conversation");
 
+  // The Conversations section is empty for three DIFFERENT reasons, and the
+  // useful next step is different in each. Someone is waiting on you > you are
+  // waiting on someone > you have not reached out at all.
+  const noConvoBody =
+    received.length > 0
+      ? await tServer(
+          "Answer the requests above. When interest is mutual, the conversation opens here.",
+        )
+      : sent.length > 0
+        ? await tServer(
+            "You've already reached out. A conversation opens here the moment someone expresses interest back.",
+          )
+        : await tServer(
+            "Mutual interest creates a match. Browse the directory, express interest in founders whose profiles align, and matches will appear here when they reciprocate.",
+          );
+  const openDirectoryLabel = await tServer("Open directory");
+
   const tabClass = (active: boolean) =>
     `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
       active
@@ -264,23 +282,19 @@ export default async function ConnectionsPage({
             {await tServer("Company conversations")}
           </h2>
           {companyConvos.length === 0 ? (
-            <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
-              <h3 className="text-d1 mb-2">
-                {await tServer("No company chats yet")}
-              </h3>
-              <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
-                {await tServer(
-                  "Connect with a company, then chat to align before proposing a deal.",
-                )}
-              </p>
-              <Link
-                href="/orgs"
-                className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
-              >
-                {await tServer("Browse companies")}{" "}
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
+            <EmptyState
+              icon={Building2}
+              title={await tServer("No company chats yet")}
+              description={await tServer(
+                "Connect with a company, then chat to align before proposing a deal.",
+              )}
+              action={
+                <LinkButton href="/orgs">
+                  {await tServer("Browse companies")}
+                  <ArrowRight className="w-4 h-4" />
+                </LinkButton>
+              }
+            />
           ) : (
             <div className="space-y-3">
               {companyConvos.map((c) => (
@@ -443,23 +457,20 @@ export default async function ConnectionsPage({
             </div>
 
             {!matches?.length ? (
-              <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
-                <h3 className="text-d1 mb-2">
-                  {await tServer("No conversations yet")}
-                </h3>
-                <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
-                  {await tServer(
-                    "Mutual interest creates a match. Browse the directory, express interest in founders whose profiles align, and matches will appear here when they reciprocate.",
-                  )}
-                </p>
-                <Link
-                  href="/browse"
-                  className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
-                >
-                  {await tServer("Open directory")}{" "}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
+              <EmptyState
+                icon={MessageCircle}
+                title={await tServer("No conversations yet")}
+                description={noConvoBody}
+                // No CTA while someone is waiting on YOU — the requests list is
+                // directly above, and a button pointing elsewhere fights it.
+                action={
+                  received.length > 0 ? undefined : (
+                    <LinkButton href="/browse">
+                      {openDirectoryLabel} <ArrowRight className="w-4 h-4" />
+                    </LinkButton>
+                  )
+                }
+              />
             ) : (
               <div className="space-y-3">
                 {sortedMatches.map((m) => {

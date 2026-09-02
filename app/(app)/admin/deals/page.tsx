@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
+import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -169,9 +170,16 @@ export default async function AdminDealsPage() {
       </div>
 
       {empty ? (
-        <div className="bg-white p-8 text-center text-ink-muted rounded-3xl shadow-xs">
-          {await tServer("No agreed deals yet.")}
-        </div>
+        // KIND A — an admin queue nobody has reached yet. There is nothing an
+        // admin can create here, so the line explains what lands here instead
+        // of offering a button.
+        <EmptyState
+          dense
+          padding="lg"
+          description={await tServer(
+            "No agreed deals yet. Partnership and funding deals land here once both sides confirm the terms.",
+          )}
+        />
       ) : (
         <div className="space-y-14">
           {dealsView.length > 0 && (

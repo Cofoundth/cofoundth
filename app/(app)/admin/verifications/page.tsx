@@ -4,7 +4,9 @@ import { BadgeCheck, Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
+import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
+import { EmptyState } from "@/components/ui";
 import { Avatar } from "@/components/Avatar";
 import { VerifyToggle } from "./VerifyToggle";
 
@@ -56,11 +58,15 @@ export default async function AdminVerificationsPage() {
         </div>
       </div>
 
+      {/* KIND A both — profiles are created by users onboarding, never by an
+          admin, so neither section has an action to offer. */}
       <Section
         title="Companies"
         icon={Building2}
         profiles={companies}
-        emptyMessage="No company profiles yet."
+        emptyMessage={await tServer(
+          "No company profiles yet. They appear here the moment someone onboards as a company.",
+        )}
       />
 
       <div className="mt-10">
@@ -68,7 +74,9 @@ export default async function AdminVerificationsPage() {
           title="Individuals"
           icon={BadgeCheck}
           profiles={individuals}
-          emptyMessage="No individual profiles yet."
+          emptyMessage={await tServer(
+            "No individual profiles yet. They appear here as soon as someone finishes onboarding.",
+          )}
         />
       </div>
     </div>
@@ -98,9 +106,7 @@ function Section({
       </div>
 
       {profiles.length === 0 ? (
-        <div className="bg-white p-8 text-center text-sm text-ink-muted rounded-3xl shadow-xs">
-          {emptyMessage}
-        </div>
+        <EmptyState dense padding="lg" description={emptyMessage} />
       ) : (
         <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
           {profiles.map((p) => (

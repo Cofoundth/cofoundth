@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { INVESTOR_TYPE_LABELS } from "@/lib/investor";
 import { Avatar } from "@/components/Avatar";
+import { EmptyState, LinkButton } from "@/components/ui";
 import { OrgCard, type OrgCardOrg } from "@/components/OrgCard";
 import { FundingConnect, FundingRespond } from "./FundingActions";
 
@@ -82,9 +83,21 @@ export default async function FundingPage() {
             {await tServer("Your companies")}
           </h2>
           {connectedOrgs.length === 0 ? (
-            <p className="text-sm text-ink-muted">
-              {await tServer("No connections yet — find a company below.")}
-            </p>
+            // KIND A — nothing here yet, and the fix is the list right below,
+            // so the copy points at it rather than carrying a button. When
+            // there is nothing below either, say that instead of sending
+            // someone to an empty section.
+            <EmptyState
+              dense
+              padding="lg"
+              description={
+                discover.length > 0
+                  ? await tServer("No connections yet — find a company below.")
+                  : await tServer(
+                      "No connections yet. Companies you connect with show up here.",
+                    )
+              }
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {connectedOrgs.map((o) => {
@@ -133,12 +146,28 @@ export default async function FundingPage() {
             {await tServer("Discover companies")}
           </h2>
           {discover.length === 0 ? (
-            <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
-              <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
-              <p className="text-ink-muted">
-                {await tServer("No companies to show yet — check back soon.")}
-              </p>
-            </div>
+            orgList.length > 0 ? (
+              // Every company on the platform is already a connection of
+              // theirs — not "nothing exists", so don't say that.
+              <EmptyState
+                icon={Building2}
+                title={await tServer("You're connected with every company")}
+                description={await tServer(
+                  "New companies show up here as they join.",
+                )}
+              />
+            ) : (
+              // KIND A — no companies exist yet. An investor cannot create one
+              // (/orgs/new is founder-only) and every other in-app surface is
+              // just as empty, so there is no CTA that would not be a dead end.
+              <EmptyState
+                icon={Building2}
+                title={await tServer("No companies here yet")}
+                description={await tServer(
+                  "Founders create a company page when they're open to funding. You'll see them here as soon as they do.",
+                )}
+              />
+            )
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {discover.map((o) => (
@@ -170,18 +199,22 @@ export default async function FundingPage() {
   if (myOrgIds.length === 0) {
     return (
       <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
-        <h1 className="text-d3 mb-2">{heading}</h1>
-        <div className="bg-white p-12 text-center mt-6 rounded-3xl shadow-xs">
-          <p className="text-ink-muted mb-6">
-            {await tServer("Create a company to raise funding from investors.")}
-          </p>
-          <Link
-            href="/orgs/new"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
-          >
-            {await tServer("Create company")} <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+        <h1 className="text-d3 mb-8">{heading}</h1>
+        {/* KIND A — this founder has no company yet, and creating one is the
+            real next step. Founder-only branch, so /orgs/new is reachable. */}
+        <EmptyState
+          icon={Building2}
+          title={await tServer("No company page yet")}
+          description={await tServer(
+            "Create a company to raise funding from investors.",
+          )}
+          action={
+            <LinkButton href="/orgs/new">
+              {await tServer("Create company")}{" "}
+              <ArrowRight className="w-4 h-4" />
+            </LinkButton>
+          }
+        />
       </div>
     );
   }
@@ -246,11 +279,16 @@ export default async function FundingPage() {
           {await tServer("Your investors")}
         </h2>
         {connected.length === 0 ? (
-          <p className="text-sm text-ink-muted">
-            {await tServer(
+          // KIND A — funding is investor-initiated, so there is deliberately no
+          // "browse investors" CTA to offer here. The line says what the
+          // company can actually influence instead.
+          <EmptyState
+            dense
+            padding="lg"
+            description={await tServer(
               "No investor interest yet. Investors discover and reach out to companies here — keep your company profile strong.",
             )}
-          </p>
+          />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {connected.map((i) => {

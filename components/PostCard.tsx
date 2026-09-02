@@ -430,7 +430,18 @@ export function PostCard({
               )}
             </ul>
           ) : (
-            <p className="text-xs text-ink-muted">{tr("No comments yet.")}</p>
+            // KIND A, and deliberately NOT an <EmptyState>: this slot is a
+            // single line inside the card's own comment drawer, with the
+            // composer already open above it. A white EmptyState card nested
+            // in the drawer of a white card reads as a rendering bug, and the
+            // action is one textarea away — so it stays a plain line that just
+            // names what to write. Investors cannot comment, so they get the
+            // statement of fact with no invitation.
+            <p className="text-xs text-ink-muted">
+              {canComment
+                ? tr("No comments yet. Ask a question or add what you know.")
+                : tr("No comments yet.")}
+            </p>
           )}
         </div>
       )}

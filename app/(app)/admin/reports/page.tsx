@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
+import { EmptyState } from "@/components/ui";
 import { Paginated } from "@/components/Paginated";
 import { ReportActions } from "./ReportActions";
 import { tServer, getLocale } from "@/lib/i18n-server";
@@ -92,12 +94,13 @@ export default async function AdminReportsPage() {
           Supabase SQL Editor.
         </div>
       ) : !reports?.length ? (
-        <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
-          <h3 className="text-d1 mb-2">{await tServer("No reports")}</h3>
-          <p className="text-ink-muted">
-            {await tServer("Everyone’s behaving. For now.")}
-          </p>
-        </div>
+        // KIND A — and the good kind of empty: an empty moderation queue is the
+        // desired state, so it keeps its existing copy and gets no CTA.
+        <EmptyState
+          icon={ShieldCheck}
+          title={await tServer("No reports")}
+          description={await tServer("Everyone’s behaving. For now.")}
+        />
       ) : (
         <Paginated pageSize={15} className="space-y-3">
           {reports.map((r) => (

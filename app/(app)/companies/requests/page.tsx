@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
+import { EmptyState, LinkButton } from "@/components/ui";
 import { AskRowActions } from "./AskRowActions";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
@@ -177,27 +178,30 @@ export default async function PartnershipRequestsBoardPage() {
       </div>
 
       {allAsks.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
-          <HandshakeIcon
-            className="w-8 h-8 text-ink-muted mx-auto mb-4"
-            strokeWidth={1}
-          />
-          <h3 className="text-d1 mb-2">{await tServer("No asks yet")}</h3>
-          <p className="text-ink-muted leading-relaxed max-w-md mx-auto mb-6">
-            {await tServer(
-              "Be the first to post. Describe the partner you need — other companies will see it and reach out.",
-            )}
-          </p>
-          {canPost && (
-            <Link
-              href="/companies/requests/new"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm rounded-full"
-            >
-              <Plus className="w-4 h-4" />
-              {await tServer("Post the first ask")}
-            </Link>
+        // Nothing on the board at all — the invitation is to post the first
+        // ask. A viewer who is not a company account cannot post, so theirs is
+        // the step that unlocks it rather than a button that would bounce.
+        <EmptyState
+          icon={HandshakeIcon}
+          title={await tServer("No asks yet")}
+          description={await tServer(
+            canPost
+              ? "Be the first to post. Describe the partner you need — other companies will see it and reach out."
+              : "Companies post what they need here. Make your profile a Company and you can post the first ask.",
           )}
-        </div>
+          action={
+            canPost ? (
+              <LinkButton href="/companies/requests/new" size="sm">
+                <Plus className="w-4 h-4" />
+                {await tServer("Post the first ask")}
+              </LinkButton>
+            ) : (
+              <LinkButton href="/onboarding" size="sm">
+                {await tServer("Set up a company profile")}
+              </LinkButton>
+            )
+          }
+        />
       ) : (
         <div className="space-y-4">
           {allAsks.map((ask) => {

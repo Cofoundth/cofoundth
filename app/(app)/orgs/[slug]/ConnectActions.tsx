@@ -8,6 +8,7 @@ import {
   requestConnectionAction,
   respondConnectionAction,
 } from "../actions";
+import { LinkButton } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 export type ConnState =
@@ -46,10 +47,17 @@ export function ConnectActions({
   if (state === "self") return null;
 
   if (state === "no_org") {
+    // Was a dead-end sentence: the one thing that unlocks this panel had no
+    // link to it anywhere on the page.
     return (
-      <p className="text-xs text-ink-muted">
-        {tr("Create a company to connect.")}
-      </p>
+      <div className="space-y-3">
+        <p className="text-xs text-ink-muted">
+          {tr("Create a company to connect.")}
+        </p>
+        <LinkButton href="/orgs/new" size="sm" variant="secondary">
+          {tr("Create company")}
+        </LinkButton>
+      </div>
     );
   }
 

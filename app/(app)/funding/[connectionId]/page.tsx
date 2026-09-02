@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { isUuid } from "@/lib/slug";
 import { COFOUNDEE_CALENDLY_URL } from "@/lib/calendly";
+import { EmptyState } from "@/components/ui";
 import { FundingProposalForm } from "../FundingProposalForm";
 import { FundingDealActions } from "../FundingDealActions";
 
@@ -150,11 +151,22 @@ export default async function FundingDetailPage({ params }: Props) {
       </div>
 
       {/* Existing proposals */}
-      {dealsView.length > 0 && (
-        <div>
-          <h2 className="text-lg font-bold tracking-normal mb-5">
-            {await tServer("Proposals")}
-          </h2>
+      <div>
+        <h2 className="text-lg font-bold tracking-normal mb-5">
+          {await tServer("Proposals")}
+        </h2>
+        {dealsView.length === 0 ? (
+          // KIND A — a two-sided negotiation, so "neither of us has proposed
+          // anything" is real information. The form that fixes it is directly
+          // above, which is why there is no button here.
+          <EmptyState
+            dense
+            padding="lg"
+            description={await tServer(
+              "No proposals yet — send the first one above.",
+            )}
+          />
+        ) : (
           <div className="space-y-3">
             {dealsView.map((d) => (
               <div key={d.id} className="bg-white p-5 rounded-3xl shadow-xs">
@@ -216,8 +228,8 @@ export default async function FundingDetailPage({ params }: Props) {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

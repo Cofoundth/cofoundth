@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { isInvestorAccount } from "@/lib/account";
 import { tServer } from "@/lib/i18n-server";
 import { OrgCard, OrgLogo, type OrgCardOrg } from "@/components/OrgCard";
+import { EmptyState, LinkButton } from "@/components/ui";
 import { InviteActions } from "./InviteActions";
 
 export const dynamic = "force-dynamic";
@@ -75,10 +76,35 @@ export default async function OrgsPage({
   const tabAll = await tServer("All");
   const tabPartner = await tServer("Want a partner");
   const tabFunding = await tServer("Want funding");
+  // TWO different empties, and they need opposite answers:
+  //   directory.length === 0      nothing is listed at all → invite them to
+  //                               list the first one (or, for an investor who
+  //                               cannot, point at the founder directory).
+  //   filteredDirectory empty     the TAB filtered everything out → the data
+  //                               exists, so offer the way back to "All".
+  //                               Never "create the first one" here.
+  //
+  // `directory` excludes the viewer's OWN companies, so "be the first to list
+  // one" is only true for someone who has none — a founder who created the
+  // only company on the platform must not be told to create it again.
+  const canListFirst = !isInvestor && myOrgs.length === 0;
+  const createCompanyLabel = await tServer("Create company");
+  const emptyDirectoryTitle = await tServer("No companies yet");
+  let emptyDirectoryBodyEn: string;
+  if (canListFirst) {
+    emptyDirectoryBodyEn =
+      "Be the first to list one. Add your company and other founders will see what you're building.";
+  } else if (isInvestor) {
+    emptyDirectoryBodyEn =
+      "Companies list themselves here as they join. The founder directory is where to see who's building right now.";
+  } else {
+    emptyDirectoryBodyEn =
+      "Yours is the only one so far. More list themselves as the community grows — the founder directory is where to meet people meanwhile.";
+  }
+  const emptyDirectoryBody = await tServer(emptyDirectoryBodyEn);
+  const browseFoundersLabel = await tServer("Browse founders");
   const noneInTab = await tServer("No companies in this tab yet.");
-  const noneYet = await tServer("No companies yet — check back soon.");
-  // Empty directory → the tabs still render; only the grid swaps for a card.
-  const directoryEmptyMsg = directory.length === 0 ? noneYet : noneInTab;
+  const seeAllLabel = await tServer("See all");
   const tabCls = (active: boolean) =>
     `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
       active
@@ -163,19 +189,20 @@ export default async function OrgsPage({
             {await tServer("Your companies")}
           </h2>
         {myOrgs.length === 0 ? (
-          <div className="bg-white p-8 text-center rounded-3xl shadow-xs">
-            <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
-            <p className="text-ink-muted mb-4">
-              {await tServer("You're not part of any company yet.")}
-            </p>
-            <Link
-              href="/orgs/new"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
-            >
-              <Plus className="w-4 h-4" />
-              {await tServer("Create company")}
-            </Link>
-          </div>
+          <EmptyState
+            padding="lg"
+            icon={Building2}
+            title={await tServer("Add your company")}
+            description={await tServer(
+              "Create a company profile to show what you offer, invite your team, and connect with other companies here.",
+            )}
+            action={
+              <LinkButton href="/orgs/new" size="sm">
+                <Plus className="w-4 h-4" />
+                {createCompanyLabel}
+              </LinkButton>
+            }
+          />
         ) : (
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {myOrgs.map((m) => (
@@ -216,10 +243,41 @@ export default async function OrgsPage({
           </Link>
         </nav>
         {filteredDirectory.length === 0 ? (
-          <div className="bg-white p-8 text-center rounded-3xl shadow-xs">
-            <Building2 className="w-8 h-8 text-ink-muted mx-auto mb-3" />
-            <p className="text-ink-muted">{directoryEmptyMsg}</p>
-          </div>
+          directory.length === 0 ? (
+            <EmptyState
+              padding="lg"
+              icon={Building2}
+              title={emptyDirectoryTitle}
+              description={emptyDirectoryBody}
+              action={
+                canListFirst ? (
+                  <LinkButton href="/orgs/new" size="sm">
+                    <Plus className="w-4 h-4" />
+                    {createCompanyLabel}
+                  </LinkButton>
+                ) : (
+                  <LinkButton
+                    href={isInvestor ? "/founders" : "/browse"}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    {browseFoundersLabel}
+                  </LinkButton>
+                )
+              }
+            />
+          ) : (
+            <EmptyState
+              dense
+              padding="lg"
+              description={noneInTab}
+              action={
+                <LinkButton href="/orgs" size="sm" variant="secondary">
+                  {seeAllLabel}
+                </LinkButton>
+              }
+            />
+          )
         ) : (
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {filteredDirectory.map((o) => (

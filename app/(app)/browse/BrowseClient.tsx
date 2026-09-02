@@ -17,6 +17,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   UserRound,
+  Users,
 } from "lucide-react";
 import {
   type ProfileLike,
@@ -26,6 +27,7 @@ import {
   COMMITMENT_LABELS,
 } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
+import { Button, EmptyState, LinkButton } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
@@ -319,14 +321,15 @@ export function BrowseClient({ others }: Props) {
         {/* Results */}
         <div className="xl:col-span-9 min-w-0">
           {filtered.length === 0 ? (
-            <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
-              <h3 className="text-d1 mb-2">{tr("No matches yet")}</h3>
-              <p className="text-ink-muted">
-                {tr(
-                  "Try widening your filters, or check back as more founders onboard.",
-                )}
-              </p>
-            </div>
+            <NoResults
+              totalOthers={others.length}
+              matchingFilters={filteredBase.length}
+              ideaTab={ideaTab}
+              onClear={clearAll}
+              onSwitchTab={() =>
+                setIdeaTab(ideaTab === "idea" ? "exploring" : "idea")
+              }
+            />
           ) : (
             <div className="space-y-4">
               {filtered.map((profile) => (
@@ -341,6 +344,84 @@ export function BrowseClient({ others }: Props) {
 }
 
 // ---- Sub-components ------------------------------------------------
+
+// The directory is empty for three different reasons, and only ONE of them is
+// "nobody is here yet". Offering "be the first" to someone whose industry
+// filter is simply too narrow would be nonsense, so each case gets the action
+// that actually unblocks it.
+function NoResults({
+  totalOthers,
+  matchingFilters,
+  ideaTab,
+  onClear,
+  onSwitchTab,
+}: {
+  /** Every other founder in the directory, before search/filters/tab. */
+  totalOthers: number;
+  /** After search + filters, BEFORE the idea/exploring tab split. */
+  matchingFilters: number;
+  ideaTab: "idea" | "exploring";
+  onClear: () => void;
+  onSwitchTab: () => void;
+}) {
+  const tr = useT();
+
+  // Nothing exists yet — the only real directory this early is the forum.
+  if (totalOthers === 0) {
+    return (
+      <EmptyState
+        icon={Users}
+        title={tr("You're the first one here")}
+        description={tr(
+          "No other founders have finished a profile yet. Post what you're building in the community — that's where the next ones land first, and they'll find you there.",
+        )}
+        action={
+          <LinkButton href="/community">
+            {tr("Say hello in the community")}
+          </LinkButton>
+        }
+      />
+    );
+  }
+
+  // The founders exist; the search/filter combination hides them.
+  if (matchingFilters === 0) {
+    return (
+      <EmptyState
+        icon={SlidersHorizontal}
+        title={tr("No founders match these filters")}
+        description={tr(
+          "Nothing fits this combination. Widen it, or clear the filters and read the whole directory.",
+        )}
+        action={
+          <Button variant="secondary" onClick={onClear}>
+            {tr("Clear all filters")}
+          </Button>
+        }
+      />
+    );
+  }
+
+  // The founders exist and pass the filters — they are all under the other tab.
+  return (
+    <EmptyState
+      icon={Users}
+      title={
+        ideaTab === "idea"
+          ? tr("No founders with an idea right now")
+          : tr("No founders exploring right now")
+      }
+      description={tr("Everyone showing at the moment is under the other tab.")}
+      action={
+        <Button variant="secondary" onClick={onSwitchTab}>
+          {ideaTab === "idea"
+            ? tr("Switch to Exploring")
+            : tr("Switch to Has an idea")}
+        </Button>
+      }
+    />
+  );
+}
 
 function FilterGroup({
   label,

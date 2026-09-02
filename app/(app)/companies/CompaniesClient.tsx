@@ -11,6 +11,7 @@ import {
   Search as SearchIcon,
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
+import { Button, EmptyState, LinkButton } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { PartnershipRequestDialog } from "./PartnershipRequestDialog";
@@ -127,6 +128,12 @@ export function CompaniesClient({
 
   const activeFilters =
     capabilityFilters.length + seekingFilters.length + (searchTerm ? 1 : 0);
+
+  function clearFilters() {
+    setSearchTerm("");
+    setCapabilityFilters([]);
+    setSeekingFilters([]);
+  }
 
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
@@ -255,11 +262,7 @@ export function CompaniesClient({
             {activeFilters > 0 && (
               <button
                 type="button"
-                onClick={() => {
-                  setSearchTerm("");
-                  setCapabilityFilters([]);
-                  setSeekingFilters([]);
-                }}
+                onClick={clearFilters}
                 className="text-xs text-ink-muted hover:text-navy"
               >
                 {tr("Clear filters ({n})").replace("{n}", String(activeFilters))}
@@ -271,24 +274,56 @@ export function CompaniesClient({
         {/* Results */}
         <div className="xl:col-span-9">
           {filtered.length === 0 ? (
-            <div className="bg-white p-12 text-center rounded-3xl shadow-xs">
-              <Building2
-                className="w-8 h-8 text-ink-muted mx-auto mb-4"
-                strokeWidth={1}
+            companies.length === 0 ? (
+              // NOTHING LISTED YET. The viewer's own company is filtered out
+              // of `companies`, so a company account seeing this is the only
+              // one here — telling them to switch profile type would be wrong.
+              <EmptyState
+                icon={Building2}
+                title={tr("No companies yet")}
+                description={
+                  currentUserIsCompany
+                    ? tr(
+                        "Yours is the only one so far. More list themselves as the community grows — the founder directory is where to meet people meanwhile.",
+                      )
+                    : tr(
+                        "Be the first company to list. Switch your profile type to Company in onboarding so others can find you.",
+                      )
+                }
+                // /browse, not /founders: this page is founder-only (absent from
+                // the investor allowlist in lib/investor-routes.ts, and the
+                // middleware bounces investors off it), so the real directory is
+                // always right here — /founders is the truncated public preview.
+                action={
+                  currentUserIsCompany ? (
+                    <LinkButton href="/browse" size="sm" variant="secondary">
+                      {tr("Browse founders")}
+                    </LinkButton>
+                  ) : (
+                    <LinkButton href="/onboarding" size="sm">
+                      {tr("Set up a company profile")}
+                    </LinkButton>
+                  )
+                }
               />
-              <h3 className="text-d1 mb-2">
-                {companies.length === 0
-                  ? tr("No companies yet")
-                  : tr("Nothing matches")}
-              </h3>
-              <p className="text-ink-muted leading-relaxed max-w-md mx-auto">
-                {companies.length === 0
-                  ? tr(
-                      "Be the first company to list. Switch your profile type to Company in onboarding so others can find you.",
-                    )
-                  : tr("Try clearing some filters or changing your search.")}
-              </p>
-            </div>
+            ) : (
+              // The companies exist — the search/filters just hid them.
+              <EmptyState
+                icon={Building2}
+                title={tr("Nothing matches")}
+                description={tr(
+                  "Try clearing some filters or changing your search.",
+                )}
+                action={
+                  <Button size="sm" variant="secondary" onClick={clearFilters}>
+                    {tr("Clear filters ({n})").replace(
+                      "{n}",
+                      String(activeFilters),
+                    )}
+                  </Button>
+                }
+              />
+            )
           ) : (
             <div className="space-y-4">
               {filtered.map((c) => (

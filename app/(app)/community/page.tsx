@@ -1,8 +1,10 @@
+import { MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { PostComposer } from "@/components/PostComposer";
 import { SearchablePostFeed } from "@/components/SearchablePostFeed";
+import { EmptyState, LinkButton } from "@/components/ui";
 import { getFeedPosts } from "@/lib/posts";
 import { isInvestorAccount } from "@/lib/account";
 
@@ -24,6 +26,22 @@ export default async function CommunityPage({
 
   // Investors read the founder community but don't post or comment in it.
   const canWrite = !!user && !(await isInvestorAccount(supabase, user.id));
+
+  // KIND A — nothing exists yet, and the two readers need opposite endings.
+  // A founder has the composer directly above, so the copy hands them three
+  // easy openings and no button. An investor CANNOT post here (writes are
+  // refused server-side, and /community/new bounces), so "be the first" would
+  // be a dead end — send them to the one surface that is genuinely full today,
+  // the public founder directory.
+  const emptyTitle = await tServer("No posts yet");
+  const emptyBody = canWrite
+    ? await tServer(
+        "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
+      )
+    : await tServer(
+        "Founders post updates, questions, and launches here. Meet the ones already on Cofoundee while the feed fills up.",
+      );
+  const browseFoundersLabel = await tServer("Browse founders");
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
@@ -52,9 +70,20 @@ export default async function CommunityPage({
         initialQuery={q ?? ""}
         canComment={canWrite}
         composer={canWrite ? <PostComposer /> : null}
-        emptyMessage={await tServer(
-          "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
-        )}
+        emptyState={
+          <EmptyState
+            icon={MessageCircle}
+            title={emptyTitle}
+            description={emptyBody}
+            action={
+              canWrite ? undefined : (
+                <LinkButton href="/founders" size="sm">
+                  {browseFoundersLabel}
+                </LinkButton>
+              )
+            }
+          />
+        }
       />
     </div>
   );

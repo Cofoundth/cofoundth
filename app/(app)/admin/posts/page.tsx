@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
+import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
+import { EmptyState } from "@/components/ui";
 import { Paginated } from "@/components/Paginated";
 import { PostRow, type AdminPost } from "./PostRow";
 
@@ -63,9 +65,15 @@ export default async function AdminPostsPage() {
       </div>
 
       {posts.length === 0 ? (
-        <div className="bg-white p-12 text-center text-ink-muted rounded-3xl shadow-xs">
-          No posts yet.
-        </div>
+        // KIND A — an unfiltered moderation list. Admins don't write posts from
+        // here, so there is no action to offer, only what will land here.
+        <EmptyState
+          dense
+          padding="lg"
+          description={await tServer(
+            "No posts yet. Everything the community writes shows up here for moderation.",
+          )}
+        />
       ) : (
         <Paginated
           pageSize={20}

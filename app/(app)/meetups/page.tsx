@@ -5,7 +5,8 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { meetupWhenParts, type Meetup } from "@/lib/meetups";
 import { nowISO } from "@/lib/time";
-import { EmptyState } from "@/components/ui";
+import { isInvestorAccount } from "@/lib/account";
+import { EmptyState, LinkButton } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,9 @@ export default async function MeetupsPage() {
 
   // RLS already hides drafts. Upcoming keeps cancelled rows visible (so people
   // who RSVP'd learn it's off); past shows published only.
-  const [{ data: upcomingRaw }, { data: pastRaw }] = await Promise.all([
+  // `investor` decides the empty-state CTA: investors are blocked from /browse
+  // by lib/investor-routes.ts, so they must not be sent there.
+  const [{ data: upcomingRaw }, { data: pastRaw }, investor] = await Promise.all([
     supabase
       .from("meetups")
       .select(SELECT)
@@ -46,6 +49,7 @@ export default async function MeetupsPage() {
       .eq("status", "published")
       .order("starts_at", { ascending: false })
       .limit(10),
+    isInvestorAccount(supabase, user.id),
   ]);
 
   const upcoming = (upcomingRaw ?? []) as Row[];
@@ -77,6 +81,7 @@ export default async function MeetupsPage() {
     tYouGoing,
     tEmptyTitle,
     tEmptyBody,
+    tBrowseFounders,
   ] = await Promise.all([
     tServer("Community"),
     tServer("Meetups"),
@@ -88,8 +93,11 @@ export default async function MeetupsPage() {
     tServer("In person"),
     tServer("Cancelled"),
     tServer("You're going"),
-    tServer("No upcoming meetups yet."),
-    tServer("Check back soon — we host founder meetups regularly."),
+    tServer("No meetups on the calendar"),
+    tServer(
+      "Cofoundee meetups get announced here first. Nothing is scheduled right now.",
+    ),
+    tServer("Browse founders"),
   ]);
 
   const labels = {
@@ -115,10 +123,19 @@ export default async function MeetupsPage() {
           {tUpcoming}
         </h2>
         {upcoming.length === 0 ? (
+          // KIND A — no meetups exist. Members cannot schedule one (that is
+          // admin-only), so the CTA points at the liveliest thing we do have,
+          // the founder directory. Investors are blocked from /browse, so they
+          // get the honest line without a button rather than a dead link.
           <EmptyState
             icon={Calendar}
             title={tEmptyTitle}
             description={tEmptyBody}
+            action={
+              investor ? undefined : (
+                <LinkButton href="/browse">{tBrowseFounders}</LinkButton>
+              )
+            }
           />
         ) : (
           <div className="space-y-4">

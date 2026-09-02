@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { listInsights } from "@/lib/insights";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { EmptyState, LinkButton } from "@/components/ui";
 
 export const revalidate = 60;
 
@@ -43,9 +44,22 @@ export default async function InsightsPage() {
       </div>
 
       {insights.length === 0 ? (
-        <div className="bg-white border border-line p-12 text-center text-ink-muted rounded-xl">
-          {tr("No insights yet — check back soon.")}
-        </div>
+        // Nothing published yet — and a visitor cannot write one either, since
+        // insights are admin-authored (/admin/insights). So there is no "be the
+        // first" ask to make here; the CTA sends them to the liveliest thing we
+        // actually have, which is the founder directory.
+        <EmptyState
+          icon={BookOpen}
+          title={tr("No insights published yet")}
+          description={tr(
+            "Guides and perspectives on building in Thailand will land here. Until then, the most useful thing on Cofoundee is the people.",
+          )}
+          action={
+            <LinkButton href="/founders" size="lg">
+              {tr("Browse founders")}
+            </LinkButton>
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {insights.map((i) => (
