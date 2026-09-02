@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import {
   adminCreate,
   adminDelete,
@@ -17,11 +17,13 @@ export type AdminFormState = { error: string } | undefined;
 
 async function requireAdmin(): Promise<string> {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!isAdminEmail(data.user?.email)) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!(await isAdminUser(supabase, user))) {
     throw new Error("Forbidden");
   }
-  return data.user!.id;
+  return user!.id;
 }
 
 function parseInput(formData: FormData): InsightInput | { error: string } {

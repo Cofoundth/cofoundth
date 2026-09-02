@@ -2,14 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import { InsightForm } from "../InsightForm";
 import { createInsightAction } from "../actions";
 
 export default async function NewInsightPage() {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!isAdminEmail(data.user?.email)) notFound();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!(await isAdminUser(supabase, user))) notFound();
 
   return (
     <div className="max-w-4xl mx-auto px-6 lg:px-10 py-[88px]">

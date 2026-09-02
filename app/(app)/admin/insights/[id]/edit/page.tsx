@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 import { adminGetById } from "@/lib/insights";
 import { InsightForm } from "../../InsightForm";
 import { updateInsightAction } from "../../actions";
@@ -11,8 +11,10 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function EditInsightPage({ params }: Props) {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!isAdminEmail(data.user?.email)) notFound();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!(await isAdminUser(supabase, user))) notFound();
 
   const { id } = await params;
   const insight = await adminGetById(id);

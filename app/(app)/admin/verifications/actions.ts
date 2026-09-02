@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminUser } from "@/lib/admin";
 
 async function requireAdmin(): Promise<void> {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!isAdminEmail(data.user?.email)) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!(await isAdminUser(supabase, user))) {
     throw new Error("Forbidden");
   }
 }

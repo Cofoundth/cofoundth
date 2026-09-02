@@ -2,7 +2,7 @@
 //
 // Public read uses the standard client (RLS only exposes published rows).
 // Admin writes use the service-role admin client; callers MUST validate
-// isAdminEmail() before calling any of the mutating helpers below.
+// isAdminUser() before calling any of the mutating helpers below.
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -71,7 +71,7 @@ export async function listAllSlugsForStaticParams(): Promise<string[]> {
 }
 
 // ---- Admin reads / writes ------------------------------------------
-// Caller MUST verify isAdminEmail() before invoking any of these.
+// Caller MUST verify isAdminUser() before invoking any of these.
 
 export async function adminListAll(): Promise<Insight[]> {
   const { data, error } = await createAdminClient()
