@@ -58,18 +58,6 @@ export async function getInsightBySlug(
   return pickLocale(data as Insight[], locale);
 }
 
-export async function listAllSlugsForStaticParams(): Promise<string[]> {
-  // Runs in `generateStaticParams` — no request context, so the cookie-based
-  // server client can't be used. Service-role admin client works statelessly.
-  const { data } = await createAdminClient()
-    .from("insights")
-    .select("slug")
-    .eq("status", "published");
-  const slugs = new Set<string>();
-  (data ?? []).forEach((r) => slugs.add(r.slug as string));
-  return Array.from(slugs);
-}
-
 // ---- Admin reads / writes ------------------------------------------
 // Caller MUST verify isAdminUser() before invoking any of these.
 

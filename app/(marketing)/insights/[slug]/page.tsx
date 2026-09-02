@@ -2,21 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import {
-  getInsightBySlug,
-  listAllSlugsForStaticParams,
-} from "@/lib/insights";
+import { getInsightBySlug } from "@/lib/insights";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 
-export const revalidate = 60;
+// Rendered per request, deliberately.
+//
+// The page picks its language from the reader's locale cookie, so one URL has
+// two bodies and can never be a single static page. Next cannot prerender it at
+// all: reading a cookie inside a static render throws DYNAMIC_SERVER_USAGE.
+//
+// With `generateStaticParams` + `revalidate` this returned 500 for every article
+// published AFTER a deploy — the slug was not in the build's params, so the
+// on-demand render was a static one, and it threw. It looked fine in testing
+// only because rebuilding baked the new slug in. Do not re-add ISR here.
 
 type Props = { params: Promise<{ slug: string }> };
-
-export async function generateStaticParams() {
-  const slugs = await listAllSlugsForStaticParams();
-  return slugs.map((slug) => ({ slug }));
-}
 
 export async function generateMetadata({
   params,
@@ -97,9 +98,33 @@ export default async function InsightPage({ params }: Props) {
 }
 
 function Paragraph({ text }: { text: string }) {
+  const lines = text.split("\n");
+
+  // Section heading. The editor tells authors "Markdown supported", so a "## "
+  // line has to become a heading — otherwise it ships as literal hashes. Sizes
+  // come off the display ladder; weight, colour and tracking are already set on
+  // h1-h6 in @layer base, so they are deliberately not repeated here.
+  const heading = lines[0].match(/^(#{2,3})\s+(.+)$/);
+  if (heading) {
+    // A heading authored without the blank line under it still renders right.
+    const rest = lines.slice(1).join("\n").trim();
+    const body = rest ? <p>{renderInline(rest)}</p> : null;
+    return heading[1].length === 2 ? (
+      <>
+        <h2 className="text-d1 pt-3">{renderInline(heading[2])}</h2>
+        {body}
+      </>
+    ) : (
+      <>
+        <h3 className="text-xl pt-1">{renderInline(heading[2])}</h3>
+        {body}
+      </>
+    );
+  }
+
   // Bullet list (lines starting with "- ")
-  if (text.split("\n").every((l) => l.trim().startsWith("- "))) {
-    const items = text.split("\n").map((l) => l.replace(/^\s*-\s+/, ""));
+  if (lines.every((l) => l.trim().startsWith("- "))) {
+    const items = lines.map((l) => l.replace(/^\s*-\s+/, ""));
     return (
       <ul className="list-disc pl-6 space-y-2">
         {items.map((item, i) => (
@@ -108,6 +133,19 @@ function Paragraph({ text }: { text: string }) {
       </ul>
     );
   }
+
+  // Numbered list (lines starting with "1. ", "2. ", ...)
+  if (lines.every((l) => /^\s*\d+\.\s+/.test(l))) {
+    const items = lines.map((l) => l.replace(/^\s*\d+\.\s+/, ""));
+    return (
+      <ol className="list-decimal pl-6 space-y-2">
+        {items.map((item, i) => (
+          <li key={i}>{renderInline(item)}</li>
+        ))}
+      </ol>
+    );
+  }
+
   return <p>{renderInline(text)}</p>;
 }
 
