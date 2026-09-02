@@ -243,6 +243,10 @@ export async function updateProfileAction(
 
   revalidatePath("/settings");
   revalidatePath(`/profile/${user.id}`);
+  // The sidebar reads this too, and it lives in a layout — which Next does
+  // not re-render on client-side navigation. Without the "layout" scope the
+  // rail keeps showing the old value until a full page load.
+  revalidatePath("/", "layout");
   revalidatePath("/dashboard");
   return { ok: true };
 }

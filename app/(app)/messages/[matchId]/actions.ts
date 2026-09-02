@@ -160,4 +160,9 @@ export async function markConversationRead(matchId: string) {
     .is("read_at", null);
 
   revalidatePath(`/messages/${matchId}`);
+  // Also revalidate the LAYOUT, not just this page. The sidebar's unread
+  // badge is fetched in app/(app)/layout.tsx, and Next does not re-render a
+  // shared layout on client-side navigation — a page-scoped revalidate
+  // leaves the badge showing a count the user has already cleared.
+  revalidatePath("/", "layout");
 }

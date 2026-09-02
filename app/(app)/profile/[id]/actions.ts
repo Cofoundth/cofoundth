@@ -86,6 +86,11 @@ export async function expressInterestAction(
   void notifyAboutInterest(user.id, toId, note);
 
   revalidatePath(`/profile/${toId}`);
+  // Also revalidate the LAYOUT, not just this page. The sidebar's unread
+  // badge is fetched in app/(app)/layout.tsx, and Next does not re-render a
+  // shared layout on client-side navigation — a page-scoped revalidate
+  // leaves the badge showing a count the user has already cleared.
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 
