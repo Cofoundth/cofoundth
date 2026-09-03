@@ -102,93 +102,43 @@ export default async function DashboardPage() {
           the page was a 20px card title — no hierarchy, and no landmark for a
           screen reader either. Their /home opens the same way ("Good evening,
           <name>"), so the shape is theirs; the string is one we already ship. */}
-      <div className="mb-8 max-w-[640px]">
-        <h1 className="text-d2">
-          {(await tServer("Welcome, {name}")).replace("{name}", firstName)}
-        </h1>
+      {/* Avatar inline with the greeting. The identity card that used to
+          carry it was the widest piece of furniture on the page, and its job
+          was telling the reader who they are — on their own dashboard. Onfound
+          open /home this way and spend the space on content. */}
+      <div className="mb-8 flex items-center gap-4">
+        <Avatar
+          name={profile?.full_name as string}
+          url={profile?.photo_url as string | null}
+          size="lg"
+        />
+        <div className="min-w-0">
+          <h1 className="text-d2 truncate">
+            {(await tServer("Welcome, {name}")).replace("{name}", firstName)}
+          </h1>
+          {(identityLine || profile?.location) && (
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted">
+              {identityLine && <span>{identityLine}</span>}
+              {profile?.location && (
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin
+                    className="w-3.5 h-3.5 text-gold-ink"
+                    strokeWidth={1.5}
+                  />
+                  {provinceLabel(profile.location as string, locale)}
+                </span>
+              )}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="grid xl:grid-cols-12 gap-8">
-        {/* LEFT — identity + stats */}
-        <aside className="xl:col-span-3 space-y-6 xl:sticky xl:top-24 self-start">
-          {/* Identity card */}
-          <div className="bg-white p-6 rounded-3xl shadow-xs">
-            <Avatar
-              name={profile?.full_name as string}
-              url={profile?.photo_url as string | null}
-              size="lg"
-            />
-            <h2 className="text-xl mt-4 leading-tight">
-              {(profile?.full_name as string) || firstName}
-            </h2>
-            {identityLine && (
-              <p className="text-sm text-ink-muted mt-1 leading-snug">
-                {identityLine}
-              </p>
-            )}
-            {profile?.location && (
-              <p className="text-sm text-ink-muted mt-2 inline-flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-gold-ink" strokeWidth={1.5} />
-                {provinceLabel(profile.location as string, locale)}
-              </p>
-            )}
-
-            <div className="border-t border-line my-4" />
-
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-ink-muted">
-                  {await tServer("Profile views")}
-                </span>
-                <span className="font-serif text-base text-navy font-medium tabular-nums">
-                  {profileViewsCount ?? 0}
-                </span>
-              </div>
-              <Link
-                href="/matches"
-                className="flex items-center justify-between group"
-              >
-                <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
-                  {await tServer("Interests")}
-                </span>
-                <span className="font-serif text-base text-navy font-medium tabular-nums">
-                  {pendingReceivedCount ?? 0}
-                </span>
-              </Link>
-              <Link
-                href="/matches"
-                className="flex items-center justify-between group"
-              >
-                <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
-                  {await tServer("Matches")}
-                </span>
-                <span className="font-serif text-base text-navy font-medium tabular-nums">
-                  {matchesCount ?? 0}
-                </span>
-              </Link>
-            </div>
-
-            <div className="border-t border-line my-4" />
-
-            <div className="space-y-2">
-              <Link
-                href={myProfileHref}
-                className="block bg-navy hover:bg-navy-dark text-white text-center py-2.5 text-sm transition-colors"
-              >
-                {await tServer("View profile")}
-              </Link>
-              <Link
-                href="/settings"
-                className="block border border-line hover:border-navy text-ink hover:text-navy text-center py-2.5 text-sm transition-colors rounded-xl"
-              >
-                {await tServer("Edit profile")}
-              </Link>
-            </div>
-          </div>
-        </aside>
-
-        {/* CENTER — the merged feed */}
-        <section className="xl:col-span-6 space-y-4">
+      {/* Two columns, 5/4 on a 9-track grid with items-start — measured off
+          their /home, which renders 599px / 473px at 1440. Ours ran 3/6/3 of
+          12, giving 236px asides: narrower than a single card. */}
+      <div className="grid lg:grid-cols-9 gap-8 lg:items-start">
+        {/* LEFT — the feed */}
+        <section className="lg:col-span-5 min-w-0 space-y-4">
           {profile?.onboarded && <PostComposer />}
 
           <RealtimeRefresh
@@ -217,9 +167,67 @@ export default async function DashboardPage() {
           <PostFeed items={feed} locale={locale} />
         </section>
 
-        {/* RIGHT — new founders */}
-        <aside className="xl:col-span-3 xl:sticky xl:top-24 self-start">
-          <div className="flex items-center justify-between mb-5">
+        {/* RIGHT — your numbers, then who is new */}
+        <aside className="lg:col-span-4 min-w-0 space-y-8 lg:sticky lg:top-24 self-start">
+          <div>
+            <h2 className="text-lg font-bold tracking-normal mb-5">
+              {await tServer("Your activity")}
+            </h2>
+            <div className="bg-white p-6 rounded-3xl shadow-xs">
+              <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-ink-muted">
+                      {await tServer("Profile views")}
+                    </span>
+                    <span className="font-serif text-base text-navy font-medium tabular-nums">
+                      {profileViewsCount ?? 0}
+                    </span>
+                  </div>
+                  <Link
+                    href="/matches"
+                    className="flex items-center justify-between group"
+                  >
+                    <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
+                      {await tServer("Interests")}
+                    </span>
+                    <span className="font-serif text-base text-navy font-medium tabular-nums">
+                      {pendingReceivedCount ?? 0}
+                    </span>
+                  </Link>
+                  <Link
+                    href="/matches"
+                    className="flex items-center justify-between group"
+                  >
+                    <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
+                      {await tServer("Matches")}
+                    </span>
+                    <span className="font-serif text-base text-navy font-medium tabular-nums">
+                      {matchesCount ?? 0}
+                    </span>
+                  </Link>
+              </div>
+
+              <div className="border-t border-line my-4" />
+
+              <div className="space-y-2">
+                  <Link
+                    href={myProfileHref}
+                    className="block bg-navy hover:bg-navy-dark text-white text-center py-2.5 text-sm transition-colors rounded-full"
+                  >
+                    {await tServer("View profile")}
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="block border border-line hover:border-navy text-ink hover:text-navy text-center py-2.5 text-sm transition-colors rounded-full"
+                  >
+                    {await tServer("Edit profile")}
+                  </Link>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold tracking-normal">
               {await tServer("New founders")}
             </h2>
@@ -289,7 +297,7 @@ export default async function DashboardPage() {
               })}
             </div>
           )}
-
+          </div>
         </aside>
       </div>
     </Section>
