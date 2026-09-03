@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  ArrowRight,
   BadgeCheck,
   Building2,
   ChevronDown,
@@ -884,20 +883,22 @@ function ProfileCard({ profile }: { profile: Profile }) {
             )}
           </div>
 
-          {/* Meta */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-muted mt-auto pt-4 border-t border-line">
-            {profile.industry.slice(0, 3).map((i) => (
-              <span key={i} className="px-2 py-0.5 border border-line rounded-full">
-                {i}
-              </span>
-            ))}
-            {profile.industry.length > 3 && (
-              <span>+{profile.industry.length - 3}</span>
-            )}
-            <span className="ml-auto inline-flex items-center gap-1 text-navy group-hover:text-gold-ink transition-colors">
-              {tr("View profile")} <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
+          {/* Industries. Rendered only when there ARE industries — this row
+              carries a top border, and an empty one left a rule floating at
+              the bottom of the card. The removed "View profile" affordance
+              had been hiding that by always giving the row content. */}
+          {profile.industry.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-muted mt-auto pt-4 border-t border-line">
+              {profile.industry.slice(0, 3).map((i) => (
+                <span key={i} className="px-2 py-0.5 border border-line rounded-full">
+                  {i}
+                </span>
+              ))}
+              {profile.industry.length > 3 && (
+                <span>+{profile.industry.length - 3}</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Link>
