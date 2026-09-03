@@ -17,6 +17,7 @@ import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import {
   MEETUP_CATEGORIES,
+  meetupCoverUrl,
   meetupWhenParts,
   meetupCalendarUrl,
   type Meetup,
@@ -60,7 +61,7 @@ export default async function MeetupDetailPage({ params }: Props) {
   const { data: meetup } = await supabase
     .from("meetups")
     .select(
-      "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, category, created_by, created_at, updated_at",
+      "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, category, image_url, visibility, lat, lng, created_by, created_at, updated_at",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -131,6 +132,7 @@ export default async function MeetupDetailPage({ params }: Props) {
   const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
   const tHostedBy = await tServer("Hosted by {name}");
   const tCatLabel = await tServer(cat.label);
+  const tPrivate = await tServer("Only people with the link");
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
@@ -151,6 +153,14 @@ export default async function MeetupDetailPage({ params }: Props) {
         )}
       </div>
 
+      {/* Cover — the host's upload, else the category artwork. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={meetupCoverUrl(m)}
+        alt=""
+        className="mb-8 h-48 w-full rounded-3xl object-cover bg-gold-soft"
+      />
+
       <h1 className="text-d2 mb-2">{m.title}</h1>
 
       {/* Category + host — the two lines Onfound's event page leads with. */}
@@ -158,6 +168,11 @@ export default async function MeetupDetailPage({ params }: Props) {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-soft px-2.5 py-0.5 text-xs text-gold-ink">
           <span aria-hidden="true">{cat.emoji}</span> {tCatLabel}
         </span>
+        {m.visibility === "private" && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-navy px-2.5 py-0.5 text-xs text-white">
+            🔒 {tPrivate}
+          </span>
+        )}
         {host && (
           <Link
             href={`/profile/${(host.slug as string | null) ?? (host.id as string)}`}

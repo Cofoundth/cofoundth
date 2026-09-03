@@ -9,6 +9,7 @@
 import { useActionState, useState } from "react";
 import { useT } from "@/lib/i18n-client";
 import { MEETUP_CATEGORIES, type MeetupCategory } from "@/lib/meetups";
+import { MapPicker } from "@/components/MeetupMap";
 import { hostMeetupAction, type HostMeetupState } from "../actions";
 import { Button } from "@/components/ui";
 
@@ -24,6 +25,8 @@ export function HostMeetupForm() {
   );
   const [category, setCategory] = useState<MeetupCategory>("coffee");
   const [format, setFormat] = useState<"in_person" | "online">("in_person");
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
+  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
 
   return (
     <form action={formAction} className="space-y-6">
@@ -108,6 +111,16 @@ export function HostMeetupForm() {
             placeholder={tr("Cafe, coworking space, or neighbourhood")}
             className={FIELD}
           />
+          <p className="text-xs text-ink-muted mt-3 mb-2">
+            {tr("Pin it on the map so it shows in map view (optional)")}
+          </p>
+          <MapPicker
+            onPick={(lat, lng) =>
+              setPin(lat === null || lng === null ? null : { lat, lng })
+            }
+          />
+          <input type="hidden" name="lat" value={pin ? String(pin.lat) : ""} />
+          <input type="hidden" name="lng" value={pin ? String(pin.lng) : ""} />
         </div>
       ) : (
         <div>
@@ -163,6 +176,49 @@ export function HostMeetupForm() {
           placeholder={tr("Leave empty for no limit")}
           className={FIELD}
         />
+      </div>
+
+      <div>
+        <label htmlFor="cover" className={LABEL}>
+          {tr("Cover photo (optional)")}
+        </label>
+        <input
+          id="cover"
+          name="cover"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="block w-full text-sm text-ink-muted file:mr-3 file:rounded-full file:border-0 file:bg-navy file:px-4 file:py-2 file:text-sm file:text-white hover:file:bg-navy-dark file:cursor-pointer"
+        />
+        <p className="text-xs text-ink-muted mt-2">
+          {tr("Skip it and we'll use the category artwork.")}
+        </p>
+      </div>
+
+      <div>
+        <span className={LABEL}>{tr("Who can see it")}</span>
+        <div className="flex gap-1.5">
+          {(
+            [
+              ["public", tr("Everyone on Cofoundee")],
+              ["private", tr("Only people with the link")],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setVisibility(key)}
+              aria-pressed={visibility === key}
+              className={`px-3 py-1.5 text-sm tracking-wide transition-colors border ${
+                visibility === key
+                  ? "bg-navy border-navy text-white"
+                  : "bg-white border-line text-ink hover:border-navy"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <input type="hidden" name="visibility" value={visibility} />
       </div>
 
       <div>

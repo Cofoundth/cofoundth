@@ -159,6 +159,10 @@ export async function hostMeetupAction(
   const startsRaw = String(formData.get("starts_at") ?? "").trim();
   const endsRaw = String(formData.get("ends_at") ?? "").trim();
   const capacityRaw = String(formData.get("capacity") ?? "").trim();
+  const visibility = String(formData.get("visibility") ?? "public");
+  const latRaw = String(formData.get("lat") ?? "").trim();
+  const lngRaw = String(formData.get("lng") ?? "").trim();
+  const cover = formData.get("cover");
 
   if (title.length < 2 || title.length > 120) {
     return { error: "Title must be 2–120 characters." };
@@ -200,8 +204,51 @@ export async function hostMeetupAction(
     capacity = n;
   }
 
+  if (visibility !== "public" && visibility !== "private") {
+    return { error: "Invalid visibility." };
+  }
+  // The pin is optional and only powers the map; free-text location stays the
+  // human-readable truth. Both-or-neither, and bounded to plausible Earth.
+  let lat: number | null = null;
+  let lng: number | null = null;
+  if (latRaw || lngRaw) {
+    lat = Number(latRaw);
+    lng = Number(lngRaw);
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      Math.abs(lat) > 90 ||
+      Math.abs(lng) > 180
+    ) {
+      return { error: "Map pin is invalid." };
+    }
+  }
+
   const admin = createAdminClient();
   const slug = await uniqueSlug(admin, title);
+
+  // Optional cover upload → the public meetup-covers bucket. The bucket caps
+  // size (2MB) and MIME (jpeg/png/webp) server-side; this trusts those caps
+  // rather than re-implementing them. No cover → the category SVG fallback.
+  let image_url: string | null = null;
+  if (cover instanceof File && cover.size > 0) {
+    if (cover.size > 2 * 1024 * 1024) {
+      return { error: "Cover image must be under 2MB." };
+    }
+    const ext =
+      cover.type === "image/png"
+        ? "png"
+        : cover.type === "image/webp"
+          ? "webp"
+          : "jpg";
+    const path = `${slug}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const { error: upErr } = await admin.storage
+      .from("meetup-covers")
+      .upload(path, cover, { contentType: cover.type || "image/jpeg" });
+    if (upErr) return { error: "Could not upload the cover image." };
+    image_url = admin.storage.from("meetup-covers").getPublicUrl(path).data
+      .publicUrl;
+  }
 
   const { data: created, error } = await admin
     .from("meetups")
@@ -217,6 +264,10 @@ export async function hostMeetupAction(
       ends_at,
       capacity,
       status: "published",
+      image_url,
+      visibility,
+      lat,
+      lng,
       created_by: user.id,
     })
     .select("id, slug")

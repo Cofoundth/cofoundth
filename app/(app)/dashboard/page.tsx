@@ -89,6 +89,7 @@ export default async function DashboardPage() {
       .from("meetups")
       .select("id, slug, title, format, location, starts_at")
       .eq("status", "published")
+      .eq("visibility", "public")
       .gte("starts_at", nowIso)
       .order("starts_at", { ascending: true })
       .limit(2),

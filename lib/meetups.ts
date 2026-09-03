@@ -12,7 +12,16 @@ export type MeetupCategory =
   | "talk"
   | "other";
 
-// The card's emoji band + chip both key off this. Labels are English source
+// Every card carries a cover: the host's upload when there is one, else the
+// category's bundled SVG — so an image is guaranteed without requiring one.
+export function meetupCoverUrl(m: {
+  image_url?: string | null;
+  category: MeetupCategory;
+}): string {
+  return m.image_url ?? `/meetup-covers/${m.category}.svg`;
+}
+
+// The card's cover fallback + chip both key off this. Labels are English source
 // strings — call sites translate. Onfound's set (Run/Coffee/Cowork/Dinner/
 // Other) plus Talk, which Bangkok founder events actually skew toward.
 export const MEETUP_CATEGORIES: Record<
@@ -40,6 +49,10 @@ export type Meetup = {
   capacity: number | null;
   status: MeetupStatus;
   category: MeetupCategory;
+  image_url: string | null;
+  visibility: "public" | "private";
+  lat: number | null;
+  lng: number | null;
   created_by: string;
   created_at: string;
   updated_at: string;
