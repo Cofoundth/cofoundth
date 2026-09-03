@@ -315,3 +315,31 @@ export async function reportMeetupAction(
   }
   return { ok: true };
 }
+
+// Post into a meetup's attendee chat. RLS is the gate — the insert policy
+// requires the caller's own RSVP row — so this runs on the user's client and
+// a non-attendee (or investor, who can never RSVP) is refused by Postgres.
+export async function postMeetupMessageAction(
+  meetupId: string,
+  content: string,
+): Promise<{ error?: string; ok?: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+  const clean = content.trim();
+  if (clean.length < 1 || clean.length > 2000) {
+    return { error: "Message must be 1–2000 characters." };
+  }
+  const { error } = await supabase.from("meetup_messages").insert({
+    meetup_id: meetupId,
+    author_id: user.id,
+    content: clean,
+  });
+  if (error) {
+    // RLS refusal lands here — the honest copy for the only real cause.
+    return { error: "Join the meetup to chat with the attendees." };
+  }
+  return { ok: true };
+}

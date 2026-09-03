@@ -6,11 +6,13 @@ import {
   Send,
   Clock,
   Building2,
+  CalendarDays,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { tServer, getLocale } from "@/lib/i18n-server";
+import { MEETUP_CATEGORIES } from "@/lib/meetups";
 import { provinceLabel } from "@/lib/provinces";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
@@ -62,7 +64,56 @@ export default async function ConnectionsPage({
     .eq("user_id", user.id);
   const myOrgIds = (myMemberships ?? []).map((m) => m.org_id as string);
   const hasCompany = myOrgIds.length > 0;
-  const tab = tabParam === "company" && hasCompany ? "company" : "personal";
+  const tab =
+    tabParam === "company" && hasCompany
+      ? "company"
+      : tabParam === "meetups"
+        ? "meetups"
+        : "personal";
+
+  // ---- Meetup chats (the reference app's Messages > Meetups tab) --------
+  // Every meetup the viewer RSVP'd to is a group chat they belong to; show
+  // newest-start first with the latest chat line as the preview.
+  const { data: myRsvpRows } = await supabase
+    .from("meetup_rsvps")
+    .select("meetup_id")
+    .eq("user_id", user.id);
+  const myMeetupIds = (myRsvpRows ?? []).map((r) => r.meetup_id as string);
+  const [{ data: myMeetupsRaw }, { data: chatRows }] = await Promise.all([
+    myMeetupIds.length
+      ? supabase
+          .from("meetups")
+          .select("id, slug, title, category, image_url, starts_at, status")
+          .in("id", myMeetupIds)
+          .order("starts_at", { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [] as never[] }),
+    myMeetupIds.length
+      ? supabase
+          .from("meetup_messages")
+          .select("meetup_id, content, created_at, author_id")
+          .in("meetup_id", myMeetupIds)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] as never[] }),
+  ]);
+  const tNoChatYet = await tServer(
+    "Nothing here yet — say hi to the people going.",
+  );
+  const lastChatBy = new Map<
+    string,
+    { content: string; created_at: string }
+  >();
+  for (const r of (chatRows ?? []) as {
+    meetup_id: string;
+    content: string;
+    created_at: string;
+  }[]) {
+    if (!lastChatBy.has(r.meetup_id))
+      lastChatBy.set(r.meetup_id, {
+        content: r.content,
+        created_at: r.created_at,
+      });
+  }
 
   // ---- Matches (mutual) + last message / unread -------------------------
   const { data: matches } = await supabase
@@ -259,21 +310,82 @@ export default async function ConnectionsPage({
         </h1>
       </div>
 
-      {hasCompany && (
-        <nav className="flex items-center gap-1 mb-8 border-b border-line">
-          <Link href="/matches" className={tabClass(tab === "personal")}>
-            {await tServer("Personal")}
-          </Link>
+      <nav className="flex items-center gap-1 mb-8 border-b border-line">
+        <Link href="/matches" className={tabClass(tab === "personal")}>
+          {await tServer("Personal")}
+        </Link>
+        {hasCompany && (
           <Link
             href="/matches?tab=company"
             className={tabClass(tab === "company")}
           >
             {await tServer("Company")}
           </Link>
-        </nav>
-      )}
+        )}
+        <Link
+          href="/matches?tab=meetups"
+          className={tabClass(tab === "meetups")}
+        >
+          {await tServer("Meetups")}
+        </Link>
+      </nav>
 
-      {tab === "company" ? (
+      {tab === "meetups" ? (
+        <section>
+          <h2 className="text-lg font-bold tracking-normal mb-5">
+            {await tServer("Meetup chats")}
+          </h2>
+          {(myMeetupsRaw ?? []).length === 0 ? (
+            <EmptyState
+              icon={CalendarDays}
+              title={await tServer("No meetup chats yet")}
+              description={await tServer(
+                "Join a meetup and its attendee chat shows up here.",
+              )}
+              action={
+                <LinkButton href="/meetups">
+                  {await tServer("Meetups")}
+                </LinkButton>
+              }
+            />
+          ) : (
+            <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+              {(myMeetupsRaw ?? []).map((mt) => {
+                const last = lastChatBy.get(mt.id as string);
+                const cat =
+                  MEETUP_CATEGORIES[
+                    mt.category as keyof typeof MEETUP_CATEGORIES
+                  ] ?? MEETUP_CATEGORIES.other;
+                return (
+                  <Link
+                    key={mt.id as string}
+                    href={`/meetups/${mt.slug as string}#chat`}
+                    className="flex items-center gap-3 p-4 hover:bg-cream transition-colors group"
+                  >
+                    <span className="w-10 h-10 rounded-full bg-gold-soft grid place-items-center text-lg shrink-0">
+                      {cat.emoji}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-navy truncate group-hover:text-gold-ink transition-colors">
+                        {mt.title as string}
+                      </span>
+                      <span className="block text-xs text-ink-muted truncate mt-0.5">
+                        {last ? last.content : tNoChatYet}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs text-ink-muted">
+                      {timeAgo(
+                        (last?.created_at ?? (mt.starts_at as string)),
+                        locale,
+                      )}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      ) : tab === "company" ? (
         <section>
           <h2 className="text-lg font-bold tracking-normal mb-5">
             {await tServer("Company conversations")}

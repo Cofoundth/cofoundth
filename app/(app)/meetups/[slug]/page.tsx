@@ -24,6 +24,8 @@ import {
 } from "@/lib/meetups";
 import { isPast } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
+import { MeetupChat, type ChatMessage } from "./MeetupChat";
+import { getLocale } from "@/lib/i18n-server";
 import { EmptyState, LinkButton } from "@/components/ui";
 import { RsvpButton } from "../RsvpButton";
 import { isInvestorAccount } from "@/lib/account";
@@ -130,6 +132,22 @@ export default async function MeetupDetailPage({ params }: Props) {
 
   const spotsFull = m.capacity != null && !going && count >= m.capacity;
   const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
+  // Attendee chat — RLS returns rows only when the viewer has an RSVP, so a
+  // non-attendee simply gets an empty list and we show the locked hint.
+  const { data: chatRaw } = await supabase
+    .from("meetup_messages")
+    .select(
+      "id, content, created_at, author:profiles(id, slug, full_name, photo_url)",
+    )
+    .eq("meetup_id", m.id)
+    .order("created_at", { ascending: true })
+    .limit(200);
+  const chatMessages = (chatRaw ?? []) as unknown as ChatMessage[];
+  const locale = await getLocale();
+  const tChatTitle = await tServer("Attendee chat");
+  const tChatLocked = await tServer(
+    "Join the meetup to chat with the attendees.",
+  );
   const tHostedBy = await tServer("Hosted by {name}");
   const tCatLabel = await tServer(cat.label);
   const tPrivate = await tServer("Only people with the link");
@@ -336,6 +354,25 @@ export default async function MeetupDetailPage({ params }: Props) {
           </div>
         )}
       </div>
+
+      {/* Attendee chat — the reference app's Messages > Meetups thread,
+          mounted where the attendees already are. */}
+      {!cancelled && (
+        <div className="mt-8 pt-8 border-t border-line">
+          <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
+            {tChatTitle}
+          </div>
+          {going ? (
+            <MeetupChat
+              meetupId={m.id}
+              messages={chatMessages}
+              locale={locale}
+            />
+          ) : (
+            <p className="text-sm text-ink-muted">{tChatLocked}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
