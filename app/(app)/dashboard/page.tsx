@@ -251,8 +251,9 @@ export default async function DashboardPage() {
             the whole feed). Each page now leads with the thing only it has —
             here the Complement-Score ranking, there the composer + full feed.
             The feed itself survives as a digest in the right rail. */}
-        <section className="lg:col-span-5 min-w-0 space-y-4">
-          <div className="flex items-center justify-between">
+        <section className="lg:col-span-5 min-w-0 space-y-8">
+          <div>
+          <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold tracking-normal">
               {await tServer("Founders you should meet")}
             </h2>
@@ -278,7 +279,7 @@ export default async function DashboardPage() {
               )}
             />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               {suggested.map(({ row: f }) => {
                 const why = ((f.i_am as string[] | null) ?? [])
                   .filter((r) => myWants.includes(r))
@@ -336,6 +337,8 @@ export default async function DashboardPage() {
               })}
             </div>
           )}
+          </div>
+
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold tracking-normal">
