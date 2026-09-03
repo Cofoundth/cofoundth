@@ -5,6 +5,7 @@ import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
 import { type AdminUser } from "./UserRow";
 import { UsersAdmin } from "./UsersAdmin";
+import { Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,7 @@ export default async function AdminUsersPage() {
   }));
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <AdminTabs />
       <div className="mb-8 pb-6 border-b border-line">
         <div className="max-w-[640px]">
@@ -58,6 +59,6 @@ export default async function AdminUsersPage() {
       </div>
 
       <UsersAdmin users={users} selfId={user!.id} />
-    </div>
+    </Section>
   );
 }

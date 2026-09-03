@@ -49,7 +49,7 @@ export function SidebarNav({ items }: { items: SidebarNavItem[] }) {
         >
           <span>{i.label}</span>
           {i.badge !== undefined && i.badge > 0 && (
-            <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
+            <span className="min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
               {i.badge > 9 ? "9+" : i.badge}
             </span>
           )}

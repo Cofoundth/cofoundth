@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState } from "@/components/ui";
+import { EmptyState, Section } from "@/components/ui";
 import { Paginated } from "@/components/Paginated";
 import { ReportActions } from "./ReportActions";
 import { tServer, getLocale } from "@/lib/i18n-server";
@@ -70,7 +70,7 @@ export default async function AdminReportsPage() {
   }
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <AdminTabs />
       <div className="mb-8 pb-8 border-b border-line">
         <div className="max-w-[640px]">
@@ -110,12 +110,12 @@ export default async function AdminReportsPage() {
             >
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold-ink border border-line px-2 py-0.5 rounded-full">
+                  <span className="text-xs uppercase tracking-[0.2em] text-gold-ink border border-line px-2 py-0.5 rounded-full">
                     {KIND_LABEL[r.target_kind as string] ??
                       (r.target_kind as string)}
                   </span>
                   <span
-                    className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full ${
+                    className={`text-xs uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full ${
                       r.status === "open"
                         ? "border-danger-line text-danger-ink"
                         : "border-line text-ink-muted"
@@ -172,6 +172,6 @@ export default async function AdminReportsPage() {
           ))}
         </Paginated>
       )}
-    </div>
+    </Section>
   );
 }

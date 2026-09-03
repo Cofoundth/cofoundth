@@ -6,7 +6,7 @@ import { tServer } from "@/lib/i18n-server";
 import { meetupWhenParts, type Meetup } from "@/lib/meetups";
 import { nowISO } from "@/lib/time";
 import { isInvestorAccount } from "@/lib/account";
-import { EmptyState, LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -109,7 +109,7 @@ export default async function MeetupsPage() {
   };
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <div className="mb-8 max-w-[640px]">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tEyebrow}
@@ -171,7 +171,7 @@ export default async function MeetupsPage() {
           </div>
         </section>
       )}
-    </div>
+    </Section>
   );
 }
 

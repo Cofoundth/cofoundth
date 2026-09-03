@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState, LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 import { adminListAll } from "@/lib/insights";
 import { togglePublishAction, deleteInsightAction } from "./actions";
 
@@ -27,7 +27,7 @@ export default async function AdminInsightsPage() {
   }
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <AdminTabs />
       <div className="mb-8 pb-8 border-b border-line flex items-end justify-between gap-4">
         <div className="max-w-[640px]">
@@ -81,11 +81,11 @@ export default async function AdminInsightsPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-navy border border-line px-2 py-0.5 rounded-full">
+                        <span className="text-xs uppercase tracking-[0.2em] text-navy border border-line px-2 py-0.5 rounded-full">
                           {r.locale}
                         </span>
                         <span
-                          className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full ${
+                          className={`text-xs uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full ${
                             r.status === "published"
                               ? "border-line text-gold-ink"
                               : "border-line text-ink-muted"
@@ -141,6 +141,6 @@ export default async function AdminInsightsPage() {
           ))}
         </div>
       )}
-    </div>
+    </Section>
   );
 }

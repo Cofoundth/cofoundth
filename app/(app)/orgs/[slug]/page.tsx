@@ -325,7 +325,7 @@ export default async function OrgPage({ params }: Props) {
                 />
               )}
               {stageLabel && (
-                <span className="text-[10px] uppercase tracking-[0.15em] px-2 py-1 border border-navy text-navy bg-cream font-sans rounded-full">
+                <span className="text-xs uppercase tracking-[0.15em] px-2 py-1 border border-navy text-navy bg-cream font-sans rounded-full">
                   {stageLabel}
                 </span>
               )}
@@ -525,7 +525,7 @@ export default async function OrgPage({ params }: Props) {
                       <div className="text-sm text-navy truncate">
                         {m.name}
                       </div>
-                      <div className="text-[10px] uppercase tracking-wider text-ink-muted">
+                      <div className="text-xs uppercase tracking-wider text-ink-muted">
                         {t(ROLE_LABELS[m.role] ?? m.role, locale)}
                       </div>
                     </div>

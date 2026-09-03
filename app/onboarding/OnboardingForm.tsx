@@ -389,7 +389,7 @@ function StepIndicator({ current, tr }: { current: number; tr: TR }) {
         {STEPS.map((s, i) => (
           <Fragment key={s.num}>
             <div
-              className={`text-[10px] uppercase tracking-[0.2em] whitespace-nowrap w-10 text-center shrink-0 ${
+              className={`text-xs uppercase tracking-[0.2em] whitespace-nowrap w-10 text-center shrink-0 ${
                 i === current ? "text-navy font-medium" : "text-ink-muted"
               }`}
             >

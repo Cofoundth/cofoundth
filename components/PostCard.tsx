@@ -263,7 +263,7 @@ export function PostCard({
                   <Link
                     key={tag}
                     href={`/community?q=${encodeURIComponent(tag)}`}
-                    className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted hover:border-navy hover:text-navy transition-colors rounded-full"
+                    className="text-xs uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted hover:border-navy hover:text-navy transition-colors rounded-full"
                   >
                     #{tag}
                   </Link>

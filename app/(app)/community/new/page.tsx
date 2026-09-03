@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PostComposer } from "./PostComposer";
+import { Section } from "@/components/ui";
 
 export default function NewPostPage() {
   return (
-    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section width="narrow">
       <Link
         href="/community"
         className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
@@ -25,6 +26,6 @@ export default function NewPostPage() {
       <div className="bg-white p-8 lg:p-10 rounded-3xl shadow-xs">
         <PostComposer />
       </div>
-    </div>
+    </Section>
   );
 }

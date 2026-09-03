@@ -34,7 +34,7 @@ export function PostRow({ post }: { post: AdminPost }) {
               {post.authorName ?? "—"}
             </Link>
             {post.hidden && (
-              <span className="text-[9px] uppercase tracking-[0.12em] border border-danger-line text-danger-ink px-1 py-0.5 rounded-full">
+              <span className="text-xs uppercase tracking-[0.12em] border border-danger-line text-danger-ink px-1 py-0.5 rounded-full">
                 Hidden
               </span>
             )}

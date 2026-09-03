@@ -77,7 +77,7 @@ export function OrgChatThread({
           >
             <div className="max-w-[78%]">
               <div
-                className={`text-[10px] text-ink-muted mb-1 ${
+                className={`text-xs text-ink-muted mb-1 ${
                   mine ? "text-right" : ""
                 }`}
               >
@@ -95,7 +95,7 @@ export function OrgChatThread({
                   <LinkedText text={m.body} />
                 </p>
                 <div
-                  className={`text-[10px] mt-1.5 ${
+                  className={`text-xs mt-1.5 ${
                     mine ? "text-white/60" : "text-ink-muted"
                   }`}
                 >

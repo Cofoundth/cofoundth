@@ -101,7 +101,7 @@ export function MessageThread({
                 <LinkedText text={m.content} />
               </p>
               <div
-                className={`text-[10px] mt-1.5 ${
+                className={`text-xs mt-1.5 ${
                   mine ? "text-white/60" : "text-ink-muted"
                 }`}
               >

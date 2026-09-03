@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { INVESTOR_TYPE_LABELS } from "@/lib/investor";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState, LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 import { OrgCard, type OrgCardOrg } from "@/components/OrgCard";
 import { FundingConnect, FundingRespond } from "./FundingActions";
 
@@ -70,7 +70,7 @@ export default async function FundingPage() {
     const verifiedLabel = await tServer("Verified company");
 
     return (
-      <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <Section>
         <div className="max-w-[640px] mb-8">
           <h1 className="text-d3 mb-2">{heading}</h1>
           <p className="text-ink">
@@ -183,7 +183,7 @@ export default async function FundingPage() {
             </div>
           )}
         </section>
-      </div>
+      </Section>
     );
   }
 
@@ -198,7 +198,7 @@ export default async function FundingPage() {
 
   if (myOrgIds.length === 0) {
     return (
-      <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <Section>
         <h1 className="text-d3 mb-8">{heading}</h1>
         {/* KIND A — this founder has no company yet, and creating one is the
             real next step. Founder-only branch, so /orgs/new is reachable. */}
@@ -215,7 +215,7 @@ export default async function FundingPage() {
             </LinkButton>
           }
         />
-      </div>
+      </Section>
     );
   }
 
@@ -266,7 +266,7 @@ export default async function FundingPage() {
   );
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <div className="max-w-[640px] mb-8">
         <h1 className="text-d3 mb-2">{heading}</h1>
         <p className="text-ink">
@@ -348,7 +348,7 @@ export default async function FundingPage() {
           interest here, they don't browse or cold-contact investors. */}
       {/* openLabel reserved for deal states on the detail page */}
       <span className="hidden">{openLabel}</span>
-    </div>
+    </Section>
   );
 }
 

@@ -34,7 +34,7 @@ function Badge({ tone, children }: { tone: "gold" | "red" | "muted"; children: R
         ? "border-danger-line text-danger-ink"
         : "border-line text-ink-muted";
   return (
-    <span className={`text-[9px] uppercase tracking-[0.12em] border rounded-full px-1 py-0.5 ${cls}`}>
+    <span className={`text-xs uppercase tracking-[0.12em] border rounded-full px-1 py-0.5 ${cls}`}>
       {children}
     </span>
   );
@@ -56,7 +56,7 @@ export function UserRow({ user, selfId }: { user: AdminUser; selfId: string }) {
         <div className="text-sm text-navy font-medium flex items-center gap-2 flex-wrap">
           <span className="truncate">{user.fullName ?? "—"}</span>
           {user.isBot && (
-            <span className="text-[9px] uppercase tracking-[0.12em] px-1.5 py-0.5 bg-navy text-white">
+            <span className="text-xs uppercase tracking-[0.12em] px-1.5 py-0.5 bg-navy text-white">
               Bot
             </span>
           )}

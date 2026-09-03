@@ -210,7 +210,7 @@ export default async function PublicPostPage({ params }: Props) {
             {tags.slice(0, 5).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted rounded-full"
+                className="text-xs uppercase tracking-[0.1em] px-2 py-0.5 border border-line text-ink-muted rounded-full"
               >
                 #{tag}
               </span>

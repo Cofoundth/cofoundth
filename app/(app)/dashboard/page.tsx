@@ -9,7 +9,7 @@ import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { provinceLabel } from "@/lib/provinces";
 import { PostComposer } from "@/components/PostComposer";
 import { PostFeed } from "@/components/PostFeed";
-import { EmptyState } from "@/components/ui";
+import { EmptyState, Section } from "@/components/ui";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { getFeedPosts } from "@/lib/posts";
 import { isWithinMs, DAY_MS } from "@/lib/time";
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
     .join(" · ");
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       {/* The page had NO <h1> at all. That was invisible while section labels
           were 12px eyebrows, but once they became 18px the largest heading on
           the page was a 20px card title — no hierarchy, and no landmark for a
@@ -276,7 +276,7 @@ export default async function DashboardPage() {
                                 .join(" · ")}`
                             : ""}
                         </div>
-                        <div className="text-[10px] text-ink-muted mt-1 inline-flex items-center gap-2">
+                        <div className="text-xs text-ink-muted mt-1 inline-flex items-center gap-2">
                           {timeAgo(f.created_at as string, locale)}
                           {fresh && (
                             <span className="w-1.5 h-1.5 rounded-full bg-navy inline-block" />
@@ -292,6 +292,6 @@ export default async function DashboardPage() {
 
         </aside>
       </div>
-    </div>
+    </Section>
   );
 }

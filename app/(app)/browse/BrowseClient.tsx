@@ -27,7 +27,7 @@ import {
   COMMITMENT_LABELS,
 } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
-import { Button, EmptyState, LinkButton } from "@/components/ui";
+import { Button, EmptyState, LinkButton, Section } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
@@ -246,7 +246,7 @@ export function BrowseClient({ others }: Props) {
     (searchTerm ? 1 : 0);
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <div className="mb-8">
         <div className="flex items-end justify-between">
           <div>
@@ -326,7 +326,7 @@ export function BrowseClient({ others }: Props) {
                 />
                 {tr("Filters")}
                 {filterCount > 0 && (
-                  <span className="min-w-[18px] h-[18px] px-1 text-[10px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
+                  <span className="min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
                     {filterCount}
                   </span>
                 )}
@@ -574,7 +574,7 @@ export function BrowseClient({ others }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </Section>
   );
 }
 
@@ -712,7 +712,7 @@ function LabeledRow({
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-1 sm:gap-3">
-      <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-gold-ink leading-tight sm:pt-1">
+      <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-gold-ink leading-tight sm:pt-1">
         {Icon && <Icon className="w-3 h-3" strokeWidth={2} />}
         {label}
       </div>
@@ -758,13 +758,13 @@ function ProfileCard({ profile }: { profile: Profile }) {
               />
             )}
             {isNew && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-line text-gold-ink font-sans rounded-full">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink font-sans rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse motion-reduce:animate-none" />
                 {tr("New")}
               </span>
             )}
             {isCompany && (
-              <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.15em] border border-line text-gold-ink rounded-full">
+              <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink rounded-full">
                 <Building2 className="w-2.5 h-2.5" strokeWidth={2} />
                 {tr("Company")}
               </span>

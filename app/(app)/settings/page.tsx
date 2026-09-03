@@ -5,6 +5,7 @@ import { AvatarUploader } from "@/components/AvatarUploader";
 import { PasswordForm } from "@/components/PasswordForm";
 import { EditProfileFormClient } from "./EditProfileFormClient";
 import { tServer } from "@/lib/i18n-server";
+import { Section } from "@/components/ui";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -73,7 +74,7 @@ export default async function SettingsPage() {
   };
 
   return (
-    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section width="narrow">
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-d2">{t.title}</h1>
         <Link
@@ -109,6 +110,6 @@ export default async function SettingsPage() {
         </p>
         <PasswordForm />
       </div>
-    </div>
+    </Section>
   );
 }

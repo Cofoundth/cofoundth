@@ -26,7 +26,7 @@ export async function MarketingNav() {
             <BrandMark size="md" />
             <div className="hidden sm:block text-left min-w-0">
               <Wordmark />
-              <div className="text-[10px] text-ink-muted uppercase tracking-[0.2em] mt-1">
+              <div className="text-xs text-ink-muted uppercase tracking-[0.2em] mt-1">
                 {tr("Est. 2026 · Bangkok")}
               </div>
             </div>

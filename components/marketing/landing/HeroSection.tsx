@@ -3,6 +3,7 @@ import { t, type Locale } from "@/lib/i18n";
 import type { PublicProfile } from "@/lib/public-profile";
 import { LinkButton } from "@/components/ui/Button";
 import { Avatar } from "@/components/Avatar";
+import { Section } from "@/components/ui";
 
 // Onfound's hero shape: full-viewport, centred, a very large display h1, one
 // line of sub, a CTA row, then a trust row of stacked avatars.
@@ -41,7 +42,7 @@ export function HeroSection({
     // so a short viewport shrinks gracefully instead of pushing the CTA below the
     // fold, and there is never a band of dead cream under the content.
     <header className="relative bg-cream border-b border-line lg:flex lg:min-h-[calc(100vh-4rem)] lg:items-center">
-      <div className="w-full max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <Section className="w-full">
         <div className="max-w-[760px] mx-auto text-center">
           <div className="text-xs uppercase tracking-[0.25em] text-ink-muted mb-6 inline-flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse motion-reduce:animate-none" />
@@ -113,7 +114,7 @@ export function HeroSection({
             {tr("Thai and English")}
           </p>
         </div>
-      </div>
+      </Section>
     </header>
   );
 }

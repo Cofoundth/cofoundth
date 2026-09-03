@@ -295,7 +295,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                 />
               )}
               {isCompany && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-[0.15em] border border-line text-gold-ink font-sans rounded-full">
+                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink font-sans rounded-full">
                   <Building2 className="w-3 h-3" strokeWidth={2} />
                   {t("Company", locale)}
                 </span>
@@ -339,7 +339,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                   return (
                     <span
                       key={tag}
-                      className={`text-[10px] uppercase tracking-[0.15em] px-2 py-1 border rounded-full ${meta.tone}`}
+                      className={`text-xs uppercase tracking-[0.15em] px-2 py-1 border rounded-full ${meta.tone}`}
                     >
                       {t(meta.en, locale)}
                     </span>
@@ -547,7 +547,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                           : "border-navy bg-cream"
                       }`}
                     >
-                      <div className="text-[10px] uppercase tracking-[0.2em] mb-1.5">
+                      <div className="text-xs uppercase tracking-[0.2em] mb-1.5">
                         <span
                           className={isMilestone ? "text-gold-ink" : "text-navy"}
                         >

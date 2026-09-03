@@ -127,7 +127,7 @@ export function ManagePanel({
                 <span className="inline-flex items-center gap-2 text-sm text-ink min-w-0">
                   <Mail className="w-3.5 h-3.5 text-ink-muted shrink-0" />
                   <span className="truncate">{inv.email}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 rounded-full">
+                  <span className="text-xs uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 rounded-full">
                     {tr(inv.role === "admin" ? "Admin" : "Member")}
                   </span>
                 </span>
@@ -168,7 +168,7 @@ export function ManagePanel({
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
                   {isOwner ? (
-                    <span className="text-[10px] uppercase tracking-wider text-gold-ink border border-line px-1.5 py-0.5 rounded-full">
+                    <span className="text-xs uppercase tracking-wider text-gold-ink border border-line px-1.5 py-0.5 rounded-full">
                       {tr("owner")}
                     </span>
                   ) : (

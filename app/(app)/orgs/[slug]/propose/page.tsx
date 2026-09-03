@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { getActiveOrgId } from "@/lib/active-org";
 import { tServer } from "@/lib/i18n-server";
 import { DealProposalForm } from "./DealProposalForm";
+import { Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function ProposePage({
   if (!conn || conn.status !== "accepted") redirect(`/orgs/${slug}`);
 
   return (
-    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section width="narrow">
       <Link
         href={`/orgs/${slug}`}
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"
@@ -72,6 +73,6 @@ export default async function ProposePage({
           targetName={org.name as string}
         />
       </div>
-    </div>
+    </Section>
   );
 }

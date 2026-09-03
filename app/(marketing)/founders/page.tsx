@@ -14,13 +14,11 @@ import { ROLE_LABELS, STAGE_LABELS } from "@/lib/matching";
 import { provinceLabel } from "@/lib/provinces";
 import { listPublicFounders } from "@/lib/public-profile";
 import { Avatar } from "@/components/Avatar";
-import {
-  Card,
+import { Card,
   EmptyState,
   Eyebrow,
   LinkButton,
-  VerifiedBadge,
-} from "@/components/ui";
+  VerifiedBadge, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Founders",
@@ -36,7 +34,7 @@ export default async function PublicFoundersPage() {
   const verifiedLabel = tr("Verified");
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       {/* Header */}
       <div className="max-w-[640px] mb-8">
         <Eyebrow className="mb-6">{tr("Community")}</Eyebrow>
@@ -155,6 +153,6 @@ export default async function PublicFoundersPage() {
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
-    </div>
+    </Section>
   );
 }

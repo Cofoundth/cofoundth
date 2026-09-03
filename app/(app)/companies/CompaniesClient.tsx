@@ -11,7 +11,7 @@ import {
   Search as SearchIcon,
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
-import { Button, EmptyState, LinkButton } from "@/components/ui";
+import { Button, EmptyState, LinkButton, Section } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { PartnershipRequestDialog } from "./PartnershipRequestDialog";
@@ -136,7 +136,7 @@ export function CompaniesClient({
   }
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       {/* Header */}
       <div className="mb-8 pb-8 border-b border-line">
         <div className="flex items-end justify-between gap-6 flex-wrap">
@@ -346,7 +346,7 @@ export function CompaniesClient({
           onClose={() => setRequestTarget(null)}
         />
       )}
-    </div>
+    </Section>
   );
 }
 
@@ -412,7 +412,7 @@ function CompanyCard({
                   />
                 )}
                 {fresh && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] border border-line text-gold-ink rounded-full">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink rounded-full">
                     <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse" />
                     {tr("New")}
                   </span>
@@ -437,7 +437,7 @@ function CompanyCard({
                 return (
                   <span
                     key={t}
-                    className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full"
+                    className="text-xs uppercase tracking-[0.15em] px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full"
                   >
                     {tr(label)}
                   </span>
@@ -454,7 +454,7 @@ function CompanyCard({
 
           {c.capabilities.length > 0 && (
             <div className="mb-3">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-gold-ink mb-1.5">
+              <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-1.5">
                 {tr("Offers")}
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -477,7 +477,7 @@ function CompanyCard({
 
           {c.partnership_seeking.length > 0 && (
             <div className="mb-4">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-1.5">
+              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-1.5">
                 {tr("Seeking")}
               </div>
               <div className="flex flex-wrap gap-1.5">

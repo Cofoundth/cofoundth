@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { isInvestorAccount } from "@/lib/account";
 import { tServer } from "@/lib/i18n-server";
 import { OrgCard, OrgLogo, type OrgCardOrg } from "@/components/OrgCard";
-import { EmptyState, LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 import { InviteActions } from "./InviteActions";
 
 export const dynamic = "force-dynamic";
@@ -124,7 +124,7 @@ export default async function OrgsPage({
   const roleLabel = (r: string) => roleLabels[r] ?? r;
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <div className="flex items-end justify-between mb-8">
         <div className="max-w-[640px]">
           <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
@@ -292,6 +292,6 @@ export default async function OrgsPage({
           </div>
         )}
       </section>
-    </div>
+    </Section>
   );
 }

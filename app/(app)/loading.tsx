@@ -2,9 +2,11 @@
 // Nav chrome is rendered by the layout (stays visible during nav);
 // this fills the main content area with a subtle skeleton.
 
+import { Section } from "@/components/ui";
+
 export default function Loading() {
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px] animate-pulse">
+    <Section className="animate-pulse">
       <div className="mb-12 pb-8 border-b border-line">
         <div className="h-3 w-32 bg-line/70 rounded-full mb-4" />
         <div className="h-12 w-2/3 bg-line/70 rounded-lg mb-3" />
@@ -21,6 +23,6 @@ export default function Loading() {
         <div className="bg-white rounded-3xl shadow-xs p-6 h-40" />
         <div className="bg-white rounded-3xl shadow-xs p-6 h-40" />
       </div>
-    </div>
+    </Section>
   );
 }

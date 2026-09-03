@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState, LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 import { AskRowActions } from "./AskRowActions";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
@@ -132,7 +132,7 @@ export default async function PartnershipRequestsBoardPage() {
   };
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       {/* Header */}
       <div className="mb-8 pb-8 border-b border-line flex items-start justify-between gap-6 flex-wrap">
         <div className="max-w-[640px]">
@@ -274,7 +274,7 @@ export default async function PartnershipRequestsBoardPage() {
                         </h3>
                       </div>
                       <span
-                        className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full shrink-0 ${statusTone}`}
+                        className={`text-xs uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full shrink-0 ${statusTone}`}
                       >
                         {statusText}
                       </span>
@@ -338,6 +338,6 @@ export default async function PartnershipRequestsBoardPage() {
           })}
         </div>
       )}
-    </div>
+    </Section>
   );
 }

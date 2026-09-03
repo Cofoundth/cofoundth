@@ -14,7 +14,7 @@ import { tServer, getLocale } from "@/lib/i18n-server";
 import { provinceLabel } from "@/lib/provinces";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState, LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -252,7 +252,7 @@ export default async function ConnectionsPage({
     }`;
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <div className="max-w-[640px] mb-8">
         <h1 className="text-d3 mb-2">
           {await tServer("Connections")}
@@ -504,7 +504,7 @@ export default async function ConnectionsPage({
                                 </span>
                               )}
                               {msg?.unread ? (
-                                <span className="text-[10px] uppercase tracking-[0.2em] bg-navy text-white px-2 py-0.5">
+                                <span className="text-xs uppercase tracking-[0.2em] bg-navy text-white px-2 py-0.5">
                                   {msg.unread} {newLabel}
                                 </span>
                               ) : null}
@@ -550,6 +550,6 @@ export default async function ConnectionsPage({
           </section>
         </>
       )}
-    </div>
+    </Section>
   );
 }

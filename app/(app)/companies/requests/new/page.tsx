@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { NewAskForm } from "./NewAskForm";
+import { Section } from "@/components/ui";
 
 export default async function NewAskPage() {
   const supabase = await createClient();
@@ -21,7 +22,7 @@ export default async function NewAskPage() {
   }
 
   return (
-    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section width="narrow">
       <Link
         href="/companies/requests"
         className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
@@ -47,6 +48,6 @@ export default async function NewAskPage() {
       </div>
 
       <NewAskForm />
-    </div>
+    </Section>
   );
 }

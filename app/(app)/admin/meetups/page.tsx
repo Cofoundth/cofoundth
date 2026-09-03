@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState, LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 import { meetupWhenParts, type Meetup } from "@/lib/meetups";
 import { isPast } from "@/lib/time";
 
@@ -49,7 +49,7 @@ export default async function AdminMeetupsPage() {
     countBy.set(r.meetup_id, (countBy.get(r.meetup_id) ?? 0) + 1);
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
         Admin
       </div>
@@ -121,6 +121,6 @@ export default async function AdminMeetupsPage() {
           })}
         </div>
       )}
-    </div>
+    </Section>
   );
 }

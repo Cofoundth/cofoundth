@@ -3,7 +3,7 @@ import { ArrowRight, BookOpen } from "lucide-react";
 import { listInsights } from "@/lib/insights";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
-import { EmptyState, LinkButton } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 
 export const revalidate = 60;
 
@@ -27,7 +27,7 @@ export default async function InsightsPage() {
       : "";
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       {/* Narrow intro over a wide grid — their editorial rhythm. */}
       <div className="max-w-[640px] mb-8">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
@@ -69,7 +69,7 @@ export default async function InsightsPage() {
               className="group flex flex-col bg-white border border-line p-6 hover:border-navy transition-colors rounded-xl"
             >
               {/* meta row */}
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] mb-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] mb-4">
                 <span className="text-gold-ink">{i.category}</span>
                 <span className="text-ink-muted/70" aria-hidden="true">
                   ·
@@ -103,6 +103,6 @@ export default async function InsightsPage() {
           ))}
         </div>
       )}
-    </div>
+    </Section>
   );
 }

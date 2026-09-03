@@ -72,7 +72,7 @@ function CardTags({ label, items }: { label: string; items: string[] }) {
   const extra = items.length - shown.length;
   return (
     <div className="mt-2.5">
-      <div className="text-[10px] uppercase tracking-wider text-gold-ink mb-1">
+      <div className="text-xs uppercase tracking-wider text-gold-ink mb-1">
         {label}
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -155,7 +155,7 @@ export function OrgCard({
           </h3>
           {org.verified && <VerifiedBadge label={verifiedLabel} />}
           {role && (
-            <span className="text-[10px] uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 shrink-0 rounded-full">
+            <span className="text-xs uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 shrink-0 rounded-full">
               {role}
             </span>
           )}

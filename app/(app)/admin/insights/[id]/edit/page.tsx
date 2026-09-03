@@ -6,6 +6,7 @@ import { isAdminUser } from "@/lib/admin";
 import { adminGetById } from "@/lib/insights";
 import { InsightForm } from "../../InsightForm";
 import { updateInsightAction } from "../../actions";
+import { Section } from "@/components/ui";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -23,7 +24,7 @@ export default async function EditInsightPage({ params }: Props) {
   const action = updateInsightAction.bind(null, id);
 
   return (
-    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section width="narrow">
       <Link
         href="/admin/insights"
         className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
@@ -58,6 +59,6 @@ export default async function EditInsightPage({ params }: Props) {
         action={action}
         submitLabel="Save changes"
       />
-    </div>
+    </Section>
   );
 }

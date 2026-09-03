@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { CreateOrgForm } from "./CreateOrgForm";
+import { Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function NewOrgPage() {
   await requireUser();
 
   return (
-    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section width="narrow">
       <Link
         href="/orgs"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"
@@ -34,6 +35,6 @@ export default async function NewOrgPage() {
       <div className="bg-white p-6 lg:p-8 rounded-3xl shadow-xs">
         <CreateOrgForm />
       </div>
-    </div>
+    </Section>
   );
 }

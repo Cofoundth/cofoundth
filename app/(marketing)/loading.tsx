@@ -8,13 +8,15 @@
 // Purely decorative: aria-hidden keeps screen readers on the route announcement
 // rather than reading a wall of empty boxes. No copy, so nothing to translate —
 // and a `loading.tsx` must render synchronously, which rules out `tServer`.
+import { Section } from "@/components/ui";
+
 export default function Loading() {
   return (
     <section
       aria-hidden="true"
       className="bg-cream border-b border-line animate-pulse motion-reduce:animate-none"
     >
-      <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+      <Section>
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           {/* Left column */}
           <div className="lg:col-span-7">
@@ -78,7 +80,7 @@ export default function Loading() {
             </div>
           </div>
         </div>
-      </div>
+      </Section>
     </section>
   );
 }

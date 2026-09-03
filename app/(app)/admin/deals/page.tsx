@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState } from "@/components/ui";
+import { EmptyState, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -153,7 +153,7 @@ export default async function AdminDealsPage() {
   const empty = dealsView.length === 0 && fundingView.length === 0;
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <AdminTabs />
       <div className="max-w-[640px] mb-8">
         <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
@@ -278,6 +278,6 @@ export default async function AdminDealsPage() {
           )}
         </div>
       )}
-    </div>
+    </Section>
   );
 }

@@ -121,7 +121,7 @@ export function PartnershipCard({ row, locale }: Props) {
               </h3>
             </div>
             <span
-              className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full shrink-0 ${status.tone}`}
+              className={`text-xs uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full shrink-0 ${status.tone}`}
             >
               {tr(status.en)}
             </span>
@@ -144,7 +144,7 @@ export function PartnershipCard({ row, locale }: Props) {
 
           {row.response_note && (
             <div className="mt-3 mb-3 p-3 bg-cream border-l-2 border-line rounded-xl">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-1">
+              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-1">
                 {tr("Response")}
               </div>
               <p className="text-sm text-ink leading-relaxed italic">

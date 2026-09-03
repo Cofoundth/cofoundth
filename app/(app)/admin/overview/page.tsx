@@ -5,6 +5,7 @@ import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
 import { TrendTabs } from "@/components/TrendTabs";
 import { msAgoISO } from "@/lib/time";
+import { Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +104,7 @@ export default async function AdminOverviewPage() {
   });
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
+    <Section>
       <AdminTabs />
       <div className="mb-8 pb-6 border-b border-line">
         <div className="max-w-[640px]">
@@ -148,6 +149,6 @@ export default async function AdminOverviewPage() {
       <p className="text-[11px] text-ink-muted mt-2">
         It&rsquo;ll fill in as activity grows.
       </p>
-    </div>
+    </Section>
   );
 }

@@ -115,7 +115,7 @@ export default async function PostPage({ params }: Props) {
       <article className="bg-white p-8 lg:p-12 rounded-3xl shadow-xs">
         {meta && KindIcon && (
           <div
-            className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] mb-4 ${meta.tone}`}
+            className={`inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] mb-4 ${meta.tone}`}
           >
             <KindIcon className="w-3.5 h-3.5" strokeWidth={1.5} />
             <span className="text-ink-muted">{await tServer(meta.en)}</span>
@@ -133,7 +133,7 @@ export default async function PostPage({ params }: Props) {
             {((post.tags ?? []) as string[]).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] uppercase tracking-[0.15em] px-2 py-1 border border-line text-gold-ink rounded-full"
+                className="text-xs uppercase tracking-[0.15em] px-2 py-1 border border-line text-gold-ink rounded-full"
               >
                 #{tag}
               </span>
