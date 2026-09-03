@@ -712,7 +712,7 @@ export default async function ProfileDetailPage({ params }: Props) {
         <>
           {/* Keeps the fixed bar from covering the last of the page content. */}
           <div className="h-20 lg:hidden" aria-hidden="true" />
-          <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(10,31,68,0.08)] pb-[env(safe-area-inset-bottom)]">
+          <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(27,26,23,0.08)] pb-[env(safe-area-inset-bottom)]">
             <div className="px-4 py-3">
               {mobileCta.href.startsWith("#") ? (
                 <a

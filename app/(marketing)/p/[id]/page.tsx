@@ -305,7 +305,7 @@ export default async function PublicPostPage({ params }: Props) {
       </div>
 
       {/* Persistent sign-in gate — LinkedIn-style, always visible */}
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(10,31,68,0.08)]">
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(27,26,23,0.08)]">
         <div className="max-w-2xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
           <p className="text-sm text-ink min-w-0 truncate">
             {(
