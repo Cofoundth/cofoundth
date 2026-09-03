@@ -290,58 +290,55 @@ export function BrowseClient({ others }: Props) {
         ))}
       </div>
 
-      <div className="grid xl:grid-cols-12 gap-10">
-        {/* Filter sidebar */}
-        <aside className="xl:col-span-3 min-w-0">
-          <div className="xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto space-y-4 pr-1">
-            <div>
-              <label
-                htmlFor="search"
-                className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-              >
-                {tr("Search")}
-              </label>
-              <input
-                id="search"
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label={tr("Search founders")}
-                placeholder={tr("Name or keyword")}
-                className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
-              />
-            </div>
+      {/* Search + a filter TRIGGER, with the filters themselves in a panel that
+          opens below. Measured off Onfound's /community: a flex row where the
+          search grows and a 48x48 icon button sits beside it, then a full-width
+          bordered card of accordion groups.
 
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((v) => !v)}
-              className="lg:hidden w-full flex items-center justify-between px-4 py-3 border border-line bg-white text-sm text-ink hover:border-navy transition-colors rounded-xl"
-              aria-expanded={filtersOpen}
-              aria-controls="browse-filters"
-            >
-              <span className="inline-flex items-center gap-2">
-                <SlidersHorizontal
-                  className="w-4 h-4 text-ink-muted"
-                  strokeWidth={1.5}
-                />
-                {tr("Filters")}
-                {filterCount > 0 && (
-                  <span className="min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
-                    {filterCount}
-                  </span>
-                )}
-              </span>
-              <ChevronDown
-                className={`w-4 h-4 text-ink-muted transition-transform ${
-                  filtersOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+          This replaces a permanent left rail that spent a third of every
+          viewport on nine always-open filter groups. Filters are a tool for
+          navigating a directory, not the first thing to look at in one. */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="relative flex-1 min-w-0">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+          <input
+            id="search"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label={tr("Search founders")}
+            placeholder={tr("Name or keyword")}
+            className="w-full h-12 pl-11 pr-4 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
+          />
+        </div>
+        {/* rounded-xl, not the base layer's pill: it has to agree with the
+            input beside it, and a call-site utility beats @layer base. */}
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-expanded={filtersOpen}
+          aria-controls="browse-filters"
+          aria-label={tr("Filters")}
+          className="relative h-12 w-12 shrink-0 flex items-center justify-center border border-line bg-white text-ink hover:border-navy transition-colors rounded-xl"
+        >
+          <SlidersHorizontal className="w-4 h-4" strokeWidth={1.5} />
+          {filterCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
+              {filterCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-            <div
-              id="browse-filters"
-              className={`space-y-6 ${filtersOpen ? "" : "hidden lg:block"}`}
-            >
+      {filtersOpen && (
+        <div
+          id="browse-filters"
+          className="mb-8 rounded-xl border border-line bg-white"
+        >
               <FilterGroup label={tr("Looking for (Role)")}>
               {ROLE_OPTIONS.map(([value, label]) => (
                 <FilterChip
@@ -549,12 +546,35 @@ export function BrowseClient({ others }: Props) {
                 </FilterChip>
               ))}
             </FilterGroup>
+
+          <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-line">
+            <span className="text-sm text-ink-muted">
+              {filtered.length} {tr("founders")}
+            </span>
+            <div className="flex items-center gap-2">
+              {filterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  className="px-4 py-2 text-sm text-ink-muted hover:text-navy tracking-wide"
+                >
+                  {tr("Clear all filters")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="px-5 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+              >
+                {tr("Done")}
+              </button>
             </div>
           </div>
-        </aside>
+        </div>
+      )}
 
-        {/* Results */}
-        <div className="xl:col-span-9 min-w-0">
+      {/* Results */}
+      <div className="min-w-0">
           {filtered.length === 0 ? (
             <NoResults
               totalOthers={others.length}
@@ -572,7 +592,6 @@ export function BrowseClient({ others }: Props) {
               ))}
             </div>
           )}
-        </div>
       </div>
     </Section>
   );
@@ -658,6 +677,13 @@ function NoResults({
   );
 }
 
+// One accordion row inside the filter panel. Collapsed by default and it owns
+// its own open state — nine groups do not need nine pieces of parent state, and
+// nothing outside this row cares whether it is expanded.
+//
+// `rounded-none` is deliberate: @layer base pills every <button>, which looks
+// wrong on a full-width row inside a bordered card. The call site wins because
+// `utilities` is a later cascade layer than `base`.
 function FilterGroup({
   label,
   children,
@@ -665,12 +691,26 @@ function FilterGroup({
   label: string;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div>
-      <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
+    <div className="border-b border-line last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left text-sm text-ink hover:bg-cream transition-colors rounded-none"
+      >
         {label}
-      </div>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
+        <ChevronDown
+          className={`w-4 h-4 text-ink-muted shrink-0 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+          strokeWidth={1.5}
+        />
+      </button>
+      {open && (
+        <div className="px-4 pb-4 flex flex-wrap gap-1.5">{children}</div>
+      )}
     </div>
   );
 }
