@@ -28,7 +28,7 @@
 
 import Link from "next/link";
 import { Building2, MapPin, Rocket } from "lucide-react";
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
 import {
   Card,
@@ -85,6 +85,15 @@ export type DirectoryCardProps = {
    *  heading sits between. Weight and tracking come from the h1-h6 base rule
    *  either way. */
   as?: "h2" | "h3";
+
+  /** INTERACTIVE MODE. When either slot is present the card's root becomes a
+   *  <div> and only the NAME links to the profile — buttons inside a link are
+   *  invalid HTML and swallow each other's clicks, which is why the reference
+   *  product's cards are not links either. headerAction sits beside the stage
+   *  emblem (their save-heart); footer renders under the body (their
+   *  Message / Full Profile row). */
+  headerAction?: ReactNode;
+  footer?: ReactNode;
 };
 
 export function DirectoryCard({
@@ -110,14 +119,16 @@ export function DirectoryCard({
   chipsIcon: ChipsIcon,
   chips = [],
   as: Heading = "h3",
+  headerAction,
+  footer,
 }: DirectoryCardProps) {
-  return (
+  const interactive = Boolean(headerAction || footer);
+  const inner = (
     // min-w-0 is load-bearing: a grid item defaults to min-width:auto and will
     // not shrink below its content's min-content width, so without it the card
     // laid out at 1157px inside a 342px track on a phone and the document
     // scrolled 792px sideways. truncate INSIDE the card cannot fix a card that
     // was never constrained.
-    <Link href={href} className="group block h-full min-w-0">
       <Card hoverable padding="xs" className="h-full flex flex-col">
         {/* HEADER — the avatar shares a 48px row with the name, and nothing
             below it is indented past the avatar. */}
@@ -125,7 +136,16 @@ export function DirectoryCard({
           <Avatar name={avatarSeed ?? name} url={photoUrl ?? null} size="md" />
           <div className="flex flex-col justify-center min-w-0 flex-1 overflow-hidden">
             <Heading className="flex items-center gap-1.5 text-sm font-semibold leading-none group-hover:text-gold-ink transition-colors">
-              <span className="truncate">{name}</span>
+              {interactive ? (
+                <Link
+                  href={href}
+                  className="truncate hover:text-gold-ink transition-colors"
+                >
+                  {name}
+                </Link>
+              ) : (
+                <span className="truncate">{name}</span>
+              )}
               {verified && verifiedLabel && (
                 <VerifiedBadge label={verifiedLabel} />
               )}
@@ -151,7 +171,10 @@ export function DirectoryCard({
           {/* Stage in the corner, the way Onfound mark it. As an inline pill it
               cost up to 97px of the row below, and that row is the only place
               sectors can go. */}
-          <StageEmblem stage={stage} label={stageLabel ?? ""} />
+          <div className="flex items-center gap-1.5 shrink-0">
+            {headerAction}
+            <StageEmblem stage={stage} label={stageLabel ?? ""} />
+          </div>
         </div>
 
         {/* BODY — three reserved rows. */}
@@ -192,7 +215,18 @@ export function DirectoryCard({
             </div>
           )}
         </div>
+
+        {footer && <div className="pt-4 flex gap-2">{footer}</div>}
       </Card>
+  );
+
+  // min-w-0 on both roots — grid items default to min-width:auto and refuse
+  // to shrink below their content (the app-wide overflow class of bug).
+  return interactive ? (
+    <div className="group block h-full min-w-0">{inner}</div>
+  ) : (
+    <Link href={href} className="group block h-full min-w-0">
+      {inner}
     </Link>
   );
 }

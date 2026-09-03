@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   ChevronDown,
+  Heart,
   Search,
+  Sparkles,
   SlidersHorizontal,
   Users,
 } from "lucide-react";
@@ -13,7 +16,10 @@ import {
   STAGE_LABELS,
   COMMITMENT_LABELS,
   INTENT_LABELS,
+  complementScore,
 } from "@/lib/matching";
+import { toggleSaveAction } from "./actions";
+import { expressInterestAction } from "@/app/(app)/profile/[id]/actions";
 import { DirectoryCard } from "@/components/DirectoryCard";
 import { Button, EmptyState, LinkButton, Section } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
@@ -51,6 +57,12 @@ type Profile = ProfileLike & {
 
 type Props = {
   others: Profile[];
+  /** The viewer's own matching axes — the matchmaker scores against these. */
+  viewer: ProfileLike;
+  /** Profile ids the viewer already expressed interest in. */
+  sentTo: string[];
+  /** Profile ids the viewer saved (the heart). */
+  savedIds: string[];
 };
 
 const ROLE_OPTIONS = Object.entries(ROLE_LABELS);
@@ -58,7 +70,7 @@ const STAGE_OPTIONS = Object.entries(STAGE_LABELS);
 const COMMITMENT_OPTIONS = Object.entries(COMMITMENT_LABELS);
 const INDUSTRY_OPTIONS = INDUSTRIES;
 
-export function BrowseClient({ others }: Props) {
+export function BrowseClient({ others, viewer, sentTo, savedIds }: Props) {
   const tr = useT();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilters, setRoleFilters] = useState<string[]>([]);
@@ -74,7 +86,13 @@ export function BrowseClient({ others }: Props) {
   // toggle is hidden) — a breakpoint-aware initial state would hydrate wrong.
   const [filtersOpen, setFiltersOpen] = useState(false);
   // Top-level split: founders who already have an idea vs. those still exploring.
-  const [ideaTab, setIdeaTab] = useState<"idea" | "exploring">("idea");
+  const [ideaTab, setIdeaTab] = useState<"idea" | "exploring" | "saved">("idea");
+  // Optimistic client state for the heart + the interest button.
+  const [saved, setSaved] = useState<Set<string>>(() => new Set(savedIds));
+  const [sent, setSent] = useState<Set<string>>(() => new Set(sentTo));
+  // Matchmaker: parsed wants (role keys) -> rank by Complement Score.
+  const [matchWants, setMatchWants] = useState<string[] | null>(null);
+  const [matchQuery, setMatchQuery] = useState("");
 
   const sorted = useMemo(
     () =>
@@ -158,9 +176,12 @@ export function BrowseClient({ others }: Props) {
   const filtered = useMemo(
     () =>
       filteredBase.filter(
-        (p) => (p.intent ?? []).includes("idea") === (ideaTab === "idea"),
+        (p) =>
+          ideaTab === "saved"
+            ? saved.has(p.id)
+            : (p.intent ?? []).includes("idea") === (ideaTab === "idea"),
       ),
-    [filteredBase, ideaTab],
+    [filteredBase, ideaTab, saved],
   );
 
   function toggleRole(v: string) {
@@ -233,6 +254,41 @@ export function BrowseClient({ others }: Props) {
     (commitmentFilter ? 1 : 0) +
     (searchTerm ? 1 : 0);
 
+  // ── Matchmaker ─────────────────────────────────────────────────────────
+  // Their "Who are you looking for?" box is LLM-backed; ours is the
+  // Complement Score, honestly labelled. Free text is scanned for role and
+  // industry words (Thai or English); matches override the viewer's
+  // looking_for/industry, and the grid re-ranks by fit.
+  const parseWants = (q: string) => {
+    const t = q.toLowerCase();
+    const roles = Object.entries(ROLE_LABELS)
+      .filter(
+        ([key, en]) =>
+          t.includes(key) ||
+          t.includes(en.toLowerCase()) ||
+          t.includes(tr(en).toLowerCase()),
+      )
+      .map(([key]) => key);
+    const industries = INDUSTRIES.filter(
+      (i) => t.includes(i.toLowerCase()) || t.includes(tr(i).toLowerCase()),
+    );
+    return { roles, industries };
+  };
+
+  const runMatch = (q: string) => {
+    const { roles, industries } = parseWants(q);
+    if (industries.length) setIndustryFilters(industries);
+    setMatchWants(roles.length ? roles : viewer.looking_for ?? []);
+  };
+
+  const ranked = useMemo(() => {
+    if (!matchWants) return filtered;
+    const me = { ...viewer, looking_for: matchWants };
+    return [...filtered].sort(
+      (a, b) => complementScore(me, b).score - complementScore(me, a).score,
+    );
+  }, [filtered, matchWants, viewer]);
+
   return (
     <Section>
       <div className="mb-8">
@@ -264,6 +320,7 @@ export function BrowseClient({ others }: Props) {
           [
             ["idea", tr("Has an idea"), ideaCount],
             ["exploring", tr("Exploring"), exploringCount],
+            ["saved", tr("Saved"), saved.size],
           ] as const
         ).map(([key, label, count]) => (
           <button
@@ -280,6 +337,83 @@ export function BrowseClient({ others }: Props) {
             <span className="text-xs text-ink-muted">({count})</span>
           </button>
         ))}
+      </div>
+
+      {/* Matchmaker — their "Who are you looking for?" card, honestly
+          powered: theirs runs an LLM ("Onfound Intelligence"), ours runs the
+          Complement Score and says so. Free text is scanned for role/industry
+          words in Thai or English; the grid re-ranks by fit. */}
+      <div className="mb-8 bg-white rounded-3xl shadow-xs p-6">
+        <h2 className="text-lg font-bold tracking-normal mb-1">
+          {tr("Who are you looking for?")}
+        </h2>
+        <p className="text-sm text-ink-muted mb-4">
+          {tr(
+            "Describe who you need — a role, an industry — and we'll rank the directory by fit.",
+          )}
+        </p>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            runMatch(matchQuery);
+          }}
+        >
+          <div className="relative flex-1 min-w-0">
+            <Sparkles
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold-ink pointer-events-none"
+              aria-hidden="true"
+            />
+            <input
+              value={matchQuery}
+              onChange={(e) => setMatchQuery(e.target.value)}
+              placeholder={tr("e.g. a technical co-founder in FinTech")}
+              className="w-full h-11 pl-11 pr-4 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
+            />
+          </div>
+          <button
+            type="submit"
+            className="shrink-0 rounded-full bg-navy px-5 text-sm text-white hover:bg-navy-dark transition-colors"
+          >
+            {tr("Match")}
+          </button>
+        </form>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {(
+            [
+              [tr("A technical co-founder"), "technical"],
+              [tr("A business co-founder"), "business"],
+              [tr("Someone in marketing"), "marketing"],
+            ] as const
+          ).map(([label, role]) => (
+            <button
+              key={role}
+              type="button"
+              onClick={() => {
+                setMatchQuery(label);
+                setMatchWants([role]);
+              }}
+              className="px-2.5 py-1 text-xs border border-line text-ink hover:border-navy rounded-full transition-colors"
+            >
+              {label}
+            </button>
+          ))}
+          {matchWants && (
+            <button
+              type="button"
+              onClick={() => {
+                setMatchWants(null);
+                setMatchQuery("");
+              }}
+              className="px-2.5 py-1 text-xs bg-navy text-white rounded-full"
+            >
+              {tr("Ranked by fit")} ×
+            </button>
+          )}
+          <span className="ml-auto text-xs text-ink-muted">
+            {tr("Powered by Complement Score")}
+          </span>
+        </div>
       </div>
 
       {/* Search + a filter TRIGGER, with the filters themselves in a panel that
@@ -579,8 +713,25 @@ export function BrowseClient({ others }: Props) {
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((profile) => (
-                <ProfileCard key={profile.id} profile={profile} />
+              {ranked.map((profile) => (
+                <ProfileCard
+                  key={profile.id}
+                  profile={profile}
+                  saved={saved.has(profile.id)}
+                  sent={sent.has(profile.id)}
+                  onSave={(next) => {
+                    setSaved((prev) => {
+                      const s2 = new Set(prev);
+                      if (next) s2.add(profile.id);
+                      else s2.delete(profile.id);
+                      return s2;
+                    });
+                    void toggleSaveAction(profile.id, next);
+                  }}
+                  onSent={() =>
+                    setSent((prev) => new Set(prev).add(profile.id))
+                  }
+                />
               ))}
             </div>
           )}
@@ -606,7 +757,7 @@ function NoResults({
   totalOthers: number;
   /** After search + filters, BEFORE the idea/exploring tab split. */
   matchingFilters: number;
-  ideaTab: "idea" | "exploring";
+  ideaTab: "idea" | "exploring" | "saved";
   onClear: () => void;
   onSwitchTab: () => void;
 }) {
@@ -746,9 +897,32 @@ function FilterChip({
 // (sm:2 lg:3) was measured on MARKETING pages, which have no sidebar. App routes
 // lose 256px to the rail, so lg:grid-cols-3 gives 219px columns at 1024 —
 // narrower than the two-column layout gives at the same width. xl gives 304px.
-function ProfileCard({ profile }: { profile: Profile }) {
+function ProfileCard({
+  profile,
+  saved,
+  sent,
+  onSave,
+  onSent,
+}: {
+  profile: Profile;
+  saved: boolean;
+  sent: boolean;
+  onSave: (next: boolean) => void;
+  onSent: () => void;
+}) {
   const locale = useLocale();
   const tr = useT();
+  const [busy, setBusy] = useState(false);
+
+  async function express() {
+    setBusy(true);
+    const fd = new FormData();
+    fd.set("toId", profile.id);
+    const res = await expressInterestAction(null, fd);
+    setBusy(false);
+    // "Already expressed" is success for the button's purposes.
+    if (!res?.error || res.error.includes("already")) onSent();
+  }
   const isCompany = profile.type === "company";
   // Idea-havers sell the project; explorers sell their track record.
   const hasIdea = (profile.intent ?? []).includes("idea");
@@ -800,6 +974,47 @@ function ProfileCard({ profile }: { profile: Profile }) {
           : (profile.looking_for ?? [])
               .map((r) => tr(ROLE_LABELS[r]))
               .filter(Boolean)
+      }
+      headerAction={
+        <button
+          type="button"
+          aria-pressed={saved}
+          aria-label={tr(saved ? "Saved" : "Save founder")}
+          onClick={() => onSave(!saved)}
+          className={`grid h-8 w-8 place-items-center rounded-full transition-colors ${
+            saved
+              ? "text-danger-ink"
+              : "text-ink-muted/60 hover:text-navy"
+          }`}
+        >
+          <Heart className="w-4 h-4" fill={saved ? "currentColor" : "none"} />
+        </button>
+      }
+      footer={
+        <>
+          {/* Their card's row is Message + Full Profile. Ours is Express
+              Interest + Full Profile — messaging unlocks on MUTUAL interest,
+              a deliberate product difference, so the first button is the
+              step that leads there. */}
+          <button
+            type="button"
+            disabled={sent || busy}
+            onClick={express}
+            className={`flex-1 rounded-full py-2 text-sm tracking-wide transition-colors ${
+              sent
+                ? "bg-gold-soft text-gold-ink cursor-default"
+                : "border border-line text-ink hover:border-navy"
+            }`}
+          >
+            {sent ? tr("Interest sent") : tr("Express Interest")}
+          </button>
+          <Link
+            href={`/profile/${profile.slug}`}
+            className="flex-1 rounded-full bg-navy py-2 text-sm text-white text-center tracking-wide hover:bg-navy-dark transition-colors"
+          >
+            {tr("Full Profile")}
+          </Link>
+        </>
       }
     />
   );
