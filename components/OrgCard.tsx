@@ -184,14 +184,24 @@ export function OrgCard({
     </div>
   );
 
+  // min-w-0 on BOTH roots: this card is a grid item on /orgs, and a grid item
+  // defaults to min-width:auto — it refuses to shrink below its content's
+  // min-content width. Measured at 390px the card laid out at 400px inside a
+  // 342px track and the page scrolled 34px sideways; truncate INSIDE the card
+  // cannot fix a card that was never constrained. Same root cause as the
+  // /founders and dashboard column fixes.
   if (action) {
-    return <Card padding="sm">{body}</Card>;
+    return (
+      <Card padding="sm" className="min-w-0">
+        {body}
+      </Card>
+    );
   }
 
   return (
     <Link
       href={target}
-      className="block bg-white rounded-3xl shadow-xs p-5 hover:shadow-sm transition-shadow group"
+      className="block min-w-0 bg-white rounded-3xl shadow-xs p-5 hover:shadow-sm transition-shadow group"
     >
       {body}
     </Link>
