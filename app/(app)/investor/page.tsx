@@ -49,7 +49,7 @@ export default async function InvestorPage({
   return (
     <div className="px-6 lg:px-10 py-[88px]">
         {editing ? (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-[640px] mx-auto">
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               {await tServer("Investor")}
             </p>
@@ -68,7 +68,7 @@ export default async function InvestorPage({
             </div>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-[640px] mx-auto">
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               {await tServer("Investor")}
             </p>

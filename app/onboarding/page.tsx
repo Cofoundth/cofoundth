@@ -73,7 +73,7 @@ export default async function OnboardingPage() {
   return (
     <>
       <header className="bg-white border-b border-line">
-        <div className="max-w-3xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
+        <div className="max-w-[640px] mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <BrandMark size="sm" />
             <Wordmark className="text-base" />

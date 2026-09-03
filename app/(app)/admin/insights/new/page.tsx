@@ -14,7 +14,7 @@ export default async function NewInsightPage() {
   if (!(await isAdminUser(supabase, user))) notFound();
 
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-10 py-[88px]">
+    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/admin/insights"
         className="text-sm text-ink-muted hover:text-navy mb-6 inline-flex items-center gap-1.5"

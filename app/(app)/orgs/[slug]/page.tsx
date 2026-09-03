@@ -289,7 +289,7 @@ export default async function OrgPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-[88px]">
+    <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-10 py-[88px]">
       <Link
         href="/orgs"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"

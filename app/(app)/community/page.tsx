@@ -44,7 +44,7 @@ export default async function CommunityPage({
   const browseFoundersLabel = await tServer("Browse founders");
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
+    <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       <div className="mb-8 pb-8 border-b border-line">
         <div className="max-w-[640px]">
           <h1 className="text-d3 mb-2">

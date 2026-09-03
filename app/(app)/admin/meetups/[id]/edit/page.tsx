@@ -35,7 +35,7 @@ export default async function EditMeetupPage({ params }: Props) {
   const meetup = data as Meetup;
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
+    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-10">
       <Link
         href="/admin/meetups"
         className="text-sm text-ink-muted hover:text-navy mb-6 inline-flex items-center gap-1.5"

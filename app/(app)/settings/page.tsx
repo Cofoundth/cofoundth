@@ -73,7 +73,7 @@ export default async function SettingsPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
+    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-d2">{t.title}</h1>
         <Link

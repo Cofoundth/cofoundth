@@ -275,7 +275,7 @@ export default async function ProfileDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-[88px]">
+    <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-10 py-[88px]">
       {relationship === "incoming" && !isOwnProfile && (
         <IncomingInterestBanner toId={profile.id} otherName={otherName} />
       )}

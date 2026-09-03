@@ -205,6 +205,22 @@ tuned per component and is deliberately NOT on this scale.
 - Reading/article pages keep a narrow column; only the rhythm applies
 - Chat/conversation views are full-height and take no vertical rhythm
 
+**Those two numbers are the whole vocabulary.** A page-level container is either
+`max-w-[1120px]` or `max-w-[640px]` — Tailwind'"'"'s `max-w-2xl/3xl/4xl/5xl` presets
+are not part of the system and reading one back tells you the page predates the
+rule. Which of the two:
+
+| Page shape | Width |
+|---|---|
+| Single column — forms, editors, settings, onboarding, propose | `max-w-[640px]` |
+| Grid or main+aside — directories, feeds, profile and org detail | `max-w-[1120px]`, with the intro block `max-w-[640px]` inside it |
+| Reading/article, chat | exempt, per the two rules above |
+
+640 is not arbitrary for forms: it puts a full-width field at 560px and a
+two-column row at 272px each, and the insight editor'"'"'s body textarea lands at
+~80 characters per line. Inner blocks, modals and skeletons are components, not
+page containers, and this does not apply to them.
+
 ### App chrome — sidebar, not top nav
 Same split their product uses:
 - **App routes** (`app/(app)/*`, including `/investor`): `components/AppSidebar.tsx` — a

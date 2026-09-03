@@ -21,7 +21,7 @@ export default async function NewAskPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
+    <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/companies/requests"
         className="text-sm text-ink-muted hover:text-navy mb-6 inline-flex items-center gap-1.5"
