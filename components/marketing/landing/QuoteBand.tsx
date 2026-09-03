@@ -18,7 +18,7 @@ export function QuoteBand({ locale }: { locale: Locale }) {
   return (
     <section
       aria-labelledby="founder-note-heading"
-      className="py-[104px] bg-navy text-white"
+      className="py-[88px] bg-navy text-white"
     >
       <div className="max-w-3xl mx-auto px-6 lg:px-10">
         <Quote className="w-10 h-10 text-gold mb-8" strokeWidth={1} aria-hidden="true" />

@@ -28,7 +28,7 @@ export function LandingCta({
   const showCount = founderCount >= SOCIAL_PROOF_FLOOR;
 
   return (
-    <section className="border-t border-line bg-cream py-[104px]">
+    <section className="border-t border-line bg-cream py-[88px]">
       <div className="mx-auto max-w-[780px] px-6 text-center lg:px-10">
         <h2 className="text-d3 lg:text-d4">
           {tr("It's still early — which is the best reason to join now.")}

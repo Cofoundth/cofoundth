@@ -29,7 +29,7 @@ export default async function InsightsPage() {
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       {/* Narrow intro over a wide grid — their editorial rhythm. */}
-      <div className="max-w-[640px] mb-14">
+      <div className="max-w-[640px] mb-8">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tr("Insights")}
         </div>

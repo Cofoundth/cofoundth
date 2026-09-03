@@ -39,7 +39,7 @@ const EVENTS: Event[] = [
 export default function EventsPage() {
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
-      <div className="mb-16 max-w-[640px]">
+      <div className="mb-8 max-w-[640px]">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           Community
         </div>

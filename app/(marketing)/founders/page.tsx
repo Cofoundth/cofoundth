@@ -38,7 +38,7 @@ export default async function PublicFoundersPage() {
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]">
       {/* Header */}
-      <div className="max-w-[640px] mb-12">
+      <div className="max-w-[640px] mb-8">
         <Eyebrow className="mb-6">{tr("Community")}</Eyebrow>
         <h1 className="text-d2 lg:text-d3 mb-4">
           {tr("Founders")}

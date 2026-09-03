@@ -57,7 +57,7 @@ export default async function InsightPage({ params }: Props) {
     <article className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/insights"
-        className="text-sm text-ink-muted hover:text-navy mb-10 inline-flex items-center gap-1.5"
+        className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
       >
         <ArrowLeft className="w-4 h-4" /> {tr("All insights")}
       </Link>
@@ -68,7 +68,7 @@ export default async function InsightPage({ params }: Props) {
       <h1 className="text-d2 lg:text-d3 mb-6">
         {insight.title}
       </h1>
-      <div className="text-sm text-ink-muted pb-10 mb-10 border-b border-line">
+      <div className="text-sm text-ink-muted pb-8 mb-8 border-b border-line">
         {insight.published_at
           ? new Date(insight.published_at).toLocaleDateString(
               locale === "th" ? "th-TH" : "en-GB",

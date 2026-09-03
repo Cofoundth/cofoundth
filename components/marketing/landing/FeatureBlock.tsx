@@ -44,7 +44,7 @@ export function FeatureBlock({
   className,
 }: FeatureBlockProps) {
   return (
-    <section className={cn("py-[100px]", className)}>
+    <section className={cn("py-[88px]", className)}>
       <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Text — always first in the DOM, visually flipped by `reverse`. */}

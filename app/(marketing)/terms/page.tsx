@@ -10,7 +10,7 @@ export default function TermsPage() {
     <article className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
       <Link
         href="/"
-        className="text-sm text-ink-muted hover:text-navy mb-10 inline-flex items-center gap-1.5"
+        className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
       >
         <ArrowLeft className="w-4 h-4" /> Back to home
       </Link>
@@ -21,7 +21,7 @@ export default function TermsPage() {
       <h1 className="text-d2 lg:text-d3 mb-4">
         Terms of Service
       </h1>
-      <p className="text-sm text-ink-muted pb-10 mb-10 border-b border-line">
+      <p className="text-sm text-ink-muted pb-8 mb-8 border-b border-line">
         Last updated: May 2026 &middot; Effective immediately
       </p>
 

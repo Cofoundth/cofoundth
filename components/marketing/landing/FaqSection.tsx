@@ -34,9 +34,9 @@ export function FaqSection({ locale }: { locale: Locale }) {
   const tr = (en: string) => t(en, locale);
 
   return (
-    <section className="py-[104px] bg-white border-t border-line">
+    <section className="py-[88px] bg-white border-t border-line">
       <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
-        <div className="max-w-[640px] mb-12">
+        <div className="max-w-[640px] mb-8">
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
             {tr("Questions")}
           </div>

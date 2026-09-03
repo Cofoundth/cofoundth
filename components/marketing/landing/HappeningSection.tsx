@@ -34,9 +34,9 @@ export function HappeningSection({
   const tr = (en: string) => t(en, locale);
 
   return (
-    <section className="py-[100px]">
+    <section className="py-[88px]">
       <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
-        <div className="max-w-[640px] mb-12">
+        <div className="max-w-[640px] mb-8">
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
             {tr("Happening now")}
           </div>

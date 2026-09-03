@@ -41,7 +41,7 @@ export default async function ContactPage() {
 
   return (
     <>
-      <section className="py-[104px] bg-cream border-b border-line">
+      <section className="py-[88px] bg-cream border-b border-line">
         <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
           <div className="max-w-[640px]">
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
@@ -66,9 +66,9 @@ export default async function ContactPage() {
         </div>
       </section>
 
-      <section className="py-[104px] bg-white">
+      <section className="py-[88px] bg-white">
         <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
-          <div className="max-w-[640px] mb-12">
+          <div className="max-w-[640px] mb-8">
             <h2 className="text-d2 lg:text-d3">
               {tr("What people usually write about.")}
             </h2>

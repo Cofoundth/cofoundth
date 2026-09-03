@@ -19,7 +19,7 @@ export default async function NewMeetupPage() {
     <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-10">
       <Link
         href="/admin/meetups"
-        className="text-sm text-ink-muted hover:text-navy mb-6 inline-flex items-center gap-1.5"
+        className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
       >
         <ArrowLeft className="w-4 h-4" /> All meetups
       </Link>
