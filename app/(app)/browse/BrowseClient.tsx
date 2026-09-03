@@ -14,7 +14,6 @@ import {
 import {
   type ProfileLike,
   ROLE_LABELS,
-  INTENT_LABELS,
   STAGE_LABELS,
   COMMITMENT_LABELS,
 } from "@/lib/matching";
@@ -770,155 +769,108 @@ function ProfileCard({ profile }: { profile: Profile }) {
   const tr = useT();
   const isCompany = profile.type === "company";
   const isNew = isWithinMs(profile.created_at, 7 * DAY_MS);
-  const roles = (profile.i_am ?? [])
-    .map((r) => tr(ROLE_LABELS[r]))
-    .filter(Boolean);
-  const intent = (profile.intent ?? [])
-    .map((x) => tr(INTENT_LABELS[x]))
-    .filter(Boolean);
+  const roles = (profile.i_am ?? []).map((r) => tr(ROLE_LABELS[r])).filter(Boolean);
   const lookingFor = (profile.looking_for ?? [])
     .map((r) => tr(ROLE_LABELS[r]))
     .filter(Boolean);
   // Idea-havers sell the project; explorers sell their track record.
   const hasIdea = (profile.intent ?? []).includes("idea");
+  const title =
+    isCompany && profile.company_name ? profile.company_name : profile.full_name;
+  const blurb = hasIdea
+    ? profile.pitch
+    : profile.work_experience || profile.background || profile.pitch;
+
   return (
     <Link
       href={`/profile/${profile.slug}`}
-      className="group flex h-full flex-col bg-white rounded-3xl shadow-xs hover:shadow-sm transition-shadow"
+      className="group flex h-full flex-col p-5 bg-white rounded-3xl shadow-xs hover:shadow-sm transition-shadow"
     >
-      {/* No items-start: the content column must STRETCH for the footer's
-          mt-auto to have space to push into, which is what aligns footers
-          across a row. The avatar keeps its own size via self-start. */}
-      <div className="flex flex-1 gap-3 p-5">
+      {/* Header: the avatar shares a 48px row with the name and location, and
+          NOTHING below it is indented past the avatar. Previously the avatar
+          sat in a left column and every other row — chips, pitch, footer —
+          started 60px in, which left an empty gutter down the whole card. */}
+      <div className="flex shrink-0 items-center gap-3">
         <Avatar name={profile.full_name} url={profile.photo_url} size="md" />
-
-        <div className="flex min-w-0 flex-1 flex-col">
-          {/* Who */}
-          <h3 className="text-xl leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors line-clamp-2 min-h-[58px]">
-            {isCompany && profile.company_name
-              ? profile.company_name
-              : profile.full_name}
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
+          <h3 className="flex items-center gap-1.5 text-lg leading-tight group-hover:text-gold-ink transition-colors">
+            {/* One line. At 20px this wrapped and every card had to reserve
+                two lines for it. */}
+            <span className="truncate">{title}</span>
             {profile.verified && (
               <BadgeCheck
                 className="w-4 h-4 text-gold-ink shrink-0"
                 strokeWidth={2}
               />
             )}
-            {isNew && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink font-sans rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse motion-reduce:animate-none" />
-                {tr("New")}
-              </span>
-            )}
             {isCompany && (
-              <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink rounded-full">
-                <Building2 className="w-2.5 h-2.5" strokeWidth={2} />
-                {tr("Company")}
-              </span>
-            )}
-            {profile.age && !isCompany && (
-              <span className="text-ink-muted text-base font-sans">
-                , {profile.age}
-              </span>
+              <Building2 className="w-3.5 h-3.5 text-gold-ink shrink-0" strokeWidth={2} />
             )}
           </h3>
-          {/* One line, clipped. This wrapped to two lines on cards with a long
-                province plus two intents, and that 20px was the last thing
-                stopping every card in a row from being identical: meta 16px
-                gave a 20px gap before the footer, meta 36px gave 0. The intent
-                is already stated by the active tab above the grid. */}
-            <div className="mt-1 flex items-center gap-x-2.5 text-xs text-ink-muted h-4 overflow-hidden">
+          <div className="mt-0.5 flex h-4 items-center gap-x-2 overflow-hidden text-xs text-ink-muted">
             {profile.location && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="w-3 h-3" />{" "}
-                {provinceLabel(profile.location, locale)}
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <MapPin className="w-3 h-3 shrink-0" />
+                <span className="truncate">
+                  {provinceLabel(profile.location, locale)}
+                </span>
               </span>
             )}
-            {intent.length > 0 && (
-              <span className="text-gold-ink">{intent.join(" · ")}</span>
-            )}
-          </div>
-            {/* Role is identity, so it sits under the meta line unlabelled.
-                As its own labelled section it cost ~60px for three one-word
-                chips. */}
-            {!isCompany && roles.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {roles.slice(0, 3).map((r) => (
-                  <span
-                    key={r}
-                    className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03] rounded-full"
-                  >
-                    {r}
-                  </span>
-                ))}
-              </div>
-            )}
-
-          {/* Two blocks, not six. Everything else — project images and link,
-              experience, education, skills — is on the profile, one click away.
-              A directory card answers "is this worth opening", and Onfound's
-              equivalent card carries 12 text nodes against our previous ~40. */}
-          <div className="mt-3 space-y-3">
-            {isCompany ? (
-              profile.pitch && (
-                <p className="text-sm leading-relaxed text-ink line-clamp-2 min-h-[45.5px]">
-                  {profile.pitch}
-                </p>
-              )
-            ) : (
-              <>
-                {(hasIdea
-                  ? profile.pitch
-                  : profile.work_experience || profile.background) && (
-                  <p className="text-sm leading-relaxed text-ink line-clamp-2 min-h-[45.5px]">
-                    {hasIdea
-                      ? profile.pitch
-                      : profile.work_experience || profile.background}
-                  </p>
-                )}
-                {lookingFor.length > 0 && (
-                  <LabeledRow label={tr("Looking for")} icon={Search}>
-                    <div className="flex flex-wrap gap-1.5">
-                      {lookingFor.slice(0, 3).map((r) => (
-                        <span
-                          key={r}
-                          className="px-2 py-0.5 text-xs border border-line text-gold-ink bg-gold-soft rounded-full"
-                        >
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                  </LabeledRow>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Rendered on EVERY card, industries or not. Onfound's footer is a
-              constant 36px on all of theirs, and a card that simply lacks the
-              row is the loudest asymmetry in a grid — one card ending on chips
-              while its neighbours end on a bordered row reads as broken.
-              Two industries max so it never wraps to a second line. */}
-          {/* ONE row, always, at a fixed height. Capping the count was not
-              enough — "Software & IT Services" beside "Design & Creative"
-              still wrapped, giving footers of 41px and 66px in the same grid.
-              nowrap + min-w-0 lets a long name ellipsis instead of wrapping,
-              so this row is 41px on every card the way Onfound's is 36px on
-              every one of theirs. */}
-          <div className="mt-auto pt-4 border-t border-line h-[41px] flex items-center gap-2 text-xs text-ink-muted overflow-hidden">
-            {profile.industry.slice(0, 2).map((i) => (
-              <span
-                key={i}
-                className="px-2 py-0.5 border border-line rounded-full min-w-0 truncate"
-              >
-                {i}
-              </span>
-            ))}
-            {profile.industry.length > 2 && (
-              <span className="shrink-0">+{profile.industry.length - 2}</span>
+            {isNew && (
+              <span className="shrink-0 text-gold-ink">{tr("New")}</span>
             )}
           </div>
         </div>
+      </div>
+
+      {/* Body — full card width, three fixed rows. */}
+      <div className="mt-4 flex flex-1 flex-col gap-3">
+        {!isCompany && roles.length > 0 && (
+          <div className="flex h-[22px] flex-wrap gap-1.5 overflow-hidden">
+            {roles.slice(0, 3).map((r) => (
+              <span
+                key={r}
+                className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03] rounded-full"
+              >
+                {r}
+              </span>
+            ))}
+          </div>
+        )}
+        {blurb && (
+          <p className="text-sm leading-relaxed text-ink line-clamp-2 min-h-[45.5px]">
+            {blurb}
+          </p>
+        )}
+        {!isCompany && lookingFor.length > 0 && (
+          <LabeledRow label={tr("Looking for")} icon={Search}>
+            <div className="flex h-[22px] flex-wrap gap-1.5 overflow-hidden">
+              {lookingFor.slice(0, 3).map((r) => (
+                <span
+                  key={r}
+                  className="px-2 py-0.5 text-xs border border-line text-gold-ink bg-gold-soft rounded-full"
+                >
+                  {r}
+                </span>
+              ))}
+            </div>
+          </LabeledRow>
+        )}
+      </div>
+
+      {/* Footer — full card width, one row, fixed height on every card. */}
+      <div className="mt-auto pt-4 border-t border-line h-[41px] flex items-center gap-2 text-xs text-ink-muted overflow-hidden">
+        {profile.industry.slice(0, 2).map((i) => (
+          <span
+            key={i}
+            className="px-2 py-0.5 border border-line rounded-full min-w-0 truncate"
+          >
+            {i}
+          </span>
+        ))}
+        {profile.industry.length > 2 && (
+          <span className="shrink-0">+{profile.industry.length - 2}</span>
+        )}
       </div>
     </Link>
   );
