@@ -54,10 +54,12 @@ export default async function AdminPostsPage() {
       <AdminTabs />
       <div className="mb-8">
         <div className="max-w-[640px]">
-          <h1 className="text-d2 mb-2">Posts</h1>
-          <p className="text-sm text-ink-muted">
-            {posts.length} total · {hiddenCount} hidden
-          </p>
+          <div className="flex min-w-0 items-baseline gap-2.5">
+            <h1 className="text-d2 truncate">Posts</h1>
+            <span className="shrink-0 text-sm text-ink-muted">
+              {posts.length} total · {hiddenCount} hidden
+            </span>
+          </div>
         </div>
       </div>
 

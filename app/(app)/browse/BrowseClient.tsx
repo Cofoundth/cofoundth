@@ -236,13 +236,17 @@ export function BrowseClient({ others }: Props) {
   return (
     <Section>
       <div className="mb-8">
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-d2 mb-2">{tr("All founders")}</h1>
-            <p className="text-sm text-ink-muted">
+        <div className="flex items-end justify-between gap-4">
+          {/* Title and count share one baseline row, the way Onfound pair
+              theirs ("Founders   273 founders" — h2 + a shrink-0 muted span on
+              flex items-baseline). Stacked, the count read as a second heading
+              line and spent a whole row on a page someone opens daily. */}
+          <div className="flex min-w-0 items-baseline gap-2.5">
+            <h1 className="text-d2 truncate">{tr("All founders")}</h1>
+            <span className="shrink-0 text-sm text-ink-muted">
               {filtered.length}{" "}
               {tr(filtered.length === 1 ? "founder" : "founders")}
-            </p>
+            </span>
           </div>
           {activeFilterCount > 0 && (
             <button

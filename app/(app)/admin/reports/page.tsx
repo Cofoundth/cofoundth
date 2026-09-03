@@ -74,13 +74,15 @@ export default async function AdminReportsPage() {
       <AdminTabs />
       <div className="mb-8">
         <div className="max-w-[640px]">
-          <h1 className="text-d2 mb-2">{await tServer("Reports")}</h1>
-          <p className="text-sm text-ink-muted">
-            {(await tServer("{n} reports total")).replace(
-              "{n}",
-              String(reports?.length ?? 0),
-            )}
-          </p>
+          <div className="flex min-w-0 items-baseline gap-2.5">
+            <h1 className="text-d2 truncate">{await tServer("Reports")}</h1>
+            <span className="shrink-0 text-sm text-ink-muted">
+              {(await tServer("{n} reports total")).replace(
+                "{n}",
+                String(reports?.length ?? 0),
+              )}
+            </span>
+          </div>
         </div>
       </div>
 

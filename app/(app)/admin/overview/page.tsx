@@ -108,11 +108,13 @@ export default async function AdminOverviewPage() {
       <AdminTabs />
       <div className="mb-8">
         <div className="max-w-[640px]">
-          <h1 className="text-d2 mb-2">Overview</h1>
-          <p className="text-sm text-ink-muted">
-            {openReports ?? 0} open report{openReports === 1 ? "" : "s"} · last{" "}
-            {DAYS} days
-          </p>
+          <div className="flex min-w-0 items-baseline gap-2.5">
+            <h1 className="text-d2 truncate">Overview</h1>
+            <span className="shrink-0 text-sm text-ink-muted">
+              {openReports ?? 0} open report{openReports === 1 ? "" : "s"} ·
+              last {DAYS} days
+            </span>
+          </div>
         </div>
       </div>
 

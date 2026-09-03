@@ -48,10 +48,12 @@ export default async function AdminUsersPage() {
       <AdminTabs />
       <div className="mb-8">
         <div className="max-w-[640px]">
-          <h1 className="text-d2 mb-2">Users</h1>
-          <p className="text-sm text-ink-muted">
-            {total} total · {active} active · {hidden} hidden
-          </p>
+          <div className="flex min-w-0 items-baseline gap-2.5">
+            <h1 className="text-d2 truncate">Users</h1>
+            <span className="shrink-0 text-sm text-ink-muted">
+              {total} total · {active} active · {hidden} hidden
+            </span>
+          </div>
         </div>
       </div>
 
