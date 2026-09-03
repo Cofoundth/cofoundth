@@ -126,10 +126,12 @@ export default async function OrgsPage({
   return (
     <Section>
       <div className="flex items-end justify-between mb-8">
-        <div className="max-w-[640px]">
-          <h1 className="text-d2">
-            {await tServer("Companies")}
-          </h1>
+        <div className="flex min-w-0 items-baseline gap-2.5">
+          <h1 className="text-d2 truncate">{await tServer("Companies")}</h1>
+          <span className="shrink-0 text-sm text-ink-muted">
+            {directory.length}{" "}
+            {await tServer(directory.length === 1 ? "company" : "companies")}
+          </span>
         </div>
         {!isInvestor && (
           <Link

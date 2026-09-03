@@ -26,7 +26,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { MapPin } from "lucide-react";
-import { Card, VerifiedBadge } from "@/components/ui";
+import {
+  Card,
+  CardChip,
+  CardLabel,
+  SectorList,
+  VerifiedBadge,
+} from "@/components/ui";
 
 export type OrgCardOrg = {
   id: string;
@@ -66,31 +72,6 @@ export function OrgLogo({
   );
 }
 
-function CardTags({ label, items }: { label: string; items: string[] }) {
-  if (!items.length) return null;
-  const shown = items.slice(0, 3);
-  const extra = items.length - shown.length;
-  return (
-    <div className="mt-2.5">
-      <div className="text-xs uppercase tracking-wider text-gold-ink mb-1">
-        {label}
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {shown.map((c) => (
-          <span
-            key={c}
-            className="text-xs text-ink border border-line bg-cream px-2 py-0.5 rounded-full"
-          >
-            {c}
-          </span>
-        ))}
-        {extra > 0 && (
-          <span className="text-[11px] text-ink-muted self-center">+{extra}</span>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export type OrgCardProps = {
   org: OrgCardOrg;
@@ -128,7 +109,6 @@ export function OrgCard({
   footer,
   href,
 }: OrgCardProps) {
-  const hasMeta = org.location || org.industry?.length;
   const target = href ?? `/orgs/${org.slug}`;
   // Whole-card link → the title tracks the card's hover. Action card → the
   // title IS the link, so it owns its own hover.
@@ -136,51 +116,83 @@ export function OrgCard({
     ? "font-serif text-lg text-navy truncate transition-colors"
     : "font-serif text-lg text-navy truncate group-hover:text-gold-ink transition-colors";
 
+  // The directory-card skeleton /browse and /founders run: a 48px header row
+  // (logo | name + meta | right cluster) with NOTHING below it indented past
+  // the logo, then full-width body rows at RESERVED heights so every card in
+  // a row shares one y-grid. The old shape put the logo in a left column and
+  // indented every row beside it — the same notch anatomy the founder cards
+  // dropped.
   const body = (
-    <div className="flex items-start gap-4">
-      <OrgLogo org={org} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className={titleCls}>
+    <div className="h-full flex flex-col">
+      <div className="shrink-0 flex gap-3 items-center">
+        <OrgLogo org={org} />
+        <div className="flex flex-col justify-center min-w-0 flex-1 overflow-hidden">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold leading-none">
             {action ? (
               <Link
                 href={target}
-                className="hover:text-gold-ink transition-colors"
+                className="truncate hover:text-gold-ink transition-colors"
               >
                 {org.name}
               </Link>
             ) : (
-              org.name
-            )}
-          </h3>
-          {org.verified && <VerifiedBadge label={verifiedLabel} />}
-          {role && (
-            <span className="text-xs uppercase tracking-wider text-ink-muted border border-line px-1.5 py-0.5 shrink-0 rounded-full">
-              {role}
-            </span>
-          )}
-        </div>
-        {org.tagline && (
-          <p className="text-sm text-ink mt-1 line-clamp-2">{org.tagline}</p>
-        )}
-        {hasMeta && (
-          <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted">
-            {org.location && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-gold-ink" />
-                {org.location}
+              <span className={`truncate ${titleCls.includes("group-hover") ? "group-hover:text-gold-ink transition-colors" : ""}`}>
+                {org.name}
               </span>
             )}
-            {org.industry?.length ? (
-              <span className="truncate">{org.industry.join(" · ")}</span>
-            ) : null}
+            {org.verified && <VerifiedBadge label={verifiedLabel} />}
+            {role && (
+              <span className="text-xs normal-case tracking-normal text-ink-muted border border-line px-1.5 py-0.5 shrink-0 rounded-full">
+                {role}
+              </span>
+            )}
+          </h3>
+          {org.location && (
+            <div className="mt-1.5 flex items-center gap-1 text-xs text-ink-muted overflow-hidden">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{org.location}</span>
+            </div>
+          )}
+        </div>
+        {action && <div className="shrink-0">{action}</div>}
+      </div>
+
+      <div className="mt-4 flex flex-col gap-4 flex-1 min-h-0">
+        {/* Sectors as the marked dot-run, reserved even when empty. */}
+        <div className="flex h-[21px] items-center overflow-hidden">
+          <SectorList items={org.industry ?? []} />
+        </div>
+
+        {org.tagline && (
+          <p className="text-xs leading-relaxed text-ink-muted line-clamp-2 min-h-[39px]">
+            {org.tagline}
+          </p>
+        )}
+
+        {(org.capabilities ?? []).length > 0 && (
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <CardLabel>{offerLabel}</CardLabel>
+            <div className="flex flex-row gap-1.5 overflow-hidden h-[22px]">
+              {(org.capabilities ?? []).slice(0, 3).map((c) => (
+                <CardChip key={c}>{c}</CardChip>
+              ))}
+            </div>
           </div>
         )}
-        <CardTags label={offerLabel} items={org.capabilities ?? []} />
-        <CardTags label={seekingLabel} items={org.partnership_seeking ?? []} />
+
+        {(org.partnership_seeking ?? []).length > 0 && (
+          <div className="mt-auto flex flex-col gap-1.5 min-w-0">
+            <CardLabel>{seekingLabel}</CardLabel>
+            <div className="flex flex-row gap-1.5 overflow-hidden h-[22px]">
+              {(org.partnership_seeking ?? []).slice(0, 3).map((c) => (
+                <CardChip key={c}>{c}</CardChip>
+              ))}
+            </div>
+          </div>
+        )}
+
         {footer}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 
