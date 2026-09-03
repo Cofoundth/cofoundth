@@ -1,0 +1,628 @@
+[
+ {
+  "id": "068a4303-0ff6-44f5-bd54-a6d75e065f01",
+  "slug": "thanee-charattrakool",
+  "industry": [
+   "AI / ML",
+   "SaaS",
+   "Web3 / Crypto",
+   "Creative / Design"
+  ]
+ },
+ {
+  "id": "0713149e-c4ea-4b91-9c34-b361d4d7dfbb",
+  "slug": "akkarapon-maneerat",
+  "industry": [
+   "Foodtech"
+  ]
+ },
+ {
+  "id": "07b089d6-521f-416f-bbf8-191219aad345",
+  "slug": "decha-aroonsri",
+  "industry": [
+   "Agritech"
+  ]
+ },
+ {
+  "id": "0c1a271c-6566-435b-af4d-845388c8ea35",
+  "slug": "wichai-boonmee",
+  "industry": [
+   "Fintech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "0e64a710-30f2-4180-8c91-454ccc5ec4c2",
+  "slug": "natdanai-viengsima",
+  "industry": [
+   "E-commerce",
+   "Manufacturing",
+   "Data / Analytics"
+  ]
+ },
+ {
+  "id": "1ada4d4a-d6f1-47fa-b9d6-bffdcb255a11",
+  "slug": "korn-visetsin",
+  "industry": [
+   "Agritech"
+  ]
+ },
+ {
+  "id": "1d27f728-1bdb-4c13-bcc7-4e1c13d7bf7b",
+  "slug": "tidanat-kumpuak",
+  "industry": [
+   "Real Estate"
+  ]
+ },
+ {
+  "id": "1e146004-9415-4f5c-bd5b-747042fa334c",
+  "slug": "james-t",
+  "industry": [
+   "Cybersecurity",
+   "AgriTech",
+   "Hardware / IoT",
+   "Travel",
+   "Data / Analytics",
+   "Social Impact",
+   "Gaming"
+  ]
+ },
+ {
+  "id": "1f9e4799-5cf9-4452-9a42-92826b030d56",
+  "slug": "wiwat-prasai",
+  "industry": [
+   "Creative / Design",
+   "Social Impact",
+   "MarTech",
+   "Travel",
+   "Media / Content",
+   "Food & Beverage",
+   "Sustainability",
+   "PR"
+  ]
+ },
+ {
+  "id": "204de7a0-566c-4c32-b57a-cb0ac5dd9b1d",
+  "slug": "founder-204de7a0",
+  "industry": [
+   "E-commerce"
+  ]
+ },
+ {
+  "id": "24fd0e85-b91b-4490-9233-a39955ac2393",
+  "slug": "founder-24fd0e85",
+  "industry": [
+   "SaaS"
+  ]
+ },
+ {
+  "id": "2ec3c6e5-5ff6-4c89-912b-df16983431f5",
+  "slug": "founder-2ec3c6e5",
+  "industry": [
+   "Edtech"
+  ]
+ },
+ {
+  "id": "3029cf31-54c3-4398-aa4f-628f820da66f",
+  "slug": "setthapong-kittisak",
+  "industry": [
+   "Healthtech"
+  ]
+ },
+ {
+  "id": "31636853-52ef-45b6-a13b-d6499f1af01b",
+  "slug": "phurin-lertwattana",
+  "industry": [
+   "Proptech"
+  ]
+ },
+ {
+  "id": "3198456a-c0d1-4c06-b9a7-bd2cff8b6bd6",
+  "slug": "apinya-saetang",
+  "industry": [
+   "Logistics"
+  ]
+ },
+ {
+  "id": "377962ff-b90d-40c8-b80f-9a860cf6db21",
+  "slug": "benjawan-itthichai",
+  "industry": [
+   "Edtech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "4728d854-d55b-4cea-a90a-720f8cbb1014",
+  "slug": "founder-4728d854",
+  "industry": [
+   "Fintech"
+  ]
+ },
+ {
+  "id": "4a02a0da-4d3a-457a-b968-dc02e7335d94",
+  "slug": "ava-s",
+  "industry": [
+   "HealthTech",
+   "E-commerce",
+   "Consumer",
+   "Sustainability",
+   "Media / Content",
+   "Travel",
+   "Food & Beverage",
+   "Wellness",
+   "Real Estate",
+   "Data / Analytics"
+  ]
+ },
+ {
+  "id": "4d9d8cd2-c632-4432-bedf-9d35e5828459",
+  "slug": "wiriyachai-pingmaung",
+  "industry": [
+   "E-commerce",
+   "Creative / Design",
+   "Cybersecurity",
+   "Data / Analytics"
+  ]
+ },
+ {
+  "id": "5818b5cc-6b27-43e8-ba95-0fa5f8b55415",
+  "slug": "founder-5818b5cc",
+  "industry": [
+   "Healthtech"
+  ]
+ },
+ {
+  "id": "5c8903f9-70e3-4c7b-aea2-486eb1caa013",
+  "slug": "founder-5c8903f9",
+  "industry": [
+   "Foodtech",
+   "E-commerce"
+  ]
+ },
+ {
+  "id": "5f6180c4-5cc1-4748-910d-fa56030fb70f",
+  "slug": "chayanon-rodjanawon",
+  "industry": [
+   "PropTech"
+  ]
+ },
+ {
+  "id": "6593d78f-6940-462f-9e0f-8e39fbbdcdc6",
+  "slug": "natthida-phromma",
+  "industry": [
+   "Traveltech"
+  ]
+ },
+ {
+  "id": "68c8bed2-8ce9-4643-81b0-5da1c40928df",
+  "slug": "malee-pinyo",
+  "industry": [
+   "Logistics"
+  ]
+ },
+ {
+  "id": "68e88a52-3260-4e98-8d4f-1e6dfa651f4f",
+  "slug": "yupin-thawat",
+  "industry": [
+   "Traveltech"
+  ]
+ },
+ {
+  "id": "693683c7-c1b0-47e1-865f-9c7f0aedaf65",
+  "slug": "founder-693683c7",
+  "industry": [
+   "Foodtech"
+  ]
+ },
+ {
+  "id": "6cac3346-f555-4a06-a3ee-aa187048df86",
+  "slug": "test-user-2",
+  "industry": [
+   "Foodtech"
+  ]
+ },
+ {
+  "id": "740d452c-280a-4a5a-bcad-793719c992cd",
+  "slug": "founder-740d452c",
+  "industry": [
+   "FinTech",
+   "Logistics",
+   "Gaming",
+   "Web3 / Crypto",
+   "Real Estate",
+   "DeepTech",
+   "Travel",
+   "Food & Beverage"
+  ]
+ },
+ {
+  "id": "7710b468-428f-4dff-94b8-58045d916273",
+  "slug": "founder-7710b468",
+  "industry": [
+   "FinTech",
+   "E-commerce",
+   "Web3 / Crypto",
+   "Hardware / IoT",
+   "Gaming",
+   "HealthTech",
+   "Consumer"
+  ]
+ },
+ {
+  "id": "7b2864b9-c22b-45c8-a650-c6a6c8a2249b",
+  "slug": "founder-7b2864b9",
+  "industry": [
+   "Healthtech"
+  ]
+ },
+ {
+  "id": "83b197c6-0fc6-47b7-b301-f788257fe2bb",
+  "slug": "wasit-jingjit",
+  "industry": [
+   "SaaS",
+   "AI / ML",
+   "Logistics",
+   "MarTech",
+   "Creative / Design",
+   "Data / Analytics"
+  ]
+ },
+ {
+  "id": "848ceedf-39d8-46cb-a9b6-a89d58912419",
+  "slug": "sawit-trisirisatayawong",
+  "industry": [
+   "Web3 / Crypto",
+   "FinTech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "899623b5-585f-4fe6-b966-2b78164512d8",
+  "slug": "founder-899623b5",
+  "industry": [
+   "E-commerce"
+  ]
+ },
+ {
+  "id": "8a35c1d1-875e-4a34-93c6-500e82689bab",
+  "slug": "founder-8a35c1d1",
+  "industry": [
+   "Fintech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "8c1647d3-1c82-4460-be50-408440af057d",
+  "slug": "louis-sup",
+  "industry": [
+   "E-commerce"
+  ]
+ },
+ {
+  "id": "90f046ce-e803-4000-807f-573279314ab8",
+  "slug": "woradorn-laodhanadhaworn",
+  "industry": [
+   "Hardware / IoT",
+   "Cybersecurity",
+   "SpaceTech",
+   "EmbeddedLinux"
+  ]
+ },
+ {
+  "id": "919839b8-494f-4a3e-850c-4db4e21b0856",
+  "slug": "ratchanok-duangjai",
+  "industry": [
+   "Fintech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "91ee9c2d-aade-443b-851a-7753be279fd6",
+  "slug": "founder-91ee9c2d",
+  "industry": [
+   "Food & Beverage",
+   "Travel",
+   "Logistics",
+   "Social Impact"
+  ]
+ },
+ {
+  "id": "933d2b41-00d7-4f05-aead-e6ccc87c4ac6",
+  "slug": "chaipat-vannapong",
+  "industry": [
+   "FinTech",
+   "E-commerce",
+   "SaaS",
+   "AI / ML",
+   "Gaming",
+   "Data / Analytics",
+   "Cybersecurity",
+   "Manufacturing",
+   "Real Estate"
+  ]
+ },
+ {
+  "id": "974ec719-5071-4292-be42-74c348d0e495",
+  "slug": "takdanai-saiso",
+  "industry": [
+   "E-commerce",
+   "Consumer",
+   "Media / Content",
+   "Travel",
+   "Food & Beverage"
+  ]
+ },
+ {
+  "id": "a837b42b-c437-4a22-b3a2-48e9b230c31e",
+  "slug": "founder-a837b42b",
+  "industry": [
+   "Edtech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "a9a1645c-9d52-428f-a54d-b3b8f7b61798",
+  "slug": "actartdev",
+  "industry": [
+   "FinTech",
+   "E-commerce",
+   "SaaS",
+   "Creative / Design",
+   "Media / Content",
+   "Data / Analytics"
+  ]
+ },
+ {
+  "id": "aa73fc4f-fd46-4d0f-b205-da14baf3c4a3",
+  "slug": "founder-aa73fc4f",
+  "industry": [
+   "Proptech"
+  ]
+ },
+ {
+  "id": "ac04cb03-028e-447c-a0a8-03685cc004a7",
+  "slug": "pim-kunjanaphorn",
+  "industry": [
+   "FinTech",
+   "HealthTech",
+   "SaaS",
+   "Travel",
+   "Climate / Energy"
+  ]
+ },
+ {
+  "id": "ad30d46a-c883-45dd-8e9a-8e34dd9bf9e7",
+  "slug": "founder-ad30d46a",
+  "industry": [
+   "Traveltech"
+  ]
+ },
+ {
+  "id": "b2a3486f-b0e4-4f4a-8db9-672fe86f82d3",
+  "slug": "test-user",
+  "industry": [
+   "Fintech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "b32d67f7-f4be-4e7a-80fe-e3f6e1495546",
+  "slug": "founder-b32d67f7",
+  "industry": [
+   "Logistics"
+  ]
+ },
+ {
+  "id": "ba109dd4-155a-404c-9be8-aca953852875",
+  "slug": "sippapas-mongkoldao",
+  "industry": [
+   "FinTech",
+   "Sustainability",
+   "DeepTech",
+   "AgriTech",
+   "Manufacturing",
+   "Wellness",
+   "EdTech",
+   "Travel"
+  ]
+ },
+ {
+  "id": "be78dd4e-0a7d-4444-9f4b-db3a87b74304",
+  "slug": "tanawat-rojanasak",
+  "industry": [
+   "Foodtech",
+   "E-commerce"
+  ]
+ },
+ {
+  "id": "bfa87722-060a-415a-8c53-e4f9686e331d",
+  "slug": "founder-bfa87722",
+  "industry": [
+   "Agritech"
+  ]
+ },
+ {
+  "id": "c2fc3f3d-18a9-4a53-902d-7bc937e8d8b2",
+  "slug": "founder-c2fc3f3d",
+  "industry": [
+   "Foodtech"
+  ]
+ },
+ {
+  "id": "c324a9b0-bdfd-42b1-a10b-f9b2eb153501",
+  "slug": "founder-c324a9b0",
+  "industry": [
+   "Healthtech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "c3ba382d-a4f5-4d31-8353-d811691c12fc",
+  "slug": "jirawat-nukaew",
+  "industry": [
+   "Logistics",
+   "GovTech"
+  ]
+ },
+ {
+  "id": "c843f560-7233-4595-88e5-e6ac3e05f259",
+  "slug": "surasak-nimit",
+  "industry": [
+   "Proptech"
+  ]
+ },
+ {
+  "id": "cba24c56-3a07-48cc-91d1-b3cedbb38d80",
+  "slug": "panudet-panumas",
+  "industry": [
+   "FinTech",
+   "HealthTech",
+   "AI / ML",
+   "Web3 / Crypto",
+   "Hardware / IoT"
+  ]
+ },
+ {
+  "id": "cd866380-5738-4fec-94ac-db59d3ad0ff4",
+  "slug": "founder-cd866380",
+  "industry": [
+   "Edtech"
+  ]
+ },
+ {
+  "id": "d675184a-2600-4e6d-99c7-0f076ae84844",
+  "slug": "founder-d675184a",
+  "industry": [
+   "E-commerce",
+   "Logistics"
+  ]
+ },
+ {
+  "id": "d9fe22d7-c6a8-4440-8cf2-a78b3b268228",
+  "slug": "ratthamontree-burimas",
+  "industry": [
+   "FinTech",
+   "HealthTech",
+   "Hardware / IoT"
+  ]
+ },
+ {
+  "id": "dcbb19cb-cd62-4599-ab07-b4af14a3beb8",
+  "slug": "phakphum-suwanno",
+  "industry": [
+   "Healthtech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "dd58a3be-5d59-4434-bfe5-d88c9a6a7203",
+  "slug": "test-two",
+  "industry": [
+   "Fintech",
+   "SaaS"
+  ]
+ },
+ {
+  "id": "e0efa939-ce29-4d3d-a46e-378458358ce1",
+  "slug": "chanidapa-wong",
+  "industry": [
+   "Edtech"
+  ]
+ },
+ {
+  "id": "e2821e72-0a23-49c7-a639-866129ea7ba3",
+  "slug": "serlorsx-x",
+  "industry": [
+   "E-commerce",
+   "SaaS",
+   "AI / ML",
+   "Creative / Design",
+   "Cybersecurity"
+  ]
+ },
+ {
+  "id": "e5cb7651-040c-4ae3-9043-423bbedc6ea4",
+  "slug": "suchada-khamphaeng",
+  "industry": [
+   "E-commerce",
+   "Logistics"
+  ]
+ },
+ {
+  "id": "e6978a2c-366a-436b-9d1c-c737ca52bb3c",
+  "slug": "kanya-ratchada",
+  "industry": [
+   "Fintech"
+  ]
+ },
+ {
+  "id": "e95a3db3-2716-4ec6-a5f6-dd5eceb32d52",
+  "slug": "founder-e95a3db3",
+  "industry": [
+   "SaaS"
+  ]
+ },
+ {
+  "id": "f0b2fd46-4299-46eb-87ee-d4eeec2cc8ad",
+  "slug": "xaypanya-phongsa",
+  "industry": [
+   "SaaS",
+   "EdTech"
+  ]
+ },
+ {
+  "id": "f29b10c8-6e3a-42fa-a203-beed27ea590a",
+  "slug": "nopphadon-charoen",
+  "industry": [
+   "SaaS"
+  ]
+ },
+ {
+  "id": "f4160c80-aff9-4835-9e8b-f8d3d9fd2382",
+  "slug": "581201010",
+  "industry": [
+   "Travel",
+   "Logistics"
+  ]
+ },
+ {
+  "id": "f725583f-9167-42ac-9a32-9dd373deb1f3",
+  "slug": "waraporn-siri",
+  "industry": [
+   "E-commerce"
+  ]
+ },
+ {
+  "id": "f8bbadeb-3a64-4d85-a30e-2b5f1bffe138",
+  "slug": "panjapol-b",
+  "industry": [
+   "Logistics",
+   "Travel",
+   "Food & Beverage",
+   "AgriTech",
+   "Manufacturing",
+   "Wellness",
+   "Real Estate",
+   "Consumer",
+   "HealthTech",
+   "E-commerce"
+  ]
+ },
+ {
+  "id": "f989082b-73a2-4bfc-8575-147be081845a",
+  "slug": "founder-f989082b",
+  "industry": [
+   "Logistics"
+  ]
+ },
+ {
+  "id": "fa21dfe5-85e2-4229-91b0-981aea0e14ac",
+  "slug": "kanokwan-chanthanin",
+  "industry": [
+   "Sustainability",
+   "Wellness",
+   "Real Estate",
+   "Food & Beverage"
+  ]
+ }
+]

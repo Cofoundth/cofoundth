@@ -1,0 +1,25 @@
+-- ============================================================================
+-- Grant `authenticated` SELECT on the two columns added in 0059.
+--
+-- Why this is needed at all: SELECT on public.profiles is granted to
+-- `authenticated` COLUMN BY COLUMN, not table-wide. A column-scoped grant does
+-- not extend to columns added later, so `activities` and `help_with` arrived
+-- invisible to every signed-in user while `anon` and `service_role` — which do
+-- hold table-wide grants — could read them fine.
+--
+-- The failure mode was silent and total. PostgREST rejects the whole request
+-- when the select list touches an ungranted column, so `.select(PROFILE_COLUMNS)`
+-- on /browse returned an error rather than rows; the page does `others ?? []`
+-- and rendered "You're the first one here" against a directory of 23 profiles.
+-- Nothing was logged. Same latent break on /settings and the profile page.
+--
+-- Only SELECT is missing: INSERT, UPDATE and REFERENCES were granted table-wide
+-- and already cover both columns, which is why saving would have worked while
+-- reading back did not.
+--
+-- Scope is deliberately these two columns, not `grant select on profiles`.
+-- `email` is the one column `authenticated` is intentionally denied, and a
+-- table-wide grant would quietly expose every member's email address.
+-- ============================================================================
+
+grant select (activities, help_with) on public.profiles to authenticated;
