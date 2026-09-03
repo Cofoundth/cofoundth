@@ -755,6 +755,12 @@ function LabeledRow({
   );
 }
 
+// The name RESERVES two lines (min-h-[58px]) rather than truncating to one.
+// Long Thai names and "Woradorn Laodhanadhaworn" wrap at 20px in a 336px
+// column, so heights came out 29 / 58 / 59 across a row and nothing else in
+// the card could line up. Onfound truncates instead, but their names are 14px
+// Latin — cutting a person's name mid-word to save 29px is the worse trade.
+//
 // The founder grid goes three-up at xl, NOT lg. The design system's card grid
 // (sm:2 lg:3) was measured on MARKETING pages, which have no sidebar. App routes
 // lose 256px to the rail, so lg:grid-cols-3 gives 219px columns at 1024 —
@@ -788,7 +794,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Who */}
-          <h3 className="text-xl leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors line-clamp-2">
+          <h3 className="text-xl leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors line-clamp-2 min-h-[58px]">
             {isCompany && profile.company_name
               ? profile.company_name
               : profile.full_name}
@@ -816,7 +822,12 @@ function ProfileCard({ profile }: { profile: Profile }) {
               </span>
             )}
           </h3>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-muted">
+          {/* One line, clipped. This wrapped to two lines on cards with a long
+                province plus two intents, and that 20px was the last thing
+                stopping every card in a row from being identical: meta 16px
+                gave a 20px gap before the footer, meta 36px gave 0. The intent
+                is already stated by the active tab above the grid. */}
+            <div className="mt-1 flex items-center gap-x-2.5 text-xs text-ink-muted h-4 overflow-hidden">
             {profile.location && (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="w-3 h-3" />{" "}
@@ -850,7 +861,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
           <div className="mt-3 space-y-3">
             {isCompany ? (
               profile.pitch && (
-                <p className="text-sm leading-relaxed text-ink line-clamp-2">
+                <p className="text-sm leading-relaxed text-ink line-clamp-2 min-h-[45.5px]">
                   {profile.pitch}
                 </p>
               )
@@ -859,7 +870,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                 {(hasIdea
                   ? profile.pitch
                   : profile.work_experience || profile.background) && (
-                  <p className="text-sm leading-relaxed text-ink line-clamp-2">
+                  <p className="text-sm leading-relaxed text-ink line-clamp-2 min-h-[45.5px]">
                     {hasIdea
                       ? profile.pitch
                       : profile.work_experience || profile.background}
@@ -883,22 +894,30 @@ function ProfileCard({ profile }: { profile: Profile }) {
             )}
           </div>
 
-          {/* Industries. Rendered only when there ARE industries — this row
-              carries a top border, and an empty one left a rule floating at
-              the bottom of the card. The removed "View profile" affordance
-              had been hiding that by always giving the row content. */}
-          {profile.industry.length > 0 && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-muted mt-auto pt-4 border-t border-line">
-              {profile.industry.slice(0, 3).map((i) => (
-                <span key={i} className="px-2 py-0.5 border border-line rounded-full">
-                  {i}
-                </span>
-              ))}
-              {profile.industry.length > 3 && (
-                <span>+{profile.industry.length - 3}</span>
-              )}
-            </div>
-          )}
+          {/* Rendered on EVERY card, industries or not. Onfound's footer is a
+              constant 36px on all of theirs, and a card that simply lacks the
+              row is the loudest asymmetry in a grid — one card ending on chips
+              while its neighbours end on a bordered row reads as broken.
+              Two industries max so it never wraps to a second line. */}
+          {/* ONE row, always, at a fixed height. Capping the count was not
+              enough — "Software & IT Services" beside "Design & Creative"
+              still wrapped, giving footers of 41px and 66px in the same grid.
+              nowrap + min-w-0 lets a long name ellipsis instead of wrapping,
+              so this row is 41px on every card the way Onfound's is 36px on
+              every one of theirs. */}
+          <div className="mt-auto pt-4 border-t border-line h-[41px] flex items-center gap-2 text-xs text-ink-muted overflow-hidden">
+            {profile.industry.slice(0, 2).map((i) => (
+              <span
+                key={i}
+                className="px-2 py-0.5 border border-line rounded-full min-w-0 truncate"
+              >
+                {i}
+              </span>
+            ))}
+            {profile.industry.length > 2 && (
+              <span className="shrink-0">+{profile.industry.length - 2}</span>
+            )}
+          </div>
         </div>
       </div>
     </Link>
