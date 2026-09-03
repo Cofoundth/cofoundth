@@ -7,18 +7,24 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, MapPin, Users } from "lucide-react";
+import { ArrowRight, MapPin, Rocket, Users } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { ROLE_LABELS, STAGE_LABELS } from "@/lib/matching";
 import { provinceLabel } from "@/lib/provinces";
 import { listPublicFounders } from "@/lib/public-profile";
 import { Avatar } from "@/components/Avatar";
-import { Card,
+import {
+  Card,
+  CardChip,
+  CardLabel,
+  CardPill,
   EmptyState,
   Eyebrow,
   LinkButton,
-  VerifiedBadge, Section } from "@/components/ui";
+  Section,
+  VerifiedBadge,
+} from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Founders",
@@ -79,63 +85,64 @@ export default async function PublicFoundersPage() {
               <Link
                 key={f.slug}
                 href={`/founders/${f.slug}`}
-                className="group block"
+                // min-w-0: a grid item defaults to min-width:auto, so
+                // without it the card refuses to shrink below its content
+                // and overflows the track on a phone (1157px in 342px).
+                className="group block h-full min-w-0"
               >
-                <Card hoverable padding="md" className="h-full flex flex-col">
-                  {/* Header: the avatar shares a 48px row with the name and
-                      location. Roles moved down into the body — beside the
-                      avatar they made this block a different height on every
-                      card, and everything below inherited that variance. */}
-                  <div className="flex shrink-0 items-center gap-3">
+                <Card hoverable padding="xs" className="h-full flex flex-col">
+                  {/* HEADER — 48px: avatar beside a name/meta column, and
+                      nothing below it indented past the avatar. */}
+                  <div className="shrink-0 flex gap-3 items-center">
                     <Avatar name={f.fullName} url={f.photoUrl} size="md" />
-                    <div className="flex min-w-0 flex-1 flex-col justify-center">
-                      <h2 className="flex items-center gap-1.5 text-lg leading-tight group-hover:text-gold-ink transition-colors">
+                    <div className="flex flex-col justify-center min-w-0 flex-1 overflow-hidden">
+                      <h2 className="flex items-center gap-1.5 text-sm font-semibold leading-none group-hover:text-gold-ink transition-colors">
                         <span className="truncate">{f.fullName}</span>
                         {f.verified && <VerifiedBadge label={verifiedLabel} />}
                       </h2>
-                      <div className="mt-0.5 flex h-4 items-center gap-x-2 overflow-hidden text-xs text-ink-muted">
-                        {f.location && (
-                          <span className="inline-flex min-w-0 items-center gap-1">
-                            <MapPin className="w-3 h-3 shrink-0" />
-                            <span className="truncate">
-                              {provinceLabel(f.location, locale)}
-                            </span>
+                      {f.location && (
+                        <div className="mt-1.5 flex items-center gap-1 text-xs text-ink-muted overflow-hidden">
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          <span className="truncate">
+                            {provinceLabel(f.location, locale)}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Body — full card width, fixed rows. */}
-                  <div className="mt-4 flex flex-1 flex-col gap-3">
-                    {roles.length > 0 && (
-                      <div className="h-4 overflow-hidden text-xs text-gold-ink">
-                        {roles.join(" · ")}
+                  {/* BODY — three rows on a 10px rhythm, each full card width. */}
+                  <div className="mt-3 flex flex-col gap-2.5 flex-1 min-h-0">
+                    {(stageLabel || f.industry.length > 0) && (
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        {stageLabel && <CardPill>{tr(stageLabel)}</CardPill>}
+                        {/* Industries as plain text, not chips: a chip's padding
+                            and border cost ~20px each, so one chip filled the row
+                            that two or three bare names fit in. */}
+                        <span className="min-w-0 truncate text-xs text-ink-muted">
+                          {f.industry.join(" · ")}
+                        </span>
                       </div>
                     )}
-                    {f.excerpt && (
-                      <p className="text-sm leading-relaxed text-ink line-clamp-2 min-h-[45.5px]">
-                        {f.excerpt}
-                      </p>
-                    )}
-                  </div>
 
-                  {/* Footer — one row, fixed height on every card. The
-                      "View profile" affordance is gone: the whole card is a
-                      link to the profile. */}
-                  <div className="mt-auto pt-4 border-t border-line h-[41px] flex items-center gap-2 overflow-hidden text-xs text-ink-muted">
-                    {f.industry.slice(0, 2).map((i) => (
-                      <span
-                        key={i}
-                        className="px-2 py-0.5 border border-line rounded-full min-w-0 truncate"
-                      >
-                        {i}
-                      </span>
-                    ))}
-                    {stageLabel && (
-                      <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full shrink-0">
-                        {tr(stageLabel)}
-                      </span>
+                    {f.excerpt && (
+                      <div className="flex flex-col gap-1.5 min-w-0">
+                        <CardLabel icon={Rocket}>{tr("Working on")}</CardLabel>
+                        <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted">
+                          {f.excerpt}
+                        </p>
+                      </div>
+                    )}
+
+                    {roles.length > 0 && (
+                      <div className="mt-auto flex flex-col gap-1.5 min-w-0">
+                        <CardLabel icon={Users}>{tr("Role")}</CardLabel>
+                        <div className="flex flex-row gap-1.5 overflow-hidden h-[22px]">
+                          {roles.slice(0, 3).map((r) => (
+                            <CardChip key={r}>{r}</CardChip>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </Card>

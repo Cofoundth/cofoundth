@@ -35,6 +35,8 @@ export {
 
 export { Card, type CardProps, type CardPadding } from "./Card";
 
+export { CardLabel, CardChip, CardPill } from "./CardParts";
+
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
 
 export {
