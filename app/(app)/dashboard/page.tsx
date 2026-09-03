@@ -5,7 +5,11 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
-import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
+import {
+  ROLE_LABELS,
+  INTENT_LABELS,
+  complementScore,
+} from "@/lib/matching";
 import { provinceLabel } from "@/lib/provinces";
 import { PostComposer } from "@/components/PostComposer";
 import { PostFeed } from "@/components/PostFeed";
@@ -34,7 +38,9 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, onboarded, profile_complete, i_am, intent, slug, photo_url, location, pitch")
+    .select(
+      "full_name, onboarded, profile_complete, i_am, intent, looking_for, industry, stage, commitment, slug, photo_url, location, pitch",
+    )
     .eq("id", user.id)
     .single();
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
@@ -42,14 +48,19 @@ export default async function DashboardPage() {
   // ---- Merged post feed (the heartbeat) ----------------------------
   const [feed, { data: newFounders }] = await Promise.all([
     getFeedPosts(supabase, { limit: 15, userId: user.id }),
+    // 40, not 4: these are RANKED below, so the query has to hand over a pool
+    // to rank rather than the four newest. Ordering stays newest-first so it
+    // doubles as the tiebreak when two candidates score the same.
     supabase
       .from("profiles")
-      .select("id, full_name, photo_url, i_am, intent, slug, created_at")
+      .select(
+        "id, full_name, photo_url, i_am, intent, looking_for, industry, stage, commitment, location, slug, created_at",
+      )
       .eq("profile_complete", true)
       .eq("suspended", false)
       .neq("id", user.id)
       .order("created_at", { ascending: false })
-      .limit(4),
+      .limit(40),
   ]);
 
   // ---- Personal stats -----------------------------------------------
@@ -89,6 +100,41 @@ export default async function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("viewed_id", user.id),
   ]);
+
+  // ---- Who to meet --------------------------------------------------
+  // The Complement Score CLAUDE.md has specified since the pivot, and /terms
+  // already promises — implemented in lib/matching.ts and used here for the
+  // first time. Sorted by fit, with the query's newest-first order surviving
+  // as the tiebreak, so a viewer with an empty profile still gets the old
+  // "newest founders" behaviour instead of an arbitrary four.
+  const me = {
+    i_am: (profile?.i_am as string[] | null) ?? [],
+    intent: (profile?.intent as string[] | null) ?? [],
+    looking_for: (profile?.looking_for as string[] | null) ?? [],
+    industry: (profile?.industry as string[] | null) ?? [],
+    stage: (profile?.stage as string | null) ?? null,
+    commitment: (profile?.commitment as string | null) ?? null,
+    location: (profile?.location as string | null) ?? null,
+  };
+  const myWants = me.looking_for;
+  const suggested = (newFounders ?? [])
+    .map((f) => ({
+      row: f,
+      fit: complementScore(me, {
+        i_am: (f.i_am as string[] | null) ?? [],
+        intent: (f.intent as string[] | null) ?? [],
+        looking_for: (f.looking_for as string[] | null) ?? [],
+        industry: (f.industry as string[] | null) ?? [],
+        stage: (f.stage as string | null) ?? null,
+        commitment: (f.commitment as string | null) ?? null,
+        location: (f.location as string | null) ?? null,
+      }).score,
+    }))
+    .sort((a, b) => b.fit - a.fit)
+    .slice(0, 4);
+
+  // Resolved before the list: .map() is not an async context.
+  const whyTemplate = await tServer("You're looking for {role}");
 
   const firstName =
     profile?.full_name?.split(" ")[0]?.trim() ||
@@ -246,7 +292,7 @@ export default async function DashboardPage() {
           <div>
             <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold tracking-normal">
-              {await tServer("New founders")}
+              {await tServer("Founders you should meet")}
             </h2>
             <Link
               href="/browse"
@@ -257,7 +303,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          {!newFounders?.length ? (
+          {!suggested.length ? (
             // KIND A — and deliberately CTA-less. This query is byte-identical
             // to the one /browse runs (profile_complete, not suspended, not
             // me), so when it comes back empty the directory is empty too: a
@@ -272,9 +318,17 @@ export default async function DashboardPage() {
             />
           ) : (
             <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
-              {newFounders.map((f) => {
+              {suggested.map(({ row: f }) => {
                 const href = `/profile/${(f.slug as string | undefined) ?? f.id}`;
                 const fresh = isWithinMs(f.created_at as string, 7 * DAY_MS);
+                // The reason this person is in the list: the roles they hold
+                // that the viewer asked for. Shown as words rather than the
+                // score itself — a percentage on a person reads as
+                // gamification, which the design rules rule out, and "why"
+                // is the more useful half anyway.
+                const why = ((f.i_am as string[] | null) ?? [])
+                  .filter((r) => myWants.includes(r))
+                  .map((r) => t(ROLE_LABELS[r] ?? r, locale));
                 return (
                   <Link
                     key={f.id as string}
@@ -301,8 +355,16 @@ export default async function DashboardPage() {
                                 .join(" · ")}`
                             : ""}
                         </div>
-                        <div className="text-xs text-ink-muted mt-1 inline-flex items-center gap-2">
-                          {timeAgo(f.created_at as string, locale)}
+                        <div className="text-xs mt-1 inline-flex items-center gap-2">
+                          {why.length > 0 ? (
+                            <span className="text-gold-ink">
+                              {whyTemplate.replace("{role}", why.join(" · "))}
+                            </span>
+                          ) : (
+                            <span className="text-ink-muted">
+                              {timeAgo(f.created_at as string, locale)}
+                            </span>
+                          )}
                           {fresh && (
                             <span className="w-1.5 h-1.5 rounded-full bg-navy inline-block" />
                           )}

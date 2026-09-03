@@ -76,3 +76,92 @@ export const EXPERIENCE_LABELS: Record<string, string> = {
   one_to_two: "1–2 ventures",
   three_plus: "3+ ventures",
 };
+
+// ── COMPLEMENT SCORE ──────────────────────────────────────────────────────
+// The weighting CLAUDE.md has specified since the pivot, and that /terms
+// already promises to users ("based on complementary skills, intent, and
+// industry") — but which existed nowhere in the code until now. The matching
+// surfaces filtered; nothing ranked.
+//
+//   role 40 / intent 30 / industry 15 / stage 10 / location+commitment 5
+//
+// COMPLEMENT, not similarity, and the two pull in opposite directions on the
+// first two axes: you want someone who IS what you are looking for, and whose
+// intent fits yours rather than repeats it. Two people who both have an idea
+// and both want a technical co-founder are a poor pair, however alike they
+// look. Industry, stage and location are the axes where sameness IS the
+// signal, so those score on overlap.
+//
+// Pure and dependency-free so it can run on the server, in a client filter, or
+// in a test without a database.
+
+/** Intent pairs that complement rather than duplicate. */
+const INTENT_FIT: Record<string, Record<string, number>> = {
+  // someone with an idea wants people who want in on one
+  idea: { open: 1, explore: 0.75, idea: 0.15 },
+  // open to ideas — best paired with someone who has one
+  open: { idea: 1, explore: 0.4, open: 0.3 },
+  // still exploring — an idea-haver gives them something to join
+  explore: { idea: 0.75, open: 0.4, explore: 0.3 },
+};
+
+function overlap(a: string[] | null, b: string[] | null): number {
+  const A = a ?? [];
+  const B = b ?? [];
+  if (A.length === 0 || B.length === 0) return 0;
+  const hits = A.filter((x) => B.includes(x)).length;
+  return hits / Math.min(A.length, B.length);
+}
+
+export type ComplementBreakdown = {
+  role: number;
+  intent: number;
+  industry: number;
+  stage: number;
+  context: number;
+};
+
+/**
+ * 0–100. `me` is the viewer, `them` the candidate.
+ *
+ * Asymmetric on purpose: score(me, them) answers "how well do they fit what I
+ * asked for", which is not the same question as score(them, me).
+ */
+export function complementScore(
+  me: ProfileLike,
+  them: ProfileLike,
+): { score: number; breakdown: ComplementBreakdown } {
+  // ROLE 40 — what fraction of the roles I asked for do they actually hold.
+  // Divided by what I ASKED for, not by the smaller set: wanting two roles and
+  // getting one is half a match, and a generalist who ticks every box should
+  // not outrank the specialist I actually need.
+  const wanted = me.looking_for ?? [];
+  const theirRoles = them.i_am ?? [];
+  const role =
+    wanted.length === 0
+      ? 0
+      : wanted.filter((r) => theirRoles.includes(r)).length / wanted.length;
+
+  // INTENT 30 — fit, not sameness (see INTENT_FIT).
+  const myIntents = me.intent ?? [];
+  const theirIntents = them.intent ?? [];
+  let intent = 0;
+  for (const a of myIntents) {
+    for (const b of theirIntents) {
+      intent = Math.max(intent, INTENT_FIT[a]?.[b] ?? 0);
+    }
+  }
+
+  // INDUSTRY 15 / STAGE 10 / CONTEXT 5 — here sameness is the signal.
+  const industry = overlap(me.industry, them.industry);
+  const stage = me.stage && them.stage && me.stage === them.stage ? 1 : 0;
+  const samePlace = !!me.location && me.location === them.location;
+  const samePace = !!me.commitment && me.commitment === them.commitment;
+  const context = (Number(samePlace) + Number(samePace)) / 2;
+
+  const breakdown = { role, intent, industry, stage, context };
+  const score =
+    role * 40 + intent * 30 + industry * 15 + stage * 10 + context * 5;
+
+  return { score: Math.round(score), breakdown };
+}
