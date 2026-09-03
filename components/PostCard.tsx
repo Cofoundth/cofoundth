@@ -404,7 +404,7 @@ export function PostCard({
                         <button
                           type="button"
                           onClick={() => replyTo(c.author?.full_name)}
-                          className="text-[11px] text-ink-muted hover:text-navy tracking-wide"
+                          className="text-xs text-ink-muted hover:text-navy tracking-wide"
                         >
                           {tr("Reply")}
                         </button>

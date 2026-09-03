@@ -430,7 +430,7 @@ export default async function ConnectionsPage({
                               {roleLine(p) || "—"}
                             </div>
                           </div>
-                          <span className="text-[11px] uppercase tracking-[0.15em] text-ink-muted inline-flex items-center gap-1 shrink-0">
+                          <span className="text-xs uppercase tracking-[0.15em] text-ink-muted inline-flex items-center gap-1 shrink-0">
                             <Clock className="w-3 h-3" /> {pendingLabel}
                           </span>
                         </Link>

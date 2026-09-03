@@ -79,7 +79,7 @@ function CardTags({ label, items }: { label: string; items: string[] }) {
         {shown.map((c) => (
           <span
             key={c}
-            className="text-[11px] text-ink border border-line bg-cream px-2 py-0.5 rounded-full"
+            className="text-xs text-ink border border-line bg-cream px-2 py-0.5 rounded-full"
           >
             {c}
           </span>

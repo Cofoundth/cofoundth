@@ -90,7 +90,7 @@ export function NextStepsPanel({ social }: { social?: Social }) {
                   <div className="text-xs font-medium text-navy mb-1">
                     {c.label}
                   </div>
-                  <div className="text-[11px] text-ink-muted leading-relaxed line-clamp-2">
+                  <div className="text-xs text-ink-muted leading-relaxed line-clamp-2">
                     {c.body}
                   </div>
                 </div>

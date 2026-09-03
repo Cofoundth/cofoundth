@@ -103,7 +103,7 @@ export function MessageComposer({ matchId }: { matchId: string }) {
       {state?.error && (
         <div className="mt-2 text-xs text-danger-ink">{state.error}</div>
       )}
-      <div className="text-[11px] text-ink-muted mt-2">
+      <div className="text-xs text-ink-muted mt-2">
         {tr("Enter to send · Shift+Enter for new line")}
       </div>
     </form>

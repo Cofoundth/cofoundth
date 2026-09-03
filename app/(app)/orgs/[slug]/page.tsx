@@ -476,7 +476,7 @@ export default async function OrgPage({ params }: Props) {
                   {dealsView.map((d) => (
                     <li key={d.id} className="py-3">
                       <div className="text-sm text-navy">{d.title}</div>
-                      <div className="text-[11px] text-ink-muted mt-0.5">
+                      <div className="text-xs text-ink-muted mt-0.5">
                         {d.typeLabel}
                         {d.value ? ` · ${d.value}` : ""} · {d.statusLabel}
                       </div>
@@ -488,7 +488,7 @@ export default async function OrgPage({ params }: Props) {
                       {(d.status === "confirmed" ||
                         d.status === "admin_review") && (
                         <div className="mt-2">
-                          <p className="text-[11px] text-ink-muted mb-1.5">
+                          <p className="text-xs text-ink-muted mb-1.5">
                             {signingHint}
                           </p>
                           <a

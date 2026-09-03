@@ -25,7 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
 // Terminal states read at a glance: signed is the win (filled gold), dead deals
 // are struck through and muted, everything still in play keeps the navy outline.
 const PILL_BASE =
-  "text-[11px] uppercase tracking-wider px-2 py-0.5 shrink-0 border rounded-full";
+  "text-xs uppercase tracking-wider px-2 py-0.5 shrink-0 border rounded-full";
 function pillCls(status: string) {
   if (status === "signed") return `${PILL_BASE} bg-gold border-line text-navy`;
   if (status === "declined" || status === "cancelled") {

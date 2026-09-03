@@ -54,7 +54,7 @@ export function DirectoryVisual({ locale = "en" }: { locale?: Locale }) {
       aria-hidden="true"
       className="rounded-[22px] border border-line bg-white p-5 shadow-sm"
     >
-      <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-ink">
+      <div className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-gold-ink">
         {tr("Founder directory")}
       </div>
 
@@ -74,7 +74,7 @@ export function DirectoryVisual({ locale = "en" }: { locale?: Locale }) {
                   {row.name}
                 </span>
                 {row.score !== null && (
-                  <span className="rounded-full bg-gold px-2 py-0.5 text-[11px] leading-tight text-ink">
+                  <span className="rounded-full bg-gold px-2 py-0.5 text-xs leading-tight text-ink">
                     {tr("Complement Score")} {row.score}
                   </span>
                 )}
@@ -88,7 +88,7 @@ export function DirectoryVisual({ locale = "en" }: { locale?: Locale }) {
                 {row.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full border border-line px-2 py-0.5 text-[11px] leading-tight text-ink-muted"
+                    className="rounded-full border border-line px-2 py-0.5 text-xs leading-tight text-ink-muted"
                   >
                     {tr(tag)}
                   </span>

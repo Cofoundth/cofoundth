@@ -374,7 +374,7 @@ function StatusPill({
   }
   if (status === "pending" && !respondable) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-ink-muted mb-1">
+      <span className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-ink-muted mb-1">
         <Clock className="w-3 h-3" /> {sent}
       </span>
     );
@@ -382,7 +382,7 @@ function StatusPill({
   // A declined connection stays in the list — say so, don't render nothing.
   if (status === "declined") {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-ink-muted border border-line bg-cream px-2 py-0.5 mb-1 rounded-full">
+      <span className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-ink-muted border border-line bg-cream px-2 py-0.5 mb-1 rounded-full">
         <X className="w-3 h-3" /> {declined}
       </span>
     );

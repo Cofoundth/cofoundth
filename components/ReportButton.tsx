@@ -23,7 +23,7 @@ export function ReportButton({
 
   if (done) {
     return (
-      <span className="text-[11px] text-ink-muted">{tr("Reported")}</span>
+      <span className="text-xs text-ink-muted">{tr("Reported")}</span>
     );
   }
 
@@ -32,7 +32,7 @@ export function ReportButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-[11px] text-ink-muted hover:text-danger-ink tracking-wide transition-colors"
+        className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-danger-ink tracking-wide transition-colors"
       >
         <Flag className="w-3 h-3" /> {tr("Report")}
       </button>
@@ -49,13 +49,13 @@ export function ReportButton({
         placeholder={tr("What’s wrong with this?")}
         className="w-full px-2 py-1.5 border border-line bg-white text-ink text-xs focus:outline-none focus:border-navy resize-none rounded-full"
       />
-      {error && <div className="text-[11px] text-danger-ink">{error}</div>}
+      {error && <div className="text-xs text-danger-ink">{error}</div>}
       <div className="flex gap-2">
         <button
           type="button"
           onClick={() => setOpen(false)}
           disabled={pending}
-          className="px-2 py-1 border border-line text-[11px] text-ink hover:border-navy rounded-full"
+          className="px-2 py-1 border border-line text-xs text-ink hover:border-navy rounded-full"
         >
           {tr("Cancel")}
         </button>
@@ -70,7 +70,7 @@ export function ReportButton({
               else setDone(true);
             })
           }
-          className="px-2 py-1 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-[11px]"
+          className="px-2 py-1 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-xs"
         >
           {pending ? tr("Submitting…") : tr("Submit report")}
         </button>

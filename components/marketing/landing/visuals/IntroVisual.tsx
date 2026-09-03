@@ -37,10 +37,10 @@ export function IntroVisual({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
       className="rounded-[22px] border border-line bg-white p-5 shadow-sm"
     >
       <div className="flex items-center justify-between gap-3 mb-5">
-        <span className="text-[11px] uppercase tracking-[0.18em] text-gold-ink font-medium">
+        <span className="text-xs uppercase tracking-[0.18em] text-gold-ink font-medium">
           {tr("Warm intro")}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-gold-soft px-2.5 py-1 text-[11px] text-ink">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-gold-soft px-2.5 py-1 text-xs text-ink">
           <BadgeCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
           {tr("Verified")}
         </span>

@@ -14,7 +14,7 @@ export function PartnershipVisual() {
       aria-hidden="true"
       className="rounded-[22px] border border-line bg-white p-5 shadow-sm"
     >
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-ink">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-ink">
         Partnership request
       </p>
 
@@ -50,7 +50,7 @@ export function PartnershipVisual() {
       <div className="mt-5 border-t border-line pt-4">
         <p className="text-sm text-ink">Distribution partnership</p>
         <p className="mt-3">
-          <span className="inline-block rounded-full border border-line bg-cream px-2.5 py-0.5 text-[11px] text-gold-ink">
+          <span className="inline-block rounded-full border border-line bg-cream px-2.5 py-0.5 text-xs text-gold-ink">
             Awaiting response
           </span>
         </p>
