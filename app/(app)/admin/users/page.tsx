@@ -46,11 +46,8 @@ export default async function AdminUsersPage() {
   return (
     <Section>
       <AdminTabs />
-      <div className="mb-8 pb-6 border-b border-line">
+      <div className="mb-8">
         <div className="max-w-[640px]">
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-            Admin
-          </div>
           <h1 className="text-d2 mb-2">Users</h1>
           <p className="text-ink">
             {total} total · {active} active · {hidden} hidden

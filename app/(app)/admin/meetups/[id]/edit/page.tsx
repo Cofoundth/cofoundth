@@ -45,9 +45,6 @@ export default async function EditMeetupPage({ params }: Props) {
 
       <div className="mb-8 pb-8 border-b border-line flex items-end justify-between gap-4">
         <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-            Admin
-          </div>
           <h1 className="text-d2">Edit meetup</h1>
         </div>
         {meetup.status !== "draft" && (

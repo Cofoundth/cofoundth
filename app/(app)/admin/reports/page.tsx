@@ -72,11 +72,8 @@ export default async function AdminReportsPage() {
   return (
     <Section>
       <AdminTabs />
-      <div className="mb-8 pb-8 border-b border-line">
+      <div className="mb-8">
         <div className="max-w-[640px]">
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-            {await tServer("Admin")}
-          </div>
           <h1 className="text-d2 mb-2">{await tServer("Reports")}</h1>
           <p className="text-ink">
             {(await tServer("{n} reports total")).replace(

@@ -31,10 +31,7 @@ export default async function NewAskPage() {
         {await tServer("Back to board")}
       </Link>
 
-      <div className="mb-8 pb-8 border-b border-line">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-          {await tServer("B2B Partnership board")}
-        </div>
+      <div className="mb-8">
         <h1 className="text-d2 mb-2">
           {await tServer("Post a partnership ask")}
         </h1>

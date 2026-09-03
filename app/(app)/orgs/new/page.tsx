@@ -20,9 +20,6 @@ export default async function NewOrgPage() {
         {await tServer("Companies")}
       </Link>
 
-      <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-        {await tServer("Create a company")}
-      </p>
       <h1 className="text-d2 mb-3">
         {await tServer("Set up your company page")}
       </h1>

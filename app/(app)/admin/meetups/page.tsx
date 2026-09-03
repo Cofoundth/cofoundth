@@ -50,9 +50,6 @@ export default async function AdminMeetupsPage() {
 
   return (
     <Section>
-      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-        Admin
-      </div>
       <AdminTabs />
 
       <div className="flex items-center justify-between mb-8">

@@ -11,7 +11,13 @@ import {
   Search as SearchIcon,
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
-import { Button, EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  Button,
+  CardChip,
+  EmptyState,
+  LinkButton,
+  Section,
+} from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { PartnershipRequestDialog } from "./PartnershipRequestDialog";
@@ -138,25 +144,15 @@ export function CompaniesClient({
   return (
     <Section>
       {/* Header */}
-      <div className="mb-8 pb-8 border-b border-line">
+      <div className="mb-8">
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[640px]">
-            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
-              <Building2 className="w-3 h-3" strokeWidth={1.5} />
-              {tr("B2B Network")}
-              <span className="text-ink-muted/70">·</span>
-              <span className="normal-case tracking-normal text-ink-muted">
-                Beta
-              </span>
-            </div>
-            <h1 className="text-d2 mb-2">
+            {/* "B2B Network" said what the sidebar item already says; Beta is
+                real status, so it stays as a chip on the title. */}
+            <h1 className="text-d2 flex items-center gap-2.5 flex-wrap">
               {tr("Companies in the community")}
+              <CardChip>Beta</CardChip>
             </h1>
-            <p className="text-ink max-w-2xl">
-              {tr(
-                "Find the right business partner. Filter by capabilities offered or partnerships sought.",
-              )}
-            </p>
           </div>
           <div className="flex items-center gap-6">
             <Link

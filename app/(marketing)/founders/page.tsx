@@ -44,9 +44,6 @@ export default async function PublicFoundersPage() {
         </p>
       </div>
 
-      {/* Thin gold rule — the editorial section divider used across the site. */}
-      <div className="w-16 h-px bg-line mb-12" />
-
       {founders.length === 0 ? (
         // An unfiltered list, so this is genuinely "nobody here yet" rather than
         // "your filter matched nothing" — which makes "be the first" the honest

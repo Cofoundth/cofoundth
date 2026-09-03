@@ -257,9 +257,6 @@ export default async function ConnectionsPage({
         <h1 className="text-d2 mb-2">
           {await tServer("Connections")}
         </h1>
-        <p className="text-ink">
-          {await tServer("Your conversations — co-founders and companies.")}
-        </p>
       </div>
 
       {hasCompany && (

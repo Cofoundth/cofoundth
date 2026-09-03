@@ -9,9 +9,6 @@ export default async function LoginPage() {
   const tr = (en: string) => tServer(en);
   return (
     <div className="bg-white border border-line p-8 lg:p-10 rounded-xl">
-      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
-        {await tr("Welcome back")}
-      </div>
       <h1 className="text-d2 mb-2">{await tr("Sign in")}</h1>
       <p className="text-sm text-ink-muted mb-8">
         {await tr("Continue building with your co-founder community.")}

@@ -87,7 +87,6 @@ export default async function MeetupDetailPage({ params }: Props) {
 
   const [
     tBack,
-    tCommunity,
     tCancelledBanner,
     tEnded,
     tWhen,
@@ -105,7 +104,6 @@ export default async function MeetupDetailPage({ params }: Props) {
     tEdit,
   ] = await Promise.all([
     tServer("Back to meetups"),
-    tServer("Community"),
     tServer("This meetup was cancelled."),
     tServer("This meetup has ended."),
     tServer("When"),
@@ -144,9 +142,6 @@ export default async function MeetupDetailPage({ params }: Props) {
         )}
       </div>
 
-      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
-        {tCommunity}
-      </div>
       <h1 className="text-d2 mb-6">{m.title}</h1>
 
       {cancelled && (

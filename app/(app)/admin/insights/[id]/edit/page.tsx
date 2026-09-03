@@ -34,9 +34,6 @@ export default async function EditInsightPage({ params }: Props) {
 
       <div className="mb-8 pb-8 border-b border-line flex items-end justify-between gap-4">
         <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-            Admin
-          </div>
           <h1 className="text-d2">Edit insight</h1>
           <p className="text-ink-muted text-sm mt-1">
             {insight.slug} · {insight.locale}

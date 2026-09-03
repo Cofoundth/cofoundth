@@ -69,9 +69,7 @@ export default async function MeetupsPage() {
   }
 
   const [
-    tEyebrow,
     tTitle,
-    tIntro,
     tUpcoming,
     tPast,
     tGoing,
@@ -83,9 +81,7 @@ export default async function MeetupsPage() {
     tEmptyBody,
     tBrowseFounders,
   ] = await Promise.all([
-    tServer("Community"),
     tServer("Meetups"),
-    tServer("In-person and online gatherings for the Cofoundee community."),
     tServer("Upcoming"),
     tServer("Past meetups"),
     tServer("going"),
@@ -111,11 +107,7 @@ export default async function MeetupsPage() {
   return (
     <Section>
       <div className="mb-8 max-w-[640px]">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
-          {tEyebrow}
-        </div>
         <h1 className="text-d2 mb-4">{tTitle}</h1>
-        <p className="text-lg text-ink leading-relaxed">{tIntro}</p>
       </div>
 
       <section>

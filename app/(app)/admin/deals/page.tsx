@@ -156,9 +156,6 @@ export default async function AdminDealsPage() {
     <Section>
       <AdminTabs />
       <div className="max-w-[640px] mb-8">
-        <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
-          {await tServer("Admin")}
-        </p>
         <h1 className="text-d2 mb-1">
           {await tServer("Deals")}
         </h1>

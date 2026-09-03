@@ -36,11 +36,8 @@ export default async function AdminVerificationsPage() {
   return (
     <Section>
       <AdminTabs />
-      <div className="mb-8 pb-8 border-b border-line">
+      <div className="mb-8">
         <div className="max-w-[640px]">
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-            Admin
-          </div>
           <h1 className="text-d2 mb-2">Verifications</h1>
           <p className="text-ink leading-relaxed">
             Verify profiles after manual checks (Thai company registration via{" "}

@@ -127,19 +127,9 @@ export default async function OrgsPage({
     <Section>
       <div className="flex items-end justify-between mb-8">
         <div className="max-w-[640px]">
-          <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
-            {await tServer(isInvestor ? "Discover" : "B2B")}
-          </p>
           <h1 className="text-d2">
             {await tServer("Companies")}
           </h1>
-          <p className="text-ink-muted mt-1">
-            {await tServer(
-              isInvestor
-                ? "Browse Thai startups — see what they're building and who's raising."
-                : "Create your company, invite your team, and connect with other companies.",
-            )}
-          </p>
         </div>
         {!isInvestor && (
           <Link

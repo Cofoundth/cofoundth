@@ -31,9 +31,6 @@ export default async function AdminInsightsPage() {
       <AdminTabs />
       <div className="mb-8 pb-8 border-b border-line flex items-end justify-between gap-4">
         <div className="max-w-[640px]">
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-            Admin
-          </div>
           <h1 className="text-d2 mb-2">Insights</h1>
           <p className="text-ink">
             {insights.length} row{insights.length === 1 ? "" : "s"} across{" "}

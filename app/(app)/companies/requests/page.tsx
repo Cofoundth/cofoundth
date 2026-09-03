@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import { CardChip, EmptyState, LinkButton, Section } from "@/components/ui";
 import { AskRowActions } from "./AskRowActions";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
@@ -134,24 +134,14 @@ export default async function PartnershipRequestsBoardPage() {
   return (
     <Section>
       {/* Header */}
-      <div className="mb-8 pb-8 border-b border-line flex items-start justify-between gap-6 flex-wrap">
+      <div className="mb-8 flex items-start justify-between gap-6 flex-wrap">
         <div className="max-w-[640px]">
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3 inline-flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse" />
-            {await tServer("B2B Partnership board")}
-            <span className="text-ink-muted/70">·</span>
-            <span className="normal-case tracking-normal text-ink-muted">
-              Beta
-            </span>
-          </div>
-          <h1 className="text-d2 mb-2">
+          {/* Eyebrow removed — the sidebar names the section. Beta is status,
+              so it stays as a chip on the title. */}
+          <h1 className="text-d2 flex items-center gap-2.5 flex-wrap">
             {await tServer("What companies are looking for")}
+            <CardChip>Beta</CardChip>
           </h1>
-          <p className="text-ink max-w-2xl">
-            {await tServer(
-              "Public board of B2B partnership asks. Post what your company needs, or browse what others are looking for.",
-            )}
-          </p>
         </div>
         {canPost ? (
           <Link

@@ -73,9 +73,6 @@ export default async function FundingPage() {
       <Section>
         <div className="max-w-[640px] mb-8">
           <h1 className="text-d2 mb-2">{heading}</h1>
-          <p className="text-ink">
-            {await tServer("Companies you've connected with, and new ones to back.")}
-          </p>
         </div>
 
         <section className="mb-14">
@@ -269,9 +266,6 @@ export default async function FundingPage() {
     <Section>
       <div className="max-w-[640px] mb-8">
         <h1 className="text-d2 mb-2">{heading}</h1>
-        <p className="text-ink">
-          {await tServer("Investors who've reached out to your company.")}
-        </p>
       </div>
 
       <section className="mb-14">

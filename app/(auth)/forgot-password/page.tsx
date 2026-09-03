@@ -4,9 +4,6 @@ import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 export default function ForgotPasswordPage() {
   return (
     <div className="bg-white border border-line p-8 lg:p-10 rounded-xl">
-      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
-        Account recovery
-      </div>
       <h1 className="text-d2 mb-2">Reset your password</h1>
       <p className="text-sm text-ink-muted mb-8">
         Enter your email and we&rsquo;ll send a 6-digit code to verify it&rsquo;s
