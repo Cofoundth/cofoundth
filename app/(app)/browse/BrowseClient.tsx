@@ -701,7 +701,10 @@ function FilterGroup({
         />
       </button>
       {open && (
-        <div className="px-4 pb-4 flex flex-wrap gap-1.5">{children}</div>
+        // pt-1, because the header button's py-3 leaves only 12px between its
+        // label and the content against pb-4's 16px below — the expanded group
+        // read as crammed at the top. 12+4 makes it a symmetric 16/16.
+        <div className="px-4 pt-1 pb-4 flex flex-wrap gap-1.5">{children}</div>
       )}
     </div>
   );
