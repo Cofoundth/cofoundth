@@ -831,19 +831,19 @@ function ProfileCard({ profile }: { profile: Profile }) {
           {/* Row A: what they are here for, then the sector. Their card pairs a
               pill with plain muted text on one line — the text form fits two or
               three industries where a second chip fit none. */}
-          {(intents.length > 0 || roles.length > 0 || profile.industry.length > 0) && (
-            <div className="flex items-center gap-2 overflow-hidden">
-              {intents.length > 0 && <CardPill>{intents[0]}</CardPill>}
-              <span className="min-w-0 truncate text-xs text-ink-muted">
-                {[...roles, ...profile.industry].join(" · ")}
-              </span>
-            </div>
-          )}
+          {/* Always rendered at a reserved height, so a profile missing an
+              intent or a sector does not pull the rows below it upward. */}
+          <div className="flex h-[21px] items-center gap-2 overflow-hidden">
+            {intents.length > 0 && <CardPill>{intents[0]}</CardPill>}
+            <span className="min-w-0 truncate text-xs text-ink-muted">
+              {[...roles, ...profile.industry].join(" · ")}
+            </span>
+          </div>
 
           {blurb && (
             <div className="flex flex-col gap-1.5 min-w-0">
               <CardLabel icon={Rocket}>{tr("Working on")}</CardLabel>
-              <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted">
+              <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted min-h-[39px]">
                 {blurb}
               </p>
             </div>

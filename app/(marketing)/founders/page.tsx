@@ -126,16 +126,17 @@ export default async function PublicFoundersPage() {
                         that two or three bare names fit in. With stage moved to
                         the corner this row is theirs alone — it went from ~183px
                         to the full card width. */}
-                    {f.industry.length > 0 && (
-                      <div className="truncate text-xs text-ink-muted">
-                        {f.industry.join(" · ")}
-                      </div>
-                    )}
+                    {/* Always rendered, at a reserved height. Omitting it on
+                        the one founder with no industries pulled every row
+                        below it up 32px and broke the shared skeleton. */}
+                    <div className="h-4 truncate text-xs text-ink-muted">
+                      {f.industry.join(" · ")}
+                    </div>
 
                     {f.excerpt && (
                       <div className="flex flex-col gap-1.5 min-w-0">
                         <CardLabel icon={Rocket}>{tr("Working on")}</CardLabel>
-                        <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted">
+                        <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted min-h-[39px]">
                           {f.excerpt}
                         </p>
                       </div>
