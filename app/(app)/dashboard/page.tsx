@@ -57,6 +57,8 @@ export default async function DashboardPage() {
       )
       .eq("profile_complete", true)
       .eq("suspended", false)
+      .eq("account_type", "founder")
+      .not("is_bot", "is", true)
       .neq("id", user.id)
       .order("created_at", { ascending: false })
       .limit(40),
@@ -74,6 +76,49 @@ export default async function DashboardPage() {
     .select("id")
     .eq("author_id", user.id);
   const myPostIds = (myPosts ?? []).map((r) => r.id as string);
+
+  // ---- The other areas, one summary query each ----------------------
+  const nowIso = new Date().toISOString();
+  const [
+    { data: upcomingMeetups },
+    { data: latestOrgs, count: orgCount },
+    { data: myOrgRows },
+  ] = await Promise.all([
+    supabase
+      .from("meetups")
+      .select("id, slug, title, format, location, starts_at")
+      .eq("status", "published")
+      .gte("starts_at", nowIso)
+      .order("starts_at", { ascending: true })
+      .limit(2),
+    supabase
+      .from("organizations")
+      .select("id, slug, name, tagline", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .limit(2),
+    supabase.from("org_members").select("org_id").eq("user_id", user.id),
+  ]);
+  const myOrgIds = (myOrgRows ?? []).map((r) => r.org_id as string);
+  const [{ count: pendingReceivedCount }, { count: matchesCount }, { count: fundingCount }] =
+    await Promise.all([
+      supabase
+        .from("interests")
+        .select("id", { count: "exact", head: true })
+        .eq("to_profile_id", user.id)
+        .eq("status", "pending"),
+      supabase
+        .from("matches")
+        .select("id", { count: "exact", head: true })
+        .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`),
+      // Investors who connected with MY companies. `.in()` on an empty list is
+      // a PostgREST syntax error, so no-company founders short-circuit to 0.
+      myOrgIds.length
+        ? supabase
+            .from("investor_connections")
+            .select("id", { count: "exact", head: true })
+            .in("org_id", myOrgIds)
+        : Promise.resolve({ count: 0 }),
+    ]);
 
   const [
     { count: postsCount },
@@ -290,6 +335,96 @@ export default async function DashboardPage() {
               })}
             </div>
           )}
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold tracking-normal">
+                {await tServer("Meetups")}
+              </h2>
+              <Link
+                href="/meetups"
+                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
+              >
+                {await tServer("See all")}
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            {!upcomingMeetups?.length ? (
+              <EmptyState
+                padding="md"
+                dense
+                description={await tServer("No meetups on the calendar")}
+              />
+            ) : (
+              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+                {upcomingMeetups.map((mt) => (
+                  <Link
+                    key={mt.id as string}
+                    href={`/meetups/${mt.slug as string}`}
+                    className="block p-4 hover:bg-cream transition-colors group"
+                  >
+                    <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
+                      {mt.title as string}
+                    </div>
+                    <div className="text-xs text-ink-muted mt-1 truncate">
+                      {new Date(mt.starts_at as string).toLocaleDateString(
+                        locale === "th" ? "th-TH" : "en-GB",
+                        { day: "numeric", month: "short" },
+                      )}
+                      {" · "}
+                      {mt.format === "online"
+                        ? t("Online", locale)
+                        : ((mt.location as string | null) ?? t("In person", locale))}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold tracking-normal">
+                {await tServer("Latest from the community")}
+              </h2>
+              <Link
+                href="/community"
+                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
+              >
+                {await tServer("See all")}
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            {feed.length === 0 ? (
+              <EmptyState
+                padding="md"
+                dense
+                description={await tServer(
+                  "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
+                )}
+              />
+            ) : (
+              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+                {feed.slice(0, 3).map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/community/${post.id}`}
+                    className="block p-4 hover:bg-cream transition-colors group"
+                  >
+                    <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
+                      {post.title || post.content}
+                    </div>
+                    <div className="text-xs text-ink-muted mt-1 truncate">
+                      {post.author?.full_name ?? "—"} ·{" "}
+                      {timeAgo(post.created_at, locale)}
+                      {post.commentCount > 0
+                        ? ` · ${post.commentCount} ${t("replies", locale)}`
+                        : ""}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
 
         {/* RIGHT — your numbers, then the conversation. The digest is the
@@ -355,44 +490,82 @@ export default async function DashboardPage() {
           </div>
 
           <div>
+            <h2 className="text-lg font-bold tracking-normal mb-5">
+              {await tServer("Connections")}
+            </h2>
+            <div className="bg-white p-6 rounded-3xl shadow-xs space-y-2.5">
+              <Link
+                href="/matches"
+                className="flex items-center justify-between group"
+              >
+                <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
+                  {await tServer("Interests")}
+                </span>
+                <span className="font-serif text-base text-navy font-medium tabular-nums">
+                  {pendingReceivedCount ?? 0}
+                </span>
+              </Link>
+              <Link
+                href="/matches"
+                className="flex items-center justify-between group"
+              >
+                <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
+                  {await tServer("Matches")}
+                </span>
+                <span className="font-serif text-base text-navy font-medium tabular-nums">
+                  {matchesCount ?? 0}
+                </span>
+              </Link>
+              <Link
+                href="/funding"
+                className="flex items-center justify-between group"
+              >
+                <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
+                  {await tServer("Funding")}
+                </span>
+                <span className="font-serif text-base text-navy font-medium tabular-nums">
+                  {fundingCount ?? 0}
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold tracking-normal">
-                {await tServer("Latest from the community")}
+                {await tServer("Companies")}
               </h2>
               <Link
-                href="/community"
+                href="/orgs"
                 className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
               >
+                {(orgCount ?? 0) > 0 ? `${orgCount}` : ""}{" "}
                 {await tServer("See all")}
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            {feed.length === 0 ? (
+            {!latestOrgs?.length ? (
               <EmptyState
                 padding="md"
                 dense
-                description={await tServer(
-                  "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
-                )}
+                description={await tServer("No companies yet")}
               />
             ) : (
               <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
-                {feed.slice(0, 3).map((post) => (
+                {latestOrgs.map((o) => (
                   <Link
-                    key={post.id}
-                    href={`/community/${post.id}`}
+                    key={o.id as string}
+                    href={`/orgs/${o.slug as string}`}
                     className="block p-4 hover:bg-cream transition-colors group"
                   >
                     <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
-                      {post.title || post.content}
+                      {o.name as string}
                     </div>
-                    <div className="text-xs text-ink-muted mt-1 truncate">
-                      {post.author?.full_name ?? "—"} ·{" "}
-                      {timeAgo(post.created_at, locale)}
-                      {post.commentCount > 0
-                        ? ` · ${post.commentCount} ${t("replies", locale)}`
-                        : ""}
-                    </div>
+                    {o.tagline && (
+                      <div className="text-xs text-ink-muted mt-1 truncate">
+                        {o.tagline as string}
+                      </div>
+                    )}
                   </Link>
                 ))}
               </div>

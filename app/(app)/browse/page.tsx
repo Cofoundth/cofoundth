@@ -18,6 +18,11 @@ export default async function BrowsePage() {
     .select(PROFILE_COLUMNS)
     .eq("profile_complete", true)
     .eq("suspended", false)
+    // Same row filters as lib/public-profile.ts: investors are confidential
+    // (an investor who completes their profile must NOT surface here), and
+    // bot/seed rows are excluded from every directory, not just the public one.
+    .eq("account_type", "founder")
+    .not("is_bot", "is", true)
     .neq("id", user.id);
 
   const othersAdapted = (others ?? []).map((p) => ({
