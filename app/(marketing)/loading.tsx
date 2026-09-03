@@ -16,7 +16,7 @@ export default function Loading() {
       aria-hidden="true"
       className="bg-cream border-b border-line animate-pulse motion-reduce:animate-none"
     >
-      <Section>
+      <Section rhythm="marketing">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           {/* Left column */}
           <div className="lg:col-span-7">

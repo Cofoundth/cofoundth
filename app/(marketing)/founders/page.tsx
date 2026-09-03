@@ -34,7 +34,7 @@ export default async function PublicFoundersPage() {
   const verifiedLabel = tr("Verified");
 
   return (
-    <Section>
+    <Section rhythm="marketing">
       {/* Header */}
       <div className="max-w-[640px] mb-8">
         <Eyebrow className="mb-6">{tr("Community")}</Eyebrow>

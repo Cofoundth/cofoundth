@@ -97,7 +97,7 @@ export default async function LegalTemplatesPage() {
   );
 
   return (
-    <Section>
+    <Section rhythm="marketing">
       <div className="mb-8 max-w-[640px]">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {resources}

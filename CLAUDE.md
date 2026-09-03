@@ -385,11 +385,28 @@ component-tier spacing only):
 
 | Structural role | Class |
 |---|---|
-| section padding | `py-[88px]` |
+| section padding, MARKETING | `py-[88px]` |
+| section padding, APP | `py-14` (56px) |
 | between major sections | `mb-14` |
 | page-header block → content | `mb-8` |
 | h1 → subtitle | `mb-2` |
 | below a section heading | `mb-5` |
+
+**Two rhythms, and the app one is the default.** The 88px section padding was
+measured off Onfound's MARKETING pages and then applied to app routes too, which
+was never checked. Measured against their actual app on 2026-09-03:
+
+| | Onfound app | Cofoundee, before |
+|---|---|---|
+| heading top from viewport | 42px | 88px |
+| content wrapper padding | 16px (`py-4`) | 88px |
+
+More than double. Marketing pages want the big rhythm; a product surface someone
+visits daily does not. App routes are `py-14` (56px) — the Fibonacci 55 step —
+and `components/ui/Section.tsx` defaults to it, so marketing must opt in with
+`rhythm="marketing"`. 56 rather than their 42 on purpose: our page titles are
+42px against their 28px, and a larger heading wants proportionally more air. Do
+not put an app page back on 88.
 
 **Operational test for "structural"**: any margin/padding between SIBLING
 page-level blocks — sections, the page header, a section heading, a card grid.

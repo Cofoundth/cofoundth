@@ -27,7 +27,7 @@ export default async function InsightsPage() {
       : "";
 
   return (
-    <Section>
+    <Section rhythm="marketing">
       {/* Narrow intro over a wide grid — their editorial rhythm. */}
       <div className="max-w-[640px] mb-8">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
