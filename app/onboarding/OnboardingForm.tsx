@@ -8,6 +8,8 @@ import { provinceOptions, provinceLabel, canonicalProvince } from "@/lib/provinc
 import Combobox from "@/components/Combobox";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
+import { ACTIVITIES } from "@/lib/activities";
+import { HELP_TOPICS } from "@/lib/help-topics";
 import { ProjectImagesField } from "@/components/ProjectImagesField";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 
@@ -100,6 +102,8 @@ type FormState = {
   work_experience: string;
   education: string;
   skills: string[];
+  activities: string[];
+  help_with: string[];
 };
 
 type Props = {
@@ -143,6 +147,8 @@ export function OnboardingForm({ initial }: Props) {
     work_experience: "",
     education: "",
     skills: [],
+    activities: [],
+    help_with: [],
     ...initial,
   });
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +159,14 @@ export function OnboardingForm({ initial }: Props) {
   }
 
   function toggle(
-    key: "looking_for" | "industry" | "i_am" | "intent" | "skills",
+    key:
+      | "looking_for"
+      | "industry"
+      | "i_am"
+      | "intent"
+      | "skills"
+      | "activities"
+      | "help_with",
     value: string,
   ) {
     setData((d) => {
@@ -218,6 +231,8 @@ export function OnboardingForm({ initial }: Props) {
     data.intent.forEach((v) => fd.append("intent", v));
     data.looking_for.forEach((v) => fd.append("looking_for", v));
     data.industry.forEach((v) => fd.append("industry", v));
+    data.activities.forEach((v) => fd.append("activities", v));
+    data.help_with.forEach((v) => fd.append("help_with", v));
     fd.append("stage", data.stage);
     fd.append("location", data.location);
     fd.append("commitment", data.commitment);
@@ -269,6 +284,8 @@ export function OnboardingForm({ initial }: Props) {
             data={data}
             set={set}
             toggleSkill={(v) => toggle("skills", v)}
+            toggleActivity={(v) => toggle("activities", v)}
+            toggleHelp={(v) => toggle("help_with", v)}
             tr={tr}
           />
         )}
@@ -716,11 +733,15 @@ function StepPitch({
   data,
   set,
   toggleSkill,
+  toggleActivity,
+  toggleHelp,
   tr,
 }: {
   data: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   toggleSkill: (v: string) => void;
+  toggleActivity: (v: string) => void;
+  toggleHelp: (v: string) => void;
   tr: TR;
 }) {
   const pitchLen = data.pitch.length;
@@ -901,6 +922,30 @@ function StepPitch({
         </datalist>
       </div>
 
+      {/* Outcomes, not hard skills. Controlled vocabulary, so unlike Skills
+          this one only accepts a value that exists in lib/help-topics.ts —
+          the server whitelists it again on save. */}
+      <TaxonomyField
+        id="help-with"
+        label={tr("I can help with")}
+        placeholder={tr("Search help topics")}
+        options={HELP_TOPICS}
+        selected={data.help_with}
+        onToggle={toggleHelp}
+        tr={tr}
+      />
+
+      {/* Feeds meetups: what this member would actually DO with someone. */}
+      <TaxonomyField
+        id="activities"
+        label={tr("What do you do for fun?")}
+        placeholder={tr("Search activities")}
+        options={ACTIVITIES}
+        selected={data.activities}
+        onToggle={toggleActivity}
+        tr={tr}
+      />
+
       {data.profile_type === "company" && (
         <div>
           <label
@@ -1041,5 +1086,71 @@ function ChoiceButton({
     >
       {children}
     </button>
+  );
+}
+
+// A datalist-backed picker over a CONTROLLED vocabulary, matching the Skills
+// field's interaction (type, Enter) so the step keeps one idiom. The difference
+// from Skills is that free text is rejected: options carry translated labels,
+// and only a value that maps back to a canonical English entry is accepted.
+// The column stores the English; the reader only ever sees their own language.
+function TaxonomyField({
+  id,
+  label,
+  placeholder,
+  options,
+  selected,
+  onToggle,
+  tr,
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  options: string[];
+  selected: string[];
+  onToggle: (v: string) => void;
+  tr: (s: string) => string;
+}) {
+  const byLabel = new Map(options.map((o) => [tr(o), o]));
+
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+      >
+        {label}
+      </label>
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {selected.map((v) => (
+            <ChoiceButton key={v} selected compact onClick={() => onToggle(v)}>
+              {tr(v)} ✕
+            </ChoiceButton>
+          ))}
+        </div>
+      )}
+      <input
+        id={id}
+        type="text"
+        list={`${id}-options`}
+        placeholder={placeholder}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter") return;
+          e.preventDefault();
+          const canonical = byLabel.get(e.currentTarget.value.trim());
+          if (canonical && !selected.includes(canonical)) onToggle(canonical);
+          if (canonical) e.currentTarget.value = "";
+        }}
+        className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
+      />
+      <datalist id={`${id}-options`}>
+        {options
+          .filter((o) => !selected.includes(o))
+          .map((o) => (
+            <option key={o} value={tr(o)} />
+          ))}
+      </datalist>
+    </div>
   );
 }

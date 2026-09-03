@@ -16,7 +16,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, slug, full_name, first_name, last_name, age, location, linkedin_url, instagram_url, facebook_url, x_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, onboarded",
+      "id, slug, full_name, first_name, last_name, age, location, linkedin_url, instagram_url, facebook_url, x_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, activities, help_with, onboarded",
     )
     .eq("id", user.id)
     .single();

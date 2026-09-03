@@ -62,7 +62,7 @@ export async function generateMetadata({
 }
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, verified, onboarded, suspended, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, activities, help_with, verified, onboarded, suspended, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
 
 const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   open_to_partnerships: {
@@ -209,6 +209,8 @@ export default async function ProfileDetailPage({ params }: Props) {
     .map((r) => t(ROLE_LABELS[r] ?? r, locale))
     .filter(Boolean);
   const skills = (profile.skills as string[] | null) ?? [];
+  const helpWith = (profile.help_with as string[] | null) ?? [];
+  const activities = (profile.activities as string[] | null) ?? [];
   const statusTags = (profile.status_tags as string[] | null) ?? [];
   const capabilities = (profile.capabilities as string[] | null) ?? [];
   const partnershipSeeking =
@@ -220,7 +222,9 @@ export default async function ProfileDetailPage({ params }: Props) {
     profile.background ||
       profile.work_experience ||
       profile.education ||
-      skills.length,
+      skills.length ||
+      helpWith.length ||
+      activities.length,
   );
 
   // ── Mobile CTA (BI6) ─────────────────────────────────────────────────────
@@ -460,6 +464,43 @@ export default async function ProfileDetailPage({ params }: Props) {
                           className="px-3 py-1.5 border border-line text-sm text-ink rounded-full"
                         >
                           {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Outcomes this member can unblock — the axis that gives a
+                    reader a concrete reason to reach out. Values are canonical
+                    English in the column and translated for display. */}
+                {helpWith.length > 0 && (
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                      {t("Can help with", locale)}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {helpWith.map((h) => (
+                        <span
+                          key={h}
+                          className="px-3 py-1.5 bg-gold-soft border border-line text-sm text-ink rounded-full"
+                        >
+                          {t(h, locale)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {activities.length > 0 && (
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                      {t("Activities", locale)}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {activities.map((a) => (
+                        <span
+                          key={a}
+                          className="px-3 py-1.5 border border-line text-sm text-ink rounded-full"
+                        >
+                          {t(a, locale)}
                         </span>
                       ))}
                     </div>

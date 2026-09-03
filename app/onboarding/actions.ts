@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { canonicalProvince } from "@/lib/provinces";
 import { LONG_TEXT_MAX } from "@/lib/limits";
+import { ACTIVITIES } from "@/lib/activities";
+import { HELP_TOPICS } from "@/lib/help-topics";
 
 export type OnboardingState = { error?: string } | null;
 
@@ -116,6 +118,21 @@ export async function saveOnboardingAction(
       .filter(Boolean),
     MAX_SKILLS,
   );
+  // Controlled vocabularies — whitelisted, not length-capped. cap() slices each
+  // item to MAX_ITEM_LEN and several help topics are longer than that, which
+  // would store a truncated string no filter could ever match.
+  const pickFrom = (values: string[], allowed: readonly string[], max: number) =>
+    [...new Set(values.filter((v) => allowed.includes(v)))].slice(0, max);
+  const activities = pickFrom(
+    formData.getAll("activities").map(String),
+    ACTIVITIES,
+    20,
+  );
+  const help_with = pickFrom(
+    formData.getAll("help_with").map(String),
+    HELP_TOPICS,
+    15,
+  );
 
   // B2B fields (Phase 4 brought forward — see CLAUDE.md for original plan)
   const profile_type =
@@ -199,6 +216,8 @@ export async function saveOnboardingAction(
       work_experience: work_experience || null,
       education: education || null,
       skills,
+      activities,
+      help_with,
       type: profile_type,
       company_name: profile_type === "company" ? company_name : null,
       capabilities: profile_type === "company" ? capabilities : [],

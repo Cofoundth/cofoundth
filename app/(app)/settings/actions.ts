@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { canonicalProvince } from "@/lib/provinces";
 import { LONG_TEXT_MAX } from "@/lib/limits";
+import { ACTIVITIES } from "@/lib/activities";
+import { HELP_TOPICS } from "@/lib/help-topics";
 
 export type EditProfileState = { error?: string; ok?: boolean } | null;
 
@@ -38,8 +40,21 @@ const MAX_ITEM_LEN = 50;
 const MAX_INDUSTRY = 10;
 const MAX_SKILLS = 30;
 
+const MAX_ACTIVITIES = 20;
+const MAX_HELP_WITH = 15;
+
 const cap = (arr: string[], max: number) =>
   arr.map((s) => s.slice(0, MAX_ITEM_LEN)).slice(0, max);
+
+// Controlled vocabularies, so the value is whitelisted rather than trimmed.
+// cap() would be actively wrong here: it slices every item to MAX_ITEM_LEN (50)
+// and several help topics are longer than that — "Doing business in Thailand as
+// a foreigner (ownership, BOI, visas)" is 64 characters — so capping would store
+// a truncated string that matches nothing in the taxonomy and can never be
+// filtered. Whitelisting bounds the length implicitly and rejects junk.
+const pickFrom = (values: string[], allowed: readonly string[], max: number) => [
+  ...new Set(values.filter((v) => allowed.includes(v))),
+].slice(0, max);
 
 export async function updateProfileAction(
   _prev: EditProfileState,
@@ -113,6 +128,16 @@ export async function updateProfileAction(
       .map((s) => s.trim())
       .filter(Boolean),
     MAX_SKILLS,
+  );
+  const activities = pickFrom(
+    formData.getAll("activities").map(String),
+    ACTIVITIES,
+    MAX_ACTIVITIES,
+  );
+  const help_with = pickFrom(
+    formData.getAll("help_with").map(String),
+    HELP_TOPICS,
+    MAX_HELP_WITH,
   );
 
   // ---- B2B
@@ -226,6 +251,8 @@ export async function updateProfileAction(
       work_experience: work_experience || null,
       education: education || null,
       skills,
+      activities,
+      help_with,
       type: profile_type,
       company_name: profile_type === "company" ? company_name : null,
       capabilities: profile_type === "company" ? capabilities : [],

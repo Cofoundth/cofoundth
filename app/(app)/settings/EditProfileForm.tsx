@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { updateProfileAction } from "./actions";
 import { useT, useLocale } from "@/lib/i18n-client";
@@ -9,6 +9,8 @@ import Combobox from "@/components/Combobox";
 import { ProjectImagesField } from "@/components/ProjectImagesField";
 import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
+import { ACTIVITIES } from "@/lib/activities";
+import { HELP_TOPICS } from "@/lib/help-topics";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 
 type SaveResult = { error?: string; ok?: boolean } | null;
@@ -87,6 +89,8 @@ export type ProfileInitial = {
   work_experience?: string | null;
   education?: string | null;
   skills?: string[] | null;
+  activities?: string[] | null;
+  help_with?: string[] | null;
 };
 
 export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
@@ -122,6 +126,23 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
     initial.project_images ?? [],
   );
   const [skills, setSkills] = useState<string[]>(initial.skills ?? []);
+  const [activities, setActivities] = useState<string[]>(
+    initial.activities ?? [],
+  );
+  const [helpWith, setHelpWith] = useState<string[]>(initial.help_with ?? []);
+
+  // Combobox matches on the visible string, so a Thai reader has to see Thai in
+  // the menu. Options are the TRANSLATED labels and this maps the pick back to
+  // the canonical English value, which is what the column stores and what every
+  // filter compares against.
+  const activityByLabel = useMemo(
+    () => new Map(ACTIVITIES.map((a) => [tr(a), a])),
+    [tr],
+  );
+  const helpByLabel = useMemo(
+    () => new Map(HELP_TOPICS.map((h) => [tr(h), h])),
+    [tr],
+  );
   const [location, setLocation] = useState(initial.location ?? "");
   const [firstName, setFirstName] = useState(initial.first_name ?? "");
   const [lastName, setLastName] = useState(initial.last_name ?? "");
@@ -500,6 +521,81 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           />
           {skills.map((s) => (
             <input key={s} type="hidden" name="skills" value={s} />
+          ))}
+        </Field>
+
+        {/* Outcomes, not hard skills — see lib/help-topics.ts. The label has to
+            carry the "I can help with…" frame or the chips read ambiguously. */}
+        <Field label={tr("I can help with")}>
+          {helpWith.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {helpWith.map((h) => (
+                <Chip
+                  key={h}
+                  on
+                  onClick={() => setHelpWith((s) => s.filter((x) => x !== h))}
+                >
+                  {tr(h)} ✕
+                </Chip>
+              ))}
+            </div>
+          )}
+          <Combobox
+            options={HELP_TOPICS.filter((h) => !helpWith.includes(h)).map((h) =>
+              tr(h),
+            )}
+            value=""
+            onChange={(v) => {
+              const canonical = helpByLabel.get(v.trim());
+              if (canonical)
+                setHelpWith((s) =>
+                  s.includes(canonical) ? s : [...s, canonical],
+                );
+            }}
+            placeholder={tr("Search help topics")}
+            allowCustom={false}
+            className={inputCls}
+            emptyText={tr("No matches")}
+          />
+          {helpWith.map((h) => (
+            <input key={h} type="hidden" name="help_with" value={h} />
+          ))}
+        </Field>
+
+        {/* Feeds meetups: what this member would actually DO with someone. */}
+        <Field label={tr("What do you do for fun?")}>
+          {activities.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {activities.map((a) => (
+                <Chip
+                  key={a}
+                  on
+                  onClick={() => setActivities((s) => s.filter((x) => x !== a))}
+                >
+                  {tr(a)} ✕
+                </Chip>
+              ))}
+            </div>
+          )}
+          <Combobox
+            options={ACTIVITIES.filter((a) => !activities.includes(a)).map((a) =>
+              tr(a),
+            )}
+            value=""
+            onChange={(v) => {
+              const canonical = activityByLabel.get(v.trim());
+              if (canonical)
+                setActivities((s) =>
+                  s.includes(canonical) ? s : [...s, canonical],
+                );
+            }}
+            placeholder={tr("Search activities")}
+            allowCustom={false}
+            className={inputCls}
+            emptyText={tr("No matches")}
+          />
+          {activities.map((a) => (
+            <input key={a} type="hidden" name="activities" value={a} />
           ))}
         </Field>
       </Section>

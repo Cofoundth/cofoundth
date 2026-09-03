@@ -31,6 +31,9 @@ import { Button, EmptyState, LinkButton } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
+import Combobox from "@/components/Combobox";
+import { ACTIVITIES } from "@/lib/activities";
+import { HELP_TOPICS } from "@/lib/help-topics";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
 type Profile = ProfileLike & {
@@ -42,6 +45,8 @@ type Profile = ProfileLike & {
   verified: boolean;
   pitch: string | null;
   skills: string[];
+  activities: string[];
+  help_with: string[];
   project_url: string | null;
   project_images: string[];
   work_experience: string | null;
@@ -69,6 +74,8 @@ export function BrowseClient({ others }: Props) {
   const [industryFilters, setIndustryFilters] = useState<string[]>([]);
   const [stageFilter, setStageFilter] = useState<string>("");
   const [commitmentFilter, setCommitmentFilter] = useState<string>("");
+  const [activityFilters, setActivityFilters] = useState<string[]>([]);
+  const [helpFilters, setHelpFilters] = useState<string[]>([]);
   // Mobile-only collapse. On lg+ the panel is always shown via CSS (and the
   // toggle is hidden) — a breakpoint-aware initial state would hydrate wrong.
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -109,6 +116,16 @@ export function BrowseClient({ others }: Props) {
         return false;
       if (stageFilter && p.stage !== stageFilter) return false;
       if (commitmentFilter && p.commitment !== commitmentFilter) return false;
+      if (
+        activityFilters.length > 0 &&
+        !activityFilters.some((a) => p.activities.includes(a))
+      )
+        return false;
+      if (
+        helpFilters.length > 0 &&
+        !helpFilters.some((h) => p.help_with.includes(h))
+      )
+        return false;
       return true;
     });
   }, [
@@ -116,6 +133,8 @@ export function BrowseClient({ others }: Props) {
     searchTerm,
     roleFilters,
     industryFilters,
+    activityFilters,
+    helpFilters,
     stageFilter,
     commitmentFilter,
   ]);
@@ -142,23 +161,50 @@ export function BrowseClient({ others }: Props) {
       s.includes(v) ? s.filter((x) => x !== v) : [...s, v],
     );
   }
+  // Combobox matches the visible string, so Thai readers get Thai options and
+  // the pick maps back to the canonical English value the column stores.
+  const activityByLabel = useMemo(
+    () => new Map(ACTIVITIES.map((a) => [tr(a), a])),
+    [tr],
+  );
+  const helpByLabel = useMemo(
+    () => new Map(HELP_TOPICS.map((h) => [tr(h), h])),
+    [tr],
+  );
+
+  function toggleActivity(v: string) {
+    setActivityFilters((s) =>
+      s.includes(v) ? s.filter((x) => x !== v) : [...s, v],
+    );
+  }
+  function toggleHelp(v: string) {
+    setHelpFilters((s) =>
+      s.includes(v) ? s.filter((x) => x !== v) : [...s, v],
+    );
+  }
   function clearAll() {
     setSearchTerm("");
     setRoleFilters([]);
     setIndustryFilters([]);
     setStageFilter("");
     setCommitmentFilter("");
+    setActivityFilters([]);
+    setHelpFilters([]);
   }
 
   const filterCount =
     roleFilters.length +
     industryFilters.length +
+    activityFilters.length +
+    helpFilters.length +
     (stageFilter ? 1 : 0) +
     (commitmentFilter ? 1 : 0);
 
   const activeFilterCount =
     roleFilters.length +
     industryFilters.length +
+    activityFilters.length +
+    helpFilters.length +
     (stageFilter ? 1 : 0) +
     (commitmentFilter ? 1 : 0) +
     (searchTerm ? 1 : 0);
@@ -272,19 +318,110 @@ export function BrowseClient({ others }: Props) {
               ))}
             </FilterGroup>
 
+            {/* Searchable, not a wall of chips. The industry list widened
+                from 31 tech verticals to the full real-economy taxonomy when
+                the platform stopped being tech-only, and rendering every
+                option as a chip stopped being readable well before that.
+                Selected industries stay visible as chips so the active filter
+                is never hidden inside a closed menu. */}
             <FilterGroup label={tr("Industry")}>
-              <div className="flex flex-wrap gap-1.5">
-                {INDUSTRY_OPTIONS.map((i) => (
-                  <FilterChip
-                    key={i}
-                    selected={industryFilters.includes(i)}
-                    onClick={() => toggleIndustry(i)}
-                    compact
-                  >
-                    {i}
-                  </FilterChip>
-                ))}
-              </div>
+              {industryFilters.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {industryFilters.map((i) => (
+                    <FilterChip
+                      key={i}
+                      selected
+                      onClick={() => toggleIndustry(i)}
+                      compact
+                    >
+                      {i} ×
+                    </FilterChip>
+                  ))}
+                </div>
+              )}
+              <Combobox
+                options={INDUSTRY_OPTIONS.filter(
+                  (i) => !industryFilters.includes(i),
+                )}
+                value=""
+                onChange={(v) => {
+                  const picked = v.trim();
+                  // allowCustom is off, but onChange still fires on blur with
+                  // whatever was typed — only accept a real taxonomy value.
+                  if (picked && INDUSTRY_OPTIONS.includes(picked)) {
+                    toggleIndustry(picked);
+                  }
+                }}
+                placeholder={tr("Search industries")}
+                allowCustom={false}
+                className="w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:border-navy focus:outline-none rounded-xl"
+                emptyText={tr("No matches")}
+              />
+            </FilterGroup>
+
+            {/* Outcomes someone can unblock for you — the axis that gives a
+                stranger a reason to message. Separate from Skills on purpose. */}
+            <FilterGroup label={tr("Can help with")}>
+              {helpFilters.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {helpFilters.map((h) => (
+                    <FilterChip
+                      key={h}
+                      selected
+                      onClick={() => toggleHelp(h)}
+                      compact
+                    >
+                      {tr(h)} ×
+                    </FilterChip>
+                  ))}
+                </div>
+              )}
+              <Combobox
+                options={HELP_TOPICS.filter(
+                  (h) => !helpFilters.includes(h),
+                ).map((h) => tr(h))}
+                value=""
+                onChange={(v) => {
+                  const canonical = helpByLabel.get(v.trim());
+                  if (canonical) toggleHelp(canonical);
+                }}
+                placeholder={tr("Search help topics")}
+                allowCustom={false}
+                className="w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:border-navy focus:outline-none rounded-xl"
+                emptyText={tr("No matches")}
+              />
+            </FilterGroup>
+
+            {/* What someone would actually DO with you. Feeds meetups. */}
+            <FilterGroup label={tr("Activities")}>
+              {activityFilters.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {activityFilters.map((a) => (
+                    <FilterChip
+                      key={a}
+                      selected
+                      onClick={() => toggleActivity(a)}
+                      compact
+                    >
+                      {tr(a)} ×
+                    </FilterChip>
+                  ))}
+                </div>
+              )}
+              <Combobox
+                options={ACTIVITIES.filter(
+                  (a) => !activityFilters.includes(a),
+                ).map((a) => tr(a))}
+                value=""
+                onChange={(v) => {
+                  const canonical = activityByLabel.get(v.trim());
+                  if (canonical) toggleActivity(canonical);
+                }}
+                placeholder={tr("Search activities")}
+                allowCustom={false}
+                className="w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:border-navy focus:outline-none rounded-xl"
+                emptyText={tr("No matches")}
+              />
             </FilterGroup>
 
             <FilterGroup label={tr("Stage")}>
