@@ -4,6 +4,28 @@
 
 export type MeetupFormat = "in_person" | "online";
 export type MeetupStatus = "draft" | "published" | "cancelled";
+export type MeetupCategory =
+  | "run"
+  | "coffee"
+  | "cowork"
+  | "dinner"
+  | "talk"
+  | "other";
+
+// The card's emoji band + chip both key off this. Labels are English source
+// strings — call sites translate. Onfound's set (Run/Coffee/Cowork/Dinner/
+// Other) plus Talk, which Bangkok founder events actually skew toward.
+export const MEETUP_CATEGORIES: Record<
+  MeetupCategory,
+  { emoji: string; label: string }
+> = {
+  coffee: { emoji: "☕", label: "Coffee" },
+  cowork: { emoji: "💻", label: "Cowork" },
+  dinner: { emoji: "🍜", label: "Dinner" },
+  talk: { emoji: "🎤", label: "Talk" },
+  run: { emoji: "🏃", label: "Run" },
+  other: { emoji: "✨", label: "Other" },
+};
 
 export type Meetup = {
   id: string;
@@ -17,6 +39,7 @@ export type Meetup = {
   ends_at: string | null;
   capacity: number | null;
   status: MeetupStatus;
+  category: MeetupCategory;
   created_by: string;
   created_at: string;
   updated_at: string;

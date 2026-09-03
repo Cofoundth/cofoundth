@@ -28,10 +28,12 @@ export function isInvestorReadableRoute(pathname: string): boolean {
     // ...but not composing a new thread.
     (pathname.startsWith("/community/") &&
       !pathname.startsWith("/community/new")) ||
-    // Meetups on the same read-first terms as the feed. RSVP is a write and is
-    // refused server-side in app/(app)/meetups/actions.ts.
+    // Meetups on the same read-first terms as the feed. RSVP and hosting are
+    // writes and are refused server-side in app/(app)/meetups/actions.ts;
+    // /meetups/new is the hosting form, excluded here like /community/new.
     pathname === "/meetups" ||
-    pathname.startsWith("/meetups/") ||
+    (pathname.startsWith("/meetups/") &&
+      !pathname.startsWith("/meetups/new")) ||
     // The company directory and company profiles, but not the founder-to-founder
     // B2B actions (create / propose / chat).
     pathname === "/orgs" ||

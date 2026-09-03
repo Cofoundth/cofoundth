@@ -359,11 +359,11 @@ export default async function DashboardPage() {
                 </p>
                 <p className="text-white leading-relaxed mb-5">
                   {await tServer(
-                    "No meetups on the calendar yet. Want to meet founders in person? Say so in the community and make the first one happen.",
+                    "No meetups on the calendar yet. Host one — every founder on Cofoundee will see it.",
                   )}
                 </p>
                 <Link
-                  href="/community/new"
+                  href="/meetups/new"
                   className="inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-5 py-2.5 text-sm tracking-wide transition-colors rounded-full"
                 >
                   {await tServer("Start the first meetup")}

@@ -16,6 +16,7 @@ import { requireUser } from "@/lib/auth";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import {
+  MEETUP_CATEGORIES,
   meetupWhenParts,
   meetupCalendarUrl,
   type Meetup,
@@ -59,14 +60,14 @@ export default async function MeetupDetailPage({ params }: Props) {
   const { data: meetup } = await supabase
     .from("meetups")
     .select(
-      "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, created_by, created_at, updated_at",
+      "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, category, created_by, created_at, updated_at",
     )
     .eq("slug", slug)
     .maybeSingle();
   if (!meetup) notFound();
   const m = meetup as Meetup;
 
-  const [{ data: attendeesRaw }, admin, investor] = await Promise.all([
+  const [{ data: attendeesRaw }, admin, investor, { data: host }] = await Promise.all([
     supabase
       .from("meetup_rsvps")
       .select("user_id, profile:profiles(id, full_name, photo_url, slug)")
@@ -74,6 +75,11 @@ export default async function MeetupDetailPage({ params }: Props) {
       .order("created_at", { ascending: true }),
     isAdminUser(supabase, user),
     isInvestorAccount(supabase, user.id),
+    supabase
+      .from("profiles")
+      .select("id, full_name, photo_url, slug")
+      .eq("id", m.created_by)
+      .maybeSingle(),
   ]);
 
   const attendees = (attendeesRaw ?? []) as unknown as AttendeeRow[];
@@ -122,6 +128,9 @@ export default async function MeetupDetailPage({ params }: Props) {
   ]);
 
   const spotsFull = m.capacity != null && !going && count >= m.capacity;
+  const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
+  const tHostedBy = await tServer("Hosted by {name}");
+  const tCatLabel = await tServer(cat.label);
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
@@ -143,6 +152,26 @@ export default async function MeetupDetailPage({ params }: Props) {
       </div>
 
       <h1 className="text-d2 mb-2">{m.title}</h1>
+
+      {/* Category + host — the two lines Onfound's event page leads with. */}
+      <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink-muted">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-soft px-2.5 py-0.5 text-xs text-gold-ink">
+          <span aria-hidden="true">{cat.emoji}</span> {tCatLabel}
+        </span>
+        {host && (
+          <Link
+            href={`/profile/${(host.slug as string | null) ?? (host.id as string)}`}
+            className="inline-flex items-center gap-2 hover:text-navy transition-colors"
+          >
+            <Avatar
+              name={host.full_name as string}
+              url={host.photo_url as string | null}
+              size="sm"
+            />
+            {tHostedBy.replace("{name}", (host.full_name as string) ?? "—")}
+          </Link>
+        )}
+      </div>
 
       {cancelled && (
         <div className="mb-6 px-4 py-3 border border-danger-line rounded-xl bg-danger-surface text-sm text-danger-ink">

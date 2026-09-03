@@ -3,6 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isInvestorAccount } from "@/lib/account";
+import { redirect } from "next/navigation";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { slugify } from "@/lib/slug";
+import {
+  bangkokInputToISO,
+  MEETUP_CATEGORIES,
+  type MeetupCategory,
+  type MeetupFormat,
+} from "@/lib/meetups";
 
 export type RsvpResult = { error?: string; going?: boolean; count?: number };
 
@@ -87,4 +96,142 @@ export async function rsvpAction(
   revalidatePath("/meetups");
   revalidatePath(`/meetups/${meetup.slug as string}`);
   return { going, count: count ?? 0 };
+}
+
+// ── Founder-facing hosting ─────────────────────────────────────────────────
+// The admin keeps its own actions in app/(app)/admin/meetups/actions.ts; this
+// differs where the audience does: any FOUNDER may host (investors read
+// meetups but never write into the founder community — same line rsvpAction
+// draws above), there is no status field (a hosted meetup publishes
+// immediately; drafts are an editorial tool and members aren't editors), and
+// the host RSVPs to their own meetup on create — a host who isn't going is a
+// data bug, and Onfound's own cards count the host in "going".
+//
+// parse/slug logic is duplicated from the admin actions on purpose: both
+// modules are "use server", so importing helpers across them would expose the
+// admin module's surface here. ~60 lines of duplication buys a hard
+// permission boundary.
+
+export type HostMeetupState = { error: string } | undefined;
+
+const urlOk = (u: string) => /^https?:\/\/.+\..+/.test(u);
+
+async function uniqueSlug(
+  admin: ReturnType<typeof createAdminClient>,
+  title: string,
+): Promise<string> {
+  let base = slugify(title);
+  if (base.length < 3) base = base ? `${base}-meetup` : "meetup";
+  let candidate = base;
+  for (let n = 2; n < 50; n++) {
+    const { data } = await admin
+      .from("meetups")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+    if (!data) return candidate;
+    candidate = `${base}-${n}`.slice(0, 50);
+  }
+  return `${base}-${crypto.randomUUID().slice(0, 6)}`.slice(0, 50);
+}
+
+export async function hostMeetupAction(
+  _prev: HostMeetupState,
+  formData: FormData,
+): Promise<HostMeetupState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sign in to host a meetup." };
+  // Investors read the meetup calendar but do not write into the founder
+  // community — the same boundary /community/new enforces.
+  if (await isInvestorAccount(supabase, user.id)) {
+    return { error: "Investor accounts can't host meetups." };
+  }
+
+  const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const category = String(formData.get("category") ?? "other");
+  const format = String(formData.get("format") ?? "in_person");
+  const location = String(formData.get("location") ?? "").trim();
+  const onlineUrl = String(formData.get("online_url") ?? "").trim();
+  const startsRaw = String(formData.get("starts_at") ?? "").trim();
+  const endsRaw = String(formData.get("ends_at") ?? "").trim();
+  const capacityRaw = String(formData.get("capacity") ?? "").trim();
+
+  if (title.length < 2 || title.length > 120) {
+    return { error: "Title must be 2–120 characters." };
+  }
+  if (description.length > 5000) {
+    return { error: "Description is too long (5000 max)." };
+  }
+  if (!(category in MEETUP_CATEGORIES)) {
+    return { error: "Pick a category." };
+  }
+  if (format !== "in_person" && format !== "online") {
+    return { error: "Pick a format." };
+  }
+  if (format === "online" && onlineUrl && !urlOk(onlineUrl)) {
+    return { error: "Enter a valid meeting link (https://…)." };
+  }
+
+  const starts_at = bangkokInputToISO(startsRaw);
+  if (!starts_at) return { error: "Pick a start date and time." };
+  if (new Date(starts_at).getTime() < Date.now()) {
+    return { error: "Pick a time in the future." };
+  }
+
+  let ends_at: string | null = null;
+  if (endsRaw) {
+    ends_at = bangkokInputToISO(endsRaw);
+    if (!ends_at) return { error: "End time is invalid." };
+    if (new Date(ends_at).getTime() <= new Date(starts_at).getTime()) {
+      return { error: "End time must be after the start time." };
+    }
+  }
+
+  let capacity: number | null = null;
+  if (capacityRaw) {
+    const n = parseInt(capacityRaw, 10);
+    if (!Number.isFinite(n) || n < 2 || n > 500) {
+      return { error: "Capacity must be between 2 and 500." };
+    }
+    capacity = n;
+  }
+
+  const admin = createAdminClient();
+  const slug = await uniqueSlug(admin, title);
+
+  const { data: created, error } = await admin
+    .from("meetups")
+    .insert({
+      slug,
+      title,
+      description: description || null,
+      category: category as MeetupCategory,
+      format: format as MeetupFormat,
+      location: format === "in_person" ? location || null : null,
+      online_url: format === "online" ? onlineUrl || null : null,
+      starts_at,
+      ends_at,
+      capacity,
+      status: "published",
+      created_by: user.id,
+    })
+    .select("id, slug")
+    .single();
+  if (error || !created) {
+    return { error: "Could not create the meetup. Try again." };
+  }
+
+  // The host is going to their own meetup — count them from the start.
+  await admin.from("meetup_rsvps").insert({
+    meetup_id: created.id,
+    user_id: user.id,
+  });
+
+  revalidatePath("/meetups");
+  revalidatePath("/dashboard");
+  redirect(`/meetups/${created.slug}`);
 }
