@@ -207,7 +207,7 @@ function MeetupItem({
       }`}
     >
       <div className="md:w-28 shrink-0">
-        <div className="font-serif text-d3 text-navy leading-none">
+        <div className="font-serif text-num2 text-navy">
           {when.day}
         </div>
         <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mt-1">

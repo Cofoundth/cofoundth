@@ -36,7 +36,11 @@ export function Eyebrow({ children, as: Tag = "div", className }: EyebrowProps) 
   return (
     <Tag
       className={cn(
-        "text-xs uppercase tracking-[0.25em] text-gold-ink",
+        // `eyebrow` is a plain marker class, not a utility: globals.css hooks
+        // it to restore weight in the Thai locale, where an eyebrow loses BOTH
+        // of its devices (no letter case, and the tracking kill-switch strips
+        // the 0.25em). Without this hook that rule matches nothing.
+        "eyebrow text-xs uppercase tracking-[0.25em] text-gold-ink",
         className,
       )}
     >

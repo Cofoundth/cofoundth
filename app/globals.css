@@ -28,6 +28,16 @@
      Overriding these retunes every rounded-sm/md/lg/xl utility at once.
      Buttons are pills and fields are 14px; both are enforced in @layer base
      below so no call site has to remember. */
+  /* Error / destructive. Warm-leaning reds chosen to sit on the sand palette
+     rather than the stock blue-red Tailwind ships. Before these existed the
+     code improvised error styling out of red-50/300/400/500 with three
+     different border weights, which is exactly the drift tokens exist to stop.
+     Measured: danger-ink on danger-surface 6.05:1, on cream 5.78:1, on white
+     6.57:1 - AA everywhere it is used. */
+  --color-danger-ink: #b42318;
+  --color-danger-surface: #fef3f2;
+  --color-danger-line: #f4b0a1;
+
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.625rem;
@@ -63,6 +73,22 @@
   --text-d4--line-height: 1.1;
   --text-d5: 4.25rem; /* 68px */
   --text-d5--line-height: 1.05;
+
+  /* Numeral register. Big standalone numbers - stat counts, calendar
+     day-of-month, error-code digits. These previously borrowed
+     `text-d2/d3 + leading-none`, which broke two rules at once: the ladder is
+     display TEXT only, and its paired line-heights are not overridable.
+
+     line-height 1.0 is safe here for exactly one reason: the content is DIGITS,
+     which carry no Thai tone or vowel marks. That content restriction is part
+     of the rule, not a nicety - put a Thai word in one of these and it
+     collides. Use with `font-serif tabular-nums`. */
+  --text-num1: 2.0625rem; /* 33px */
+  --text-num1--line-height: 1;
+  --text-num2: 2.625rem; /* 42px */
+  --text-num2--line-height: 1;
+  --text-num3: 4.25rem; /* 68px */
+  --text-num3--line-height: 1;
 
   /* Per-glyph fallback: Latin renders the Latin face, Thai falls through to
      Noto Sans Thai (neither Rethink Sans nor Inter covers Thai).
@@ -152,6 +178,45 @@
      locale — the !important overrides Tailwind's inline tracking utilities. */
   html[lang="th"] * {
     letter-spacing: normal !important;
+  }
+
+  /* Thai needs more leading than Latin, and the gap is physical, not stylistic.
+     Measured against the font this app actually loads, via canvas TextMetrics
+     at 100px: max ink ABOVE the baseline is 1.010em - a tone mark stacked over
+     an upper vowel, the everyday case in Thai - against 0.73em for Latin "Hxg"
+     in the same face. Deepest measured ink BELOW is 0.27em. Two Thai lines
+     therefore start sharing ink at 1.28, which makes `leading-tight` (1.25) a
+     real collision rather than a theoretical one.
+
+     Reproduce on any app page:
+       await document.fonts.ready;
+       const c = document.createElement("canvas").getContext("2d");
+       c.font = `100px ${getComputedStyle(document.body).fontFamily}`;
+       c.measureText("\u0e17\u0e35\u0e48").actualBoundingBoxAscent / 100;  // -> 1.01
+
+     `!important` is load-bearing here for the same reason it is on the focus
+     ring below: the ladder's line-heights and every `leading-*` utility live in
+     the `utilities` layer, which beats `base` regardless of specificity.
+     Without it this rule silently does nothing at all.
+
+     Latin pages keep the tight ladder - only Thai pays for Thai physics.
+     `leading-snug` (1.375) already clears the threshold and is left alone. */
+  html[lang="th"] :where(.leading-none, .leading-tight) {
+    line-height: 1.45 !important;
+  }
+  html[lang="th"] :where(.text-d1) {
+    line-height: 1.35 !important;
+  }
+  html[lang="th"] :where(.text-d2, .text-d3, .text-d4, .text-d5) {
+    line-height: 1.3 !important;
+  }
+
+  /* An eyebrow in Thai loses BOTH of its devices: Thai has no letter case, and
+     the rule above strips the tracking that carries the label feel in Latin.
+     Left alone it degrades into plain small grey text. Compensate with weight,
+     the one signal Thai keeps. */
+  html[lang="th"] .eyebrow {
+    font-weight: 600;
   }
 
   /* One global keyboard focus ring. Targets :focus-visible only, so mouse and

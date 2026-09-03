@@ -59,7 +59,7 @@ export default function EventsPage() {
               className="bg-white border border-line p-6 lg:p-8 flex flex-col md:flex-row gap-6 rounded-xl"
             >
               <div className="md:w-32 shrink-0">
-                <div className="font-serif text-d3 text-gold-ink leading-none">
+                <div className="font-serif text-num2 text-gold-ink">
                   {d.toLocaleDateString("en-GB", { day: "numeric" })}
                 </div>
                 <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mt-1">

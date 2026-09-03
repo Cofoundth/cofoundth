@@ -167,7 +167,7 @@ export function CompaniesClient({
               {tr("Partnership board")}
             </Link>
             <div className="text-right">
-              <div className="font-serif text-d2 text-navy leading-none">
+              <div className="font-serif text-num1 text-navy">
                 {companies.length}
               </div>
               <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mt-1">

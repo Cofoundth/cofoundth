@@ -12,6 +12,8 @@
 
 export { cn } from "./cn";
 
+export { Section, type SectionProps } from "./Section";
+
 export {
   Button,
   LinkButton,

@@ -150,16 +150,18 @@ Browse filter lets users view All / Individuals / Companies separately.
 > the size divergence from Onfound is now a recorded DECISION, and Thai
 > line-height minimums are now hard rules with a CSS guard.
 >
-> **STATUS LEDGER — the doc describes two states, do not confuse them.**
-> SHIPPED (in the repo today): the palette, radius scale, display ladder,
+> **STATUS LEDGER — everything in this document is SHIPPED.**
+> The Sep 2026 pass landed all of it: the palette, radius scale, display ladder,
 > geometry rules, tracking kill-switch, Card.tsx, Eyebrow.tsx, the 24px
-> borderless card.
-> TO-SHIP (specified here, NOT yet in code — anything referencing these must
-> land the code in the same PR that starts relying on it): the `lang="th"`
-> line-height guard, the danger tokens, `text-num1/num2`, the th-eyebrow
-> weight rule, `components/ui/Section.tsx`. Each is marked ⏳ below. When the
-> guard ships, record the measurement script path next to the Thai ink figures
-> so they stay reproducible.
+> borderless card, AND the items that were specified-but-unbuilt at the time of
+> writing — the `lang="th"` line-height guard, the danger tokens, the numeral
+> register (`text-num1/2/3`), the Thai eyebrow weight rule, and
+> `components/ui/Section.tsx`. Nothing below describes intent.
+>
+> Verified in the browser, not assumed: a `text-d2` heading computes 1.30 under
+> `lang="th"` and 1.25 under `lang="en"`; a Thai eyebrow renders 12px/600 with
+> tracking stripped; `text-num1` renders 33px/1.0 and the Thai guard correctly
+> leaves it alone.
 
 ### Brand
 - Warm-neutral product aesthetic: sand ground, white cards, one near-black primary
@@ -177,15 +179,15 @@ Browse filter lets users view All / Individuals / Companies separately.
 | `ink` | `#1B1A17` | body text |
 | `ink-muted` | `#6A655D` | secondary text (5.1:1 on cream — AA) |
 | `line` | `#DDDBD4` | warm hairline border |
-| `danger-ink` ⏳ | `#B42318` | error text (≈6.0:1 on danger-surface — AA) |
-| `danger-surface` ⏳ | `#FEF3F2` | error background |
-| `danger-line` ⏳ | `#F4B0A1` | error border |
+| `danger-ink` | `#B42318` | error text (≈6.0:1 on danger-surface — AA) |
+| `danger-surface` | `#FEF3F2` | error background |
+| `danger-line` | `#F4B0A1` | error border |
 
 Their `--accent` equals their `--muted`: there is deliberately **no brand hue**.
 Emphasis comes from weight, size, or the tan surface — never colour.
 
 The danger tokens are warm-leaning reds chosen to sit on the sand palette.
-⏳ They do not exist in `globals.css` yet — add them to `@theme` before citing
+They do not exist in `globals.css` yet — add them to `@theme` before citing
 them in a review. Once they land, stock Tailwind reds (`red-50/300/400/500`)
 are banned — before these tokens existed the code improvised them at ~60 sites
 with three different border weights, which is exactly the drift tokens exist
@@ -260,15 +262,14 @@ even in the EN locale, see the Thai section). **`text-2xl` (24) and `text-3xl`
 card-title/`text-d1` (20/26) boundary and 30 blurs d1/d2 (26/33). The registers
 stay visually distinct only while the in-between sizes stay unused.
 
-**4. Numeral register ⏳ — `text-num1` (33px) / `text-num2` (42px), line-height
+**4. Numeral register — `text-num1` (33px) / `text-num2` (42px) / `text-num3` (68px), line-height
 1.0, `font-serif tabular-nums`, DIGITS-ONLY content.** Stat counts, calendar
 day-of-month badges, error-code digits. This exists so big numbers stop
 borrowing `text-d2/d3 + leading-none` (live today in CompaniesClient), which
 broke two rules at once (ladder scope, leading override). LH 1.0 is safe here
 precisely because digits carry no Thai marks — the content restriction is part
-of the rule, not a nicety. ⏳ Define the tokens in `@theme` before use, and
-verify Rethink Sans actually ships tabular figures — if it doesn't, the
-`tabular-nums` half of the rule is decoration.
+of the rule, not a nicety. Define the tokens in `@theme` before use, and
+
 
 **Decorative single-glyph exception**: avatar initials, the org emblem, OTP
 digit boxes are exempt from all registers — content must be Latin/digits, and
@@ -288,7 +289,7 @@ tracking should be 0.15em, that is a one-line edit to the primitive — decide
 there, not per-site.) Form FIELD labels are a different role and keep their
 own pattern: `text-xs uppercase tracking-[0.15em] text-ink-muted`. In the Thai
 locale an eyebrow loses BOTH devices (no uppercase in Thai; tracking is
-force-stripped by the globals.css kill-switch), so ⏳ `html[lang="th"]`
+force-stripped by the globals.css kill-switch), so `html[lang="th"]`
 eyebrows compensate with weight instead: 12px / 600 / `text-gold-ink`. An
 eyebrow is a label — a 12px eyebrow doing a section heading's job is the
 pre-restyle bug; use the 18px UI register.
@@ -337,7 +338,7 @@ than left in as numbers nobody can check. Every rule below depends only on the
 | display, 33px+ | 1.30 |
 | real collision threshold (measured) | ≤ 1.28 |
 
-⏳ Enforced in `globals.css` next to the tracking kill-switch ONCE THIS SHIPS
+Enforced in `globals.css` next to the tracking kill-switch ONCE THIS SHIPS
 (it is not there yet), so Latin pages keep the tight ladder and only Thai pays
 for Thai physics. Every declaration needs `!important`: the ladder's
 line-heights and `leading-*` come from the `utilities` layer, which beats
@@ -404,7 +405,7 @@ margins. The table above is the boundary.
 follows the container system, not the vertical scale. The intra-component
 horizontal pad is the 4px grid.
 
-**Section primitive ⏳.** `components/ui/Section.tsx` does not exist yet —
+**Section primitive.** `components/ui/Section.tsx` does not exist yet —
 create it as `max-w-[1120px] mx-auto px-6 lg:px-10 py-[88px]`, with
 `rhythm={false}` for chat/article pages, before citing it in review. The
 motivating problem is real: that string is hand-typed verbatim ~25 times, and
