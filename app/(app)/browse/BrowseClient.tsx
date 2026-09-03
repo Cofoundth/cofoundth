@@ -30,6 +30,7 @@ import {
   EmptyState,
   LinkButton,
   Section,
+  StageEmblem,
 } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
@@ -812,6 +813,17 @@ function ProfileCard({ profile }: { profile: Profile }) {
               {isNew && <span className="shrink-0 text-gold-ink">{tr("New")}</span>}
             </div>
           </div>
+          {/* Stage as a corner glyph, matching /founders and Onfound. Intent
+              stays inline below — they are different axes: stage is how far
+              along the company is, intent is what the person is bringing. */}
+          <StageEmblem
+            stage={profile.stage}
+            label={
+              profile.stage && STAGE_LABELS[profile.stage]
+                ? tr(STAGE_LABELS[profile.stage])
+                : ""
+            }
+          />
         </div>
 
         {/* BODY — three rows on a 10px rhythm, each full card width. */}

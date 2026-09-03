@@ -18,11 +18,11 @@ import {
   Card,
   CardChip,
   CardLabel,
-  CardPill,
   EmptyState,
   Eyebrow,
   LinkButton,
   Section,
+  StageEmblem,
   VerifiedBadge,
 } from "@/components/ui";
 
@@ -109,19 +109,26 @@ export default async function PublicFoundersPage() {
                         </div>
                       )}
                     </div>
+                    {/* Stage as a glyph in the corner, the way Onfound mark it.
+                        As an inline pill it cost up to 97px of the row below —
+                        "กำลังสร้าง MVP" is a long string — and that row is the
+                        only place industries can go. */}
+                    <StageEmblem
+                      stage={f.stage}
+                      label={stageLabel ? tr(stageLabel) : ""}
+                    />
                   </div>
 
                   {/* BODY — three rows on a 10px rhythm, each full card width. */}
                   <div className="mt-4 flex flex-col gap-4 flex-1 min-h-0">
-                    {(stageLabel || f.industry.length > 0) && (
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        {stageLabel && <CardPill>{tr(stageLabel)}</CardPill>}
-                        {/* Industries as plain text, not chips: a chip's padding
-                            and border cost ~20px each, so one chip filled the row
-                            that two or three bare names fit in. */}
-                        <span className="min-w-0 truncate text-xs text-ink-muted">
-                          {f.industry.join(" · ")}
-                        </span>
+                    {/* Industries as plain text, not chips: a chip's padding
+                        and border cost ~20px each, so one chip filled the row
+                        that two or three bare names fit in. With stage moved to
+                        the corner this row is theirs alone — it went from ~183px
+                        to the full card width. */}
+                    {f.industry.length > 0 && (
+                      <div className="truncate text-xs text-ink-muted">
+                        {f.industry.join(" · ")}
                       </div>
                     )}
 

@@ -19,6 +19,7 @@
 // callers pass already-translated strings.
 
 import type { ComponentProps, ComponentType, ReactNode } from "react";
+import { Banknote, Hammer, Lightbulb, TrendingUp } from "lucide-react";
 import { cn } from "./cn";
 
 /** Field name inside a card: "Working on", "Can help with". */
@@ -81,5 +82,63 @@ export function CardPill({
       )}
       {...rest}
     />
+  );
+}
+
+// ── STAGE EMBLEM ──────────────────────────────────────────────────────────
+// Where a founder is, as a 32px disc in the card's top-right corner. Copied in
+// PLACEMENT from Onfound, whose card puts the same marker in the same corner —
+// but NOT in colour. Theirs is hue-coded per stage (tan #E7DAB4 for idea, green
+// #CBDFD2 for early, blue #CCDCEC for active). This palette has deliberately no
+// brand hue, so all four stages share the one tan accent surface and the ICON
+// carries the distinction. Colour-only coding would fail a colour-blind reader
+// anyway; four distinct glyphs do not.
+//
+// `bg-gold` is the accent SURFACE, which is the legal use of that token on a
+// light ground (gold as TEXT on light measures ~1.3:1 and has shipped invisible
+// before). gold-ink on gold measures ~4.4:1 — past the 3:1 floor for a 2px
+// stroke at 16px.
+//
+// Sized by a FIXED BOX, never by line-height: the Thai guard in globals.css
+// force-overrides leading-none/leading-tight, so a glyph sized that way would
+// break in the default locale. Box-sized glyphs are immune.
+//
+// role="img" + aria-label, because a bare <div> with aria-label is not reliably
+// announced — the icon carries meaning here and must have an accessible name.
+const STAGE_ICONS: Record<
+  string,
+  ComponentType<{ className?: string; strokeWidth?: number }>
+> = {
+  exploring: Lightbulb,
+  building: Hammer,
+  traction: TrendingUp,
+  raising: Banknote,
+};
+
+export function StageEmblem({
+  stage,
+  label,
+  className,
+}: {
+  stage: string | null | undefined;
+  /** Already translated — this file never translates (see the barrel header). */
+  label: string;
+  className?: string;
+}) {
+  const Icon = stage ? STAGE_ICONS[stage] : undefined;
+  if (!Icon) return null;
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className={cn(
+        "grid place-items-center h-8 w-8 shrink-0 rounded-full",
+        "bg-gold text-gold-ink",
+        className,
+      )}
+    >
+      <Icon className="w-4 h-4" strokeWidth={2} />
+    </span>
   );
 }
