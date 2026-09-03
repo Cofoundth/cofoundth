@@ -52,21 +52,38 @@ export default async function DashboardPage() {
       .limit(4),
   ]);
 
-  // ---- Personal stats (still computed, surfaced subtly) -------------
+  // ---- Personal stats -----------------------------------------------
+  // COMMUNITY metrics, not matching ones. This card used to lead with
+  // Interests and Matches, which measure the co-founder flow — the axis the
+  // strategy deliberately demoted to "cherry on top". A community-first
+  // product should reflect back what you put in (posts) and what came back
+  // (replies). Pending interests are not lost: AppSidebar badges them on
+  // Connections, which is the better home for a number that wants action.
+  const { data: myPosts } = await supabase
+    .from("forum_posts")
+    .select("id")
+    .eq("author_id", user.id);
+  const myPostIds = (myPosts ?? []).map((r) => r.id as string);
+
   const [
-    { count: pendingReceivedCount },
-    { count: matchesCount },
+    { count: postsCount },
+    { count: repliesCount },
     { count: profileViewsCount },
   ] = await Promise.all([
     supabase
-      .from("interests")
+      .from("forum_posts")
       .select("id", { count: "exact", head: true })
-      .eq("to_profile_id", user.id)
-      .eq("status", "pending"),
-    supabase
-      .from("matches")
-      .select("id", { count: "exact", head: true })
-      .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`),
+      .eq("author_id", user.id),
+    // Replies to YOUR posts by anyone but you — talking to yourself is not
+    // engagement. `.in()` with an empty array is a Postgres syntax error, so a
+    // member with no posts short-circuits to a resolved zero.
+    myPostIds.length
+      ? supabase
+          .from("forum_comments")
+          .select("id", { count: "exact", head: true })
+          .in("post_id", myPostIds)
+          .neq("author_id", user.id)
+      : Promise.resolve({ count: 0 }),
     supabase
       .from("profile_views")
       .select("id", { count: "exact", head: true })
@@ -184,25 +201,25 @@ export default async function DashboardPage() {
                     </span>
                   </div>
                   <Link
-                    href="/matches"
+                    href="/community"
                     className="flex items-center justify-between group"
                   >
                     <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
-                      {await tServer("Interests")}
+                      {await tServer("Posts")}
                     </span>
                     <span className="font-serif text-base text-navy font-medium tabular-nums">
-                      {pendingReceivedCount ?? 0}
+                      {postsCount ?? 0}
                     </span>
                   </Link>
                   <Link
-                    href="/matches"
+                    href="/community"
                     className="flex items-center justify-between group"
                   >
                     <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
-                      {await tServer("Matches")}
+                      {await tServer("Replies")}
                     </span>
                     <span className="font-serif text-base text-navy font-medium tabular-nums">
-                      {matchesCount ?? 0}
+                      {repliesCount ?? 0}
                     </span>
                   </Link>
               </div>
