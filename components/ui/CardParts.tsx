@@ -142,3 +142,46 @@ export function StageEmblem({
     </span>
   );
 }
+
+/** Sectors, as a marked attribute rather than a run of prose.
+ *
+ *  NOT chips, and that is measured, not taste: a chip costs ~20px in padding
+ *  and border, so at this row's width chips fit ONE sector where text fits
+ *  three. Onfound render the same field the same way — muted 12px with a small
+ *  filled dot, chips reserved for "Can help with" — the difference is that they
+ *  carry one sector per member and we allow ten, which is what turned our row
+ *  into a wall of text.
+ *
+ *  Sliced and counted rather than joined and ellipsised. That reverses the
+ *  earlier call here, because the row got wider: when stage was still an inline
+ *  pill this row was ~183px, where slicing showed one name and truncating
+ *  showed about one and a half. At the full 304px, slicing shows two whole
+ *  names AND an accurate total, with no mid-word cut. */
+export function SectorList({
+  items,
+  max = 2,
+  className,
+}: {
+  items: string[];
+  max?: number;
+  className?: string;
+}) {
+  if (items.length === 0) return null;
+  const shown = items.slice(0, max);
+  const rest = items.length - shown.length;
+  return (
+    <span
+      className={cn(
+        "inline-flex min-w-0 items-center gap-1.5 text-xs text-ink-muted",
+        className,
+      )}
+    >
+      <span
+        className="h-2 w-2 shrink-0 rounded-full bg-gold-ink"
+        aria-hidden="true"
+      />
+      <span className="min-w-0 truncate">{shown.join(" · ")}</span>
+      {rest > 0 && <span className="shrink-0">+{rest}</span>}
+    </span>
+  );
+}

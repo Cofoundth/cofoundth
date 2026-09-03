@@ -30,6 +30,7 @@ import {
   EmptyState,
   LinkButton,
   Section,
+  SectorList,
   StageEmblem,
 } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
@@ -835,9 +836,15 @@ function ProfileCard({ profile }: { profile: Profile }) {
               intent or a sector does not pull the rows below it upward. */}
           <div className="flex h-[21px] items-center gap-2 overflow-hidden">
             {intents.length > 0 && <CardPill>{intents[0]}</CardPill>}
-            <span className="min-w-0 truncate text-xs text-ink-muted">
-              {[...roles, ...profile.industry].join(" · ")}
-            </span>
+            {/* Roles and sectors were one merged run, which put two different
+                taxonomies in a single undifferentiated list. The dot marks
+                where identity ends and sector begins. */}
+            {roles.length > 0 && (
+              <span className="min-w-0 truncate text-xs text-ink-muted">
+                {roles.slice(0, 2).join(" · ")}
+              </span>
+            )}
+            <SectorList items={profile.industry} max={1} />
           </div>
 
           {blurb && (

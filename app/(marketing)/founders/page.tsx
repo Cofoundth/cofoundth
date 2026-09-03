@@ -22,6 +22,7 @@ import {
   Eyebrow,
   LinkButton,
   Section,
+  SectorList,
   StageEmblem,
   VerifiedBadge,
 } from "@/components/ui";
@@ -129,8 +130,8 @@ export default async function PublicFoundersPage() {
                     {/* Always rendered, at a reserved height. Omitting it on
                         the one founder with no industries pulled every row
                         below it up 32px and broke the shared skeleton. */}
-                    <div className="h-4 truncate text-xs text-ink-muted">
-                      {f.industry.join(" · ")}
+                    <div className="flex h-4 items-center overflow-hidden">
+                      <SectorList items={f.industry} />
                     </div>
 
                     {f.excerpt && (

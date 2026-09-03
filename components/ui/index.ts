@@ -35,7 +35,13 @@ export {
 
 export { Card, type CardProps, type CardPadding } from "./Card";
 
-export { CardLabel, CardChip, CardPill, StageEmblem } from "./CardParts";
+export {
+  CardLabel,
+  CardChip,
+  CardPill,
+  SectorList,
+  StageEmblem,
+} from "./CardParts";
 
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
 
