@@ -87,9 +87,9 @@ export default async function SettingsPage() {
       <p className="text-sm text-ink-muted mb-8">{t.sub}</p>
 
       <div className="mb-14">
-        <div className="text-xs uppercase tracking-[0.2em] text-gold-ink border-b border-line pb-2 mb-4">
+        <h2 className="text-lg font-bold tracking-normal border-b border-line pb-2 mb-4">
           {t.photo}
-        </div>
+        </h2>
         <AvatarUploader
           userId={user.id}
           initialUrl={profile.photo_url ?? null}
@@ -100,9 +100,9 @@ export default async function SettingsPage() {
       <EditProfileFormClient initial={initial} />
 
       <div className="mt-14 pt-8 border-t border-line">
-        <div className="text-xs uppercase tracking-[0.2em] text-gold-ink border-b border-line pb-2 mb-4">
+        <h2 className="text-lg font-bold tracking-normal border-b border-line pb-2 mb-4">
           {await tServer("Password")}
-        </div>
+        </h2>
         <p className="text-sm text-ink-muted mb-5 max-w-lg leading-relaxed">
           {await tServer(
             "Set a password so you can sign in with your email — handy if you joined with Google.",
