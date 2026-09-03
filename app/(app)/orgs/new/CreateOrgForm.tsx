@@ -6,6 +6,8 @@ import { createOrgAction, type OrgFormState } from "../actions";
 import { OrgLogoField, OrgProductImagesField } from "./OrgImageFields";
 import { useT } from "@/lib/i18n-client";
 import { LONG_TEXT_MAX } from "@/lib/limits";
+import { INDUSTRIES } from "@/lib/industries";
+import Combobox from "@/components/Combobox";
 
 const INITIAL: OrgFormState = null;
 const PITCH_MAX = LONG_TEXT_MAX;
@@ -50,6 +52,7 @@ export function CreateOrgForm() {
     createOrgAction,
     INITIAL,
   );
+  const [industry, setIndustry] = useState<string[]>([]);
   const [pitch, setPitch] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
@@ -189,11 +192,47 @@ export function CreateOrgForm() {
             </Field>
           </div>
 
-          <Field
-            label={tr("Industry")}
-            hint={tr("Comma-separated, e.g. Logistics, SaaS")}
-          >
-            <input name="industry" type="text" className={inputCls} />
+          {/* The SAME taxonomy the founder directory uses. This was free
+              text, so a company could say "Tech" while every founder profile
+              said "Software & IT Services" — two names for one thing, and the
+              company search on /companies matches org industries as plain text,
+              so the mismatch quietly cost relevance. Controlled vocabulary now;
+              the action whitelists it again server-side. */}
+          <Field label={tr("Industry")}>
+            {industry.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {industry.map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() =>
+                      setIndustry((s) => s.filter((x) => x !== i))
+                    }
+                    className="px-3 py-1.5 text-sm bg-navy border border-navy text-white rounded-full"
+                  >
+                    {i} ✕
+                  </button>
+                ))}
+              </div>
+            )}
+            <Combobox
+              options={INDUSTRIES.filter((i) => !industry.includes(i))}
+              value=""
+              onChange={(v) => {
+                const picked = v.trim();
+                if (picked && INDUSTRIES.includes(picked))
+                  setIndustry((s) =>
+                    s.includes(picked) ? s : [...s, picked],
+                  );
+              }}
+              placeholder={tr("Search industries")}
+              allowCustom={false}
+              className={inputCls}
+              emptyText={tr("No matches")}
+            />
+            {industry.map((i) => (
+              <input key={i} type="hidden" name="industry" value={i} />
+            ))}
           </Field>
 
           <Field label={tr("What we offer")} hint={tr("Separate with commas")}>

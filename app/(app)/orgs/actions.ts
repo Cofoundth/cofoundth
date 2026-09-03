@@ -8,6 +8,7 @@ import { isUuid, slugify } from "@/lib/slug";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { getActiveOrgId } from "@/lib/active-org";
 import { isInvestorAccount } from "@/lib/account";
+import { INDUSTRIES } from "@/lib/industries";
 
 export type OrgFormState = { error?: string } | null;
 
@@ -63,7 +64,19 @@ export async function createOrgAction(
   const logoUrl = String(formData.get("logo_url") ?? "").trim();
   const location = String(formData.get("location") ?? "").trim();
   const stage = String(formData.get("stage") ?? "").trim();
-  const industry = parseList(String(formData.get("industry") ?? ""));
+  // Controlled vocabulary, so this is a whitelist rather than parseList's
+  // free-text split. The form posts one `industry` entry per selection now, not
+  // a comma-separated string, and only values that exist in the taxonomy are
+  // stored — otherwise a company drifts out of the shared vocabulary the
+  // founder directory and company search both rely on.
+  const industry = [
+    ...new Set(
+      formData
+        .getAll("industry")
+        .map(String)
+        .filter((v) => INDUSTRIES.includes(v)),
+    ),
+  ].slice(0, 12);
   const capabilities = parseList(String(formData.get("capabilities") ?? ""));
   const partnershipSeeking = parseList(
     String(formData.get("partnership_seeking") ?? ""),
