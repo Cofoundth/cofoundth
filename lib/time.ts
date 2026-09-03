@@ -18,6 +18,10 @@ export function msAgoISO(ms: number): string {
 
 // "Now", as ISO — for server-side upcoming/past query bounds. Plain function so
 // the impure read doesn't trip the purity rule when called during render.
+export function msAheadISO(ms: number): string {
+  return new Date(Date.now() + ms).toISOString();
+}
+
 export function nowISO(): string {
   return new Date().toISOString();
 }
