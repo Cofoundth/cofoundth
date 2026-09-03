@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, MapPin, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
@@ -8,13 +8,12 @@ import { Avatar } from "@/components/Avatar";
 import {
   ROLE_LABELS,
   INTENT_LABELS,
+  STAGE_LABELS,
   complementScore,
 } from "@/lib/matching";
+import { DirectoryCard } from "@/components/DirectoryCard";
 import { provinceLabel } from "@/lib/provinces";
-import { PostComposer } from "@/components/PostComposer";
-import { PostFeed } from "@/components/PostFeed";
 import { EmptyState, Section } from "@/components/ui";
-import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { getFeedPosts } from "@/lib/posts";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
@@ -200,37 +199,103 @@ export default async function DashboardPage() {
           their /home, which renders 599px / 473px at 1440. Ours ran 3/6/3 of
           12, giving 236px asides: narrower than a single card. */}
       <div className="grid lg:grid-cols-9 gap-8 lg:items-start">
-        {/* LEFT — the feed */}
+        {/* LEFT — who to meet. The third review in a row flagged that this
+            column was the community feed, which made /dashboard and /community
+            render identically at today's post volume (2 posts: any preview is
+            the whole feed). Each page now leads with the thing only it has —
+            here the Complement-Score ranking, there the composer + full feed.
+            The feed itself survives as a digest in the right rail. */}
         <section className="lg:col-span-5 min-w-0 space-y-4">
-          {profile?.onboarded && <PostComposer />}
-
-          <RealtimeRefresh
-            table="forum_posts"
-            currentUserId={user.id}
-            senderColumn="author_id"
-            kind="posts"
-          />
-
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold tracking-normal">
-              {await tServer("Latest from the community")}
+              {await tServer("Founders you should meet")}
             </h2>
             <Link
-              href="/community"
+              href="/browse"
               className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
             >
-              {await tServer("See all")}
+              {await tServer("Browse")}
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
-          {/* KIND A — nothing posted yet. PostFeed's own state says so and
-              hands over three easy openings; the composer above is the action,
-              so it deliberately carries no button. */}
-          <PostFeed items={feed} locale={locale} />
+          {!suggested.length ? (
+            // KIND A — and deliberately CTA-less. This query is byte-identical
+            // to the one /browse runs, so when it comes back empty the
+            // directory is empty too: a "Browse founders" button would land on
+            // the same nothing. The header above already links there.
+            <EmptyState
+              padding="md"
+              dense
+              description={await tServer(
+                "You’re the first here. Invite a friend and this list fills up.",
+              )}
+            />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {suggested.map(({ row: f }) => {
+                const why = ((f.i_am as string[] | null) ?? [])
+                  .filter((r) => myWants.includes(r))
+                  .map((r) => t(ROLE_LABELS[r] ?? r, locale));
+                return (
+                  <DirectoryCard
+                    key={f.id as string}
+                    href={`/profile/${(f.slug as string | undefined) ?? f.id}`}
+                    name={f.full_name as string}
+                    photoUrl={f.photo_url as string | null}
+                    location={
+                      f.location
+                        ? provinceLabel(f.location as string, locale)
+                        : null
+                    }
+                    flag={
+                      isWithinMs(f.created_at as string, 7 * DAY_MS)
+                        ? t("New", locale)
+                        : null
+                    }
+                    stage={f.stage as string | null}
+                    stageLabel={
+                      f.stage && STAGE_LABELS[f.stage as string]
+                        ? t(STAGE_LABELS[f.stage as string], locale)
+                        : undefined
+                    }
+                    pill={
+                      ((f.intent as string[] | null) ?? [])
+                        .map((x) =>
+                          INTENT_LABELS[x] ? t(INTENT_LABELS[x], locale) : null,
+                        )
+                        .filter(Boolean)[0] ?? null
+                    }
+                    tags={((f.i_am as string[] | null) ?? []).map((r) =>
+                      t(ROLE_LABELS[r] ?? r, locale),
+                    )}
+                    sectors={(f.industry as string[] | null) ?? []}
+                    sectorMax={1}
+                    // The WHY is the blurb slot: the roles they hold that the
+                    // viewer asked for — the ranking, explained in words
+                    // instead of a score.
+                    blurb={
+                      why.length > 0
+                        ? whyTemplate.replace("{role}", why.join(" · "))
+                        : null
+                    }
+                    blurbLabel={t("Why this match", locale)}
+                    chipsIcon={Search}
+                    chipsLabel={t("Looking for", locale)}
+                    chips={((f.looking_for as string[] | null) ?? []).map((r) =>
+                      t(ROLE_LABELS[r] ?? r, locale),
+                    )}
+                  />
+                );
+              })}
+            </div>
+          )}
         </section>
 
-        {/* RIGHT — your numbers, then who is new */}
+        {/* RIGHT — your numbers, then the conversation. The digest is the
+            feed's survival on this page: three headlines, no composer — the
+            full feed with search, pagination and writing lives on /community,
+            which is what keeps the two pages from being the same page. */}
         <aside className="lg:col-span-4 min-w-0 space-y-8 lg:sticky lg:top-24 self-start">
           <div>
             <h2 className="text-lg font-bold tracking-normal mb-5">
@@ -291,91 +356,47 @@ export default async function DashboardPage() {
 
           <div>
             <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold tracking-normal">
-              {await tServer("Founders you should meet")}
-            </h2>
-            <Link
-              href="/browse"
-              className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
-            >
-              {await tServer("Browse")}
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          {!suggested.length ? (
-            // KIND A — and deliberately CTA-less. This query is byte-identical
-            // to the one /browse runs (profile_complete, not suspended, not
-            // me), so when it comes back empty the directory is empty too: a
-            // "Browse founders" button would land on the same nothing. The
-            // header above already links to /browse for the normal case.
-            <EmptyState
-              padding="md"
-              dense
-              description={await tServer(
-                "You’re the first here. Invite a friend and this list fills up.",
-              )}
-            />
-          ) : (
-            <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
-              {suggested.map(({ row: f }) => {
-                const href = `/profile/${(f.slug as string | undefined) ?? f.id}`;
-                const fresh = isWithinMs(f.created_at as string, 7 * DAY_MS);
-                // The reason this person is in the list: the roles they hold
-                // that the viewer asked for. Shown as words rather than the
-                // score itself — a percentage on a person reads as
-                // gamification, which the design rules rule out, and "why"
-                // is the more useful half anyway.
-                const why = ((f.i_am as string[] | null) ?? [])
-                  .filter((r) => myWants.includes(r))
-                  .map((r) => t(ROLE_LABELS[r] ?? r, locale));
-                return (
+              <h2 className="text-lg font-bold tracking-normal">
+                {await tServer("Latest from the community")}
+              </h2>
+              <Link
+                href="/community"
+                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
+              >
+                {await tServer("See all")}
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            {feed.length === 0 ? (
+              <EmptyState
+                padding="md"
+                dense
+                description={await tServer(
+                  "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
+                )}
+              />
+            ) : (
+              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+                {feed.slice(0, 3).map((post) => (
                   <Link
-                    key={f.id as string}
-                    href={href}
+                    key={post.id}
+                    href={`/community/${post.id}`}
                     className="block p-4 hover:bg-cream transition-colors group"
                   >
-                    <div className="flex items-start gap-3">
-                      <Avatar
-                        name={f.full_name as string}
-                        url={f.photo_url as string | null}
-                        size="sm"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
-                          {f.full_name as string}
-                        </div>
-                        <div className="text-xs text-ink-muted mt-0.5 truncate">
-                          {((f.i_am as string[] | null) ?? [])
-                            .map((r) => t(ROLE_LABELS[r] ?? r, locale))
-                            .join(" · ") || "—"}
-                          {((f.intent as string[] | null) ?? []).length > 0
-                            ? ` · ${((f.intent as string[] | null) ?? [])
-                                .map((x) => t(INTENT_LABELS[x] ?? x, locale))
-                                .join(" · ")}`
-                            : ""}
-                        </div>
-                        <div className="text-xs mt-1 inline-flex items-center gap-2">
-                          {why.length > 0 ? (
-                            <span className="text-gold-ink">
-                              {whyTemplate.replace("{role}", why.join(" · "))}
-                            </span>
-                          ) : (
-                            <span className="text-ink-muted">
-                              {timeAgo(f.created_at as string, locale)}
-                            </span>
-                          )}
-                          {fresh && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-navy inline-block" />
-                          )}
-                        </div>
-                      </div>
+                    <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
+                      {post.title || post.content}
+                    </div>
+                    <div className="text-xs text-ink-muted mt-1 truncate">
+                      {post.author?.full_name ?? "—"} ·{" "}
+                      {timeAgo(post.created_at, locale)}
+                      {post.commentCount > 0
+                        ? ` · ${post.commentCount} ${t("replies", locale)}`
+                        : ""}
                     </div>
                   </Link>
-                );
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
           </div>
         </aside>
       </div>
