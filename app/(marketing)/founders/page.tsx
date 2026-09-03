@@ -131,7 +131,10 @@ export default async function PublicFoundersPage() {
                         the one founder with no industries pulled every row
                         below it up 32px and broke the shared skeleton. */}
                     <div className="flex h-4 items-center overflow-hidden">
-                      <SectorList items={f.industry} />
+                      <SectorList
+                        items={f.industry}
+                        fallback={stageLabel ? tr(stageLabel) : undefined}
+                      />
                     </div>
 
                     {f.excerpt && (

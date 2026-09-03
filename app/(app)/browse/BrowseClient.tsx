@@ -844,7 +844,15 @@ function ProfileCard({ profile }: { profile: Profile }) {
                 {roles.slice(0, 2).join(" · ")}
               </span>
             )}
-            <SectorList items={profile.industry} max={1} />
+            <SectorList
+              items={profile.industry}
+              max={1}
+              fallback={
+                profile.stage && STAGE_LABELS[profile.stage]
+                  ? tr(STAGE_LABELS[profile.stage])
+                  : undefined
+              }
+            />
           </div>
 
           {blurb && (

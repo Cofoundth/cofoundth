@@ -160,15 +160,23 @@ export function StageEmblem({
 export function SectorList({
   items,
   max = 2,
+  fallback,
   className,
 }: {
   items: string[];
   max?: number;
+  /** Shown when there are no sectors, so the reserved row is never a hole.
+   *  Cards pass the stage label: sector is optional on a profile but stage is
+   *  set on every member of the directory, and Onfound likewise carry stage
+   *  twice (the corner disc AND a body badge), so the repeat is idiomatic
+   *  rather than sloppy. Already translated — this file never translates. */
+  fallback?: string;
   className?: string;
 }) {
-  if (items.length === 0) return null;
-  const shown = items.slice(0, max);
-  const rest = items.length - shown.length;
+  const source = items.length > 0 ? items : fallback ? [fallback] : [];
+  if (source.length === 0) return null;
+  const shown = source.slice(0, max);
+  const rest = source.length - shown.length;
   return (
     <span
       className={cn(
