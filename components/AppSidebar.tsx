@@ -122,6 +122,7 @@ export async function AppSidebar() {
         },
         { href: "/orgs", label: await tServer("Companies") },
         { href: "/funding", label: await tServer("Funding") },
+        { href: "/activity", label: await tServer("Profile insights") },
       ];
   if (
     isAdmin({
