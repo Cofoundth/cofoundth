@@ -72,7 +72,7 @@ export default async function FundingPage() {
     return (
       <Section>
         <div className="max-w-[640px] mb-8">
-          <h1 className="text-d3 mb-2">{heading}</h1>
+          <h1 className="text-d2 mb-2">{heading}</h1>
           <p className="text-ink">
             {await tServer("Companies you've connected with, and new ones to back.")}
           </p>
@@ -199,7 +199,7 @@ export default async function FundingPage() {
   if (myOrgIds.length === 0) {
     return (
       <Section>
-        <h1 className="text-d3 mb-8">{heading}</h1>
+        <h1 className="text-d2 mb-8">{heading}</h1>
         {/* KIND A — this founder has no company yet, and creating one is the
             real next step. Founder-only branch, so /orgs/new is reachable. */}
         <EmptyState
@@ -268,7 +268,7 @@ export default async function FundingPage() {
   return (
     <Section>
       <div className="max-w-[640px] mb-8">
-        <h1 className="text-d3 mb-2">{heading}</h1>
+        <h1 className="text-d2 mb-2">{heading}</h1>
         <p className="text-ink">
           {await tServer("Investors who've reached out to your company.")}
         </p>

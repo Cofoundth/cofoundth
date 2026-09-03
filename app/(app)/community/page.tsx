@@ -47,7 +47,7 @@ export default async function CommunityPage({
     <Section>
       <div className="mb-8 pb-8 border-b border-line">
         <div className="max-w-[640px]">
-          <h1 className="text-d3 mb-2">
+          <h1 className="text-d2 mb-2">
             {await tServer("Community")}
           </h1>
           <p className="text-ink">

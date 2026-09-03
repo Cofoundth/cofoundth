@@ -57,7 +57,7 @@ export default async function AdminPostsPage() {
           <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
             Admin
           </div>
-          <h1 className="text-d3 mb-2">Posts</h1>
+          <h1 className="text-d2 mb-2">Posts</h1>
           <p className="text-ink">
             {posts.length} total · {hiddenCount} hidden
           </p>

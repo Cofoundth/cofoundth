@@ -103,7 +103,7 @@ export default async function DashboardPage() {
           screen reader either. Their /home opens the same way ("Good evening,
           <name>"), so the shape is theirs; the string is one we already ship. */}
       <div className="mb-8 max-w-[640px]">
-        <h1 className="text-d2 lg:text-d3">
+        <h1 className="text-d2">
           {(await tServer("Welcome, {name}")).replace("{name}", firstName)}
         </h1>
       </div>

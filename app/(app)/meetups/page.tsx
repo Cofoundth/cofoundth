@@ -114,7 +114,7 @@ export default async function MeetupsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tEyebrow}
         </div>
-        <h1 className="text-d3 mb-4">{tTitle}</h1>
+        <h1 className="text-d2 mb-4">{tTitle}</h1>
         <p className="text-lg text-ink leading-relaxed">{tIntro}</p>
       </div>
 

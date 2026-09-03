@@ -130,7 +130,7 @@ export default async function OrgsPage({
           <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
             {await tServer(isInvestor ? "Discover" : "B2B")}
           </p>
-          <h1 className="text-d3">
+          <h1 className="text-d2">
             {await tServer("Companies")}
           </h1>
           <p className="text-ink-muted mt-1">

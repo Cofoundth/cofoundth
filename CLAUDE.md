@@ -240,9 +240,25 @@ ladder heading's line-height** — `leading-tight` is 1.25 and so LOOSENS
 `text-d3`, and anything ≤ 1.274 collides Thai marks (see the Thai table below).
 (This deliberately relaxes the old blanket "never override": LOOSENING with
 `leading-relaxed` is allowed on user-generated prose only — the pitch display,
-the landing pull-quote. Everything else inherits the pair.) Scope: d1–d3 are
-the app ladder (d3 = every page title); **d4/d5 are marketing-hero and
-error-page sizes only.**
+the landing pull-quote. Everything else inherits the pair.) 
+
+**Page titles split by surface, the same way the vertical rhythm does.**
+
+| Surface | Page title |
+|---|---|
+| App routes (`app/(app)/*`, onboarding) | **`text-d2` (33px), flat** |
+| Marketing pages | `text-d2 lg:text-d3` |
+| Landing hero | `text-d3 sm:text-d4 lg:text-d5` |
+
+Onfound's app title measures 28px; ours was 42px (`text-d3`) with 88px of
+padding above it, which is what made app pages read as marketing pages. 33 not
+28 because 33 is a ladder step we already used for every form and editor title
+— this unified onto a size in the system rather than inventing one. Before the
+split the app was inconsistent without deciding to be: 24 titles at d3, 9 at
+d2, roughly along wide-page vs form-page lines. All 36 are now d2.
+
+`d1` is a section heading inside marketing prose. **`d4`/`d5` are the landing
+hero and error pages only** — never an app surface.
 
 **2. UI register — off-ladder on purpose.** Section headings inside the app are
 `text-lg font-bold tracking-normal` (18px/700/normal). This is OUR size for

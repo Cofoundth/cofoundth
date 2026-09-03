@@ -159,7 +159,7 @@ export default async function AdminDealsPage() {
         <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
           {await tServer("Admin")}
         </p>
-        <h1 className="text-d3 mb-1">
+        <h1 className="text-d2 mb-1">
           {await tServer("Deals")}
         </h1>
         <p className="text-ink-muted">

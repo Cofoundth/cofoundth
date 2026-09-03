@@ -147,7 +147,7 @@ export default async function MeetupDetailPage({ params }: Props) {
       <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
         {tCommunity}
       </div>
-      <h1 className="text-d3 mb-6">{m.title}</h1>
+      <h1 className="text-d2 mb-6">{m.title}</h1>
 
       {cancelled && (
         <div className="mb-6 px-4 py-3 border border-danger-line rounded-xl bg-danger-surface text-sm text-danger-ink">
