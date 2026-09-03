@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -22,6 +22,24 @@ export function MobileMenu({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  // Hold the page still while the menu is over it. The backdrop covers the
+  // viewport but does not stop scrolling, so without this the content slides
+  // around behind an open menu.
+  //
+  // The lock goes on <html>, not just <body>: <html> is the scrolling element
+  // here, and hiding overflow on <body> alone left wheel and touch scrolling
+  // working. This stops user scrolling; programmatic scrollTo still moves the
+  // page, which nothing in the UI does while the menu is open.
+  useEffect(() => {
+    if (!open) return;
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = previous;
+    };
+  }, [open]);
   // Same reason as the desktop rail: the server layout does not re-render on a
   // soft navigation, so the active item has to be derived on the client.
   const isActive = (href: string) =>
@@ -47,7 +65,11 @@ export function MobileMenu({
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-40 bg-navy/20 cursor-default"
           />
-          <div className="absolute left-0 right-0 top-full z-50 bg-white border-y border-line shadow-lg">
+          <div
+            // Scrolls internally: with the body locked, a list taller than the
+            // screen would otherwise have unreachable items on a short phone.
+            className="absolute left-0 right-0 top-full z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain bg-white border-y border-line shadow-lg"
+          >
             <nav className="px-6 py-1 flex flex-col">
               {links.map((l) => (
                 <Link

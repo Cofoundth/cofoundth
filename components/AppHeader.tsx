@@ -12,9 +12,9 @@ import { MobileMenu } from "@/components/MobileMenu";
 import { OrgSwitcher } from "@/components/OrgSwitcher";
 import { getUserOrgs, getActiveOrgId } from "@/lib/active-org";
 
-// The single app header. Rendered by the (app) layout AND by MarketingNav for
-// logged-in visitors, so public content (insights/legal) and the app share the
-// exact same navbar.
+// The marketing header for logged-in visitors, rendered by MarketingNav, so
+// public content (insights/legal) and the app share the same navbar. The (app)
+// shell itself uses AppSidebar — this is no longer mounted there.
 export async function AppHeader() {
   const user = await getUser();
   if (!user) return null;
@@ -135,8 +135,12 @@ export async function AppHeader() {
     navItems.push({ href: "/admin/overview", label: await tServer("Admin") });
   }
 
+  // Sticky, not relative. MobileMenu's panel is `absolute top-full`, so it is
+  // anchored to this element: a static header scrolls away and takes the open
+  // menu with it. AppSidebar's mobile bar is sticky for the same reason, which
+  // is why the menu only detached on marketing pages.
   return (
-    <header className="bg-white border-b border-line relative">
+    <header className="bg-white border-b border-line sticky top-0 z-40">
       {/* 1120 to sit flush with the marketing section container below it. */}
       <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
         <div className="flex items-center justify-between h-16">
