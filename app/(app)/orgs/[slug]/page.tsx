@@ -316,7 +316,7 @@ export default async function OrgPage({ params }: Props) {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-d2 flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-d2 mb-2 flex items-center gap-2.5 flex-wrap">
               {org.name as string}
               {org.verified && (
                 <VerifiedBadge

@@ -65,7 +65,7 @@ export default async function PublicFounderPage({ params }: Props) {
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <Avatar name={founder.fullName} url={founder.photoUrl} size="xl" />
           <div className="min-w-0 flex-1">
-            <h1 className="text-d2 lg:text-d3 inline-flex items-center gap-2 flex-wrap">
+            <h1 className="text-d2 lg:text-d3 mb-4 inline-flex items-center gap-2 flex-wrap">
               {founder.fullName}
               {founder.verified && (
                 <VerifiedBadge label={tr("Verified")} size="lg" />

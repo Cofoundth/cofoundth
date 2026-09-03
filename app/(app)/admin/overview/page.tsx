@@ -109,7 +109,7 @@ export default async function AdminOverviewPage() {
       <div className="mb-8">
         <div className="max-w-[640px]">
           <h1 className="text-d2 mb-2">Overview</h1>
-          <p className="text-ink">
+          <p className="text-sm text-ink-muted">
             {openReports ?? 0} open report{openReports === 1 ? "" : "s"} · last{" "}
             {DAYS} days
           </p>

@@ -32,7 +32,7 @@ export default async function AdminInsightsPage() {
       <div className="mb-8 pb-8 border-b border-line flex items-end justify-between gap-4">
         <div className="max-w-[640px]">
           <h1 className="text-d2 mb-2">Insights</h1>
-          <p className="text-ink">
+          <p className="text-sm text-ink-muted">
             {insights.length} row{insights.length === 1 ? "" : "s"} across{" "}
             {bySlug.size} post{bySlug.size === 1 ? "" : "s"}.
           </p>

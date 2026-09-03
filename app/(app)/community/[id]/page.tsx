@@ -123,7 +123,7 @@ export default async function PostPage({ params }: Props) {
         )}
 
         {post.title ? (
-          <h1 className="text-d2 mb-4">
+          <h1 className="text-d2 mb-2">
             {post.title as string}
           </h1>
         ) : null}

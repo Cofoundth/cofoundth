@@ -53,7 +53,7 @@ export default async function InvestorPage({
             <h1 className="text-d2 mb-2">
               {await tServer("Set up your investor profile")}
             </h1>
-            <p className="text-ink-muted leading-relaxed mb-8">
+            <p className="text-sm text-ink-muted mb-8">
               {await tServer(
                 "Tell us how you invest. This is separate from the founder profile — no company or co-founder details needed.",
               )}
@@ -66,7 +66,7 @@ export default async function InvestorPage({
           </div>
         ) : (
           <div className="max-w-[640px] mx-auto">
-            <h1 className="text-d2 mb-1">
+            <h1 className="text-d2 mb-2">
               {(inv?.firm_name as string | null) ||
                 (firstName
                   ? (await tServer("Welcome, {name}")).replace(
@@ -75,7 +75,7 @@ export default async function InvestorPage({
                     )
                   : await tServer("Welcome"))}
             </h1>
-            <p className="text-ink-muted mb-8">
+            <p className="text-sm text-ink-muted mb-8">
               {[typeLabel, inv?.location].filter(Boolean).join(" · ")}
             </p>
 

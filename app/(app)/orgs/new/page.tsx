@@ -20,10 +20,10 @@ export default async function NewOrgPage() {
         {await tServer("Companies")}
       </Link>
 
-      <h1 className="text-d2 mb-3">
+      <h1 className="text-d2 mb-2">
         {await tServer("Set up your company page")}
       </h1>
-      <p className="text-ink-muted leading-relaxed mb-8">
+      <p className="text-sm text-ink-muted mb-8">
         {await tServer(
           "Create a company profile and invite your team. You stay an individual founder — this is your company, separate from your personal profile.",
         )}

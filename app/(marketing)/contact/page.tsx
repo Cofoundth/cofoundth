@@ -47,10 +47,10 @@ export default async function ContactPage() {
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("Contact")}
             </p>
-            <h1 className="text-d2 lg:text-d3 mb-6">
+            <h1 className="text-d2 lg:text-d3 mb-4">
               {tr("Talk to us.")}
             </h1>
-            <p className="text-lg text-ink-muted leading-relaxed mb-8">
+            <p className="text-lg text-ink leading-relaxed mb-8">
               {tr(
                 "Two of us read everything that comes in. Write in Thai or English — whichever is easier.",
               )}

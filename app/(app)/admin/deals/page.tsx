@@ -156,10 +156,10 @@ export default async function AdminDealsPage() {
     <Section>
       <AdminTabs />
       <div className="max-w-[640px] mb-8">
-        <h1 className="text-d2 mb-1">
+        <h1 className="text-d2 mb-2">
           {await tServer("Deals")}
         </h1>
-        <p className="text-ink-muted">
+        <p className="text-sm text-ink-muted">
           {await tServer(
             "Agreed deals waiting for Cofoundee to coordinate the contract signing.",
           )}

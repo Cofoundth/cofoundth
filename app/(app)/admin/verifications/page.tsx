@@ -39,7 +39,7 @@ export default async function AdminVerificationsPage() {
       <div className="mb-8">
         <div className="max-w-[640px]">
           <h1 className="text-d2 mb-2">Verifications</h1>
-          <p className="text-ink leading-relaxed">
+          <p className="text-sm text-ink-muted">
             Verify profiles after manual checks (Thai company registration via{" "}
             <a
               href="https://datawarehouse.dbd.go.th/"

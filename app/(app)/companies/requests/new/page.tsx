@@ -35,7 +35,7 @@ export default async function NewAskPage() {
         <h1 className="text-d2 mb-2">
           {await tServer("Post a partnership ask")}
         </h1>
-        <p className="text-ink">
+        <p className="text-sm text-ink-muted">
           {(
             await tServer(
               "Describe the partner {name} needs. Other companies will see it and respond with offers.",

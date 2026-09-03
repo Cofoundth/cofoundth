@@ -254,7 +254,7 @@ export default async function ConnectionsPage({
   return (
     <Section>
       <div className="max-w-[640px] mb-8">
-        <h1 className="text-d2 mb-2">
+        <h1 className="text-d2">
           {await tServer("Connections")}
         </h1>
       </div>

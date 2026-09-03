@@ -142,7 +142,7 @@ export default async function MeetupDetailPage({ params }: Props) {
         )}
       </div>
 
-      <h1 className="text-d2 mb-6">{m.title}</h1>
+      <h1 className="text-d2 mb-2">{m.title}</h1>
 
       {cancelled && (
         <div className="mb-6 px-4 py-3 border border-danger-line rounded-xl bg-danger-surface text-sm text-danger-ink">

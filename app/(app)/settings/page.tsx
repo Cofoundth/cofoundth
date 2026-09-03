@@ -76,7 +76,7 @@ export default async function SettingsPage() {
   return (
     <Section width="narrow">
       <div className="flex items-center justify-between mb-1">
-        <h1 className="text-d2">{t.title}</h1>
+        <h1 className="text-d2 mb-2">{t.title}</h1>
         <Link
           href={profileHref}
           className="text-sm text-navy hover:text-gold-ink tracking-wide"

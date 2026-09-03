@@ -55,7 +55,7 @@ export default async function AdminPostsPage() {
       <div className="mb-8">
         <div className="max-w-[640px]">
           <h1 className="text-d2 mb-2">Posts</h1>
-          <p className="text-ink">
+          <p className="text-sm text-ink-muted">
             {posts.length} total · {hiddenCount} hidden
           </p>
         </div>

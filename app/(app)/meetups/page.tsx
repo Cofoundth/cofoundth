@@ -107,7 +107,7 @@ export default async function MeetupsPage() {
   return (
     <Section>
       <div className="mb-8 max-w-[640px]">
-        <h1 className="text-d2 mb-4">{tTitle}</h1>
+        <h1 className="text-d2">{tTitle}</h1>
       </div>
 
       <section>

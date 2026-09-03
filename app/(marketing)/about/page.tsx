@@ -49,10 +49,10 @@ export default async function AboutPage() {
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
               {tr("Our story")}
             </p>
-            <h1 className="text-d2 lg:text-d3 mb-6">
+            <h1 className="text-d2 lg:text-d3 mb-4">
               {tr("We're building the room we wanted to walk into.")}
             </h1>
-            <p className="text-lg text-ink-muted leading-relaxed">
+            <p className="text-lg text-ink leading-relaxed">
               {tr(
                 "Cofoundee is a community for Thai founders first. Everything else — partners, advisors, capital — is meant to grow on top of that, in that order.",
               )}

@@ -57,7 +57,7 @@ export default async function ProposePage({
           org.name as string,
         )}
       </h1>
-      <p className="text-ink-muted leading-relaxed mb-8">
+      <p className="text-sm text-ink-muted mb-8">
         {await tServer(
           "Both sides confirm the terms, then Cofoundee coordinates the contract.",
         )}

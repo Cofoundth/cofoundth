@@ -15,7 +15,7 @@ export default function NewPostPage() {
 
       <div className="mb-8">
         <h1 className="text-d2 mb-2">New post</h1>
-        <p className="text-ink-muted">
+        <p className="text-sm text-ink-muted">
           Share what you&rsquo;re building, ask a question, or request feedback.
         </p>
       </div>
