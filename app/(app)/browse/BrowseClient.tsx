@@ -1,13 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  BadgeCheck,
-  Building2,
   ChevronDown,
-  MapPin,
-  Rocket,
   Search,
   SlidersHorizontal,
   Users,
@@ -19,19 +14,8 @@ import {
   COMMITMENT_LABELS,
   INTENT_LABELS,
 } from "@/lib/matching";
-import { Avatar } from "@/components/Avatar";
-import {
-  Button,
-  Card,
-  CardChip,
-  CardLabel,
-  CardPill,
-  EmptyState,
-  LinkButton,
-  Section,
-  SectorList,
-  StageEmblem,
-} from "@/components/ui";
+import { DirectoryCard } from "@/components/DirectoryCard";
+import { Button, EmptyState, LinkButton, Section } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
@@ -759,137 +743,57 @@ function ProfileCard({ profile }: { profile: Profile }) {
   const locale = useLocale();
   const tr = useT();
   const isCompany = profile.type === "company";
-  const isNew = isWithinMs(profile.created_at, 7 * DAY_MS);
-  const roles = (profile.i_am ?? []).map((r) => tr(ROLE_LABELS[r])).filter(Boolean);
-  const intents = (profile.intent ?? [])
-    .map((i) => (INTENT_LABELS[i] ? tr(INTENT_LABELS[i]) : null))
-    .filter(Boolean) as string[];
-  const lookingFor = (profile.looking_for ?? [])
-    .map((r) => tr(ROLE_LABELS[r]))
-    .filter(Boolean);
   // Idea-havers sell the project; explorers sell their track record.
   const hasIdea = (profile.intent ?? []).includes("idea");
-  const title =
-    isCompany && profile.company_name ? profile.company_name : profile.full_name;
-  const blurb = hasIdea
-    ? profile.pitch
-    : profile.work_experience || profile.background || profile.pitch;
 
   return (
-    // min-w-0: a grid item defaults to min-width:auto and will not shrink
-    // below its content's min-content width. Without it the long joined
-    // industry run pushed the card to 1157px inside a 342px track on a
-    // phone, and truncate INSIDE the card cannot fix an unconstrained card.
-    <Link
+    <DirectoryCard
       href={`/profile/${profile.slug}`}
-      className="group block h-full min-w-0"
-    >
-      <Card
-        hoverable
-        padding="xs"
-        className="h-full flex flex-col"
-      >
-        {/* HEADER — 48px, avatar beside a name/meta column. Nothing below it
-            is indented past the avatar; every row starts at the padding edge. */}
-        <div className="shrink-0 flex gap-3 items-center">
-          <Avatar name={profile.full_name} url={profile.photo_url} size="md" />
-          <div className="flex flex-col justify-center min-w-0 flex-1 overflow-hidden">
-            <h3 className="flex items-center gap-1.5 text-sm font-semibold leading-none group-hover:text-gold-ink transition-colors">
-              <span className="truncate">{title}</span>
-              {profile.verified && (
-                <BadgeCheck className="w-4 h-4 text-gold-ink shrink-0" strokeWidth={2} />
-              )}
-              {isCompany && (
-                <Building2 className="w-3.5 h-3.5 text-gold-ink shrink-0" strokeWidth={2} />
-              )}
-            </h3>
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-muted overflow-hidden">
-              {profile.location && (
-                <span className="inline-flex min-w-0 items-center gap-1">
-                  <MapPin className="w-3 h-3 shrink-0" />
-                  <span className="truncate">
-                    {provinceLabel(profile.location, locale)}
-                  </span>
-                </span>
-              )}
-              {isNew && <span className="shrink-0 text-gold-ink">{tr("New")}</span>}
-            </div>
-          </div>
-          {/* Stage as a corner glyph, matching /founders and Onfound. Intent
-              stays inline below — they are different axes: stage is how far
-              along the company is, intent is what the person is bringing. */}
-          <StageEmblem
-            stage={profile.stage}
-            label={
-              profile.stage && STAGE_LABELS[profile.stage]
-                ? tr(STAGE_LABELS[profile.stage])
-                : ""
-            }
-          />
-        </div>
-
-        {/* BODY — three rows on a 10px rhythm, each full card width. */}
-        <div className="mt-4 flex flex-col gap-4 flex-1 min-h-0">
-          {/* Row A: what they are here for, then the sector. Their card pairs a
-              pill with plain muted text on one line — the text form fits two or
-              three industries where a second chip fit none. */}
-          {/* Always rendered at a reserved height, so a profile missing an
-              intent or a sector does not pull the rows below it upward. */}
-          <div className="flex h-[21px] items-center gap-2 overflow-hidden">
-            {intents.length > 0 && <CardPill>{intents[0]}</CardPill>}
-            {/* Roles and sectors were one merged run, which put two different
-                taxonomies in a single undifferentiated list. The dot marks
-                where identity ends and sector begins. */}
-            {roles.length > 0 && (
-              <span className="min-w-0 truncate text-xs text-ink-muted">
-                {roles.slice(0, 2).join(" · ")}
-              </span>
-            )}
-            <SectorList
-              items={profile.industry}
-              max={1}
-              fallback={
-                profile.stage && STAGE_LABELS[profile.stage]
-                  ? tr(STAGE_LABELS[profile.stage])
-                  : undefined
-              }
-            />
-          </div>
-
-          {blurb && (
-            <div className="flex flex-col gap-1.5 min-w-0">
-              <CardLabel icon={Rocket}>{tr("Working on")}</CardLabel>
-              <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted min-h-[39px]">
-                {blurb}
-              </p>
-            </div>
-          )}
-
-          {/* Block 3 — the same labeled-chips shape /founders uses for Role,
-              so the two directories read as one card. mt-auto pins it, so every
-              card ends level.
-
-              This carries looking_for, NOT help_with. help_with was here and
-              rendered on 0 of 13 cards, because no profile has the field yet —
-              dead UI in the slot the card's strongest live field deserved.
-              looking_for is required for directory entry, so it is on every
-              card, and "who they want" is the matching axis this directory
-              exists for. help_with is still on the profile page; it earns a
-              card slot when profiles actually carry it, and that needs a
-              symmetry plan first — a 4th block on some cards and not others is
-              the raggedness we just spent two commits removing. */}
-          {!isCompany && lookingFor.length > 0 && (
-            <div className="mt-auto flex flex-col gap-1.5 min-w-0">
-              <CardLabel icon={Search}>{tr("Looking for")}</CardLabel>
-              <div className="flex flex-row gap-1.5 overflow-hidden h-[22px]">
-                {lookingFor.slice(0, 3).map((r) => (
-                  <CardChip key={r}>{r}</CardChip>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-    </Link>
+      name={
+        isCompany && profile.company_name
+          ? profile.company_name
+          : profile.full_name
+      }
+      avatarSeed={profile.full_name}
+      photoUrl={profile.photo_url}
+      location={
+        profile.location ? provinceLabel(profile.location, locale) : null
+      }
+      verified={profile.verified}
+      verifiedLabel={tr("Verified")}
+      isCompany={isCompany}
+      flag={
+        isWithinMs(profile.created_at, 7 * DAY_MS) ? tr("New") : null
+      }
+      stage={profile.stage}
+      stageLabel={
+        profile.stage && STAGE_LABELS[profile.stage]
+          ? tr(STAGE_LABELS[profile.stage])
+          : undefined
+      }
+      pill={
+        (profile.intent ?? [])
+          .map((i) => (INTENT_LABELS[i] ? tr(INTENT_LABELS[i]) : null))
+          .filter(Boolean)[0] ?? null
+      }
+      tags={(profile.i_am ?? []).map((r) => tr(ROLE_LABELS[r])).filter(Boolean)}
+      sectors={profile.industry}
+      sectorMax={1}
+      blurb={
+        hasIdea
+          ? profile.pitch
+          : profile.work_experience || profile.background || profile.pitch
+      }
+      blurbLabel={tr("Working on")}
+      chipsIcon={Search}
+      chipsLabel={tr("Looking for")}
+      chips={
+        isCompany
+          ? []
+          : (profile.looking_for ?? [])
+              .map((r) => tr(ROLE_LABELS[r]))
+              .filter(Boolean)
+      }
+    />
   );
 }
