@@ -216,6 +216,16 @@ export default async function FundingPage() {
     );
   }
 
+  // The company this founder manages — the explainer's CTA points at its
+  // page, because that page is the one thing a founder can act on in an
+  // investor-initiated model.
+  const { data: myOrg } = await admin
+    .from("organizations")
+    .select("slug, name")
+    .in("id", myOrgIds)
+    .limit(1)
+    .maybeSingle();
+
   const { data: connsRaw } = await admin
     .from("investor_connections")
     .select("id, investor_id, org_id, status, requested_by")
@@ -262,13 +272,28 @@ export default async function FundingPage() {
     ),
   );
 
+  const tHow = {
+    title: await tServer("How funding works here"),
+    steps: [
+      await tServer("Keep your company page sharp — that's what investors see."),
+      await tServer("Investors discover companies and reach out first."),
+      await tServer("You accept, talk, and close the deal on your terms."),
+    ],
+    cta: await tServer("Polish your company page"),
+  };
+
   return (
     <Section>
-      <div className="max-w-[640px] mb-8">
-        <h1 className="text-d2">{heading}</h1>
+      <div className="mb-8 flex min-w-0 items-baseline gap-2.5">
+        <h1 className="text-d2 truncate">{heading}</h1>
+        <span className="shrink-0 text-sm text-ink-muted">
+          {connected.length}{" "}
+          {await tServer(connected.length === 1 ? "investor" : "investors")}
+        </span>
       </div>
 
-      <section className="mb-14">
+      <div className="grid lg:grid-cols-9 gap-8 lg:items-start">
+      <section className="lg:col-span-5 min-w-0">
         <h2 className="text-lg font-bold tracking-normal mb-5">
           {await tServer("Your investors")}
         </h2>
@@ -284,7 +309,7 @@ export default async function FundingPage() {
             )}
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             {connected.map((i) => {
               const uid = i.user_id as string;
               const c = connByInvestor.get(uid)!;
@@ -337,9 +362,40 @@ export default async function FundingPage() {
         )}
       </section>
 
-      {/* No "discover investors" — funding is investor-initiated. Companies are
-          discoverable to investors on the investor view; they manage inbound
-          interest here, they don't browse or cold-contact investors. */}
+      {/* RIGHT — the model, told straight. Funding here is investor-initiated:
+          there is deliberately no "browse investors" anywhere, so the rail
+          explains what a founder CAN do instead of pretending otherwise. The
+          page's one dark accent, per the design system. */}
+      <aside className="lg:col-span-4 min-w-0 lg:sticky lg:top-24 self-start">
+        <div className="bg-navy p-6 rounded-3xl">
+          <p className="eyebrow text-xs uppercase tracking-[0.25em] text-gold mb-4">
+            {tHow.title}
+          </p>
+          <ol className="space-y-4">
+            {tHow.steps.map((step, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-gold/15 text-gold text-xs grid place-items-center font-medium">
+                  {i + 1}
+                </span>
+                <span className="text-white/90 text-sm leading-relaxed">
+                  {step}
+                </span>
+              </li>
+            ))}
+          </ol>
+          {myOrg && (
+            <Link
+              href={`/orgs/${myOrg.slug as string}`}
+              className="mt-6 inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-5 py-2.5 text-sm tracking-wide transition-colors rounded-full"
+            >
+              {tHow.cta}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
+        </div>
+      </aside>
+      </div>
+
       {/* openLabel reserved for deal states on the detail page */}
       <span className="hidden">{openLabel}</span>
     </Section>
