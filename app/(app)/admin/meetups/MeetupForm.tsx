@@ -68,7 +68,7 @@ export function MeetupForm({ initial, action, submitLabel }: Props) {
             name="location"
             label="Venue / location"
             defaultValue={initial?.location ?? ""}
-            placeholder="e.g. HUBBA Thonglor, Bangkok"
+            placeholder="e.g. Union Mall, Ladprao"
           />
         ) : (
           <Input

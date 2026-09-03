@@ -64,7 +64,7 @@ export function HostMeetupForm() {
           required
           minLength={2}
           maxLength={120}
-          placeholder={tr("Coffee and co-founder talk in Ari")}
+          placeholder={tr("Coffee and co-founder talk in Ladprao")}
           className={FIELD}
         />
       </div>
