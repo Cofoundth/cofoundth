@@ -286,3 +286,32 @@ export async function hostMeetupAction(
   revalidatePath("/dashboard");
   redirect(`/meetups/${created.slug}`);
 }
+
+// Report a meetup into the same moderation queue posts and profiles use.
+// Runs on the user's RLS client — the reports insert policy already scopes
+// reporter_id to auth.uid(), so no service role is involved.
+export async function reportMeetupAction(
+  meetupId: string,
+  reason: string,
+): Promise<{ error?: string; ok?: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+  const clean = reason.trim();
+  if (clean.length < 5 || clean.length > 1000) {
+    return { error: "Tell us a little more (5–1000 characters)." };
+  }
+  const { error } = await supabase.from("reports").insert({
+    reporter_id: user.id,
+    target_kind: "meetup",
+    target_id: meetupId,
+    reason: clean,
+  });
+  if (error) {
+    console.error("[meetups.report]", error);
+    return { error: "Couldn't send the report. Try again." };
+  }
+  return { ok: true };
+}

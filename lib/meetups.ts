@@ -10,6 +10,10 @@ export type MeetupCategory =
   | "cowork"
   | "dinner"
   | "talk"
+  | "gym"
+  | "hike"
+  | "walk"
+  | "drinks"
   | "other";
 
 // Every card carries a cover: the host's upload when there is one, else the
@@ -33,6 +37,10 @@ export const MEETUP_CATEGORIES: Record<
   dinner: { emoji: "🍜", label: "Dinner" },
   talk: { emoji: "🎤", label: "Talk" },
   run: { emoji: "🏃", label: "Run" },
+  gym: { emoji: "🏋️", label: "Gym" },
+  hike: { emoji: "⛰️", label: "Hike" },
+  walk: { emoji: "🚶", label: "Walk" },
+  drinks: { emoji: "🍻", label: "Drinks" },
   other: { emoji: "✨", label: "Other" },
 };
 

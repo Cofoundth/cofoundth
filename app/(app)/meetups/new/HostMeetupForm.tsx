@@ -17,20 +17,28 @@ const FIELD =
   "w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:border-navy focus:outline-none rounded-xl";
 const LABEL = "block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2";
 
-export function HostMeetupForm() {
+export function HostMeetupForm({
+  fixedCategory,
+}: {
+  /** Set by the create wizard: step 1 picked the category, so the picker is
+   *  not rendered again — the value rides the hidden input. */
+  fixedCategory?: MeetupCategory;
+} = {}) {
   const tr = useT();
   const [state, formAction, pending] = useActionState<HostMeetupState, FormData>(
     hostMeetupAction,
     undefined,
   );
-  const [category, setCategory] = useState<MeetupCategory>("coffee");
+  const [category, setCategory] = useState<MeetupCategory>(
+    fixedCategory ?? "coffee",
+  );
   const [format, setFormat] = useState<"in_person" | "online">("in_person");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
 
   return (
     <form action={formAction} className="space-y-6">
-      <div>
+      <div className={fixedCategory ? "hidden" : undefined}>
         <span className={LABEL}>{tr("Category")}</span>
         <div className="flex flex-wrap gap-1.5">
           {(

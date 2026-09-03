@@ -9,7 +9,7 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { isInvestorAccount } from "@/lib/account";
 import { Section } from "@/components/ui";
-import { HostMeetupForm } from "./HostMeetupForm";
+import { HostMeetupWizard } from "../HostMeetupWizard";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +30,7 @@ export default async function NewMeetupPage() {
       </div>
 
       <div className="bg-white p-8 rounded-3xl shadow-xs">
-        <HostMeetupForm />
+        <HostMeetupWizard />
       </div>
     </Section>
   );
