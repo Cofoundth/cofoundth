@@ -3,21 +3,26 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  ArrowRight,
-  BadgeCheck,
   Building2,
+  ChevronDown,
   HandshakeIcon,
   MapPin,
   Search as SearchIcon,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import {
   Button,
   CardChip,
+  CardLabel,
+  CardPill,
   EmptyState,
   LinkButton,
   Section,
+  SectorList,
+  VerifiedBadge,
 } from "@/components/ui";
+import { STAGE_LABELS } from "@/lib/matching";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { PartnershipRequestDialog } from "./PartnershipRequestDialog";
@@ -75,6 +80,7 @@ export function CompaniesClient({
   const [requestTarget, setRequestTarget] = useState<CompanyProfile | null>(
     null,
   );
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Deep-link from the partnership board ("Respond" → /companies?focus=<id>):
   // auto-open the request dialog for that company, if the viewer can send.
@@ -149,28 +155,24 @@ export function CompaniesClient({
           <div className="max-w-[640px]">
             {/* "B2B Network" said what the sidebar item already says; Beta is
                 real status, so it stays as a chip on the title. */}
-            <h1 className="text-d2 flex items-center gap-2.5 flex-wrap">
-              {tr("Companies in the community")}
-              <CardChip>Beta</CardChip>
+            <h1 className="text-d2 flex items-baseline gap-2.5 flex-wrap">
+              <span className="inline-flex items-center gap-2.5">
+                {tr("Companies in the community")}
+                <CardChip>Beta</CardChip>
+              </span>
+              <span className="text-sm font-normal tracking-normal text-ink-muted">
+                {companies.length}{" "}
+                {tr(companies.length === 1 ? "company" : "companies")}
+              </span>
             </h1>
           </div>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/companies/requests"
-              className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors rounded-xl"
-            >
-              <HandshakeIcon className="w-4 h-4" strokeWidth={1.5} />
-              {tr("Partnership board")}
-            </Link>
-            <div className="text-right">
-              <div className="font-serif text-num1 text-navy">
-                {companies.length}
-              </div>
-              <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mt-1">
-                {tr("Companies")}
-              </div>
-            </div>
-          </div>
+          <Link
+            href="/companies/requests"
+            className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors rounded-xl"
+          >
+            <HandshakeIcon className="w-4 h-4" strokeWidth={1.5} />
+            {tr("Partnership board")}
+          </Link>
         </div>
 
         {!currentUserIsCompany && (
@@ -190,85 +192,104 @@ export function CompaniesClient({
         )}
       </div>
 
-      <div className="grid xl:grid-cols-12 gap-8">
-        {/* Filter sidebar */}
-        <aside className="xl:col-span-3">
-          <div className="lg:sticky lg:top-6 space-y-8">
-            <div>
-              <label
-                htmlFor="company-search"
-                className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+      {/* Search grows, a 48px filter trigger beside it, the filters in a
+          panel below — the same pattern /browse runs; the permanent rail
+          spent a quarter of the viewport on two chip groups. */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="relative flex-1 min-w-0">
+          <SearchIcon
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+          <input
+            id="company-search"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label={tr("Search")}
+            placeholder={tr("Name, capability…")}
+            className="w-full h-12 pl-11 pr-4 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
+          />
+        </div>
+        {/* rounded-xl, not the base layer's pill: it has to agree with the
+            input beside it, and a call-site utility beats @layer base. */}
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-expanded={filtersOpen}
+          aria-controls="company-filters"
+          aria-label={tr("Filters")}
+          className="relative h-12 w-12 shrink-0 flex items-center justify-center border border-line bg-white text-ink hover:border-navy transition-colors rounded-xl"
+        >
+          <SlidersHorizontal className="w-4 h-4" strokeWidth={1.5} />
+          {capabilityFilters.length + seekingFilters.length > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
+              {capabilityFilters.length + seekingFilters.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {filtersOpen && (
+        <div
+          id="company-filters"
+          className="mb-8 rounded-xl border border-line bg-white"
+        >
+          <FilterGroup label={tr("Offers")}>
+            {capabilities.map((cap) => (
+              <FilterChip
+                key={cap}
+                selected={capabilityFilters.includes(cap)}
+                onClick={() => toggle(setCapabilityFilters, cap)}
               >
-                {tr("Search")}
-              </label>
-              <div className="relative">
-                <SearchIcon
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted"
-                  strokeWidth={1.5}
-                />
-                <input
-                  id="company-search"
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={tr("Name, capability…")}
-                  className="w-full pl-9 pr-3 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
-                />
-              </div>
-            </div>
-
-            {capabilities.length > 0 && (
-              <div>
-                <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
-                  {tr("Offers")}
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {capabilities.map((cap) => (
-                    <FilterChip
-                      key={cap}
-                      selected={capabilityFilters.includes(cap)}
-                      onClick={() => toggle(setCapabilityFilters, cap)}
-                    >
-                      {cap}
-                    </FilterChip>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {seeking.length > 0 && (
-              <div>
-                <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-3">
-                  {tr("Seeking")}
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {seeking.map((s) => (
-                    <FilterChip
-                      key={s}
-                      selected={seekingFilters.includes(s)}
-                      onClick={() => toggle(setSeekingFilters, s)}
-                    >
-                      {s}
-                    </FilterChip>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeFilters > 0 && (
+                {cap}
+              </FilterChip>
+            ))}
+          </FilterGroup>
+          <FilterGroup label={tr("Seeking")}>
+            {seeking.map((sk) => (
+              <FilterChip
+                key={sk}
+                selected={seekingFilters.includes(sk)}
+                onClick={() => toggle(setSeekingFilters, sk)}
+              >
+                {sk}
+              </FilterChip>
+            ))}
+          </FilterGroup>
+          <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-line">
+            <span className="text-sm text-ink-muted">
+              {filtered.length}{" "}
+              {tr(filtered.length === 1 ? "company" : "companies")}
+            </span>
+            <div className="flex items-center gap-2">
+              {activeFilters > 0 && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="px-4 py-2 text-sm text-ink-muted hover:text-navy tracking-wide"
+                >
+                  {tr("Clear filters ({n})").replace(
+                    "{n}",
+                    String(activeFilters),
+                  )}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={clearFilters}
-                className="text-xs text-ink-muted hover:text-navy"
+                onClick={() => setFiltersOpen(false)}
+                className="px-5 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
               >
-                {tr("Clear filters ({n})").replace("{n}", String(activeFilters))}
+                {tr("Done")}
               </button>
-            )}
+            </div>
           </div>
-        </aside>
+        </div>
+      )}
 
-        {/* Results */}
-        <div className="xl:col-span-9">
+      {/* Results */}
+      <div className="min-w-0">
           {filtered.length === 0 ? (
             companies.length === 0 ? (
               // NOTHING LISTED YET. The viewer's own company is filtered out
@@ -321,7 +342,7 @@ export function CompaniesClient({
               />
             )
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((c) => (
                 <CompanyCard
                   key={c.id}
@@ -332,7 +353,6 @@ export function CompaniesClient({
               ))}
             </div>
           )}
-        </div>
       </div>
 
       {requestTarget && (
@@ -347,6 +367,43 @@ export function CompaniesClient({
 }
 
 // ---- Sub-components ----------------------------------------------
+
+// One accordion row inside the filter panel — /browse's recipe. `rounded-none`
+// is deliberate: @layer base pills every <button>, which looks wrong on a
+// full-width row inside a bordered card; the call site wins because
+// `utilities` is a later cascade layer than `base`.
+function FilterGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-line last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left text-sm text-ink hover:bg-cream transition-colors rounded-none"
+      >
+        {label}
+        <ChevronDown
+          className={`w-4 h-4 text-ink-muted shrink-0 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+          strokeWidth={1.5}
+        />
+      </button>
+      {open && (
+        // pt-1: the header button's py-3 leaves 12px against pb-4's 16 — the
+        // same symmetry fix /browse's panel carries.
+        <div className="px-4 pt-1 pb-4 flex flex-wrap gap-1.5">{children}</div>
+      )}
+    </div>
+  );
+}
 
 function FilterChip({
   selected,
@@ -384,131 +441,99 @@ function CompanyCard({
   const tr = useT();
   const locale = useLocale();
   const fresh = isWithinMs(c.created_at, 7 * DAY_MS);
+  const statusTag = c.status_tags
+    .map((t) => STATUS_TAG_LABEL[t])
+    .filter(Boolean)[0];
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-xs hover:shadow-sm transition-shadow">
-      <div className="flex items-start gap-5">
-        <Link href={`/profile/${c.slug}`} className="shrink-0">
-          <Avatar name={c.company_name} url={c.photo_url} size="lg" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
-            <div className="min-w-0">
-              <Link
-                href={`/profile/${c.slug}`}
-                className="group inline-flex items-center gap-1.5 flex-wrap"
-              >
-                <h3 className="text-xl leading-tight group-hover:text-gold-ink transition-colors">
-                  {c.company_name}
-                </h3>
-                {c.verified && (
-                  <BadgeCheck
-                    className="w-4 h-4 text-gold-ink shrink-0"
-                    strokeWidth={2}
-                  />
-                )}
-                {fresh && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse" />
-                    {tr("New")}
-                  </span>
-                )}
-              </Link>
-              <div className="text-xs text-ink-muted mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                {tr("Rep")}: {c.representative}
-                {c.location && (
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> {provinceLabel(c.location, locale)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {c.status_tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {c.status_tags.map((t) => {
-                const label = STATUS_TAG_LABEL[t];
-                if (!label) return null;
-                return (
-                  <span
-                    key={t}
-                    className="text-xs uppercase tracking-[0.15em] px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full"
-                  >
-                    {tr(label)}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-
-          {c.pitch && (
-            <p className="text-sm text-ink leading-relaxed mb-4 line-clamp-2">
-              {c.pitch}
-            </p>
-          )}
-
-          {c.capabilities.length > 0 && (
-            <div className="mb-3">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-1.5">
-                {tr("Offers")}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {c.capabilities.slice(0, 8).map((cap) => (
-                  <span
-                    key={cap}
-                    className="text-xs px-2 py-0.5 bg-cream border border-line text-ink rounded-full"
-                  >
-                    {cap}
-                  </span>
-                ))}
-                {c.capabilities.length > 8 && (
-                  <span className="text-xs text-ink-muted px-1">
-                    +{c.capabilities.length - 8}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {c.partnership_seeking.length > 0 && (
-            <div className="mb-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-1.5">
-                {tr("Seeking")}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {c.partnership_seeking.slice(0, 8).map((s) => (
-                  <span
-                    key={s}
-                    className="text-xs px-2 py-0.5 bg-gold-soft border border-line text-gold-ink rounded-full"
-                  >
-                    {s}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 pt-3 border-t border-line">
+    <div className="group h-full min-w-0 bg-white rounded-3xl shadow-xs hover:shadow-sm transition-shadow p-4 flex flex-col">
+      {/* HEADER — logo shares the 48px row; nothing below is indented. */}
+      <div className="shrink-0 flex gap-3 items-center">
+        <Avatar name={c.company_name} url={c.photo_url} size="md" />
+        <div className="flex flex-col justify-center min-w-0 flex-1 overflow-hidden">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold leading-none">
             <Link
               href={`/profile/${c.slug}`}
-              className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1"
+              className="truncate hover:text-gold-ink transition-colors"
             >
-              {tr("Full profile")}
-              <ArrowRight className="w-3.5 h-3.5" />
+              {c.company_name}
             </Link>
-            {canRequest && (
-              <button
-                type="button"
-                onClick={onRequest}
-                className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
-              >
-                <HandshakeIcon className="w-3.5 h-3.5" />
-                {tr("Send partnership request")}
-              </button>
+            {c.verified && <VerifiedBadge label={tr("Verified")} />}
+          </h3>
+          <div className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-muted overflow-hidden">
+            <span className="truncate">{c.representative}</span>
+            {c.location && (
+              <span className="inline-flex min-w-0 items-center gap-1 shrink-0">
+                <MapPin className="w-3 h-3 shrink-0" />
+                {provinceLabel(c.location, locale)}
+              </span>
             )}
+            {fresh && <span className="shrink-0 text-gold-ink">{tr("New")}</span>}
           </div>
         </div>
+      </div>
+
+      {/* BODY — reserved rows on the shared skeleton. */}
+      <div className="mt-4 flex flex-col gap-4 flex-1 min-h-0">
+        <div className="flex h-[21px] items-center gap-2 overflow-hidden">
+          {statusTag && <CardPill>{tr(statusTag)}</CardPill>}
+          <SectorList
+            items={c.industry}
+            max={1}
+            fallback={
+              c.stage && STAGE_LABELS[c.stage]
+                ? tr(STAGE_LABELS[c.stage])
+                : undefined
+            }
+          />
+        </div>
+
+        {c.pitch && (
+          <p className="text-xs leading-relaxed text-ink-muted line-clamp-2 min-h-[39px]">
+            {c.pitch}
+          </p>
+        )}
+
+        {c.capabilities.length > 0 && (
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <CardLabel>{tr("Offers")}</CardLabel>
+            <div className="flex flex-row gap-1.5 overflow-hidden h-[22px]">
+              {c.capabilities.slice(0, 3).map((cap) => (
+                <CardChip key={cap}>{cap}</CardChip>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {c.partnership_seeking.length > 0 && (
+          <div className="mt-auto flex flex-col gap-1.5 min-w-0">
+            <CardLabel>{tr("Seeking")}</CardLabel>
+            <div className="flex flex-row gap-1.5 overflow-hidden h-[22px]">
+              {c.partnership_seeking.slice(0, 3).map((sk) => (
+                <CardChip key={sk}>{sk}</CardChip>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* FOOTER — the /browse card's two-button row: act, or read more. */}
+      <div className="pt-4 flex gap-2">
+        {canRequest && (
+          <button
+            type="button"
+            onClick={onRequest}
+            className="flex-1 rounded-full bg-navy py-2 text-sm text-white tracking-wide hover:bg-navy-dark transition-colors"
+          >
+            {tr("Send partnership request")}
+          </button>
+        )}
+        <Link
+          href={`/profile/${c.slug}`}
+          className={`flex-1 rounded-full border border-line py-2 text-sm text-ink text-center tracking-wide hover:border-navy transition-colors`}
+        >
+          {tr("Full profile")}
+        </Link>
       </div>
     </div>
   );
