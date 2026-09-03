@@ -718,6 +718,141 @@ function checkRule3(src, lines, starts, mask, push, relPath) {
   }
 }
 
+// RULE 4 - a display-ladder heading that overrides its own line-height.
+//
+// text-d1..d5 are 26/33/42/53/68px and EACH SHIPS ITS OWN PAIRED line-height,
+// tightening as the size grows: 1.30 / 1.25 / 1.15 / 1.10 / 1.05. Adding a
+// leading-* utility replaces that paired value, and the direction of the error
+// depends on the step, which is why it survives review:
+//
+//     text-d3 (1.15) + leading-tight (1.25)  ->  10% LOOSER than designed
+//     text-d2 (1.25) + leading-tight (1.25)  ->  no-op, so it looks harmless
+//     text-d5 (1.05) + leading-tight (1.25)  ->  19% looser
+//
+// The responsive form is the worst case: `text-d2 lg:text-d3 leading-tight` is
+// correct on a phone and wrong at lg, so nobody notices on the device they
+// tested. 41 sites across 32 files were live when this rule was written; 19 of
+// them were a visible regression rather than a no-op.
+//
+// leading-none is the opposite failure and matters more in Thai than in Latin.
+// The paired values leave room for a tone mark above the ascender and a vowel
+// mark below the baseline; 1.0 does not, so Thai headings collide.
+//
+// ONLY heading elements are checked. A <div> or <blockquote> at a display size
+// is a stat number or a pull-quote, where an explicit leading is a real
+// decision - the pull-quote in QuoteBand is deliberately leading-relaxed.
+const LADDER_HEADING =
+  /<(h[1-6])\b[^>]*className=\s*(?:"([^"]*)"|\{`([^`]*)`\})/g;
+
+const LADDER_LH = { d1: 1.3, d2: 1.25, d3: 1.15, d4: 1.1, d5: 1.05 };
+const LEADING_VALUE = {
+  "leading-none": 1.0,
+  "leading-tight": 1.25,
+  "leading-snug": 1.375,
+  "leading-normal": 1.5,
+  "leading-relaxed": 1.625,
+  "leading-loose": 2.0,
+};
+
+function checkRule4(src, lines, starts, mask, push) {
+  LADDER_HEADING.lastIndex = 0;
+  let m;
+  while ((m = LADDER_HEADING.exec(src))) {
+    const idx = m.index;
+    if (mask[idx]) continue;
+    const cls = m[2] ?? m[3] ?? "";
+    const steps = [...cls.matchAll(/\btext-(d[1-5])\b/g)].map((x) => x[1]);
+    if (!steps.length) continue;
+    const lead = Object.keys(LEADING_VALUE).find((k) =>
+      new RegExp("\\b" + k + "\\b").test(cls),
+    );
+    if (!lead) continue;
+
+    // Describe the actual effect per step so the message is arguable, not dogma.
+    const effects = steps.map((st) => {
+      const delta = LEADING_VALUE[lead] - LADDER_LH[st];
+      if (Math.abs(delta) < 0.001) return `text-${st} unchanged`;
+      const dir = delta > 0 ? "LOOSER" : "tighter";
+      return `text-${st} ${(Math.abs(delta) / LADDER_LH[st] * 100).toFixed(0)}% ${dir}`;
+    });
+    const { line, column } = positionOf(starts, idx);
+    push({
+      rule: "ladder-line-height",
+      line,
+      column,
+      class: lead,
+      element: `<${m[1]}>`,
+      snippet: (lines[line - 1] ?? "").trim(),
+      message:
+        `\`${lead}\` overrides the paired line-height of ` +
+        `${steps.map((x) => "text-" + x).join(" / ")} (${effects.join(", ")}). ` +
+        `Each ladder step ships its own. Delete the leading-* class. ` +
+        `Headings at non-ladder sizes (text-xl, text-lg) keep theirs.`,
+    });
+  }
+}
+
+// RULE 5 - a page container on a width the system does not define.
+//
+// The system has exactly two page widths: max-w-[1120px] for a section
+// container (grid or main+aside) and max-w-[640px] for a narrow column (forms,
+// editors, settings, onboarding). Tailwind's max-w-2xl/3xl/4xl/5xl presets are
+// none of the system's numbers, and reading one back means the page predates
+// the rule - 15 of them were live when this was written, across 2xl/3xl/4xl/5xl.
+//
+// Scoped to the OUTERMOST container of a route file, which is why this only
+// looks at page.tsx and only at the first max-w it finds. Inner blocks, modals
+// and skeletons are components, not page containers, and are none of its
+// business.
+//
+// Reading/article and chat routes are exempt by the design rules themselves
+// ("Reading/article pages keep a narrow column"; "Chat/conversation views are
+// full-height"), so they are listed here rather than being flagged forever.
+const PAGE_WIDTH_EXEMPT = [
+  /\(app\)[\/]community[\/]\[id\][\/]page\.tsx$/,
+  /\(app\)[\/]meetups[\/]\[slug\][\/]page\.tsx$/,
+  /\(app\)[\/]orgs[\/]\[slug\][\/]chat[\/]page\.tsx$/,
+  /\(app\)[\/]funding[\/]\[connectionId\][\/]page\.tsx$/,
+  /\(marketing\)[\/](privacy|terms|code-of-conduct)[\/]page\.tsx$/,
+  /\(marketing\)[\/]insights[\/]\[slug\][\/]page\.tsx$/,
+  /\(marketing\)[\/]founders[\/]\[slug\][\/]page\.tsx$/,
+  /\(marketing\)[\/]p[\/]\[id\][\/]page\.tsx$/,
+];
+
+const OFF_SYSTEM_WIDTH = /\bmax-w-(?:2xl|3xl|4xl|5xl|6xl|7xl)\b/;
+
+function checkRule5(src, lines, starts, mask, push, relPath) {
+  const rel = (relPath || "").replace(/\\/g, "/");
+  if (!/[\/]page\.tsx$/.test(rel)) return;
+  if (PAGE_WIDTH_EXEMPT.some((re) => re.test(rel))) return;
+
+  // The first max-w on a mx-auto container is the page container.
+  const CONTAINER = /className=\s*"([^"]*\bmx-auto\b[^"]*)"/g;
+  CONTAINER.lastIndex = 0;
+  let m;
+  while ((m = CONTAINER.exec(src))) {
+    const idx = m.index;
+    if (mask[idx]) continue;
+    const cls = m[1];
+    const bad = cls.match(OFF_SYSTEM_WIDTH);
+    if (!bad) continue;
+    const { line, column } = positionOf(starts, idx);
+    push({
+      rule: "page-container-width",
+      line,
+      column,
+      class: bad[0],
+      element: "page container",
+      snippet: (lines[line - 1] ?? "").trim(),
+      message:
+        `\`${bad[0]}\` is not one of the system's two page widths. ` +
+        `Single column (form, editor, settings, onboarding) -> max-w-[640px]; ` +
+        `grid or main+aside -> max-w-[1120px] with the intro block 640 inside it.`,
+    });
+    return; // outermost container only
+  }
+}
+
 function checkRule2(src, lines, starts, mask, push) {
   const passthrough = passthroughComponentsOf(src);
   const symbols = symbolTableOf(src, mask);
@@ -862,6 +997,8 @@ function lintFile(absPath, relPath, errors) {
     checkRule1(src, lines, starts, mask, (v) => raw.push(v));
     checkRule2(src, lines, starts, mask, (v) => raw.push(v));
     checkRule3(src, lines, starts, mask, (v) => raw.push(v), relPath);
+    checkRule4(src, lines, starts, mask, (v) => raw.push(v));
+    checkRule5(src, lines, starts, mask, (v) => raw.push(v), relPath);
   } catch (err) {
     errors.push({ path: relPath, message: `scan failed: ${err.message}` });
     return null;
@@ -923,6 +1060,27 @@ const RULE_DOCS = {
     "  except next/link, which renders a bare <a> the base layer does not round.",
     "  Classes reached through a module-level constant are followed and reported",
     "  at the element that renders them.",
+  ],
+  "ladder-line-height": [
+    "ladder-line-height - text-d1..d5 each ship their OWN paired line-height",
+    "  (1.30 / 1.25 / 1.15 / 1.10 / 1.05, tightening as the size grows). A",
+    "  leading-* utility replaces it, and the error flips direction per step:",
+    "  text-d3 + leading-tight is 10% LOOSER, text-d2 + leading-tight is a no-op.",
+    "  `text-d2 lg:text-d3 leading-tight` is therefore right on a phone and wrong",
+    "  at lg, which is how 19 real regressions survived review.",
+    "  FIX   delete the leading-* class. Headings at non-ladder sizes keep theirs.",
+    "  NOTE  only h1-h6 are checked - a <div> or <blockquote> at display size is a",
+    "        stat number or a pull-quote, where explicit leading is a decision.",
+  ],
+  "page-container-width": [
+    "page-container-width - the system defines exactly two page widths:",
+    "  max-w-[1120px] for a section container (grid or main+aside) and",
+    "  max-w-[640px] for a narrow column (forms, editors, settings, onboarding).",
+    "  Tailwind's 2xl/3xl/4xl/5xl presets are none of the system's numbers.",
+    "  FIX   pick the one that matches the page shape. 640 puts a full-width field",
+    "        at 560px and a two-column row at 272px each.",
+    "  NOTE  only the OUTERMOST container of a page.tsx is checked. Reading/article",
+    "        and chat routes are exempt by the design rules and are skipped.",
   ],
 };
 
