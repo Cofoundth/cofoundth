@@ -455,8 +455,23 @@ pages use `<Section>`, not the string.
 ### Layout — measured from their live DOM
 - Section container **`max-w-[1120px]`**, vertical rhythm **`py-[88px]`**
 - Intro/header block **`max-w-[640px]`** — a narrow intro above a wide grid
-- Card grid **`gap-4 sm:grid-cols-2 lg:grid-cols-3`** (renders 328.4px columns at 1120px, identical to their `.lm-grid`). `gap-4` is the rule for CARD grids; form-field grids are layout inside a component and may differ
+- Card grid **`gap-4 sm:grid-cols-2 lg:grid-cols-3`** on MARKETING; app routes use **`xl:grid-cols-3`** (renders 328.4px columns at 1120px, identical to their `.lm-grid`). `gap-4` is the rule for CARD grids; form-field grids are layout inside a component and may differ
 - Card body order: meta row → title → excerpt → footer row
+
+**App card grids go three-up at `xl`, not `lg`.** The `lg:grid-cols-3` above was
+measured on marketing pages, which have no sidebar. App routes lose 256px to the
+rail, so the same class produces very different columns:
+
+| viewport | 2-up | 3-up |
+|---|---|---|
+| 1024 (`lg`) | 336px | **219px** |
+| 1280 (`xl`) | 464px | 304px |
+| 1440 | 512px | 336px |
+
+At `lg` a three-up app grid is NARROWER than the two-up layout at the same
+width, which is how the founder card ended up with 148px for a name and every
+card wrapping differently. Going three-up at `xl` fixed the card without
+touching the card.
 - Reading/article pages keep a narrow column; only the rhythm applies
 - Chat/conversation views are full-height and take no vertical rhythm
 

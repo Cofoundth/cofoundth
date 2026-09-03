@@ -579,7 +579,7 @@ export function BrowseClient({ others }: Props) {
               }
             />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((profile) => (
                 <ProfileCard key={profile.id} profile={profile} />
               ))}
@@ -756,6 +756,10 @@ function LabeledRow({
   );
 }
 
+// The founder grid goes three-up at xl, NOT lg. The design system's card grid
+// (sm:2 lg:3) was measured on MARKETING pages, which have no sidebar. App routes
+// lose 256px to the rail, so lg:grid-cols-3 gives 219px columns at 1024 —
+// narrower than the two-column layout gives at the same width. xl gives 304px.
 function ProfileCard({ profile }: { profile: Profile }) {
   const locale = useLocale();
   const tr = useT();
@@ -785,7 +789,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Who */}
-          <h3 className="text-xl leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors">
+          <h3 className="text-xl leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors line-clamp-2">
             {isCompany && profile.company_name
               ? profile.company_name
               : profile.full_name}
@@ -829,7 +833,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                 chips. */}
             {!isCompany && roles.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {roles.map((r) => (
+                {roles.slice(0, 3).map((r) => (
                   <span
                     key={r}
                     className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03] rounded-full"
@@ -865,7 +869,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                 {lookingFor.length > 0 && (
                   <LabeledRow label={tr("Looking for")} icon={Search}>
                     <div className="flex flex-wrap gap-1.5">
-                      {lookingFor.map((r) => (
+                      {lookingFor.slice(0, 3).map((r) => (
                         <span
                           key={r}
                           className="px-2 py-0.5 text-xs border border-line text-gold-ink bg-gold-soft rounded-full"
