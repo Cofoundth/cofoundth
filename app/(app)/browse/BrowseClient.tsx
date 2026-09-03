@@ -586,7 +586,7 @@ export function BrowseClient({ others }: Props) {
               }
             />
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((profile) => (
                 <ProfileCard key={profile.id} profile={profile} />
               ))}
@@ -741,6 +741,16 @@ function FilterChip({
   );
 }
 
+// A URL is unreadable in a narrow card and `break-all` turns it into
+// confetti. Show the host and let the profile page carry the full link.
+function hostOf(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
 function LabeledRow({
   label,
   icon: Icon,
@@ -751,9 +761,11 @@ function LabeledRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-1 sm:gap-3">
-      <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-gold-ink leading-tight sm:pt-1">
-        {Icon && <Icon className="w-3 h-3" strokeWidth={2} />}
+    // Stacked, not a label gutter. The 96px column this used to reserve was
+    // most of a grid card's usable width.
+    <div className="min-w-0">
+      <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-gold-ink leading-tight mb-1">
+        {Icon && <Icon className="w-3 h-3 shrink-0" strokeWidth={2} />}
         {label}
       </div>
       <div className="min-w-0 text-sm text-ink">{children}</div>
@@ -780,12 +792,15 @@ function ProfileCard({ profile }: { profile: Profile }) {
   return (
     <Link
       href={`/profile/${profile.slug}`}
-      className="group block bg-white rounded-3xl shadow-xs hover:shadow-sm transition-shadow"
+      className="group flex h-full flex-col bg-white rounded-3xl shadow-xs hover:shadow-sm transition-shadow"
     >
-      <div className="flex items-start gap-4 sm:gap-5 p-5 sm:p-6">
-        <Avatar name={profile.full_name} url={profile.photo_url} size="lg" />
+      {/* No items-start: the content column must STRETCH for the footer's
+          mt-auto to have space to push into, which is what aligns footers
+          across a row. The avatar keeps its own size via self-start. */}
+      <div className="flex flex-1 gap-3 p-5">
+        <Avatar name={profile.full_name} url={profile.photo_url} size="md" />
 
-        <div className="flex-1 min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col">
           {/* Who */}
           <h3 className="text-xl leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors">
             {isCompany && profile.company_name
@@ -856,7 +871,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
             {isCompany ? (
               profile.pitch && (
                 <LabeledRow label={tr("Pitch")} icon={Hammer}>
-                  <p className="leading-relaxed text-ink whitespace-pre-wrap">
+                  <p className="leading-relaxed text-ink whitespace-pre-wrap line-clamp-3">
                     {profile.pitch}
                   </p>
                 </LabeledRow>
@@ -865,7 +880,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
               <>
                 {profile.pitch && (
                   <LabeledRow label={tr("Pitch")} icon={Hammer}>
-                    <p className="leading-relaxed text-ink whitespace-pre-wrap">
+                    <p className="leading-relaxed text-ink whitespace-pre-wrap line-clamp-3">
                       {profile.pitch}
                     </p>
                   </LabeledRow>
@@ -876,10 +891,10 @@ function ProfileCard({ profile }: { profile: Profile }) {
                     <div className="space-y-2">
                       {profile.project_images.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {profile.project_images.map((url, i) => (
+                          {profile.project_images.slice(0, 2).map((url, i) => (
                             <div
                               key={i}
-                              className="w-20 h-14 overflow-hidden border border-line shrink-0 bg-cream rounded-xl"
+                              className="w-16 h-12 overflow-hidden border border-line shrink-0 bg-cream rounded-xl"
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
@@ -893,9 +908,13 @@ function ProfileCard({ profile }: { profile: Profile }) {
                         </div>
                       )}
                       {profile.project_url && (
-                        <span className="inline-flex items-center gap-1 text-xs text-navy break-all">
+                        <span className="inline-flex items-center gap-1 text-xs text-navy min-w-0">
                           <ExternalLink className="w-3 h-3 shrink-0" />
-                          {profile.project_url}
+                          {/* host only: the full URL used break-all and
+                              shattered mid-word in a grid column. */}
+                          <span className="truncate">
+                            {hostOf(profile.project_url)}
+                          </span>
                         </span>
                       )}
                     </div>
@@ -906,7 +925,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
               <>
                 {(profile.work_experience || profile.background) && (
                   <LabeledRow label={tr("Experience")} icon={Briefcase}>
-                    <p className="leading-relaxed text-ink whitespace-pre-wrap">
+                    <p className="leading-relaxed text-ink whitespace-pre-wrap line-clamp-3">
                       {profile.work_experience || profile.background}
                     </p>
                   </LabeledRow>
@@ -929,7 +948,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
             )}
             {!isCompany && profile.education && (
               <LabeledRow label={tr("Education")} icon={GraduationCap}>
-                <p className="leading-relaxed text-ink whitespace-pre-wrap">
+                <p className="leading-relaxed text-ink whitespace-pre-wrap line-clamp-3">
                   {profile.education}
                 </p>
               </LabeledRow>
@@ -951,7 +970,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
           </div>
 
           {/* Meta */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-muted mt-4 pt-4 border-t border-line">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-muted mt-auto pt-4 border-t border-line">
             {profile.industry.slice(0, 3).map((i) => (
               <span key={i} className="px-2 py-0.5 border border-line rounded-full">
                 {i}
