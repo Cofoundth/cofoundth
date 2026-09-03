@@ -5,18 +5,11 @@ import { useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
-  Briefcase,
   Building2,
   ChevronDown,
-  ExternalLink,
-  GraduationCap,
-  Hammer,
-  Image as ImageIcon,
   MapPin,
   Search,
   SlidersHorizontal,
-  Sparkles,
-  UserRound,
   Users,
 } from "lucide-react";
 import {
@@ -741,16 +734,6 @@ function FilterChip({
   );
 }
 
-// A URL is unreadable in a narrow card and `break-all` turns it into
-// confetti. Show the host and let the profile page carry the full link.
-function hostOf(url: string) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-}
-
 function LabeledRow({
   label,
   icon: Icon,
@@ -841,131 +824,59 @@ function ProfileCard({ profile }: { profile: Profile }) {
               <span className="text-gold-ink">{intent.join(" · ")}</span>
             )}
           </div>
-
-          {/* What — each row a distinct visual form:
-              Role = navy chips (who they are), Building = prose (what they do),
-              Looking for = gold chips (what they want). */}
-          <div className="mt-4 space-y-3">
-            {isCompany ? (
-              <LabeledRow label={tr("Represented by")} icon={Briefcase}>
-                <span className="font-medium text-navy">
-                  {profile.full_name}
-                </span>
-              </LabeledRow>
-            ) : (
-              roles.length > 0 && (
-                <LabeledRow label={tr("Role")} icon={UserRound}>
-                  <div className="flex flex-wrap gap-1.5">
-                    {roles.map((r) => (
-                      <span
-                        key={r}
-                        className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03] rounded-full"
-                      >
-                        {r}
-                      </span>
-                    ))}
-                  </div>
-                </LabeledRow>
-              )
+            {/* Role is identity, so it sits under the meta line unlabelled.
+                As its own labelled section it cost ~60px for three one-word
+                chips. */}
+            {!isCompany && roles.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {roles.map((r) => (
+                  <span
+                    key={r}
+                    className="px-2 py-0.5 text-xs border border-navy/25 text-navy bg-navy/[0.03] rounded-full"
+                  >
+                    {r}
+                  </span>
+                ))}
+              </div>
             )}
+
+          {/* Two blocks, not six. Everything else — project images and link,
+              experience, education, skills — is on the profile, one click away.
+              A directory card answers "is this worth opening", and Onfound's
+              equivalent card carries 12 text nodes against our previous ~40. */}
+          <div className="mt-3 space-y-3">
             {isCompany ? (
               profile.pitch && (
-                <LabeledRow label={tr("Pitch")} icon={Hammer}>
-                  <p className="leading-relaxed text-ink whitespace-pre-wrap line-clamp-3">
-                    {profile.pitch}
-                  </p>
-                </LabeledRow>
+                <p className="text-sm leading-relaxed text-ink line-clamp-2">
+                  {profile.pitch}
+                </p>
               )
-            ) : hasIdea ? (
-              <>
-                {profile.pitch && (
-                  <LabeledRow label={tr("Pitch")} icon={Hammer}>
-                    <p className="leading-relaxed text-ink whitespace-pre-wrap line-clamp-3">
-                      {profile.pitch}
-                    </p>
-                  </LabeledRow>
-                )}
-                {(profile.project_url ||
-                  profile.project_images.length > 0) && (
-                  <LabeledRow label={tr("Project")} icon={ImageIcon}>
-                    <div className="space-y-2">
-                      {profile.project_images.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {profile.project_images.slice(0, 2).map((url, i) => (
-                            <div
-                              key={i}
-                              className="w-16 h-12 overflow-hidden border border-line shrink-0 bg-cream rounded-xl"
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={url}
-                                alt=""
-                                loading="lazy"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {profile.project_url && (
-                        <span className="inline-flex items-center gap-1 text-xs text-navy min-w-0">
-                          <ExternalLink className="w-3 h-3 shrink-0" />
-                          {/* host only: the full URL used break-all and
-                              shattered mid-word in a grid column. */}
-                          <span className="truncate">
-                            {hostOf(profile.project_url)}
-                          </span>
-                        </span>
-                      )}
-                    </div>
-                  </LabeledRow>
-                )}
-              </>
             ) : (
               <>
-                {(profile.work_experience || profile.background) && (
-                  <LabeledRow label={tr("Experience")} icon={Briefcase}>
-                    <p className="leading-relaxed text-ink whitespace-pre-wrap line-clamp-3">
-                      {profile.work_experience || profile.background}
-                    </p>
-                  </LabeledRow>
+                {(hasIdea
+                  ? profile.pitch
+                  : profile.work_experience || profile.background) && (
+                  <p className="text-sm leading-relaxed text-ink line-clamp-2">
+                    {hasIdea
+                      ? profile.pitch
+                      : profile.work_experience || profile.background}
+                  </p>
                 )}
-                {profile.skills.length > 0 && (
-                  <LabeledRow label={tr("Skills")} icon={Sparkles}>
+                {lookingFor.length > 0 && (
+                  <LabeledRow label={tr("Looking for")} icon={Search}>
                     <div className="flex flex-wrap gap-1.5">
-                      {profile.skills.slice(0, 6).map((s) => (
+                      {lookingFor.map((r) => (
                         <span
-                          key={s}
-                          className="px-2 py-0.5 text-xs border border-line text-ink rounded-full"
+                          key={r}
+                          className="px-2 py-0.5 text-xs border border-line text-gold-ink bg-gold-soft rounded-full"
                         >
-                          {s}
+                          {r}
                         </span>
                       ))}
                     </div>
                   </LabeledRow>
                 )}
               </>
-            )}
-            {!isCompany && profile.education && (
-              <LabeledRow label={tr("Education")} icon={GraduationCap}>
-                <p className="leading-relaxed text-ink whitespace-pre-wrap line-clamp-3">
-                  {profile.education}
-                </p>
-              </LabeledRow>
-            )}
-            {!isCompany && lookingFor.length > 0 && (
-              <LabeledRow label={tr("Looking for")} icon={Search}>
-                <div className="flex flex-wrap gap-1.5">
-                  {lookingFor.map((r) => (
-                    <span
-                      key={r}
-                      className="px-2 py-0.5 text-xs border border-line text-gold-ink bg-gold-soft rounded-full"
-                    >
-                      {r}
-                    </span>
-                  ))}
-                </div>
-              </LabeledRow>
             )}
           </div>
 
