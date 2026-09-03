@@ -13,7 +13,7 @@ import {
 } from "@/lib/matching";
 import { DirectoryCard } from "@/components/DirectoryCard";
 import { provinceLabel } from "@/lib/provinces";
-import { EmptyState, Section } from "@/components/ui";
+import { EmptyState, LinkButton, Section } from "@/components/ui";
 import { getFeedPosts } from "@/lib/posts";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
@@ -45,7 +45,7 @@ export default async function DashboardPage() {
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
   // ---- Merged post feed (the heartbeat) ----------------------------
-  const [feed, { data: newFounders }] = await Promise.all([
+  const [feed, { data: newFounders, count: founderCount }] = await Promise.all([
     getFeedPosts(supabase, { limit: 15, userId: user.id }),
     // 40, not 4: these are RANKED below, so the query has to hand over a pool
     // to rank rather than the four newest. Ordering stays newest-first so it
@@ -54,6 +54,7 @@ export default async function DashboardPage() {
       .from("profiles")
       .select(
         "id, full_name, photo_url, i_am, intent, looking_for, industry, stage, commitment, location, slug, created_at",
+        { count: "exact" },
       )
       .eq("profile_complete", true)
       .eq("suspended", false)
@@ -93,7 +94,7 @@ export default async function DashboardPage() {
       .limit(2),
     supabase
       .from("organizations")
-      .select("id, slug, name, tagline", { count: "exact" })
+      .select("id, slug, name, tagline, logo_url", { count: "exact" })
       .order("created_at", { ascending: false })
       .limit(2),
     supabase.from("org_members").select("org_id").eq("user_id", user.id),
@@ -349,11 +350,23 @@ export default async function DashboardPage() {
               </Link>
             </div>
             {!upcomingMeetups?.length ? (
-              <EmptyState
-                padding="md"
-                dense
-                description={await tServer("No meetups on the calendar")}
-              />
+              <div className="bg-navy p-6 rounded-3xl">
+                <p className="eyebrow text-xs uppercase tracking-[0.25em] text-gold mb-3">
+                  {await tServer("Meetups")}
+                </p>
+                <p className="text-white leading-relaxed mb-5">
+                  {await tServer(
+                    "No meetups on the calendar yet. Want to meet founders in person? Say so in the community and make the first one happen.",
+                  )}
+                </p>
+                <Link
+                  href="/community/new"
+                  className="inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-5 py-2.5 text-sm tracking-wide transition-colors rounded-full"
+                >
+                  {await tServer("Start the first meetup")}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             ) : (
               <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
                 {upcomingMeetups.map((mt) => (
@@ -408,8 +421,14 @@ export default async function DashboardPage() {
                   <Link
                     key={post.id}
                     href={`/community/${post.id}`}
-                    className="block p-4 hover:bg-cream transition-colors group"
+                    className="flex items-start gap-3 p-4 hover:bg-cream transition-colors group"
                   >
+                    <Avatar
+                      name={post.author?.full_name}
+                      url={post.author?.photo_url}
+                      size="sm"
+                    />
+                    <div className="min-w-0 flex-1">
                     <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
                       {post.title || post.content}
                     </div>
@@ -419,6 +438,7 @@ export default async function DashboardPage() {
                       {post.commentCount > 0
                         ? ` · ${post.commentCount} ${t("replies", locale)}`
                         : ""}
+                    </div>
                     </div>
                   </Link>
                 ))}
@@ -432,6 +452,42 @@ export default async function DashboardPage() {
             full feed with search, pagination and writing lives on /community,
             which is what keeps the two pages from being the same page. */}
         <aside className="lg:col-span-4 min-w-0 space-y-8 lg:sticky lg:top-24 self-start">
+          {/* Faces first — Onfound's most appealing module is an overlapping
+              avatar pile over a one-line count: social proof carried by
+              people, not numbers. Real members, same pool the ranking uses. */}
+          <div>
+            <h2 className="text-lg font-bold tracking-normal mb-5">
+              {await tServer("Your network")}
+            </h2>
+            <div className="bg-white p-6 rounded-3xl shadow-xs">
+              <div className="flex items-center -space-x-3">
+                {(newFounders ?? []).slice(0, 5).map((f) => (
+                  <div
+                    key={f.id as string}
+                    className="rounded-full ring-2 ring-white"
+                  >
+                    <Avatar
+                      name={f.full_name as string}
+                      url={f.photo_url as string | null}
+                      size="md"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-ink mt-4 leading-relaxed">
+                {(await tServer("{n} founders are building here")).replace(
+                  "{n}",
+                  String(founderCount ?? 0),
+                )}
+              </p>
+              <div className="mt-4">
+                <LinkButton href="/browse" size="sm" variant="secondary">
+                  {await tServer("Browse founders")}
+                </LinkButton>
+              </div>
+            </div>
+          </div>
+
           <div>
             <h2 className="text-lg font-bold tracking-normal mb-5">
               {await tServer("Your activity")}
@@ -556,8 +612,14 @@ export default async function DashboardPage() {
                   <Link
                     key={o.id as string}
                     href={`/orgs/${o.slug as string}`}
-                    className="block p-4 hover:bg-cream transition-colors group"
+                    className="flex items-start gap-3 p-4 hover:bg-cream transition-colors group"
                   >
+                    <Avatar
+                      name={o.name as string}
+                      url={o.logo_url as string | null}
+                      size="sm"
+                    />
+                    <div className="min-w-0 flex-1">
                     <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
                       {o.name as string}
                     </div>
@@ -566,6 +628,7 @@ export default async function DashboardPage() {
                         {o.tagline as string}
                       </div>
                     )}
+                    </div>
                   </Link>
                 ))}
               </div>
