@@ -34,7 +34,7 @@ export function CommentComposer({ postId }: { postId: string }) {
         className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y rounded-xl"
       />
       {state?.error && (
-        <div className="text-xs text-red-700">{state.error}</div>
+        <div className="text-xs text-danger-ink">{state.error}</div>
       )}
       <div className="flex justify-end">
         <button

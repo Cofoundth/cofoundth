@@ -73,7 +73,7 @@ export function RsvpButton({
       {going && !disabled && (
         <p className="mt-2 text-xs text-ink-muted">{tr("Tap again to cancel")}</p>
       )}
-      {error && <p className="mt-2 text-xs text-red-800">{error}</p>}
+      {error && <p className="mt-2 text-xs text-danger-ink">{error}</p>}
     </div>
   );
 }

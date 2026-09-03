@@ -220,7 +220,7 @@ function MeetupItem({
         <div className="flex items-start gap-3">
           <h3 className="text-xl mb-2 flex-1">{m.title}</h3>
           {cancelled && (
-            <span className="shrink-0 text-[11px] uppercase tracking-[0.15em] text-red-800 border border-red-300 rounded-full px-2 py-0.5">
+            <span className="shrink-0 text-[11px] uppercase tracking-[0.15em] text-danger-ink border border-danger-line rounded-full px-2 py-0.5">
               {labels.cancelled}
             </span>
           )}

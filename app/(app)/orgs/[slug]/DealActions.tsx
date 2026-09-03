@@ -54,7 +54,7 @@ export function DealActions({
             {pending ? tr("Declining…") : tr("Decline")}
           </button>
         </div>
-        {error && <p className="text-xs text-red-700 mt-1">{tr(error)}</p>}
+        {error && <p className="text-xs text-danger-ink mt-1">{tr(error)}</p>}
       </div>
     );
   }
@@ -65,11 +65,11 @@ export function DealActions({
         type="button"
         disabled={pending}
         onClick={() => run(() => cancelDealAction(dealId))}
-        className="text-xs text-ink-muted hover:text-red-700 disabled:opacity-50"
+        className="text-xs text-ink-muted hover:text-danger-ink disabled:opacity-50"
       >
         {pending ? tr("Withdrawing…") : tr("Withdraw")}
       </button>
-      {error && <p className="text-xs text-red-700 mt-1">{tr(error)}</p>}
+      {error && <p className="text-xs text-danger-ink mt-1">{tr(error)}</p>}
     </div>
   );
 }

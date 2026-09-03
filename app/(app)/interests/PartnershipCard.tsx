@@ -239,7 +239,7 @@ export function PartnershipCard({ row, locale }: Props) {
             >
               <button
                 type="submit"
-                className="text-xs text-ink-muted hover:text-red-700"
+                className="text-xs text-ink-muted hover:text-danger-ink"
               >
                 {tr("Withdraw request")}
               </button>

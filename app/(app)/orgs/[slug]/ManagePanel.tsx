@@ -105,7 +105,7 @@ export function ManagePanel({
         </div>
         {msg && (
           <p
-            className={`text-xs ${msg.kind === "ok" ? "text-gold-ink" : "text-red-700"}`}
+            className={`text-xs ${msg.kind === "ok" ? "text-gold-ink" : "text-danger-ink"}`}
           >
             {tr(msg.text)}
           </p>
@@ -135,7 +135,7 @@ export function ManagePanel({
                   type="button"
                   disabled={pending}
                   onClick={() => run(() => revokeInviteAction(inv.id))}
-                  className="text-xs text-ink-muted hover:text-red-700 disabled:opacity-50"
+                  className="text-xs text-ink-muted hover:text-danger-ink disabled:opacity-50"
                 >
                   {tr("Revoke")}
                 </button>
@@ -198,7 +198,7 @@ export function ManagePanel({
                       onClick={() =>
                         run(() => removeMemberAction(orgId, m.userId))
                       }
-                      className="text-ink-muted hover:text-red-700 disabled:opacity-50"
+                      className="text-ink-muted hover:text-danger-ink disabled:opacity-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

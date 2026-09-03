@@ -139,7 +139,7 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
       {state?.error && (
         <div
           role="alert"
-          className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl"
+          className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl"
         >
           {tr(state.error)}
         </div>

@@ -59,7 +59,7 @@ export function CommentItem({
                   await deleteCommentAction(id, postId);
                 })
               }
-              className="text-ink-muted hover:text-red-700 disabled:opacity-60"
+              className="text-ink-muted hover:text-danger-ink disabled:opacity-60"
               aria-label={tr("Delete")}
               title={tr("Delete")}
             >

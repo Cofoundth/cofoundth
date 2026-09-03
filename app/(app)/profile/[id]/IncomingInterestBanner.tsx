@@ -54,7 +54,7 @@ export function IncomingInterestBanner({
         </form>
       </div>
       {state?.error && (
-        <div className="px-6 pb-4 -mt-2 text-sm text-red-300">
+        <div className="px-6 pb-4 -mt-2 text-sm text-danger-line">
           {state.error}
         </div>
       )}

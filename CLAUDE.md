@@ -181,17 +181,18 @@ Browse filter lets users view All / Individuals / Companies separately.
 | `line` | `#DDDBD4` | warm hairline border |
 | `danger-ink` | `#B42318` | error text (≈6.0:1 on danger-surface — AA) |
 | `danger-surface` | `#FEF3F2` | error background |
-| `danger-line` | `#F4B0A1` | error border |
+| `danger-line` | `#F4B0A1` | error border — AND the error foreground on `bg-navy` |
+| `danger-ink-dark` | `#8F1A12` | solid destructive button hover (white on it: 9.03:1) |
 
 Their `--accent` equals their `--muted`: there is deliberately **no brand hue**.
 Emphasis comes from weight, size, or the tan surface — never colour.
 
 The danger tokens are warm-leaning reds chosen to sit on the sand palette.
 They do not exist in `globals.css` yet — add them to `@theme` before citing
-them in a review. Once they land, stock Tailwind reds (`red-50/300/400/500`)
-are banned — before these tokens existed the code improvised them at ~60 sites
-with three different border weights, which is exactly the drift tokens exist
-to stop. Until they land, do not "fix" a red by inventing a fourth variant.
+them in a review. Stock Tailwind reds are banned — before these tokens existed the code improvised them at 134 sites across 48
+files in 15 distinct class shapes — three border weights, four text weights —
+which is exactly the drift tokens exist to stop. Do not "fix" a red by
+inventing a sixteenth variant.
 
 **Dark-panel subsystem** — on `bg-navy`, the palette inverts to a fixed
 vocabulary. This is the ONE context where `text-gold` is legal (≈13.4:1 there;
@@ -204,6 +205,12 @@ vocabulary. This is the ONE context where `text-gold` is legal (≈13.4:1 there;
 | eyebrow / accent | `text-gold` |
 | border | `border-gold/50` |
 | icon well | `bg-gold/15` |
+| error text | `text-danger-line` |
+
+That last row is not a preference. `danger-ink` measures **2.65:1** on
+`bg-navy` — an invisible error message — while `danger-line` measures 9.59:1.
+The red migration nearly mapped the one dark-panel error site to `danger-ink`
+on autopilot; it is the gold-on-light bug with the colours reversed.
 
 ### Typography — FOUR registers, and they are not the same scale
 - Headings: **Rethink Sans** (still exposed as the `font-serif` class — legacy name, not a

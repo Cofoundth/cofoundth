@@ -300,7 +300,7 @@ export function OnboardingForm({ initial }: Props) {
         )}
 
         {error && (
-          <div className="mt-6 px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
+          <div className="mt-6 px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
             {error}
           </div>
         )}
@@ -785,7 +785,7 @@ function StepPitch({
           </label>
           <span
             className={`text-xs shrink-0 mt-1 ${
-              pitchLen > 500 ? "text-red-700" : "text-ink-muted"
+              pitchLen > 500 ? "text-danger-ink" : "text-ink-muted"
             }`}
           >
             {pitchLen} / {LONG_TEXT_MAX}

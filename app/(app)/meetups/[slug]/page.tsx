@@ -150,7 +150,7 @@ export default async function MeetupDetailPage({ params }: Props) {
       <h1 className="text-d3 mb-6">{m.title}</h1>
 
       {cancelled && (
-        <div className="mb-6 px-4 py-3 border border-red-300 rounded-xl bg-red-50 text-sm text-red-800">
+        <div className="mb-6 px-4 py-3 border border-danger-line rounded-xl bg-danger-surface text-sm text-danger-ink">
           {tCancelledBanner}
         </div>
       )}
@@ -248,7 +248,7 @@ export default async function MeetupDetailPage({ params }: Props) {
           {tWhosGoing} · {count}
           {m.capacity != null ? `/${m.capacity}` : ""} {tGoing}
           {spotsFull && !past && !cancelled && (
-            <span className="text-red-800 normal-case tracking-normal">
+            <span className="text-danger-ink normal-case tracking-normal">
               — {tFull}
             </span>
           )}

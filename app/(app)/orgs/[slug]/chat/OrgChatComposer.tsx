@@ -31,7 +31,7 @@ export function OrgChatComposer({ connectionId }: { connectionId: string }) {
 
   return (
     <div className="border-t border-line bg-white px-6 py-3">
-      {error && <p className="text-xs text-red-700 mb-2">{tr(error)}</p>}
+      {error && <p className="text-xs text-danger-ink mb-2">{tr(error)}</p>}
       <div className="flex items-end gap-2">
         <textarea
           value={body}

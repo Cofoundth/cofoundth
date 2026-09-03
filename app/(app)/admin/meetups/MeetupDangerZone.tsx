@@ -50,7 +50,7 @@ export function MeetupDangerZone({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="px-4 py-2 border border-line hover:border-red-300 text-ink hover:text-red-800 disabled:opacity-50 text-sm tracking-wide inline-flex items-center gap-2"
+            className="px-4 py-2 border border-line hover:border-danger-line text-ink hover:text-danger-ink disabled:opacity-50 text-sm tracking-wide inline-flex items-center gap-2"
           >
             <Ban className="w-4 h-4" /> Cancel meetup
           </button>
@@ -59,12 +59,12 @@ export function MeetupDangerZone({
           type="button"
           onClick={onDelete}
           disabled={isPending}
-          className="px-4 py-2 border border-red-300 text-red-800 hover:bg-red-50 disabled:opacity-50 text-sm tracking-wide inline-flex items-center gap-2"
+          className="px-4 py-2 border border-danger-line text-danger-ink hover:bg-danger-surface disabled:opacity-50 text-sm tracking-wide inline-flex items-center gap-2"
         >
           <Trash2 className="w-4 h-4" /> Delete meetup
         </button>
       </div>
-      {error && <p className="mt-3 text-xs text-red-800">{error}</p>}
+      {error && <p className="mt-3 text-xs text-danger-ink">{error}</p>}
     </div>
   );
 }

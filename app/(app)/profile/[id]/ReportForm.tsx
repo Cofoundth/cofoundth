@@ -31,7 +31,7 @@ export function ReportForm({ targetId }: { targetId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-xs text-ink-muted hover:text-red-700 inline-flex items-center gap-1.5 mx-auto"
+        className="text-xs text-ink-muted hover:text-danger-ink inline-flex items-center gap-1.5 mx-auto"
       >
         <Flag className="w-3 h-3" /> {tr("Report profile")}
       </button>
@@ -58,7 +58,7 @@ export function ReportForm({ targetId }: { targetId: string }) {
         className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
       />
       {state?.error && (
-        <div className="text-xs text-red-700">{state.error}</div>
+        <div className="text-xs text-danger-ink">{state.error}</div>
       )}
       <div className="flex gap-2">
         <button

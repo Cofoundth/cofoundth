@@ -32,7 +32,7 @@ export function ReportButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-[11px] text-ink-muted hover:text-red-700 tracking-wide transition-colors"
+        className="inline-flex items-center gap-1 text-[11px] text-ink-muted hover:text-danger-ink tracking-wide transition-colors"
       >
         <Flag className="w-3 h-3" /> {tr("Report")}
       </button>
@@ -49,7 +49,7 @@ export function ReportButton({
         placeholder={tr("What’s wrong with this?")}
         className="w-full px-2 py-1.5 border border-line bg-white text-ink text-xs focus:outline-none focus:border-navy resize-none rounded-full"
       />
-      {error && <div className="text-[11px] text-red-700">{error}</div>}
+      {error && <div className="text-[11px] text-danger-ink">{error}</div>}
       <div className="flex gap-2">
         <button
           type="button"

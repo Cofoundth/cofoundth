@@ -117,7 +117,7 @@ function FieldShell({
       {error && (
         <p
           id={htmlFor ? `${htmlFor}-error` : undefined}
-          className="mt-1.5 text-xs text-red-800"
+          className="mt-1.5 text-xs text-danger-ink"
         >
           {error}
         </p>
@@ -156,7 +156,7 @@ export function Input(props: InputProps) {
         className={cn(
           FIELD_BASE,
           FIELD_SIZE_CLASSES[fieldSize],
-          error ? "border-red-300" : "border-line",
+          error ? "border-danger-line" : "border-line",
           className,
         )}
       />
@@ -202,7 +202,7 @@ export function Textarea(props: TextareaProps) {
           FIELD_BASE,
           FIELD_SIZE_CLASSES[fieldSize],
           RESIZE_CLASSES[resize],
-          error ? "border-red-300" : "border-line",
+          error ? "border-danger-line" : "border-line",
           className,
         )}
       />

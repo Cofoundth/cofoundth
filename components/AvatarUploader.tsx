@@ -132,7 +132,7 @@ export function AvatarUploader({ initialUrl, name }: Props) {
         <p className="text-xs text-ink-muted mt-2">
           {tr("Optional. JPG/PNG, up to 5MB.")}
         </p>
-        {error && <p className="text-xs text-red-700 mt-1">{error}</p>}
+        {error && <p className="text-xs text-danger-ink mt-1">{error}</p>}
 
         <input
           ref={inputRef}

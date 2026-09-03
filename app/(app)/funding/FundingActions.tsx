@@ -39,7 +39,7 @@ export function FundingConnect({ targetId }: { targetId: string }) {
         {pending ? tr("Connecting…") : tr("Connect")}
       </button>
       {error && (
-        <p role="alert" className="text-xs text-red-700 mt-1.5">
+        <p role="alert" className="text-xs text-danger-ink mt-1.5">
           {tr(error)}
         </p>
       )}
@@ -87,7 +87,7 @@ export function FundingRespond({ connectionId }: { connectionId: string }) {
         </button>
       </div>
       {error && (
-        <p role="alert" className="text-xs text-red-700 mt-1.5">
+        <p role="alert" className="text-xs text-danger-ink mt-1.5">
           {tr(error)}
         </p>
       )}

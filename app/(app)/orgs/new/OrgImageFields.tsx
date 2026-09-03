@@ -107,7 +107,7 @@ export function OrgLogoField({
           {value ? tr("Change logo") : tr("Upload logo")}
         </button>
         <p className="text-xs text-ink-muted mt-2">{tr("JPG/PNG, up to 5MB.")}</p>
-        {error && <p className="text-xs text-red-700 mt-1">{tr(error)}</p>}
+        {error && <p className="text-xs text-danger-ink mt-1">{tr(error)}</p>}
         <input
           ref={inputRef}
           type="file"
@@ -195,7 +195,7 @@ export function OrgProductImagesField({
           String(MAX_PRODUCT_IMAGES),
         )}
       </p>
-      {error && <p className="text-xs text-red-700 mt-1">{tr(error)}</p>}
+      {error && <p className="text-xs text-danger-ink mt-1">{tr(error)}</p>}
       <input
         ref={inputRef}
         type="file"

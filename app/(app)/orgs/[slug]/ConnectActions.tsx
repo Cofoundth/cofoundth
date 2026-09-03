@@ -118,7 +118,7 @@ export function ConnectActions({
             {tr("Decline")}
           </button>
         </div>
-        {error && <p className="text-xs text-red-700 mt-1.5">{tr(error)}</p>}
+        {error && <p className="text-xs text-danger-ink mt-1.5">{tr(error)}</p>}
       </div>
     );
   }
@@ -135,7 +135,7 @@ export function ConnectActions({
         <Handshake className="w-4 h-4" />
         {pending ? tr("Connecting…") : tr("Connect")}
       </button>
-      {error && <p className="text-xs text-red-700 mt-1.5">{tr(error)}</p>}
+      {error && <p className="text-xs text-danger-ink mt-1.5">{tr(error)}</p>}
     </div>
   );
 }

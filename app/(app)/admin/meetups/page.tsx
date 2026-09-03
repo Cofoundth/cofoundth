@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 const STATUS_STYLE: Record<string, string> = {
   draft: "text-ink-muted border-line",
   published: "text-navy border-navy",
-  cancelled: "text-red-800 border-red-300",
+  cancelled: "text-danger-ink border-danger-line",
 };
 
 export default async function AdminMeetupsPage() {

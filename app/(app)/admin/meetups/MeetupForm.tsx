@@ -126,7 +126,7 @@ export function MeetupForm({ initial, action, submitLabel }: Props) {
       </div>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 rounded-xl bg-red-50 text-sm text-red-800">
+        <div className="px-4 py-3 border border-danger-line rounded-xl bg-danger-surface text-sm text-danger-ink">
           {state.error}
         </div>
       )}

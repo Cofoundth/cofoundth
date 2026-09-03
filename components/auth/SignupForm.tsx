@@ -214,7 +214,7 @@ export function SignupForm() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           className={`w-full px-4 py-3 border bg-white text-ink focus:outline-none ${
             passwordsMismatch
-              ? "border-red-400 focus:border-red-500"
+              ? "border-danger-line focus:border-danger-ink"
               : passwordsMatch
                 ? "border-line focus:border-line"
                 : "border-line focus:border-navy"
@@ -226,14 +226,14 @@ export function SignupForm() {
           </p>
         )}
         {passwordsMismatch && (
-          <p className="text-xs text-red-700 mt-2 inline-flex items-center gap-1.5">
+          <p className="text-xs text-danger-ink mt-2 inline-flex items-center gap-1.5">
             <X className="w-3 h-3" /> {tr("Passwords don’t match")}
           </p>
         )}
       </div>
 
       {state.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
+        <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
           {state.error}
         </div>
       )}

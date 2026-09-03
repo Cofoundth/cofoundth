@@ -681,7 +681,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           </span>
         )}
         {state?.error && (
-          <span className="text-sm text-red-700">{state.error}</span>
+          <span className="text-sm text-danger-ink">{state.error}</span>
         )}
       </div>
     </form>
@@ -697,13 +697,13 @@ const inputCls =
 const reqInput = (missing: boolean) =>
   `w-full border bg-white px-3 py-2 text-sm text-ink focus:outline-none ${
     missing
-      ? "border-red-400 bg-red-50 focus:border-red-500"
+      ? "border-danger-line bg-danger-surface focus:border-danger-ink"
       : "border-line focus:border-navy"
   }`;
 
 function RequiredFlag({ tr }: { tr: (s: string) => string }) {
   return (
-    <p className="text-xs text-red-600 mt-1.5">
+    <p className="text-xs text-danger-ink mt-1.5">
       {tr("Required to appear in the Founders directory")}
     </p>
   );
@@ -753,7 +753,7 @@ function Label({
   return (
     <p
       id={id}
-      className={`text-sm ${missing ? "text-red-600 font-medium" : "text-ink-muted"}`}
+      className={`text-sm ${missing ? "text-danger-ink font-medium" : "text-ink-muted"}`}
     >
       {children}
     </p>

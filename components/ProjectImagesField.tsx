@@ -89,7 +89,7 @@ export function ProjectImagesField({
         className="hidden"
         onChange={onPick}
       />
-      {error && <div className="mt-2 text-xs text-red-700">{error}</div>}
+      {error && <div className="mt-2 text-xs text-danger-ink">{error}</div>}
       {value.map((url) => (
         <input key={url} type="hidden" name="project_images" value={url} />
       ))}

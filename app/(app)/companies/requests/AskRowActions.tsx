@@ -35,7 +35,7 @@ export function AskRowActions({ askId, status }: Props) {
               await updateAskStatusAction(askId, "closed");
             });
           }}
-          className="text-xs text-ink-muted hover:text-red-700"
+          className="text-xs text-ink-muted hover:text-danger-ink"
         >
           {tr("Close")}
         </button>

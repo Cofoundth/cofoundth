@@ -31,7 +31,7 @@ function Badge({ tone, children }: { tone: "gold" | "red" | "muted"; children: R
     tone === "gold"
       ? "border-line text-gold-ink"
       : tone === "red"
-        ? "border-red-300 text-red-700"
+        ? "border-danger-line text-danger-ink"
         : "border-line text-ink-muted";
   return (
     <span className={`text-[9px] uppercase tracking-[0.12em] border rounded-full px-1 py-0.5 ${cls}`}>
@@ -99,7 +99,7 @@ export function UserRow({ user, selfId }: { user: AdminUser; selfId: string }) {
               <button
                 disabled={pending}
                 onClick={() => run(() => adminDeleteUser(user.id))}
-                className="px-2 py-1 text-[11px] bg-red-700 hover:bg-red-800 text-white disabled:opacity-50"
+                className="px-2 py-1 text-[11px] bg-danger-ink hover:bg-danger-ink-dark text-white disabled:opacity-50"
               >
                 Confirm delete
               </button>
@@ -115,7 +115,7 @@ export function UserRow({ user, selfId }: { user: AdminUser; selfId: string }) {
             <button
               disabled={pending}
               onClick={() => setConfirmDelete(true)}
-              className="px-2 py-1 text-[11px] border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 rounded-full"
+              className="px-2 py-1 text-[11px] border border-danger-line text-danger-ink hover:bg-danger-surface disabled:opacity-50 rounded-full"
             >
               Delete
             </button>

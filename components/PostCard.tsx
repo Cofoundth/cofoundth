@@ -197,7 +197,7 @@ export function PostCard({
                       await deletePostAction(post.id);
                     })
                   }
-                  className="text-ink-muted hover:text-red-700 shrink-0"
+                  className="text-ink-muted hover:text-danger-ink shrink-0"
                   aria-label={tr("Delete")}
                   title={tr("Delete")}
                 >
@@ -389,7 +389,7 @@ export function PostCard({
                           <button
                             type="button"
                             onClick={() => removeComment(c.id)}
-                            className="text-ink-muted hover:text-red-700 shrink-0"
+                            className="text-ink-muted hover:text-danger-ink shrink-0"
                             aria-label={tr("Delete")}
                             title={tr("Delete")}
                           >

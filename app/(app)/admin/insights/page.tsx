@@ -128,7 +128,7 @@ export default async function AdminInsightsPage() {
                       >
                         <button
                           type="submit"
-                          className="text-xs px-3 py-1.5 border border-red-300 text-red-700 hover:bg-red-50 transition-colors rounded-full"
+                          className="text-xs px-3 py-1.5 border border-danger-line text-danger-ink hover:bg-danger-surface transition-colors rounded-full"
                         >
                           Delete
                         </button>

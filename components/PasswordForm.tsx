@@ -61,7 +61,7 @@ export function PasswordForm() {
           </span>
         )}
         {state?.error && (
-          <span className="text-sm text-red-700">{state.error}</span>
+          <span className="text-sm text-danger-ink">{state.error}</span>
         )}
       </div>
     </form>

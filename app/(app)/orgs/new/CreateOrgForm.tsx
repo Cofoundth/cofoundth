@@ -142,7 +142,7 @@ export function CreateOrgForm() {
         />
         <div
           className={`text-right text-xs mt-1 tabular-nums ${
-            pitchTooLong ? "text-red-700" : "text-ink-muted"
+            pitchTooLong ? "text-danger-ink" : "text-ink-muted"
           }`}
         >
           {pitchLen} / {PITCH_MAX}
@@ -284,7 +284,7 @@ export function CreateOrgForm() {
       </Section>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
+        <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
           {tr(state.error)}
         </div>
       )}

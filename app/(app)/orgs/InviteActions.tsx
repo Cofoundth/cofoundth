@@ -23,7 +23,7 @@ export function InviteActions({ inviteId }: { inviteId: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      {error && <span className="text-xs text-red-700 mr-1">{tr(error)}</span>}
+      {error && <span className="text-xs text-danger-ink mr-1">{tr(error)}</span>}
       <button
         type="button"
         disabled={pending}

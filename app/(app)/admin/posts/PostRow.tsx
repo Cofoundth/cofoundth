@@ -34,7 +34,7 @@ export function PostRow({ post }: { post: AdminPost }) {
               {post.authorName ?? "—"}
             </Link>
             {post.hidden && (
-              <span className="text-[9px] uppercase tracking-[0.12em] border border-red-300 text-red-700 px-1 py-0.5 rounded-full">
+              <span className="text-[9px] uppercase tracking-[0.12em] border border-danger-line text-danger-ink px-1 py-0.5 rounded-full">
                 Hidden
               </span>
             )}
@@ -58,7 +58,7 @@ export function PostRow({ post }: { post: AdminPost }) {
               <button
                 disabled={pending}
                 onClick={() => run(() => adminDeletePost(post.id))}
-                className="px-2 py-1 text-[11px] bg-red-700 hover:bg-red-800 text-white disabled:opacity-50"
+                className="px-2 py-1 text-[11px] bg-danger-ink hover:bg-danger-ink-dark text-white disabled:opacity-50"
               >
                 Confirm
               </button>
@@ -74,7 +74,7 @@ export function PostRow({ post }: { post: AdminPost }) {
             <button
               disabled={pending}
               onClick={() => setConfirmDelete(true)}
-              className="px-2 py-1 text-[11px] border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 rounded-full"
+              className="px-2 py-1 text-[11px] border border-danger-line text-danger-ink hover:bg-danger-surface disabled:opacity-50 rounded-full"
             >
               Delete
             </button>

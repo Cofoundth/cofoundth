@@ -25,7 +25,7 @@ export function ReportActions({
           type="button"
           disabled={pending}
           onClick={() => act("remove")}
-          className="px-3 py-1.5 text-xs bg-red-700 hover:bg-red-800 disabled:opacity-50 text-white tracking-wide"
+          className="px-3 py-1.5 text-xs bg-danger-ink hover:bg-danger-ink-dark disabled:opacity-50 text-white tracking-wide"
         >
           {tr("Remove content")}
         </button>

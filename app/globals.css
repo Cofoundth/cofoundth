@@ -37,6 +37,9 @@
   --color-danger-ink: #b42318;
   --color-danger-surface: #fef3f2;
   --color-danger-line: #f4b0a1;
+  /* Hover for the solid destructive button. White on it is 9.03:1, against
+     6.57:1 on danger-ink itself, so the hover darkens without losing legibility. */
+  --color-danger-ink-dark: #8f1a12;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;

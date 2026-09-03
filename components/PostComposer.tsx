@@ -181,7 +181,7 @@ export function PostComposer() {
       )}
 
       {state?.error && (
-        <div className="mt-2 text-xs text-red-700">{state.error}</div>
+        <div className="mt-2 text-xs text-danger-ink">{state.error}</div>
       )}
 
       <div className="mt-3 flex items-center justify-between gap-3">
@@ -220,7 +220,7 @@ export function PostComposer() {
           </button>
           {remaining < 500 && (
             <span
-              className={`tabular-nums ${tooLong ? "text-red-700" : "text-ink-muted"}`}
+              className={`tabular-nums ${tooLong ? "text-danger-ink" : "text-ink-muted"}`}
             >
               {remaining}
             </span>

@@ -62,7 +62,7 @@ export function ForgotPasswordForm() {
         </div>
 
         {state.error && (
-          <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
+          <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
             {state.error}
           </div>
         )}
@@ -100,7 +100,7 @@ export function ForgotPasswordForm() {
       </div>
 
       {state.error && (
-        <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">
+        <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
           {state.error}
         </div>
       )}

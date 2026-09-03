@@ -117,7 +117,7 @@ export default async function AdminReportsPage() {
                   <span
                     className={`text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border rounded-full ${
                       r.status === "open"
-                        ? "border-red-300 text-red-700"
+                        ? "border-danger-line text-danger-ink"
                         : "border-line text-ink-muted"
                     }`}
                   >

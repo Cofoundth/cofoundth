@@ -41,12 +41,12 @@ export function FundingDealActions({
           disabled={pending}
           aria-busy={pending}
           onClick={() => run(() => cancelInvestorDealAction(dealId))}
-          className="text-xs text-ink-muted hover:text-red-700 disabled:opacity-50"
+          className="text-xs text-ink-muted hover:text-danger-ink disabled:opacity-50"
         >
           {pending ? tr("Withdrawing…") : tr("Withdraw")}
         </button>
         {error && (
-          <p role="alert" className="text-xs text-red-700 mt-1">
+          <p role="alert" className="text-xs text-danger-ink mt-1">
             {tr(error)}
           </p>
         )}
@@ -79,7 +79,7 @@ export function FundingDealActions({
         </button>
       </div>
       {error && (
-        <p role="alert" className="text-xs text-red-700 mt-1">
+        <p role="alert" className="text-xs text-danger-ink mt-1">
           {tr(error)}
         </p>
       )}
