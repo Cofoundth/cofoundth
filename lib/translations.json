@@ -1282,5 +1282,16 @@
   "What do you do for fun?": "ว่างๆ ชอบทำอะไร",
   "Search activities": "ค้นหากิจกรรม",
   "Search help topics": "ค้นหาเรื่องที่ช่วยได้",
-  "Can help with": "ช่วยเรื่อง"
+  "Can help with": "ช่วยเรื่อง",
+  "Under 6 months": "ไม่ถึง 6 เดือน",
+  "6–12 months": "6–12 เดือน",
+  "1–2 years": "1–2 ปี",
+  "2–5 years": "2–5 ปี",
+  "5+ years": "มากกว่า 5 ปี",
+  "How long building": "ทำมานานแค่ไหน",
+  "I need help with": "อยากได้ความช่วยเหลือเรื่อง",
+  "Needs help with": "ต้องการความช่วยเหลือ",
+  "Age": "อายุ",
+  "What do you need help with?": "อยากได้ความช่วยเหลือเรื่องอะไร",
+  "How long have you been building this?": "ทำสิ่งนี้มานานแค่ไหนแล้ว"
 }

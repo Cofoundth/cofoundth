@@ -133,6 +133,22 @@ export async function saveOnboardingAction(
     HELP_TOPICS,
     15,
   );
+  const needs_help_with = pickFrom(
+    formData.getAll("needs_help_with").map(String),
+    HELP_TOPICS,
+    15,
+  );
+  const BUILDING_SINCE_VALUES = [
+    "under_six_months",
+    "six_to_twelve_months",
+    "one_to_two_years",
+    "two_to_five_years",
+    "over_five_years",
+  ];
+  const rawBuilding = String(formData.get("building_since") ?? "");
+  const building_since = BUILDING_SINCE_VALUES.includes(rawBuilding)
+    ? rawBuilding
+    : null;
 
   // B2B fields (Phase 4 brought forward — see CLAUDE.md for original plan)
   const profile_type =
@@ -218,6 +234,8 @@ export async function saveOnboardingAction(
       skills,
       activities,
       help_with,
+      needs_help_with,
+      building_since,
       type: profile_type,
       company_name: profile_type === "company" ? company_name : null,
       capabilities: profile_type === "company" ? capabilities : [],

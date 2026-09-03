@@ -50,6 +50,15 @@ const EXPERIENCES = [
   { value: "one_to_two", label: "1–2 ventures" },
   { value: "three_plus", label: "3+ ventures" },
 ];
+// Time in the CURRENT venture — a different question from EXPERIENCES, which
+// counts how many ventures there have been.
+const BUILDING_SINCE = [
+  { value: "under_six_months", label: "Under 6 months" },
+  { value: "six_to_twelve_months", label: "6–12 months" },
+  { value: "one_to_two_years", label: "1–2 years" },
+  { value: "two_to_five_years", label: "2–5 years" },
+  { value: "over_five_years", label: "5+ years" },
+];
 const STATUS_TAGS = [
   { value: "open_to_cofounder", label: "Open to co-founder" },
   { value: "open_to_partnerships", label: "Open to partnerships" },
@@ -91,6 +100,8 @@ export type ProfileInitial = {
   skills?: string[] | null;
   activities?: string[] | null;
   help_with?: string[] | null;
+  needs_help_with?: string[] | null;
+  building_since?: string | null;
 };
 
 export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
@@ -130,6 +141,12 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
     initial.activities ?? [],
   );
   const [helpWith, setHelpWith] = useState<string[]>(initial.help_with ?? []);
+  const [needsHelp, setNeedsHelp] = useState<string[]>(
+    initial.needs_help_with ?? [],
+  );
+  const [buildingSince, setBuildingSince] = useState(
+    initial.building_since ?? "",
+  );
 
   // Combobox matches on the visible string, so a Thai reader has to see Thai in
   // the menu. Options are the TRANSLATED labels and this maps the pick back to
@@ -411,6 +428,15 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         <Pills options={RUNWAYS} selected={[runway]} onPick={setRunway} tr={tr} />
         <input type="hidden" name="runway" value={runway} />
 
+        <Label>{tr("How long have you been building this?")}</Label>
+        <Pills
+          options={BUILDING_SINCE}
+          selected={[buildingSince]}
+          onPick={setBuildingSince}
+          tr={tr}
+        />
+        <input type="hidden" name="building_since" value={buildingSince} />
+
         <Label>{tr("Founder experience")}</Label>
         <Pills
           options={EXPERIENCES}
@@ -559,6 +585,44 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           />
           {helpWith.map((h) => (
             <input key={h} type="hidden" name="help_with" value={h} />
+          ))}
+        </Field>
+
+        {/* The demand side of the same vocabulary. Storing only what someone can
+            offer left nothing to match it against. */}
+        <Field label={tr("What do you need help with?")}>
+          {needsHelp.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {needsHelp.map((h) => (
+                <Chip
+                  key={h}
+                  on
+                  onClick={() => setNeedsHelp((s) => s.filter((x) => x !== h))}
+                >
+                  {tr(h)} ✕
+                </Chip>
+              ))}
+            </div>
+          )}
+          <Combobox
+            options={HELP_TOPICS.filter((h) => !needsHelp.includes(h)).map((h) =>
+              tr(h),
+            )}
+            value=""
+            onChange={(v) => {
+              const canonical = helpByLabel.get(v.trim());
+              if (canonical)
+                setNeedsHelp((s) =>
+                  s.includes(canonical) ? s : [...s, canonical],
+                );
+            }}
+            placeholder={tr("Search help topics")}
+            allowCustom={false}
+            className={inputCls}
+            emptyText={tr("No matches")}
+          />
+          {needsHelp.map((h) => (
+            <input key={h} type="hidden" name="needs_help_with" value={h} />
           ))}
         </Field>
 

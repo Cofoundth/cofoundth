@@ -10,6 +10,7 @@ import { INDUSTRIES } from "@/lib/industries";
 import { COMMON_SKILLS } from "@/lib/skills";
 import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
+import { BUILDING_SINCE_LABELS } from "@/lib/matching";
 import { ProjectImagesField } from "@/components/ProjectImagesField";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 
@@ -104,6 +105,8 @@ type FormState = {
   skills: string[];
   activities: string[];
   help_with: string[];
+  needs_help_with: string[];
+  building_since: string;
 };
 
 type Props = {
@@ -149,6 +152,8 @@ export function OnboardingForm({ initial }: Props) {
     skills: [],
     activities: [],
     help_with: [],
+    needs_help_with: [],
+    building_since: "",
     ...initial,
   });
   const [error, setError] = useState<string | null>(null);
@@ -166,7 +171,8 @@ export function OnboardingForm({ initial }: Props) {
       | "intent"
       | "skills"
       | "activities"
-      | "help_with",
+      | "help_with"
+      | "needs_help_with",
     value: string,
   ) {
     setData((d) => {
@@ -233,6 +239,8 @@ export function OnboardingForm({ initial }: Props) {
     data.industry.forEach((v) => fd.append("industry", v));
     data.activities.forEach((v) => fd.append("activities", v));
     data.help_with.forEach((v) => fd.append("help_with", v));
+    data.needs_help_with.forEach((v) => fd.append("needs_help_with", v));
+    fd.append("building_since", data.building_since);
     fd.append("stage", data.stage);
     fd.append("location", data.location);
     fd.append("commitment", data.commitment);
@@ -286,6 +294,7 @@ export function OnboardingForm({ initial }: Props) {
             toggleSkill={(v) => toggle("skills", v)}
             toggleActivity={(v) => toggle("activities", v)}
             toggleHelp={(v) => toggle("help_with", v)}
+            toggleNeeds={(v) => toggle("needs_help_with", v)}
             tr={tr}
           />
         )}
@@ -623,6 +632,21 @@ function StepContext({
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
+          {tr("How long have you been building this?")}
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-8">
+          {Object.entries(BUILDING_SINCE_LABELS).map(([value, label]) => (
+            <ChoiceButton
+              key={value}
+              selected={data.building_since === value}
+              onClick={() => set("building_since", value)}
+            >
+              {tr(label)}
+            </ChoiceButton>
+          ))}
+        </div>
+
+        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
           {tr("Your stage")}
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -735,6 +759,7 @@ function StepPitch({
   toggleSkill,
   toggleActivity,
   toggleHelp,
+  toggleNeeds,
   tr,
 }: {
   data: FormState;
@@ -742,6 +767,7 @@ function StepPitch({
   toggleSkill: (v: string) => void;
   toggleActivity: (v: string) => void;
   toggleHelp: (v: string) => void;
+  toggleNeeds: (v: string) => void;
   tr: TR;
 }) {
   const pitchLen = data.pitch.length;
@@ -932,6 +958,18 @@ function StepPitch({
         options={HELP_TOPICS}
         selected={data.help_with}
         onToggle={toggleHelp}
+        tr={tr}
+      />
+
+      {/* The demand side of the same vocabulary — without it there is nothing
+          to match the offer against. */}
+      <TaxonomyField
+        id="needs-help-with"
+        label={tr("What do you need help with?")}
+        placeholder={tr("Search help topics")}
+        options={HELP_TOPICS}
+        selected={data.needs_help_with}
+        onToggle={toggleNeeds}
         tr={tr}
       />
 

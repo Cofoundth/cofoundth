@@ -34,6 +34,7 @@ import { INDUSTRIES } from "@/lib/industries";
 import Combobox from "@/components/Combobox";
 import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
+import { BUILDING_SINCE_LABELS, AGE_BANDS } from "@/lib/matching";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
 type Profile = ProfileLike & {
@@ -47,6 +48,8 @@ type Profile = ProfileLike & {
   skills: string[];
   activities: string[];
   help_with: string[];
+  needs_help_with: string[];
+  building_since: string | null;
   project_url: string | null;
   project_images: string[];
   work_experience: string | null;
@@ -76,6 +79,9 @@ export function BrowseClient({ others }: Props) {
   const [commitmentFilter, setCommitmentFilter] = useState<string>("");
   const [activityFilters, setActivityFilters] = useState<string[]>([]);
   const [helpFilters, setHelpFilters] = useState<string[]>([]);
+  const [needsFilters, setNeedsFilters] = useState<string[]>([]);
+  const [buildingFilter, setBuildingFilter] = useState<string>("");
+  const [ageBandFilter, setAgeBandFilter] = useState<string>("");
   // Mobile-only collapse. On lg+ the panel is always shown via CSS (and the
   // toggle is hidden) — a breakpoint-aware initial state would hydrate wrong.
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -126,6 +132,19 @@ export function BrowseClient({ others }: Props) {
         !helpFilters.some((h) => p.help_with.includes(h))
       )
         return false;
+      if (
+        needsFilters.length > 0 &&
+        !needsFilters.some((h) => p.needs_help_with.includes(h))
+      )
+        return false;
+      if (buildingFilter && p.building_since !== buildingFilter) return false;
+      if (ageBandFilter) {
+        const band = AGE_BANDS.find((b) => b.key === ageBandFilter);
+        // A profile with no age is excluded rather than assumed — guessing would
+        // put people in a band they never chose.
+        if (!band || p.age == null || p.age < band.min || p.age > band.max)
+          return false;
+      }
       return true;
     });
   }, [
@@ -135,6 +154,9 @@ export function BrowseClient({ others }: Props) {
     industryFilters,
     activityFilters,
     helpFilters,
+    needsFilters,
+    buildingFilter,
+    ageBandFilter,
     stageFilter,
     commitmentFilter,
   ]);
@@ -182,6 +204,11 @@ export function BrowseClient({ others }: Props) {
       s.includes(v) ? s.filter((x) => x !== v) : [...s, v],
     );
   }
+  function toggleNeeds(v: string) {
+    setNeedsFilters((s) =>
+      s.includes(v) ? s.filter((x) => x !== v) : [...s, v],
+    );
+  }
   function clearAll() {
     setSearchTerm("");
     setRoleFilters([]);
@@ -190,6 +217,9 @@ export function BrowseClient({ others }: Props) {
     setCommitmentFilter("");
     setActivityFilters([]);
     setHelpFilters([]);
+    setNeedsFilters([]);
+    setBuildingFilter("");
+    setAgeBandFilter("");
   }
 
   const filterCount =
@@ -197,6 +227,9 @@ export function BrowseClient({ others }: Props) {
     industryFilters.length +
     activityFilters.length +
     helpFilters.length +
+    needsFilters.length +
+    (buildingFilter ? 1 : 0) +
+    (ageBandFilter ? 1 : 0) +
     (stageFilter ? 1 : 0) +
     (commitmentFilter ? 1 : 0);
 
@@ -205,6 +238,9 @@ export function BrowseClient({ others }: Props) {
     industryFilters.length +
     activityFilters.length +
     helpFilters.length +
+    needsFilters.length +
+    (buildingFilter ? 1 : 0) +
+    (ageBandFilter ? 1 : 0) +
     (stageFilter ? 1 : 0) +
     (commitmentFilter ? 1 : 0) +
     (searchTerm ? 1 : 0);
@@ -392,6 +428,38 @@ export function BrowseClient({ others }: Props) {
               />
             </FilterGroup>
 
+            {/* The demand side of the same vocabulary. */}
+            <FilterGroup label={tr("Needs help with")}>
+              {needsFilters.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {needsFilters.map((h) => (
+                    <FilterChip
+                      key={h}
+                      selected
+                      onClick={() => toggleNeeds(h)}
+                      compact
+                    >
+                      {tr(h)} ×
+                    </FilterChip>
+                  ))}
+                </div>
+              )}
+              <Combobox
+                options={HELP_TOPICS.filter(
+                  (h) => !needsFilters.includes(h),
+                ).map((h) => tr(h))}
+                value=""
+                onChange={(v) => {
+                  const canonical = helpByLabel.get(v.trim());
+                  if (canonical) toggleNeeds(canonical);
+                }}
+                placeholder={tr("Search help topics")}
+                allowCustom={false}
+                className="w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:border-navy focus:outline-none rounded-xl"
+                emptyText={tr("No matches")}
+              />
+            </FilterGroup>
+
             {/* What someone would actually DO with you. Feeds meetups. */}
             <FilterGroup label={tr("Activities")}>
               {activityFilters.length > 0 && (
@@ -422,6 +490,36 @@ export function BrowseClient({ others }: Props) {
                 className="w-full border border-line bg-white px-3 py-2 text-sm text-ink focus:border-navy focus:outline-none rounded-xl"
                 emptyText={tr("No matches")}
               />
+            </FilterGroup>
+
+            <FilterGroup label={tr("How long building")}>
+              {Object.entries(BUILDING_SINCE_LABELS).map(([value, label]) => (
+                <FilterChip
+                  key={value}
+                  selected={buildingFilter === value}
+                  onClick={() =>
+                    setBuildingFilter(buildingFilter === value ? "" : value)
+                  }
+                >
+                  {tr(label)}
+                </FilterChip>
+              ))}
+            </FilterGroup>
+
+            {/* Bands over the existing integer column — no schema of its own. */}
+            <FilterGroup label={tr("Age")}>
+              {AGE_BANDS.map((b) => (
+                <FilterChip
+                  key={b.key}
+                  selected={ageBandFilter === b.key}
+                  onClick={() =>
+                    setAgeBandFilter(ageBandFilter === b.key ? "" : b.key)
+                  }
+                  compact
+                >
+                  {b.label}
+                </FilterChip>
+              ))}
             </FilterGroup>
 
             <FilterGroup label={tr("Stage")}>

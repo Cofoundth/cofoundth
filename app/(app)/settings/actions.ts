@@ -20,6 +20,13 @@ const ROLE_VALUES = [
 const INTENT_VALUES = ["idea", "open", "explore"] as const;
 const STAGE_VALUES = ["exploring", "building", "traction", "raising"] as const;
 const COMMITMENT_VALUES = ["full_time", "part_time", "side_project"] as const;
+const BUILDING_SINCE_VALUES = [
+  "under_six_months",
+  "six_to_twelve_months",
+  "one_to_two_years",
+  "two_to_five_years",
+  "over_five_years",
+] as const;
 const RUNWAY_VALUES = [
   "three_months",
   "six_months",
@@ -104,6 +111,7 @@ export async function updateProfileAction(
   const commitment = String(formData.get("commitment") ?? "");
   const runway = String(formData.get("runway") ?? "");
   const experience = String(formData.get("experience") ?? "");
+  const building_since = String(formData.get("building_since") ?? "");
   const pitch = String(formData.get("pitch") ?? "").trim();
   const projectUrlRaw = String(formData.get("project_url") ?? "")
     .trim()
@@ -136,6 +144,13 @@ export async function updateProfileAction(
   );
   const help_with = pickFrom(
     formData.getAll("help_with").map(String),
+    HELP_TOPICS,
+    MAX_HELP_WITH,
+  );
+  // Same vocabulary as help_with by design — the supply and demand sides only
+  // pair up if both are drawn from one list.
+  const needs_help_with = pickFrom(
+    formData.getAll("needs_help_with").map(String),
     HELP_TOPICS,
     MAX_HELP_WITH,
   );
@@ -205,6 +220,8 @@ export async function updateProfileAction(
     return { error: "Please select a valid stage." };
   if (commitment && !COMMITMENT_VALUES.includes(commitment as never))
     return { error: "Please select a valid commitment level." };
+  if (building_since && !BUILDING_SINCE_VALUES.includes(building_since as never))
+    return { error: "Please select a valid time building." };
   if (runway && !RUNWAY_VALUES.includes(runway as never))
     return { error: "Please select a valid runway." };
   if (experience && !EXPERIENCE_VALUES.includes(experience as never))
@@ -240,6 +257,7 @@ export async function updateProfileAction(
       looking_for,
       industry,
       stage: stage || null,
+      building_since: building_since || null,
       commitment: commitment || null,
       runway: runway || null,
       experience: experience || null,
@@ -253,6 +271,7 @@ export async function updateProfileAction(
       skills,
       activities,
       help_with,
+      needs_help_with,
       type: profile_type,
       company_name: profile_type === "company" ? company_name : null,
       capabilities: profile_type === "company" ? capabilities : [],

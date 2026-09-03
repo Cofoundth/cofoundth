@@ -62,7 +62,7 @@ export async function generateMetadata({
 }
 
 const COLUMNS =
-  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, activities, help_with, verified, onboarded, suspended, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
+  "id, slug, full_name, age, location, photo_url, linkedin_url, instagram_url, facebook_url, x_url, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, activities, help_with, needs_help_with, building_since, verified, onboarded, suspended, type, company_name, capabilities, partnership_seeking, status_tags, created_at";
 
 const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   open_to_partnerships: {
@@ -211,6 +211,7 @@ export default async function ProfileDetailPage({ params }: Props) {
   const skills = (profile.skills as string[] | null) ?? [];
   const helpWith = (profile.help_with as string[] | null) ?? [];
   const activities = (profile.activities as string[] | null) ?? [];
+  const needsHelp = (profile.needs_help_with as string[] | null) ?? [];
   const statusTags = (profile.status_tags as string[] | null) ?? [];
   const capabilities = (profile.capabilities as string[] | null) ?? [];
   const partnershipSeeking =
@@ -224,6 +225,7 @@ export default async function ProfileDetailPage({ params }: Props) {
       profile.education ||
       skills.length ||
       helpWith.length ||
+      needsHelp.length ||
       activities.length,
   );
 
@@ -482,6 +484,23 @@ export default async function ProfileDetailPage({ params }: Props) {
                         <span
                           key={h}
                           className="px-3 py-1.5 bg-gold-soft border border-line text-sm text-ink rounded-full"
+                        >
+                          {t(h, locale)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {needsHelp.length > 0 && (
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                      {t("Needs help with", locale)}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {needsHelp.map((h) => (
+                        <span
+                          key={h}
+                          className="px-3 py-1.5 border border-line text-sm text-ink-muted rounded-full"
                         >
                           {t(h, locale)}
                         </span>
