@@ -6,7 +6,6 @@ import {
   BadgeCheck,
   Building2,
   ChevronDown,
-  HeartHandshake,
   MapPin,
   Rocket,
   Search,
@@ -765,7 +764,9 @@ function ProfileCard({ profile }: { profile: Profile }) {
   const intents = (profile.intent ?? [])
     .map((i) => (INTENT_LABELS[i] ? tr(INTENT_LABELS[i]) : null))
     .filter(Boolean) as string[];
-  const helpWith = profile.help_with ?? [];
+  const lookingFor = (profile.looking_for ?? [])
+    .map((r) => tr(ROLE_LABELS[r]))
+    .filter(Boolean);
   // Idea-havers sell the project; explorers sell their track record.
   const hasIdea = (profile.intent ?? []).includes("idea");
   const title =
@@ -864,32 +865,30 @@ function ProfileCard({ profile }: { profile: Profile }) {
             </div>
           )}
 
-          {/* Row C: the reason to open a stranger's profile. This is the field
-              the card was missing entirely — we store it and never showed it. */}
-          {!isCompany && helpWith.length > 0 && (
-            <div className="flex flex-col gap-1.5 min-w-0">
-              <CardLabel icon={HeartHandshake}>{tr("Can help with")}</CardLabel>
+          {/* Block 3 — the same labeled-chips shape /founders uses for Role,
+              so the two directories read as one card. mt-auto pins it, so every
+              card ends level.
+
+              This carries looking_for, NOT help_with. help_with was here and
+              rendered on 0 of 13 cards, because no profile has the field yet —
+              dead UI in the slot the card's strongest live field deserved.
+              looking_for is required for directory entry, so it is on every
+              card, and "who they want" is the matching axis this directory
+              exists for. help_with is still on the profile page; it earns a
+              card slot when profiles actually carry it, and that needs a
+              symmetry plan first — a 4th block on some cards and not others is
+              the raggedness we just spent two commits removing. */}
+          {!isCompany && lookingFor.length > 0 && (
+            <div className="mt-auto flex flex-col gap-1.5 min-w-0">
+              <CardLabel icon={Search}>{tr("Looking for")}</CardLabel>
               <div className="flex flex-row gap-1.5 overflow-hidden h-[22px]">
-                {helpWith.slice(0, 3).map((h) => (
-                  <CardChip key={h}>{tr(h)}</CardChip>
+                {lookingFor.slice(0, 3).map((r) => (
+                  <CardChip key={r}>{r}</CardChip>
                 ))}
               </div>
             </div>
           )}
         </div>
-
-        {/* FOOTER — what they want back, pinned so every card ends level. */}
-        {!isCompany && (profile.looking_for ?? []).length > 0 && (
-          <div className="mt-auto pt-3 flex items-center gap-1.5 overflow-hidden text-xs text-ink-muted">
-            <Search className="w-3 h-3 shrink-0" strokeWidth={2} />
-            <span className="min-w-0 truncate">
-              {(profile.looking_for ?? [])
-                .map((r) => tr(ROLE_LABELS[r]))
-                .filter(Boolean)
-                .join(" · ")}
-            </span>
-          </div>
-        )}
       </Card>
     </Link>
   );

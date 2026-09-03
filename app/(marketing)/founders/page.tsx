@@ -130,7 +130,10 @@ export default async function PublicFoundersPage() {
                     {/* Always rendered, at a reserved height. Omitting it on
                         the one founder with no industries pulled every row
                         below it up 32px and broke the shared skeleton. */}
-                    <div className="flex h-4 items-center overflow-hidden">
+                    {/* h-[21px], not h-4: /browse's equivalent row carries an intent pill
+                        at 21px, and matching it here puts both directories' blocks on
+                        the same y (80/117/194) instead of 5px apart. */}
+                    <div className="flex h-[21px] items-center overflow-hidden">
                       <SectorList
                         items={f.industry}
                         fallback={stageLabel ? tr(stageLabel) : undefined}
