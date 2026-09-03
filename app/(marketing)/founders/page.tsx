@@ -82,48 +82,61 @@ export default async function PublicFoundersPage() {
                 className="group block"
               >
                 <Card hoverable padding="md" className="h-full flex flex-col">
-                  <div className="flex items-start gap-4">
-                    <Avatar name={f.fullName} url={f.photoUrl} size="lg" />
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-lg leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors">
-                        {f.fullName}
+                  {/* Header: the avatar shares a 48px row with the name and
+                      location. Roles moved down into the body — beside the
+                      avatar they made this block a different height on every
+                      card, and everything below inherited that variance. */}
+                  <div className="flex shrink-0 items-center gap-3">
+                    <Avatar name={f.fullName} url={f.photoUrl} size="md" />
+                    <div className="flex min-w-0 flex-1 flex-col justify-center">
+                      <h2 className="flex items-center gap-1.5 text-lg leading-tight group-hover:text-gold-ink transition-colors">
+                        <span className="truncate">{f.fullName}</span>
                         {f.verified && <VerifiedBadge label={verifiedLabel} />}
                       </h2>
-                      {roles.length > 0 && (
-                        <div className="mt-1 text-xs text-gold-ink">
-                          {roles.join(" · ")}
-                        </div>
-                      )}
-                      {f.location && (
-                        <div className="mt-1 inline-flex items-center gap-1 text-xs text-ink-muted">
-                          <MapPin className="w-3 h-3 shrink-0" />
-                          {provinceLabel(f.location, locale)}
-                        </div>
-                      )}
+                      <div className="mt-0.5 flex h-4 items-center gap-x-2 overflow-hidden text-xs text-ink-muted">
+                        {f.location && (
+                          <span className="inline-flex min-w-0 items-center gap-1">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span className="truncate">
+                              {provinceLabel(f.location, locale)}
+                            </span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {f.excerpt && (
-                    <p className="mt-4 text-sm text-ink leading-relaxed">
-                      {f.excerpt}
-                    </p>
-                  )}
+                  {/* Body — full card width, fixed rows. */}
+                  <div className="mt-4 flex flex-1 flex-col gap-3">
+                    {roles.length > 0 && (
+                      <div className="h-4 overflow-hidden text-xs text-gold-ink">
+                        {roles.join(" · ")}
+                      </div>
+                    )}
+                    {f.excerpt && (
+                      <p className="text-sm leading-relaxed text-ink line-clamp-2 min-h-[45.5px]">
+                        {f.excerpt}
+                      </p>
+                    )}
+                  </div>
 
-                  <div className="mt-auto pt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-ink-muted">
+                  {/* Footer — one row, fixed height on every card. The
+                      "View profile" affordance is gone: the whole card is a
+                      link to the profile. */}
+                  <div className="mt-auto pt-4 border-t border-line h-[41px] flex items-center gap-2 overflow-hidden text-xs text-ink-muted">
                     {f.industry.slice(0, 2).map((i) => (
-                      <span key={i} className="px-2 py-0.5 border border-line rounded-full">
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 border border-line rounded-full min-w-0 truncate"
+                      >
                         {i}
                       </span>
                     ))}
                     {stageLabel && (
-                      <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full">
+                      <span className="px-2 py-0.5 border border-line text-gold-ink bg-gold-soft rounded-full shrink-0">
                         {tr(stageLabel)}
                       </span>
                     )}
-                    <span className="ml-auto inline-flex items-center gap-1 text-navy group-hover:text-gold-ink transition-colors">
-                      {tr("View profile")}
-                      <ArrowRight className="w-3 h-3" />
-                    </span>
                   </div>
                 </Card>
               </Link>
