@@ -28,7 +28,7 @@ import { SocialLinks } from "@/components/SocialIcons";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
-import { LinkButton, buttonClasses } from "@/components/ui";
+import { LinkButton, StageEmblem, buttonClasses } from "@/components/ui";
 import { ExpressInterestForm } from "./ExpressInterestForm";
 import { IncomingInterestBanner } from "./IncomingInterestBanner";
 import { ReportForm } from "./ReportForm";
@@ -281,12 +281,20 @@ export default async function ProfileDetailPage({ params }: Props) {
       )}
 
       {/* ---- Hero ---- */}
-      <header className="bg-cream p-6 sm:p-8 lg:p-10 mb-8 rounded-3xl">
+      <header className="bg-cream p-8 mb-8 rounded-3xl">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
           <div className="flex-1 min-w-0">
             <h1 className="text-d2 flex items-center gap-2.5 flex-wrap">
               {otherName}
+              <StageEmblem
+                stage={profile.stage as string | null}
+                label={
+                  profile.stage && STAGE_LABELS[profile.stage as string]
+                    ? t(STAGE_LABELS[profile.stage as string], locale)
+                    : ""
+                }
+              />
               {profile.verified && (
                 <BadgeCheck
                   className="w-6 h-6 text-gold-ink shrink-0"
@@ -359,10 +367,10 @@ export default async function ProfileDetailPage({ params }: Props) {
             capabilities.length > 0 ||
             projectImages.length > 0 ||
             projectUrl) && (
-            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
+            <section className="bg-white p-8 rounded-3xl shadow-xs">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {t("What I'm building", locale)}
-              </div>
+              </h2>
               {profile.pitch && (
                 <div className="border-l-2 border-navy pl-5">
                   <p className="font-serif text-xl sm:text-d1 text-navy leading-relaxed">
@@ -414,14 +422,14 @@ export default async function ProfileDetailPage({ params }: Props) {
               )}
               {capabilities.length > 0 && (
                 <div className="mt-6 pt-5 border-t border-line">
-                  <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                  <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2.5">
                     {t("Capabilities", locale)}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {capabilities.map((c) => (
                       <span
                         key={c}
-                        className="px-3 py-1.5 border border-line text-sm text-ink rounded-full"
+                        className="px-3 py-1.5 bg-navy/10 text-sm text-ink rounded-full"
                       >
                         {c}
                       </span>
@@ -434,10 +442,10 @@ export default async function ProfileDetailPage({ params }: Props) {
 
           {/* Who I am */}
           {hasAbout && (
-            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
+            <section className="bg-white p-8 rounded-3xl shadow-xs">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {t("Background & experience", locale)}
-              </div>
+              </h2>
               <div className="space-y-5">
                 {profile.background && (
                   <AboutBlock label={t("Background", locale)}>
@@ -456,14 +464,14 @@ export default async function ProfileDetailPage({ params }: Props) {
                 )}
                 {skills.length > 0 && (
                   <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                    <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2.5">
                       {t("Skills & expertise", locale)}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {skills.map((s) => (
                         <span
                           key={s}
-                          className="px-3 py-1.5 border border-line text-sm text-ink rounded-full"
+                          className="px-3 py-1.5 bg-navy/10 text-sm text-ink rounded-full"
                         >
                           {s}
                         </span>
@@ -476,14 +484,14 @@ export default async function ProfileDetailPage({ params }: Props) {
                     English in the column and translated for display. */}
                 {helpWith.length > 0 && (
                   <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                    <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2.5">
                       {t("Can help with", locale)}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {helpWith.map((h) => (
                         <span
                           key={h}
-                          className="px-3 py-1.5 bg-gold-soft border border-line text-sm text-ink rounded-full"
+                          className="px-3 py-1.5 bg-gold-soft text-sm text-gold-ink rounded-full"
                         >
                           {t(h, locale)}
                         </span>
@@ -493,14 +501,14 @@ export default async function ProfileDetailPage({ params }: Props) {
                 )}
                 {needsHelp.length > 0 && (
                   <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                    <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2.5">
                       {t("Needs help with", locale)}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {needsHelp.map((h) => (
                         <span
                           key={h}
-                          className="px-3 py-1.5 border border-line text-sm text-ink-muted rounded-full"
+                          className="px-3 py-1.5 bg-navy/10 text-sm text-ink-muted rounded-full"
                         >
                           {t(h, locale)}
                         </span>
@@ -510,14 +518,14 @@ export default async function ProfileDetailPage({ params }: Props) {
                 )}
                 {activities.length > 0 && (
                   <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-2.5">
+                    <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2.5">
                       {t("Activities", locale)}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {activities.map((a) => (
                         <span
                           key={a}
-                          className="px-3 py-1.5 border border-line text-sm text-ink rounded-full"
+                          className="px-3 py-1.5 bg-navy/10 text-sm text-ink rounded-full"
                         >
                           {t(a, locale)}
                         </span>
@@ -531,10 +539,10 @@ export default async function ProfileDetailPage({ params }: Props) {
 
           {/* Recent milestones */}
           {(recentMilestones?.length ?? 0) > 0 && (
-            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-5">
+            <section className="bg-white p-8 rounded-3xl shadow-xs">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
                 {t("Recent milestones & launches", locale)}
-              </div>
+              </h2>
               <div className="space-y-4">
                 {(recentMilestones ?? []).map((m) => {
                   const isMilestone = m.kind === "milestone";
@@ -743,7 +751,7 @@ function AboutBlock({
 }) {
   return (
     <div>
-      <div className="text-xs uppercase tracking-[0.18em] text-ink-muted mb-1.5">
+      <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-1.5">
         {label}
       </div>
       <p className="text-ink leading-relaxed whitespace-pre-line">{children}</p>
