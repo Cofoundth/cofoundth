@@ -18,7 +18,7 @@ export default function TermsPage() {
       <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
         Legal
       </div>
-      <h1 className="text-d2 lg:text-d3 leading-tight mb-4">
+      <h1 className="text-d2 lg:text-d3 mb-4">
         Terms of Service
       </h1>
       <p className="text-sm text-ink-muted pb-10 mb-10 border-b border-line">

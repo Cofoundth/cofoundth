@@ -402,7 +402,7 @@ function CompanyCard({
                 href={`/profile/${c.slug}`}
                 className="group inline-flex items-center gap-1.5 flex-wrap"
               >
-                <h3 className="font-serif text-xl text-navy leading-tight group-hover:text-gold-ink transition-colors">
+                <h3 className="text-xl leading-tight group-hover:text-gold-ink transition-colors">
                   {c.company_name}
                 </h3>
                 {c.verified && (

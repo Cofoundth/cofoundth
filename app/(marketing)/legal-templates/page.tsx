@@ -101,7 +101,7 @@ export default async function LegalTemplatesPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {resources}
         </div>
-        <h1 className="text-d2 lg:text-d3 leading-tight mb-4">{heading}</h1>
+        <h1 className="text-d2 lg:text-d3 mb-4">{heading}</h1>
         <p className="text-lg text-ink leading-relaxed">{intro}</p>
         <div className="mt-6 px-4 py-3 border border-line bg-cream text-sm text-ink leading-relaxed rounded-xl">
           <strong className="text-navy">{importantLabel}</strong> {disclaimer}
@@ -125,7 +125,7 @@ export default async function LegalTemplatesPage() {
                     strokeWidth={1.5}
                   />
                   <div className="flex-1">
-                    <h3 className="font-serif text-lg text-navy mb-1.5">
+                    <h3 className="text-lg mb-1.5">
                       {t.title}
                     </h3>
                     <p className="text-sm text-ink leading-relaxed mb-3">

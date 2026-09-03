@@ -53,7 +53,7 @@ export default async function InvestorPage({
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               {await tServer("Investor")}
             </p>
-            <h1 className="font-serif text-d2 text-navy leading-tight mb-2">
+            <h1 className="text-d2 mb-2">
               {await tServer("Set up your investor profile")}
             </h1>
             <p className="text-ink-muted leading-relaxed mb-8">
@@ -72,7 +72,7 @@ export default async function InvestorPage({
             <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               {await tServer("Investor")}
             </p>
-            <h1 className="font-serif text-d3 text-navy leading-tight mb-1">
+            <h1 className="text-d3 mb-1">
               {(inv?.firm_name as string | null) ||
                 (firstName
                   ? (await tServer("Welcome, {name}")).replace(

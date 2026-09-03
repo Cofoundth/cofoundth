@@ -33,7 +33,7 @@ export default async function InsightsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tr("Insights")}
         </div>
-        <h1 className="text-d2 lg:text-d3 leading-tight mb-4">
+        <h1 className="text-d2 lg:text-d3 mb-4">
           {tr("Founder guides & perspectives")}
         </h1>
         <p className="text-lg text-ink leading-relaxed">
@@ -80,7 +80,7 @@ export default async function InsightsPage() {
               </div>
 
               {/* title */}
-              <h2 className="font-serif text-xl text-navy leading-snug mb-3 group-hover:text-gold-ink transition-colors">
+              <h2 className="text-xl leading-snug mb-3 group-hover:text-gold-ink transition-colors">
                 {i.title}
               </h2>
 

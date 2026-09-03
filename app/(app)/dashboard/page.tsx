@@ -118,7 +118,7 @@ export default async function DashboardPage() {
               url={profile?.photo_url as string | null}
               size="lg"
             />
-            <h2 className="font-serif text-xl text-navy mt-4 leading-tight">
+            <h2 className="text-xl mt-4 leading-tight">
               {(profile?.full_name as string) || firstName}
             </h2>
             {identityLine && (

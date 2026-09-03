@@ -66,7 +66,7 @@ export function PublicPostActions({
             <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
               Cofoundee
             </div>
-            <h3 className="font-serif text-2xl text-navy mb-2">
+            <h3 className="text-2xl mb-2">
               {tr("Join the community")}
             </h3>
             <p className="text-sm text-ink-muted leading-relaxed mb-6">

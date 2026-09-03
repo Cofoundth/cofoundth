@@ -48,7 +48,7 @@ export function HeroSection({
             {tr("Thailand's startup community")}
           </div>
 
-          <h1 className="text-d3 sm:text-d4 lg:text-d5 text-navy mb-6">
+          <h1 className="text-d3 sm:text-d4 lg:text-d5 mb-6">
             {tr("The bridge for Thailand's startup ecosystem.")}
           </h1>
 

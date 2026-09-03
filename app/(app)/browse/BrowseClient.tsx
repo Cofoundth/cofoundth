@@ -747,7 +747,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
 
         <div className="flex-1 min-w-0">
           {/* Who */}
-          <h3 className="font-serif text-xl text-navy leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors">
+          <h3 className="text-xl leading-tight inline-flex items-center gap-1.5 flex-wrap group-hover:text-gold-ink transition-colors">
             {isCompany && profile.company_name
               ? profile.company_name
               : profile.full_name}

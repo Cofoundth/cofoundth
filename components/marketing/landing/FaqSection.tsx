@@ -51,7 +51,7 @@ export function FaqSection({ locale }: { locale: Locale }) {
               key={f.q}
               className="rounded-[22px] border border-line p-7"
             >
-              <h3 className="font-serif text-lg text-navy mb-2">{tr(f.q)}</h3>
+              <h3 className="text-lg mb-2">{tr(f.q)}</h3>
               <p className="text-ink-muted leading-relaxed">{tr(f.a)}</p>
             </div>
           ))}

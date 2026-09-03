@@ -137,7 +137,7 @@ export default async function FundingDetailPage({ params }: Props) {
       >
         <ArrowLeft className="w-3 h-3" /> {await tServer("Funding")}
       </Link>
-      <h1 className="font-serif text-d3 text-navy mb-1">{otherName}</h1>
+      <h1 className="text-d3 mb-1">{otherName}</h1>
       <p className="text-ink-muted mb-8">
         {await tServer("Agree on terms, then Cofoundee coordinates the signing.")}
       </p>

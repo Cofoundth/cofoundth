@@ -116,7 +116,7 @@ export function PartnershipCard({ row, locale }: Props) {
                   )}
                 </span>
               </div>
-              <h3 className="font-serif text-lg text-navy leading-tight">
+              <h3 className="text-lg leading-tight">
                 {row.subject}
               </h3>
             </div>

@@ -71,7 +71,7 @@ export function ManagePanel({
 
   return (
     <div className="bg-white p-6 space-y-6 rounded-3xl shadow-xs">
-      <h2 className="font-serif text-xl text-navy">{tr("Manage team")}</h2>
+      <h2 className="text-xl">{tr("Manage team")}</h2>
 
       {/* Invite */}
       <form onSubmit={sendInvite} className="space-y-3">

@@ -114,7 +114,7 @@ export default async function MeetupsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           {tEyebrow}
         </div>
-        <h1 className="text-d3 leading-tight mb-4">{tTitle}</h1>
+        <h1 className="text-d3 mb-4">{tTitle}</h1>
         <p className="text-lg text-ink leading-relaxed">{tIntro}</p>
       </div>
 
@@ -218,7 +218,7 @@ function MeetupItem({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-start gap-3">
-          <h3 className="font-serif text-xl text-navy mb-2 flex-1">{m.title}</h3>
+          <h3 className="text-xl mb-2 flex-1">{m.title}</h3>
           {cancelled && (
             <span className="shrink-0 text-[11px] uppercase tracking-[0.15em] text-red-800 border border-red-300 rounded-full px-2 py-0.5">
               {labels.cancelled}

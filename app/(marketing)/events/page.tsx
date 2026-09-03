@@ -43,7 +43,7 @@ export default function EventsPage() {
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
           Community
         </div>
-        <h1 className="text-d2 lg:text-d3 leading-tight mb-4">Events</h1>
+        <h1 className="text-d2 lg:text-d3 mb-4">Events</h1>
         <p className="text-lg text-ink leading-relaxed">
           In-person and online gatherings for Thailand&rsquo;s founder
           community.
@@ -76,7 +76,7 @@ export default function EventsPage() {
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="font-serif text-xl text-navy mb-2">
+                <h3 className="text-xl mb-2">
                   {e.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-muted mb-3">
@@ -109,7 +109,7 @@ export default function EventsPage() {
       </div>
 
       <div className="mt-16 p-6 bg-cream border border-line rounded-xl">
-        <h3 className="font-serif text-xl text-navy mb-2">
+        <h3 className="text-xl mb-2">
           Want to host an event?
         </h3>
         <p className="text-sm text-ink leading-relaxed mb-3">

@@ -52,7 +52,7 @@ export function ForFoundersSection({ locale }: { locale: Locale }) {
                   aria-hidden="true"
                 />
               </div>
-              <h3 className="font-serif text-xl mb-2">{tr(title)}</h3>
+              <h3 className="text-xl mb-2">{tr(title)}</h3>
               <p className="text-sm text-ink-muted leading-relaxed">
                 {tr(body)}
               </p>

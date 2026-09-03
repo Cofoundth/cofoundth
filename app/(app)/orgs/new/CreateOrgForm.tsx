@@ -23,6 +23,26 @@ const STAGES: { value: string; en: string }[] = [
 const inputCls =
   "w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy";
 
+// The app's section register: 18px / 700 / normal tracking. Both overrides are
+// load-bearing — @layer base sets every h1-h6 to weight 600 and -0.02em, so
+// without font-bold + tracking-normal this silently renders as display type.
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-5">
+      <h2 className="text-lg font-bold tracking-normal border-b border-line pb-2">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 function Field({
   label,
   hint,
@@ -77,6 +97,7 @@ export function CreateOrgForm() {
         value={JSON.stringify(productImages)}
       />
 
+      <Section title={tr("The company")}>
       <Field label={tr("Company name")} required>
         <input
           name="name"
@@ -128,6 +149,9 @@ export function CreateOrgForm() {
         </div>
       </Field>
 
+      </Section>
+
+      <Section title={tr("What you're building")}>
       <Field label={tr("Product link")} required>
         <input
           name="product_url"
@@ -165,10 +189,11 @@ export function CreateOrgForm() {
         </div>
       </Field>
 
-      <div className="border-t border-line pt-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-4">
-          {tr("Optional")}
-        </p>
+      </Section>
+
+      {/* Was a 12px all-caps eyebrow doing an 18px section heading's job — the
+          exact pattern the section register exists to replace. */}
+      <Section title={tr("Optional details")}>
         <div className="space-y-6">
           <div className="grid sm:grid-cols-2 gap-6">
             <Field label={tr("Location")}>
@@ -256,7 +281,7 @@ export function CreateOrgForm() {
             />
           </Field>
         </div>
-      </div>
+      </Section>
 
       {state?.error && (
         <div className="px-4 py-3 border border-red-300 bg-red-50 text-sm text-red-800 rounded-xl">

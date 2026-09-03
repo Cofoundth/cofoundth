@@ -1293,5 +1293,8 @@
   "Needs help with": "ต้องการความช่วยเหลือ",
   "Age": "อายุ",
   "What do you need help with?": "อยากได้ความช่วยเหลือเรื่องอะไร",
-  "How long have you been building this?": "ทำสิ่งนี้มานานแค่ไหนแล้ว"
+  "How long have you been building this?": "ทำสิ่งนี้มานานแค่ไหนแล้ว",
+  "The company": "ข้อมูลบริษัท",
+  "What you're building": "สิ่งที่คุณกำลังสร้าง",
+  "Optional details": "ข้อมูลเพิ่มเติม (ไม่บังคับ)"
 }

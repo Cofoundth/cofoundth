@@ -269,7 +269,7 @@ export default async function PartnershipRequestsBoardPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-navy inline-block" />
                           )}
                         </div>
-                        <h3 className="font-serif text-xl text-navy leading-tight">
+                        <h3 className="text-xl leading-tight">
                           {ask.subject as string}
                         </h3>
                       </div>

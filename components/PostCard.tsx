@@ -208,7 +208,7 @@ export function PostCard({
 
             {post.title && (
               <Link href={`/community/${post.id}`} className="block group mt-1">
-                <h3 className="font-serif text-lg text-navy leading-tight group-hover:text-gold-ink transition-colors">
+                <h3 className="text-lg leading-tight group-hover:text-gold-ink transition-colors">
                   {post.title}
                 </h3>
               </Link>

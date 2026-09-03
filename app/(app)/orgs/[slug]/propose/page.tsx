@@ -53,7 +53,7 @@ export default async function ProposePage({
       <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
         {await tServer("Deal proposal")}
       </p>
-      <h1 className="font-serif text-d2 text-navy leading-tight mb-2">
+      <h1 className="text-d2 mb-2">
         {(await tServer("Propose a deal with {company}")).replace(
           "{company}",
           org.name as string,
