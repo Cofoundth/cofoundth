@@ -815,7 +815,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
         </div>
 
         {/* BODY — three rows on a 10px rhythm, each full card width. */}
-        <div className="mt-3 flex flex-col gap-2.5 flex-1 min-h-0">
+        <div className="mt-4 flex flex-col gap-4 flex-1 min-h-0">
           {/* Row A: what they are here for, then the sector. Their card pairs a
               pill with plain muted text on one line — the text form fits two or
               three industries where a second chip fit none. */}
