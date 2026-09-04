@@ -42,6 +42,8 @@ export function isInvestorReadableRoute(pathname: string): boolean {
       !pathname.endsWith("/propose") &&
       !pathname.endsWith("/chat")) ||
     pathname.startsWith("/profile/") ||
+    // Their own notifications are their own data.
+    pathname === "/notifications" ||
     pathname === "/settings"
   );
 }

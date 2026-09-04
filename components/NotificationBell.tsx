@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { timeAgo } from "@/lib/time";
+import { notifHref, notifText } from "@/lib/notifications";
 import {
   markAllNotificationsRead,
   dismissNotification,
@@ -28,26 +29,6 @@ export type NotifItem = {
   } | null;
 };
 
-function hrefFor(n: NotifItem): string {
-  switch (n.type) {
-    case "profile_view":
-      return n.actor ? `/profile/${n.actor.slug ?? n.actor.id}` : "/dashboard";
-    case "comment":
-    case "mention":
-      return n.entityId ? `/community/${n.entityId}` : "/community";
-    case "message":
-      return n.entityId ? `/messages/${n.entityId}` : "/matches";
-    case "interest":
-    case "match":
-      return "/matches";
-    case "deal_proposed":
-      return n.data?.slug ? `/orgs/${n.data.slug}` : "/orgs";
-    case "funding_proposed":
-      return n.entityId ? `/funding/${n.entityId}` : "/funding";
-    default:
-      return "/dashboard";
-  }
-}
 
 // Where the panel opens from. "down-right" suits a top bar (the marketing
 // header, the mobile app bar). "up-right" is for the desktop sidebar rail,
@@ -176,32 +157,6 @@ export function NotificationBell({
     await clearAllNotifications();
   }
 
-  function textFor(n: NotifItem): string {
-    const name = n.actor?.full_name || n.data?.actor_name || tr("Someone");
-    switch (n.type) {
-      case "profile_view":
-        return tr("{name} viewed your profile").replace("{name}", name);
-      case "comment":
-        return tr("{name} commented on your post").replace("{name}", name);
-      case "mention":
-        return tr("{name} mentioned you in a comment").replace("{name}", name);
-      case "interest":
-        return tr("{name} is interested in connecting").replace("{name}", name);
-      case "match":
-        return tr("You and {name} are now connected").replace("{name}", name);
-      case "message":
-        return tr("{name} sent you a message").replace("{name}", name);
-      case "deal_proposed":
-        return tr("{name} proposed a partnership deal").replace(
-          "{name}",
-          n.data?.actor_name || tr("A company"),
-        );
-      case "funding_proposed":
-        return tr("{name} sent a funding proposal").replace("{name}", name);
-      default:
-        return "";
-    }
-  }
 
   return (
     <div className="relative" ref={ref}>
@@ -239,15 +194,26 @@ export function NotificationBell({
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted">
               {tr("Notifications")}
             </div>
-            {items.length > 0 && (
-              <button
-                type="button"
-                onClick={handleClearAll}
-                className="text-xs text-ink-muted hover:text-navy transition-colors"
+            <div className="flex items-center gap-3">
+              {items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAll}
+                  className="text-xs text-ink-muted hover:text-navy transition-colors"
+                >
+                  {tr("Clear all")}
+                </button>
+              )}
+              {/* The glanceable panel keeps the last few; the page holds the
+                  full history. */}
+              <Link
+                href="/notifications"
+                onClick={() => setOpen(false)}
+                className="text-xs text-navy hover:text-gold-ink transition-colors"
               >
-                {tr("Clear all")}
-              </button>
-            )}
+                {tr("See all")}
+              </Link>
+            </div>
           </div>
 
           {items.length === 0 ? (
@@ -259,14 +225,14 @@ export function NotificationBell({
               {items.map((n) => (
                 <li key={n.id} className="relative group/item">
                   <Link
-                    href={hrefFor(n)}
+                    href={notifHref(n)}
                     onClick={() => setOpen(false)}
                     // Unread must not rest on the background tint alone — it is
                     // a ~1% wash that low-vision users and anyone on a dim
                     // screen will miss. The gold marker carries it visually,
                     // the aria-label carries it for screen readers.
                     aria-label={
-                      n.readAt ? undefined : `${tr("Unread")}: ${textFor(n)}`
+                      n.readAt ? undefined : `${tr("Unread")}: ${notifText(n, tr)}`
                     }
                     className={`flex items-start gap-3 px-4 py-3 pr-9 border-b border-line last:border-b-0 hover:bg-cream transition-colors ${
                       n.readAt ? "" : "bg-cream/60"
@@ -285,7 +251,7 @@ export function NotificationBell({
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-ink leading-snug">
-                        {textFor(n)}
+                        {notifText(n, tr)}
                       </p>
                       {(n.type === "comment" || n.type === "mention") &&
                       n.data?.post_title ? (
