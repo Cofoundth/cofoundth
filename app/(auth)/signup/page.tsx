@@ -27,9 +27,15 @@ export default async function SignupPage() {
       </div>
 
       <p className="mt-6 text-xs text-ink-muted leading-relaxed">
-        {await tr(
-          "By continuing, you agree to our Terms and acknowledge our PDPA privacy policy.",
-        )}
+        {await tr("By continuing, you agree to our")}{" "}
+        <Link href="/terms" className="underline hover:text-navy">
+          {await tr("Terms of Service")}
+        </Link>{" "}
+        {await tr("and acknowledge our")}{" "}
+        <Link href="/privacy" className="underline hover:text-navy">
+          {await tr("Privacy Policy")}
+        </Link>
+        .
       </p>
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">

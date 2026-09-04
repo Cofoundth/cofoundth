@@ -32,6 +32,8 @@ import { LinkButton, StageEmblem, buttonClasses } from "@/components/ui";
 import { ExpressInterestForm } from "./ExpressInterestForm";
 import { IncomingInterestBanner } from "./IncomingInterestBanner";
 import { ReportForm } from "./ReportForm";
+import { BlockButton } from "./BlockButton";
+import { isBlockedEitherWay } from "@/lib/blocking";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -118,6 +120,13 @@ export default async function ProfileDetailPage({ params }: Props) {
     !isOwnProfile &&
     !(await isAdminUser(supabase, user))
   ) {
+    notFound();
+  }
+
+  // Blocked pairs don't see each other — symmetric, and indistinguishable
+  // from a profile that doesn't exist (revealing "you are blocked" invites
+  // retaliation).
+  if (!isOwnProfile && user && (await isBlockedEitherWay(user.id, profile.id))) {
     notFound();
   }
 
@@ -626,8 +635,9 @@ export default async function ProfileDetailPage({ params }: Props) {
                   />
                 </div>
               )}
-              <div className="bg-white p-4 rounded-3xl shadow-xs">
+              <div className="bg-white p-4 rounded-3xl shadow-xs flex flex-col gap-3">
                 <ReportForm targetId={profile.id} />
+                <BlockButton targetId={profile.id} />
               </div>
             </>
           )}

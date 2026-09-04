@@ -11,6 +11,7 @@ import { Eye, Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth";
+import { getBlockedIds } from "@/lib/blocking";
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { timeAgo, msAgoISO, DAY_MS } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
@@ -35,11 +36,17 @@ export default async function ActivityPage() {
     .limit(100);
   const views = viewRows ?? [];
 
+  // Blocked pairs disappear from each other everywhere, this page included —
+  // the big number and the list below both come off the same filtered set, so
+  // "12 founders viewed you" can never disagree with the 11 faces under it.
+  const blocked = await getBlockedIds(user.id);
+
   // Distinct viewers, newest first.
   const viewerIds: string[] = [];
   for (const v of views) {
     const id = v.viewer_id as string;
-    if (id && id !== user.id && !viewerIds.includes(id)) viewerIds.push(id);
+    if (id && id !== user.id && !blocked.has(id) && !viewerIds.includes(id))
+      viewerIds.push(id);
   }
 
   const { data: viewerProfiles } = viewerIds.length

@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { isInvestorAccount } from "@/lib/account";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isBlockedEitherWay } from "@/lib/blocking";
+import { notifyUsers } from "@/lib/notify";
 import { slugify } from "@/lib/slug";
 import {
   bangkokInputToISO,
@@ -38,7 +40,7 @@ export async function rsvpAction(
   // RLS hides drafts; a cancelled or already-passed meetup can't be joined.
   const { data: meetup } = await supabase
     .from("meetups")
-    .select("id, slug, status, starts_at, capacity")
+    .select("id, slug, title, status, starts_at, capacity, created_by")
     .eq("id", meetupId)
     .maybeSingle();
   if (!meetup) return { error: "Meetup not found." };
@@ -48,22 +50,26 @@ export async function rsvpAction(
   }
 
   if (going) {
+    // One cheap PK lookup up front: it powers the capacity check below. It
+    // used to carry the whole "only notify on FIRST join" rule too, which it
+    // could not actually keep — un-RSVPing DELETES the row, so a
+    // cancel/rejoin made `mine` null again and re-pinged the host. The real
+    // guard is the notification dedupe further down.
+    const { data: mine } = await supabase
+      .from("meetup_rsvps")
+      .select("user_id")
+      .eq("meetup_id", meetupId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
     // Advisory capacity check. A race at the very last seat is possible and
     // acceptable at this scale; the (meetup_id,user_id) PK makes a double-RSVP
     // an idempotent upsert rather than a duplicate.
     if (meetup.capacity != null) {
-      const [{ count: goingCount }, { data: mine }] = await Promise.all([
-        supabase
-          .from("meetup_rsvps")
-          .select("user_id", { count: "exact", head: true })
-          .eq("meetup_id", meetupId),
-        supabase
-          .from("meetup_rsvps")
-          .select("user_id")
-          .eq("meetup_id", meetupId)
-          .eq("user_id", user.id)
-          .maybeSingle(),
-      ]);
+      const { count: goingCount } = await supabase
+        .from("meetup_rsvps")
+        .select("user_id", { count: "exact", head: true })
+        .eq("meetup_id", meetupId);
       if (!mine && (goingCount ?? 0) >= (meetup.capacity as number)) {
         return { error: "This meetup is full." };
       }
@@ -75,6 +81,49 @@ export async function rsvpAction(
     if (error) {
       console.error("[meetups.rsvp]", error);
       return { error: "Couldn't RSVP. Try again." };
+    }
+
+    // Tell the host someone's coming (their Notifications > My meetups).
+    // entity_id carries the meetup id; the deep link needs the slug, which
+    // rides in data (entity_id is a bare uuid to notifHref).
+    const hostId = meetup.created_by as string;
+    if (!mine && hostId && hostId !== user.id) {
+      // Two gates before the host hears anything.
+      // 1. A blocked pair doesn't ping each other, in either direction.
+      // 2. Dedupe on the notification itself, not on `mine`: cancelling an
+      //    RSVP deletes the row, so `mine` alone lets a cancel/rejoin loop
+      //    ping the host once per rejoin. Service role, because the row
+      //    belongs to the HOST and RLS scopes reads to the recipient.
+      const admin = createAdminClient();
+      const [alreadyBlocked, { data: existingNotif }] = await Promise.all([
+        isBlockedEitherWay(hostId, user.id),
+        admin
+          .from("notifications")
+          .select("id")
+          .eq("recipient_id", hostId)
+          .eq("actor_id", user.id)
+          .eq("type", "meetup_rsvp")
+          .eq("entity_id", meetupId)
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (!alreadyBlocked && !existingNotif) {
+        const { data: me } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+        await notifyUsers([hostId], {
+          actorId: user.id,
+          type: "meetup_rsvp",
+          entityId: meetupId,
+          data: {
+            actor_name: (me?.full_name as string) ?? "A founder",
+            slug: (meetup.slug as string) ?? "",
+            title: (meetup.title as string) ?? "",
+          },
+        });
+      }
     }
   } else {
     const { error } = await supabase

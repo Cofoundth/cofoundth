@@ -26,10 +26,10 @@ export async function AppSidebar() {
     .select("full_name, photo_url, slug, is_admin, account_type")
     .eq("id", user.id)
     .single();
+  // Founders land on the My Profile hub (identity, stats, account door) —
+  // the public view is one row inside it. Investors keep their own home.
   const myProfileHref =
-    profile?.account_type === "investor"
-      ? "/investor"
-      : `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
+    profile?.account_type === "investor" ? "/investor" : "/profile";
 
   const myOrgs = await getUserOrgs(supabase, user.id);
   const activeOrgId =

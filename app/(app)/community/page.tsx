@@ -8,6 +8,7 @@ import { SearchablePostFeed } from "@/components/SearchablePostFeed";
 import { EmptyState, LinkButton, Section } from "@/components/ui";
 import { getFeedPosts } from "@/lib/posts";
 import { isInvestorAccount } from "@/lib/account";
+import { getBlockedIds } from "@/lib/blocking";
 import { timeAgo, nowISO, msAheadISO, DAY_MS } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
 
@@ -25,31 +26,48 @@ export default async function CommunityPage({
   const locale = await getLocale();
   const { q } = await searchParams;
 
-  const feed = await getFeedPosts(supabase, { limit: 50, userId: user?.id });
+  // Blocked pairs first: the feed needs the set, not just the ticker. A
+  // blocked member vanishing from the directory while their posts still lead
+  // the feed is the block half-working, which is worse than not shipping it.
+  const blocked = user
+    ? await getBlockedIds(user.id)
+    : new Set<string>();
+
+  const feed = await getFeedPosts(supabase, {
+    limit: 50,
+    userId: user?.id,
+    excludeAuthorIds: blocked,
+  });
 
   // ---- "What's happening" — the reference app's activity ticker -----------
   // Auto-generated events beside the feed: who joined lately (the public
   // directory's own row filters, so bots and investors never surface) and how
   // many meetups are coming up this week. Social proof that writes itself.
   const weekAhead = msAheadISO(7 * DAY_MS);
-  const [{ data: recentJoins }, { count: weekMeetups }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, slug, full_name, photo_url, created_at")
-      .eq("profile_complete", true)
-      .eq("suspended", false)
-      .eq("account_type", "founder")
-      .not("is_bot", "is", true)
-      .order("created_at", { ascending: false })
-      .limit(5),
-    supabase
-      .from("meetups")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "published")
-      .eq("visibility", "public")
-      .gte("starts_at", nowISO())
-      .lte("starts_at", weekAhead),
-  ]);
+  const [{ data: recentJoinsRaw }, { count: weekMeetups }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, slug, full_name, photo_url, created_at")
+        .eq("profile_complete", true)
+        .eq("suspended", false)
+        .eq("account_type", "founder")
+        .not("is_bot", "is", true)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("meetups")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "published")
+        .eq("visibility", "public")
+        .gte("starts_at", nowISO())
+        .lte("starts_at", weekAhead),
+    ]);
+  // Over-fetch 8, filter blocked pairs, show 5 — the ticker never goes short
+  // just because the viewer blocked someone recent.
+  const recentJoins = (recentJoinsRaw ?? [])
+    .filter((p) => !blocked.has(p.id as string))
+    .slice(0, 5);
 
   // Investors read the founder community but don't post or comment in it.
   const canWrite = !!user && !(await isInvestorAccount(supabase, user.id));

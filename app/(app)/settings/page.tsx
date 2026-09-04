@@ -1,13 +1,40 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import {
+  Bug,
+  ChevronRight,
+  FileText,
+  LifeBuoy,
+  LogOut,
+  Scale,
+  ShieldCheck,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { PasswordForm } from "@/components/PasswordForm";
+import { Avatar } from "@/components/Avatar";
 import { EditProfileFormClient } from "./EditProfileFormClient";
+import { DeleteAccountForm } from "./DeleteAccountForm";
+import { UnblockButton } from "./UnblockButton";
+import { signOutAction } from "@/app/(auth)/actions";
 import { tServer } from "@/lib/i18n-server";
-import { Section } from "@/components/ui";
+import { Card, Section } from "@/components/ui";
 
-export default async function SettingsPage() {
+const SUPPORT_EMAIL = "chayanonr@cofoundee.co";
+
+// Two tabs, one destination. The reference app splits "edit what others see"
+// (their /profile pencils) from "manage the account" (their /settings);
+// ours keeps both under /settings — Profile is the editor that has always
+// lived here, Account is their settings anatomy minus the subscription
+// group (Cofoundee has no paid tier and doesn't copy paywalls).
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab: tabParam } = await searchParams;
+  const tab = tabParam === "account" ? "account" : "profile";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,6 +56,20 @@ export default async function SettingsPage() {
   if (!profile) redirect("/onboarding");
 
   const profileHref = `/profile/${profile.slug ?? profile.id}`;
+
+  // ---- Blocked members (account tab) — own rows, RLS-readable ----------
+  const { data: blockRows } = await supabase
+    .from("profile_blocks")
+    .select("blocked_id")
+    .eq("blocker_id", user.id)
+    .order("created_at", { ascending: false });
+  const blockedIds = (blockRows ?? []).map((b) => b.blocked_id as string);
+  const { data: blockedProfiles } = blockedIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, slug, full_name, photo_url")
+        .in("id", blockedIds)
+    : { data: [] };
 
   // Map to plain primitives — never hand a raw driver row (enum arrays etc.)
   // straight to a client component.
@@ -67,11 +108,24 @@ export default async function SettingsPage() {
   };
 
   const t = {
-    title: await tServer("Edit profile"),
+    title: await tServer("Settings"),
     view: await tServer("View profile"),
-    sub: await tServer("Update your details anytime."),
+    sub: await tServer("Your profile, your account."),
     photo: await tServer("Profile photo"),
+    tabProfile: await tServer("Profile"),
+    tabAccount: await tServer("Account"),
   };
+
+  const tabClass = (active: boolean) =>
+    `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
+      active
+        ? "border-navy text-navy font-medium"
+        : "border-transparent text-ink-muted hover:text-navy"
+    }`;
+
+  const heading = "text-lg font-bold tracking-normal border-b border-line pb-2 mb-4";
+  const row =
+    "flex items-center justify-between gap-3 p-4 text-sm text-ink hover:bg-cream transition-colors";
 
   return (
     <Section width="narrow">
@@ -86,30 +140,186 @@ export default async function SettingsPage() {
       </div>
       <p className="text-sm text-ink-muted mb-8">{t.sub}</p>
 
-      <div className="mb-14">
-        <h2 className="text-lg font-bold tracking-normal border-b border-line pb-2 mb-4">
-          {t.photo}
-        </h2>
-        <AvatarUploader
-          userId={user.id}
-          initialUrl={profile.photo_url ?? null}
-          name={profile.full_name ?? user.email ?? null}
-        />
-      </div>
+      <nav className="flex items-center gap-1 mb-8 border-b border-line">
+        <Link href="/settings" className={tabClass(tab === "profile")}>
+          {t.tabProfile}
+        </Link>
+        <Link href="/settings?tab=account" className={tabClass(tab === "account")}>
+          {t.tabAccount}
+        </Link>
+      </nav>
 
-      <EditProfileFormClient initial={initial} />
+      {tab === "profile" ? (
+        <>
+          <div className="mb-14">
+            <h2 className={heading}>{t.photo}</h2>
+            <AvatarUploader
+              userId={user.id}
+              initialUrl={profile.photo_url ?? null}
+              name={profile.full_name ?? user.email ?? null}
+            />
+          </div>
 
-      <div className="mt-14 pt-8 border-t border-line">
-        <h2 className="text-lg font-bold tracking-normal border-b border-line pb-2 mb-4">
-          {await tServer("Password")}
-        </h2>
-        <p className="text-sm text-ink-muted mb-5 max-w-lg leading-relaxed">
-          {await tServer(
-            "Set a password so you can sign in with your email — handy if you joined with Google.",
-          )}
-        </p>
-        <PasswordForm />
-      </div>
+          <EditProfileFormClient initial={initial} />
+        </>
+      ) : (
+        <div className="space-y-14">
+          {/* ---- Account ---- */}
+          <section>
+            <h2 className={heading}>{await tServer("Account")}</h2>
+            <Card
+              padding="none"
+              className="divide-y divide-line overflow-hidden mb-5"
+            >
+              <div className="flex items-center justify-between gap-3 p-4 text-sm">
+                <span className="text-ink-muted">{await tServer("Email")}</span>
+                <span className="text-ink truncate">{user.email}</span>
+              </div>
+            </Card>
+            <p className="text-sm text-ink-muted mb-5 max-w-lg leading-relaxed">
+              {await tServer(
+                "Set a password so you can sign in with your email — handy if you joined with Google.",
+              )}
+            </p>
+            <PasswordForm />
+          </section>
+
+          {/* ---- Privacy & safety ---- */}
+          <section>
+            <h2 className={heading}>{await tServer("Privacy & safety")}</h2>
+            <Card padding="none" className="divide-y divide-line overflow-hidden">
+              <div className="flex items-center gap-2 p-4 text-sm text-ink">
+                <ShieldCheck
+                  className="w-4 h-4 text-gold-ink shrink-0"
+                  strokeWidth={1.5}
+                />
+                {await tServer("Blocked members")}
+                <span className="text-xs text-ink-muted">
+                  · {await tServer("Members you've blocked won't see you")}
+                </span>
+              </div>
+              {(blockedProfiles ?? []).length === 0 ? (
+                <div className="p-4 text-sm text-ink-muted">
+                  {await tServer("You haven't blocked anyone.")}
+                </div>
+              ) : (
+                (blockedProfiles ?? []).map((b) => (
+                  <div
+                    key={b.id as string}
+                    className="flex items-center gap-3 p-4"
+                  >
+                    <Avatar
+                      name={b.full_name as string}
+                      url={b.photo_url as string | null}
+                      size="sm"
+                    />
+                    <span className="min-w-0 flex-1 text-sm text-ink truncate">
+                      {(b.full_name as string) ?? "—"}
+                    </span>
+                    <UnblockButton targetId={b.id as string} />
+                  </div>
+                ))
+              )}
+            </Card>
+          </section>
+
+          {/* ---- Help & support ---- */}
+          <section>
+            <h2 className={heading}>{await tServer("Help & support")}</h2>
+            <Card padding="none" className="divide-y divide-line overflow-hidden">
+              <a href={`mailto:${SUPPORT_EMAIL}`} className={row}>
+                <span className="inline-flex items-center gap-2 min-w-0">
+                  <LifeBuoy
+                    className="w-4 h-4 text-gold-ink shrink-0"
+                    strokeWidth={1.5}
+                  />
+                  {await tServer("Contact support")}
+                </span>
+                <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
+              </a>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Bug report")}`}
+                className={row}
+              >
+                <span className="inline-flex items-center gap-2 min-w-0">
+                  <Bug
+                    className="w-4 h-4 text-gold-ink shrink-0"
+                    strokeWidth={1.5}
+                  />
+                  {await tServer("Report a bug")}
+                </span>
+                <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
+              </a>
+            </Card>
+          </section>
+
+          {/* ---- About & legal ---- */}
+          <section>
+            <h2 className={heading}>{await tServer("About & legal")}</h2>
+            <Card padding="none" className="divide-y divide-line overflow-hidden">
+              <Link href="/terms" className={row}>
+                <span className="inline-flex items-center gap-2 min-w-0">
+                  <FileText
+                    className="w-4 h-4 text-gold-ink shrink-0"
+                    strokeWidth={1.5}
+                  />
+                  {await tServer("Terms of Service")}
+                </span>
+                <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
+              </Link>
+              <Link href="/privacy" className={row}>
+                <span className="inline-flex items-center gap-2 min-w-0">
+                  <Scale
+                    className="w-4 h-4 text-gold-ink shrink-0"
+                    strokeWidth={1.5}
+                  />
+                  {await tServer("Privacy Policy")}
+                </span>
+                <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
+              </Link>
+              <Link href="/code-of-conduct" className={row}>
+                <span className="inline-flex items-center gap-2 min-w-0">
+                  <ShieldCheck
+                    className="w-4 h-4 text-gold-ink shrink-0"
+                    strokeWidth={1.5}
+                  />
+                  {await tServer("Code of Conduct")}
+                </span>
+                <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
+              </Link>
+            </Card>
+          </section>
+
+          {/* ---- Session ---- */}
+          <section>
+            <h2 className={heading}>{await tServer("Session")}</h2>
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-line text-sm text-ink hover:border-navy transition-colors rounded-full"
+              >
+                <LogOut className="w-4 h-4" strokeWidth={1.5} />
+                {await tServer("Sign out")}
+              </button>
+            </form>
+          </section>
+
+          {/* ---- Danger zone ---- */}
+          <section>
+            <h2 className="text-lg font-bold tracking-normal border-b border-danger-line pb-2 mb-4 text-danger-ink">
+              {await tServer("Danger zone")}
+            </h2>
+            <div className="bg-danger-surface border border-danger-line rounded-3xl p-6">
+              <p className="text-sm text-ink mb-5 max-w-lg leading-relaxed">
+                {await tServer(
+                  "Permanently delete your account and all of your data.",
+                )}
+              </p>
+              <DeleteAccountForm />
+            </div>
+          </section>
+        </div>
+      )}
     </Section>
   );
 }

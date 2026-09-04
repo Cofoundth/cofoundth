@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { isInvestorAccount } from "@/lib/account";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
+import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import type { PostComment, PostItem } from "@/lib/post-types";
 
 export type PostFormState = { error?: string } | null;
@@ -135,12 +136,20 @@ export async function searchFeedAction(q: string): Promise<PostItem[]> {
 }
 
 // Cursor pagination: next page of the feed, older than `before` (created_at).
+// Same block exclusion the first page applies — without it a blocked author
+// reappears on page 2, which is worse than never having filtered at all.
 export async function loadMoreFeedAction(before: string): Promise<PostItem[]> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return getFeedPosts(supabase, { limit: 20, userId: user?.id ?? null, before });
+  const blocked = user ? await getBlockedIds(user.id) : undefined;
+  return getFeedPosts(supabase, {
+    limit: 20,
+    userId: user?.id ?? null,
+    before,
+    excludeAuthorIds: blocked,
+  });
 }
 
 export async function deletePostAction(id: string) {
@@ -202,6 +211,19 @@ export async function createPostCommentAction(
   if (!user) return { error: "Not authenticated." };
   if (await isInvestorAccount(supabase, user.id))
     return { error: "Only founders can comment in the community." };
+
+  // A blocked pair can't talk here either. The post itself already 404s for
+  // this viewer (/community/[id]), so this closes the direct-action path that
+  // skips the page — and it deliberately doesn't say who blocked whom.
+  const { data: post } = await supabase
+    .from("forum_posts")
+    .select("author_id")
+    .eq("id", postId)
+    .maybeSingle();
+  if (!post) return { error: "This post isn’t available." };
+  if (await isBlockedEitherWay(user.id, post.author_id as string)) {
+    return { error: "This post isn’t available." };
+  }
 
   const { error } = await supabase
     .from("forum_comments")

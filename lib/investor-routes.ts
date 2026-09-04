@@ -42,6 +42,10 @@ export function isInvestorReadableRoute(pathname: string): boolean {
       !pathname.endsWith("/propose") &&
       !pathname.endsWith("/chat")) ||
     pathname.startsWith("/profile/") ||
+    // The hub itself, not just /profile/[id]: the page redirects investors to
+    // /investor on its own, and without this the middleware bounces them to
+    // /funding before that redirect ever runs.
+    pathname === "/profile" ||
     // Their own notifications are their own data.
     pathname === "/notifications" ||
     pathname === "/settings"

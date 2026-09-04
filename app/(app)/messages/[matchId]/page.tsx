@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth";
+import { isBlockedEitherWay } from "@/lib/blocking";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
@@ -39,6 +40,10 @@ export default async function MessagePage({ params }: Props) {
     match.profile_a_id === user.id
       ? (match.profile_b_id as string)
       : (match.profile_a_id as string);
+
+  // The conversation list hides blocked pairs; a bookmarked thread URL must
+  // not bypass that.
+  if (await isBlockedEitherWay(user.id, otherId)) notFound();
 
   const { data: other } = await supabase
     .from("profiles")

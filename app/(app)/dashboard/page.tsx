@@ -15,6 +15,7 @@ import { DirectoryCard } from "@/components/DirectoryCard";
 import { provinceLabel } from "@/lib/provinces";
 import { EmptyState, LinkButton, Section } from "@/components/ui";
 import { getFeedPosts } from "@/lib/posts";
+import { getBlockedIds } from "@/lib/blocking";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -45,8 +46,18 @@ export default async function DashboardPage() {
   const myProfileHref = `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
   // ---- Merged post feed (the heartbeat) ----------------------------
-  const [feed, { data: newFounders, count: founderCount }] = await Promise.all([
-    getFeedPosts(supabase, { limit: 15, userId: user.id }),
+  // The block set has to land BEFORE the feed, not beside it: the feed
+  // excludes blocked authors, so it can't be a sibling of the same
+  // Promise.all any more. The two things that don't depend on it still run in
+  // parallel underneath.
+  const blocked = await getBlockedIds(user.id);
+  const [feed, { data: newFounders, count: founderCount }] =
+    await Promise.all([
+      getFeedPosts(supabase, {
+        limit: 15,
+        userId: user.id,
+        excludeAuthorIds: blocked,
+      }),
     // 40, not 4: these are RANKED below, so the query has to hand over a pool
     // to rank rather than the four newest. Ordering stays newest-first so it
     // doubles as the tiebreak when two candidates score the same.
@@ -63,7 +74,13 @@ export default async function DashboardPage() {
       .neq("id", user.id)
       .order("created_at", { ascending: false })
       .limit(40),
-  ]);
+    ]);
+  // Blocked pairs never surface in the ranked pool or the face pile.
+  // founderCount stays unfiltered on purpose — it's a census ("N founders in
+  // the community"), not a list of people shown to the viewer.
+  const founderPool = (newFounders ?? []).filter(
+    (p) => !blocked.has(p.id as string),
+  );
 
   // ---- Personal stats -----------------------------------------------
   // COMMUNITY metrics, not matching ones. This card used to lead with
@@ -163,7 +180,7 @@ export default async function DashboardPage() {
     location: (profile?.location as string | null) ?? null,
   };
   const myWants = me.looking_for;
-  const suggested = (newFounders ?? [])
+  const suggested = founderPool
     .map((f) => ({
       row: f,
       fit: complementScore(me, {
@@ -465,7 +482,7 @@ export default async function DashboardPage() {
             </h2>
             <div className="bg-white p-6 rounded-3xl shadow-xs">
               <div className="flex items-center -space-x-3">
-                {(newFounders ?? []).slice(0, 5).map((f) => (
+                {founderPool.slice(0, 5).map((f) => (
                   <div
                     key={f.id as string}
                     className="rounded-full ring-2 ring-white"

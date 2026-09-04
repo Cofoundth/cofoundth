@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isBlockedEitherWay } from "@/lib/blocking";
 
 export type ConvMessage = {
   id: string;
@@ -25,6 +26,24 @@ export async function fetchMessagesAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return [];
+
+  // A block closes the conversation in BOTH directions, and the poll is the
+  // one path that would keep serving it: RLS still lets a party read their own
+  // match, and "they blocked me" is RLS-invisible, so the gate has to run here
+  // on the service role. Empty list, not an error — same shape the UI already
+  // handles, and it degrades to "nothing new" rather than a broken thread.
+  const { data: convMatch } = await supabase
+    .from("matches")
+    .select("profile_a_id, profile_b_id")
+    .eq("id", matchId)
+    .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`)
+    .maybeSingle();
+  if (!convMatch) return [];
+  const otherId =
+    (convMatch.profile_a_id as string) === user.id
+      ? (convMatch.profile_b_id as string)
+      : (convMatch.profile_a_id as string);
+  if (await isBlockedEitherWay(user.id, otherId)) return [];
 
   const { data, error } = await supabase
     .from("messages")
@@ -64,11 +83,22 @@ export async function sendMessageAction(
   // and defends against any future RLS regression.
   const { data: match } = await supabase
     .from("matches")
-    .select("id")
+    .select("id, profile_a_id, profile_b_id")
     .eq("id", matchId)
     .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`)
     .maybeSingle();
   if (!match) return { error: "Conversation not found." };
+
+  // Blocked either way: the thread stays readable as history but takes no new
+  // messages. Distinct copy from "not found" — the conversation exists, it is
+  // just closed — and deliberately says nothing about who blocked whom.
+  const otherId =
+    (match.profile_a_id as string) === user.id
+      ? (match.profile_b_id as string)
+      : (match.profile_a_id as string);
+  if (await isBlockedEitherWay(user.id, otherId)) {
+    return { error: "This conversation isn’t available." };
+  }
 
   const { error } = await supabase
     .from("messages")
@@ -106,11 +136,22 @@ export async function postMeetLinkAction(
 
   const { data: match } = await supabase
     .from("matches")
-    .select("id")
+    .select("id, profile_a_id, profile_b_id")
     .eq("id", matchId)
     .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`)
     .maybeSingle();
   if (!match) return { error: "Conversation not found." };
+
+  // Blocked either way: the thread stays readable as history but takes no new
+  // messages. Distinct copy from "not found" — the conversation exists, it is
+  // just closed — and deliberately says nothing about who blocked whom.
+  const otherId =
+    (match.profile_a_id as string) === user.id
+      ? (match.profile_b_id as string)
+      : (match.profile_a_id as string);
+  if (await isBlockedEitherWay(user.id, otherId)) {
+    return { error: "This conversation isn’t available." };
+  }
 
   const { data: prof } = await supabase
     .from("profiles")

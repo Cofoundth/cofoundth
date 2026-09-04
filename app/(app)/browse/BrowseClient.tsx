@@ -63,6 +63,8 @@ type Props = {
   sentTo: string[];
   /** Profile ids the viewer saved (the heart). */
   savedIds: string[];
+  /** Deep-link (?tab=saved from the My Profile hub) — initial tab only. */
+  initialTab?: "idea" | "exploring" | "saved";
 };
 
 const ROLE_OPTIONS = Object.entries(ROLE_LABELS);
@@ -70,7 +72,13 @@ const STAGE_OPTIONS = Object.entries(STAGE_LABELS);
 const COMMITMENT_OPTIONS = Object.entries(COMMITMENT_LABELS);
 const INDUSTRY_OPTIONS = INDUSTRIES;
 
-export function BrowseClient({ others, viewer, sentTo, savedIds }: Props) {
+export function BrowseClient({
+  others,
+  viewer,
+  sentTo,
+  savedIds,
+  initialTab,
+}: Props) {
   const tr = useT();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilters, setRoleFilters] = useState<string[]>([]);
@@ -86,7 +94,9 @@ export function BrowseClient({ others, viewer, sentTo, savedIds }: Props) {
   // toggle is hidden) — a breakpoint-aware initial state would hydrate wrong.
   const [filtersOpen, setFiltersOpen] = useState(false);
   // Top-level split: founders who already have an idea vs. those still exploring.
-  const [ideaTab, setIdeaTab] = useState<"idea" | "exploring" | "saved">("idea");
+  const [ideaTab, setIdeaTab] = useState<"idea" | "exploring" | "saved">(
+    initialTab ?? "idea",
+  );
   // Optimistic client state for the heart + the interest button.
   const [saved, setSaved] = useState<Set<string>>(() => new Set(savedIds));
   const [sent, setSent] = useState<Set<string>>(() => new Set(sentTo));

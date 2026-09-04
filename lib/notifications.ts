@@ -7,7 +7,12 @@
 export type NotifLike = {
   type: string;
   entityId: string | null;
-  data: { actor_name?: string; post_title?: string; slug?: string } | null;
+  data: {
+    actor_name?: string;
+    post_title?: string;
+    slug?: string;
+    title?: string;
+  } | null;
   actor: {
     id: string;
     slug: string | null;
@@ -32,6 +37,8 @@ export function notifHref(n: NotifLike): string {
       return n.data?.slug ? `/orgs/${n.data.slug}` : "/orgs";
     case "funding_proposed":
       return n.entityId ? `/funding/${n.entityId}` : "/funding";
+    case "meetup_rsvp":
+      return n.data?.slug ? `/meetups/${n.data.slug}` : "/meetups";
     default:
       return "/dashboard";
   }
@@ -62,6 +69,10 @@ export function notifText(
       );
     case "funding_proposed":
       return tr("{name} sent a funding proposal").replace("{name}", name);
+    case "meetup_rsvp":
+      return tr("{name} is going to your meetup")
+        .replace("{name}", name)
+        .concat(n.data?.title ? ` · ${n.data.title}` : "");
     default:
       return "";
   }

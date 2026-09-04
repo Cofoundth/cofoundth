@@ -17,6 +17,7 @@ import { provinceLabel } from "@/lib/provinces";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
 import { EmptyState, LinkButton, Section } from "@/components/ui";
+import { getBlockedIds } from "@/lib/blocking";
 
 export const dynamic = "force-dynamic";
 
@@ -116,11 +117,23 @@ export default async function ConnectionsPage({
   }
 
   // ---- Matches (mutual) + last message / unread -------------------------
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("id, profile_a_id, profile_b_id, created_at")
-    .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`)
-    .order("created_at", { ascending: false });
+  const [{ data: matchesRaw }, blocked] = await Promise.all([
+    supabase
+      .from("matches")
+      .select("id, profile_a_id, profile_b_id, created_at")
+      .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`)
+      .order("created_at", { ascending: false }),
+    getBlockedIds(user.id),
+  ]);
+  // A match that predates a block stays in the DB but leaves both lists —
+  // same symmetric hiding as the directory.
+  const matches = (matchesRaw ?? []).filter((m) => {
+    const other =
+      m.profile_a_id === user.id
+        ? (m.profile_b_id as string)
+        : (m.profile_a_id as string);
+    return !blocked.has(other);
+  });
 
   const matchOtherIds = (matches ?? []).map((m) =>
     m.profile_a_id === user.id
@@ -143,8 +156,12 @@ export default async function ConnectionsPage({
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
   ]);
-  const received = receivedRaw ?? [];
-  const sent = sentRaw ?? [];
+  const received = (receivedRaw ?? []).filter(
+    (r) => !blocked.has(r.from_profile_id as string),
+  );
+  const sent = (sentRaw ?? []).filter(
+    (s) => !blocked.has(s.to_profile_id as string),
+  );
 
   // ---- One profile fetch for everyone we need to render -----------------
   const profileIds = Array.from(

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getBlockedIds } from "@/lib/blocking";
 
 export type PolledNotif = {
   id: string;
@@ -32,16 +33,21 @@ export async function fetchNotificationsAction(): Promise<{
     .order("created_at", { ascending: false })
     .limit(12);
 
-  const items: PolledNotif[] = (data ?? []).map((n) => ({
-    id: n.id as string,
-    type: n.type as string,
-    entityId: (n.entity_id as string | null) ?? null,
-    data:
-      (n.data as { actor_name?: string; post_title?: string } | null) ?? null,
-    readAt: (n.read_at as string | null) ?? null,
-    createdAt: n.created_at as string,
-    actorId: (n.actor_id as string | null) ?? null,
-  }));
+  // Same actor filter the /notifications page applies — the bell and the page
+  // read the same history and must not disagree about who is in it.
+  const blocked = await getBlockedIds(user.id);
+  const items: PolledNotif[] = (data ?? [])
+    .filter((n) => !n.actor_id || !blocked.has(n.actor_id as string))
+    .map((n) => ({
+      id: n.id as string,
+      type: n.type as string,
+      entityId: (n.entity_id as string | null) ?? null,
+      data:
+        (n.data as { actor_name?: string; post_title?: string } | null) ?? null,
+      readAt: (n.read_at as string | null) ?? null,
+      createdAt: n.created_at as string,
+      actorId: (n.actor_id as string | null) ?? null,
+    }));
   return { items, unread: items.filter((i) => !i.readAt).length };
 }
 

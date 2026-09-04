@@ -1,13 +1,44 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { hardDeleteUser } from "@/lib/delete-user";
 import { canonicalProvince } from "@/lib/provinces";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
 
 export type EditProfileState = { error?: string; ok?: boolean } | null;
+export type DeleteAccountState = { error?: string } | null;
+
+// Settings > Danger zone. The terms page promises this exists ("You may
+// delete your account at any time from your profile settings"). The mechanics
+// — what blocks a delete, what order things go in — live in lib/delete-user
+// and are shared with the admin console, so the two can't drift. On success
+// the session is gone, so redirect.
+export async function deleteAccountAction(
+  _prev: DeleteAccountState,
+  formData: FormData,
+): Promise<DeleteAccountState> {
+  const confirm = String(formData.get("confirm") ?? "").trim();
+  if (confirm !== "DELETE") {
+    return { error: "Type DELETE to confirm." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { error } = await hardDeleteUser(createAdminClient(), user.id);
+  if (error) return { error };
+
+  await supabase.auth.signOut();
+  redirect("/");
+}
 
 const ROLE_VALUES = [
   "technical",

@@ -89,28 +89,53 @@ async function shapePosts(
   });
 }
 
+// How many extra rows an exclusion set is allowed to buy back. A blocked
+// author's posts are dropped AFTER the query, so the page has to over-fetch or
+// it comes back short; the cap keeps a viewer with a long block list from
+// turning one feed render into a 500-row scan.
+const MAX_OVERFETCH = 50;
+
 export async function getFeedPosts(
   supabase: DB,
   {
     limit = 30,
     userId,
     before,
-  }: { limit?: number; userId?: string | null; before?: string | null },
+    excludeAuthorIds,
+  }: {
+    limit?: number;
+    userId?: string | null;
+    before?: string | null;
+    /** Blocked pairs (lib/blocking). Filtered in JS: the reverse direction of
+     *  a block is RLS-invisible, so it can't become a query clause. */
+    excludeAuthorIds?: Iterable<string>;
+  },
 ): Promise<PostItem[]> {
+  const excluded =
+    excludeAuthorIds instanceof Set
+      ? excludeAuthorIds
+      : new Set(excludeAuthorIds ?? []);
+  const fetchLimit = limit + Math.min(excluded.size, MAX_OVERFETCH);
+
   let q = supabase
     .from("forum_posts")
     .select(POST_COLS)
     .eq("hidden", false)
     .order("created_at", { ascending: false })
-    .limit(limit);
-  // Cursor pagination: fetch the page strictly older than `before`.
+    .limit(fetchLimit);
+  // Cursor pagination: fetch the page strictly older than `before`. The
+  // cursor is a created_at, and the filter below only ever REMOVES rows, so
+  // over-fetching cannot make a later page skip anything.
   if (before) q = q.lt("created_at", before);
   const hiddenAuthors = await suspendedAuthorIds(supabase);
   if (hiddenAuthors.length)
     q = q.not("author_id", "in", `(${hiddenAuthors.join(",")})`);
 
   const { data: posts } = await q;
-  return shapePosts(supabase, posts ?? [], userId);
+  const rows = excluded.size
+    ? (posts ?? []).filter((p) => !excluded.has(p.author_id as string))
+    : (posts ?? []);
+  return shapePosts(supabase, rows.slice(0, limit), userId);
 }
 
 // Full-DB search across title, content, tags, and author name. Unlike the old

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { isInvestorAccount } from "@/lib/account";
+import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/ui";
 import { ROLE_LABELS } from "@/lib/matching";
@@ -54,6 +55,17 @@ export default async function PostPage({ params }: Props) {
 
   if (!post) notFound();
 
+  // A blocked pair can't read each other's threads. The feed already drops
+  // these posts; this closes the direct-link path, and 404 (not a message) is
+  // the right answer — it says nothing about who blocked whom.
+  if (user && (await isBlockedEitherWay(user.id, post.author_id as string))) {
+    notFound();
+  }
+  // Comments from blocked members are dropped the same way the feed drops
+  // their posts. Post-filter, not a query clause: the reverse direction of a
+  // block is RLS-invisible to this client.
+  const blocked = user ? await getBlockedIds(user.id) : new Set<string>();
+
   // Investors read the founder community but don't comment in it.
   const canWrite = !!user && !(await isInvestorAccount(supabase, user.id));
 
@@ -80,14 +92,17 @@ export default async function PostPage({ params }: Props) {
   ]);
 
   // Comments + authors
-  const { data: comments } = await supabase
+  const { data: commentRows } = await supabase
     .from("forum_comments")
     .select("id, author_id, content, created_at")
     .eq("post_id", id)
     .order("created_at", { ascending: true });
+  const comments = (commentRows ?? []).filter(
+    (c) => !blocked.has(c.author_id as string),
+  );
 
   const commentAuthorIds = Array.from(
-    new Set((comments ?? []).map((c) => c.author_id as string)),
+    new Set(comments.map((c) => c.author_id as string)),
   );
   const { data: commentAuthors } = commentAuthorIds.length
     ? await supabase
@@ -231,7 +246,7 @@ export default async function PostPage({ params }: Props) {
               strokeWidth={1.5}
               aria-hidden="true"
             />
-            <span className="tabular-nums">{comments?.length ?? 0}</span>
+            <span className="tabular-nums">{comments.length}</span>
             <span className="sr-only">{commentsLabel}</span>
           </span>
         </div>
@@ -251,7 +266,7 @@ export default async function PostPage({ params }: Props) {
           kind="comments"
         />
 
-        {comments?.length ? (
+        {comments.length ? (
           <div className="bg-white divide-y divide-line px-6 mb-6 rounded-3xl shadow-xs overflow-hidden">
             {comments.map((c) => {
               const a = authorMap.get(c.author_id as string);

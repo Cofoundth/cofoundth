@@ -1,11 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import { getBlockedIds } from "@/lib/blocking";
 import { BrowseClient } from "./BrowseClient";
 
 const PROFILE_COLUMNS =
   "id, slug, full_name, age, location, photo_url, verified, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, why_this, skills, project_url, project_images, work_experience, background, education, activities, help_with, needs_help_with, building_since, onboarded, type, company_name, capabilities, created_at";
 
-export default async function BrowsePage() {
+export default async function BrowsePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const supabase = await createClient();
 
   const user = await requireUser();
@@ -45,7 +51,13 @@ export default async function BrowsePage() {
     .not("is_bot", "is", true)
     .neq("id", user.id);
 
-  const othersAdapted = (others ?? []).map((p) => ({
+  // Blocked pairs vanish from the directory in both directions. Post-filter,
+  // not a query clause: the reverse direction is RLS-invisible to this client.
+  const blocked = await getBlockedIds(user.id);
+
+  const othersAdapted = (others ?? [])
+    .filter((p) => !blocked.has(p.id as string))
+    .map((p) => ({
     id: p.id as string,
     slug: (p.slug as string) ?? (p.id as string),
     full_name: (p.full_name as string) ?? "Founder",
@@ -78,6 +90,12 @@ export default async function BrowsePage() {
 
   return (
     <BrowseClient
+      // Keyed by tab so /browse?tab=saved → /browse REMOUNTS. BrowseClient
+      // reads initialTab into useState once; without the key a same-segment
+      // navigation re-renders with a new prop the state ignores, and the
+      // sidebar's Browse link looks broken from the saved list.
+      key={tab === "saved" ? "saved" : "idea"}
+      initialTab={tab === "saved" ? "saved" : undefined}
       others={othersAdapted}
       viewer={{
         i_am: (me?.i_am as string[] | null) ?? [],

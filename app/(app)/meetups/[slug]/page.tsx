@@ -29,6 +29,7 @@ import { getLocale } from "@/lib/i18n-server";
 import { EmptyState, LinkButton } from "@/components/ui";
 import { RsvpButton } from "../RsvpButton";
 import { isInvestorAccount } from "@/lib/account";
+import { getBlockedIds } from "@/lib/blocking";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +71,7 @@ export default async function MeetupDetailPage({ params }: Props) {
   if (!meetup) notFound();
   const m = meetup as Meetup;
 
-  const [{ data: attendeesRaw }, admin, investor, { data: host }] = await Promise.all([
+  const [{ data: attendeesRaw }, admin, investor, { data: host }, blocked] = await Promise.all([
     supabase
       .from("meetup_rsvps")
       .select("user_id, profile:profiles(id, full_name, photo_url, slug)")
@@ -83,11 +84,22 @@ export default async function MeetupDetailPage({ params }: Props) {
       .select("id, full_name, photo_url, slug")
       .eq("id", m.created_by)
       .maybeSingle(),
+    getBlockedIds(user.id),
   ]);
 
-  const attendees = (attendeesRaw ?? []) as unknown as AttendeeRow[];
-  const count = attendees.length;
-  const going = attendees.some((a) => a.user_id === user.id);
+  // A blocked host takes the whole meetup with them — there is no version of
+  // this page that doesn't put the two of you in the same room.
+  if (blocked.has(m.created_by)) notFound();
+
+  const allAttendees = (attendeesRaw ?? []) as unknown as AttendeeRow[];
+  // The COUNT stays honest (it is the room's size, and rsvpAction returns the
+  // unfiltered figure — a filtered one here would flicker on RSVP); only the
+  // faces the viewer sees are filtered.
+  const count = allAttendees.length;
+  const going = allAttendees.some((a) => a.user_id === user.id);
+  const attendees = allAttendees.filter(
+    (a) => !blocked.has(a.user_id),
+  );
 
   const cancelled = m.status === "cancelled";
   const past = isPast(m.starts_at);
@@ -142,7 +154,9 @@ export default async function MeetupDetailPage({ params }: Props) {
     .eq("meetup_id", m.id)
     .order("created_at", { ascending: true })
     .limit(200);
-  const chatMessages = (chatRaw ?? []) as unknown as ChatMessage[];
+  const chatMessages = ((chatRaw ?? []) as unknown as ChatMessage[]).filter(
+    (msg) => !msg.author || !blocked.has(msg.author.id),
+  );
   const locale = await getLocale();
   const tChatTitle = await tServer("Attendee chat");
   const tChatLocked = await tServer(

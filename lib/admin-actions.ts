@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
+import { hardDeleteUser } from "@/lib/delete-user";
 
 type Result = { ok?: boolean; error?: string };
 
@@ -95,22 +96,13 @@ export async function adminDeleteUser(userId: string): Promise<Result> {
   const ctx = await requireAdmin();
   if ("error" in ctx) return ctx;
   if (userId === ctx.selfId) return { error: "You can't delete yourself." };
-  const admin = ctx.admin;
 
-  for (const bucket of ["avatars", "post-images"]) {
-    const { data: files } = await admin.storage.from(bucket).list(userId);
-    if (files?.length) {
-      await admin.storage
-        .from(bucket)
-        .remove(files.map((f) => `${userId}/${f.name}`));
-    }
-  }
+  // Same routine the member's own Danger zone runs (lib/delete-user), so an
+  // admin delete can't succeed where a self-delete would have been refused —
+  // or vice versa.
+  const { error } = await hardDeleteUser(ctx.admin, userId);
+  if (error) return { error };
 
-  const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) {
-    console.error("[adminDeleteUser]", error);
-    return { error: "Couldn't delete the account. Try again." };
-  }
   revalidateAll();
   return { ok: true };
 }
