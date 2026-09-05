@@ -32,6 +32,7 @@ type Row = Pick<
   | "capacity"
   | "status"
   | "category"
+  | "topic"
   | "image_url"
   | "lat"
   | "lng"
@@ -39,7 +40,7 @@ type Row = Pick<
 >;
 
 const SELECT =
-  "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, category, image_url, lat, lng, created_by";
+  "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, category, topic, image_url, lat, lng, created_by";
 
 export default async function MeetupsPage({
   searchParams,

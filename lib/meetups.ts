@@ -51,6 +51,129 @@ export const MEETUP_CATEGORIES: Record<
   other: { emoji: "✨", label: "Other" },
 };
 
+// The tile step groups the formats the way the reference flow does — a few
+// short sections under eyebrows beats one flat grid of ten. Section labels are
+// English source strings (call sites translate).
+//
+// EXACTLY-ONCE IS A REAL COMPILER GUARANTEE, not a comment: the assignment is
+// the other way round. Each category names its section in a
+// `Record<MeetupCategory, …>`, so a missing category is a type error, a
+// duplicate is a duplicate object key, and a typo'd section label is caught by
+// the value type. The wizard's first step renders ONLY from this table — a
+// category that slipped out of it would be unpickable while still rendering on
+// every card that already carries it.
+const SECTION_ORDER = [
+  "Eat & drink",
+  "Work & talk",
+  "Move",
+  "Something else",
+] as const;
+
+type CategorySection = (typeof SECTION_ORDER)[number];
+
+// Declaration order here is the order the tiles render inside their section.
+const CATEGORY_SECTION: Record<MeetupCategory, CategorySection> = {
+  coffee: "Eat & drink",
+  dinner: "Eat & drink",
+  drinks: "Eat & drink",
+  cowork: "Work & talk",
+  talk: "Work & talk",
+  run: "Move",
+  gym: "Move",
+  hike: "Move",
+  walk: "Move",
+  other: "Something else",
+};
+
+export const MEETUP_CATEGORY_SECTIONS: {
+  label: string;
+  keys: MeetupCategory[];
+}[] = SECTION_ORDER.map((label) => ({
+  label,
+  keys: (Object.keys(CATEGORY_SECTION) as MeetupCategory[]).filter(
+    (key) => CATEGORY_SECTION[key] === label,
+  ),
+}));
+
+// ── Topic ──────────────────────────────────────────────────────────────────
+// What the meetup is ABOUT, as distinct from the format it takes. A coffee can
+// be about runway or about burnout, and the founder scanning the calendar
+// wants to know which. Twelve, fixed: a free-text field here would fragment
+// into twelve spellings of "fundraising" and stop being filterable.
+//
+// Keys are stored in meetups.topic and constrained by the CHECK in
+// 0071_meetup_topic.sql — add one HERE and you must add it THERE too.
+export type MeetupTopic =
+  | "customers"
+  | "feedback"
+  | "fundraising"
+  | "cofounder"
+  | "team"
+  | "sales_marketing"
+  | "product_ux"
+  | "ai_tools"
+  | "wellbeing"
+  | "scaling"
+  | "accountability"
+  | "connecting";
+
+export const MEETUP_TOPICS: Record<
+  MeetupTopic,
+  { label: string; blurb: string }
+> = {
+  customers: {
+    label: "Finding customers",
+    blurb: "Sales, marketing, traction",
+  },
+  feedback: {
+    label: "Getting feedback",
+    blurb: "Ideas, product, positioning",
+  },
+  fundraising: {
+    label: "Raising money",
+    blurb: "Funding, cashflow, runway",
+  },
+  cofounder: {
+    label: "Finding a co-founder",
+    blurb: "Partners, skills, alignment",
+  },
+  team: {
+    label: "Building a team",
+    blurb: "Hiring, culture, leadership",
+  },
+  sales_marketing: {
+    label: "Sales & marketing",
+    blurb: "Content, growth, distribution",
+  },
+  product_ux: {
+    label: "Product & UX",
+    blurb: "Features, retention, user experience",
+  },
+  ai_tools: {
+    label: "AI & tools",
+    blurb: "Automation, workflows, leverage",
+  },
+  wellbeing: {
+    label: "Founder wellbeing",
+    blurb: "Burnout, balance, resilience",
+  },
+  // "Scaling up", not "Scaling": the bare word is already a company STAGE
+  // label ("กำลังขยาย" — currently expanding), and translations key off the
+  // English string, so reusing it would put a stage word in a topic row.
+  scaling: {
+    label: "Scaling up",
+    blurb: "Systems, operations, growth",
+  },
+  accountability: {
+    label: "Accountability",
+    blurb: "Focus, goals, momentum",
+  },
+  connecting: {
+    label: "Just connecting",
+    blurb: "No agenda, meet good founders",
+  },
+};
+
 export type Meetup = {
   id: string;
   slug: string;
@@ -64,6 +187,7 @@ export type Meetup = {
   capacity: number | null;
   status: MeetupStatus;
   category: MeetupCategory;
+  topic: MeetupTopic | null;
   image_url: string | null;
   visibility: "public" | "private";
   lat: number | null;
@@ -123,6 +247,27 @@ export function toBangkokInput(iso: string): string {
   return `${get("year")}-${get("month")}-${get("day")}T${hour}:${get("minute")}`;
 }
 
+// Today in Bangkok as "YYYY-MM-DD" — the `min` a date picker needs so a
+// meetup can't be scheduled into the past. en-CA formats as ISO, which is why
+// every date helper here uses it.
+export function bangkokToday(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: MEETUP_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+// "YYYY-MM-DD" → the next calendar day, same format. Parsed at UTC noon so no
+// offset can push the arithmetic onto the wrong day.
+export function nextBangkokDay(day: string): string {
+  const d = new Date(`${day}T12:00:00Z`);
+  if (isNaN(d.getTime())) return day;
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 // "YYYY-MM-DDTHH:mm" typed in the form (Bangkok local) → a UTC ISO instant.
 // Returns null on a malformed / impossible value so the action can reject it.
 export function bangkokInputToISO(v: string): string | null {
@@ -157,8 +302,8 @@ export function meetupCalendarUrl(m: {
 
   const where =
     m.format === "online"
-      ? m.online_url ?? "Online"
-      : m.location ?? "To be announced";
+      ? (m.online_url ?? "Online")
+      : (m.location ?? "To be announced");
 
   const params = new URLSearchParams({
     action: "TEMPLATE",

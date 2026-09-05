@@ -36,13 +36,21 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 import { cn } from "./cn";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
+// ⚠️ A destructive button must pass variant="danger" — appending
+// `className="bg-danger-ink"` to the default primary does NOT work. `cn` does
+// not de-duplicate conflicting utilities, so both backgrounds land on the
+// element at equal specificity and CSS source order decides; Tailwind emits
+// colour utilities alphabetically, which puts `.bg-navy` AFTER `.bg-danger-ink`
+// and paints the button navy. The variant REPLACES the background instead —
+// the same reason Input.tsx swaps its border colour rather than appending one.
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-navy hover:bg-navy-dark text-white",
   secondary: "bg-transparent border border-line hover:border-navy text-navy",
   ghost: "bg-transparent text-ink hover:text-navy",
+  danger: "bg-danger-ink hover:bg-danger-ink-dark text-white",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {

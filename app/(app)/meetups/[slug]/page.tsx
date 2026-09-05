@@ -17,6 +17,7 @@ import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import {
   MEETUP_CATEGORIES,
+  MEETUP_TOPICS,
   meetupCoverUrl,
   meetupWhenParts,
   meetupCalendarUrl,
@@ -64,7 +65,7 @@ export default async function MeetupDetailPage({ params }: Props) {
   const { data: meetup } = await supabase
     .from("meetups")
     .select(
-      "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, category, image_url, visibility, lat, lng, created_by, created_at, updated_at",
+      "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, category, topic, image_url, visibility, lat, lng, created_by, created_at, updated_at",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -164,6 +165,10 @@ export default async function MeetupDetailPage({ params }: Props) {
   );
   const tHostedBy = await tServer("Hosted by {name}");
   const tCatLabel = await tServer(cat.label);
+  // The topic is nullable — every meetup created before the wizard's step 2
+  // existed has none, and those rows must still render.
+  const topic = m.topic ? MEETUP_TOPICS[m.topic] : null;
+  const tTopicLabel = topic ? await tServer(topic.label) : null;
   const tPrivate = await tServer("Only people with the link");
 
   return (
@@ -200,6 +205,11 @@ export default async function MeetupDetailPage({ params }: Props) {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-soft px-2.5 py-0.5 text-xs text-gold-ink">
           <span aria-hidden="true">{cat.emoji}</span> {tCatLabel}
         </span>
+        {tTopicLabel && (
+          <span className="inline-flex items-center rounded-full bg-navy/10 px-2.5 py-0.5 text-xs text-ink">
+            {tTopicLabel}
+          </span>
+        )}
         {m.visibility === "private" && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-navy px-2.5 py-0.5 text-xs text-white">
             🔒 {tPrivate}

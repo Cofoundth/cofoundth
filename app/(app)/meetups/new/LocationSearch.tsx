@@ -155,9 +155,12 @@ export function LocationSearch({
 
   return (
     <div className="relative">
+      {/* NAMELESS on purpose. This field renders inside the host wizard's one
+          long-lived <form>, which already carries a hidden `location` input;
+          a second control with that name would put two values in the FormData
+          for one field. The wizard owns the value, this owns the search. */}
       <Input
         id="location"
-        name="location"
         label={label}
         fieldSize="sm"
         maxLength={200}

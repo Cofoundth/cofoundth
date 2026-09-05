@@ -11,7 +11,9 @@ import { slugify } from "@/lib/slug";
 import {
   bangkokInputToISO,
   MEETUP_CATEGORIES,
+  MEETUP_TOPICS,
   type MeetupCategory,
+  type MeetupTopic,
   type MeetupFormat,
 } from "@/lib/meetups";
 
@@ -202,6 +204,7 @@ export async function hostMeetupAction(
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const category = String(formData.get("category") ?? "other");
+  const topic = String(formData.get("topic") ?? "");
   const format = String(formData.get("format") ?? "in_person");
   const location = String(formData.get("location") ?? "").trim();
   const onlineUrl = String(formData.get("online_url") ?? "").trim();
@@ -221,6 +224,12 @@ export async function hostMeetupAction(
   }
   if (!(category in MEETUP_CATEGORIES)) {
     return { error: "Pick a category." };
+  }
+  // Required for anything created through the wizard. The COLUMN stays
+  // nullable (legacy rows have no topic) — the requirement lives here, at the
+  // only place that writes new ones.
+  if (!(topic in MEETUP_TOPICS)) {
+    return { error: "Pick a topic." };
   }
   if (format !== "in_person" && format !== "online") {
     return { error: "Pick a format." };
@@ -306,6 +315,7 @@ export async function hostMeetupAction(
       title,
       description: description || null,
       category: category as MeetupCategory,
+      topic: topic as MeetupTopic,
       format: format as MeetupFormat,
       location: format === "in_person" ? location || null : null,
       online_url: format === "online" ? onlineUrl || null : null,

@@ -30,15 +30,17 @@ import {
 import { useT } from "@/lib/i18n-client";
 import {
   MEETUP_CATEGORIES,
+  MEETUP_TOPICS,
   meetupCalendarUrl,
   meetupCoverUrl,
   meetupWhenParts,
   type MeetupCategory,
   type MeetupFormat,
+  type MeetupTopic,
 } from "@/lib/meetups";
 import { colorFor, getInitials } from "@/components/Avatar";
 import { MeetupMap, type MeetupPin } from "@/components/MeetupMap";
-import { EmptyState } from "@/components/ui";
+import { CardChip, EmptyState } from "@/components/ui";
 import { rsvpAction, reportMeetupAction } from "./actions";
 import { HostMeetupWizard } from "./HostMeetupWizard";
 
@@ -61,6 +63,7 @@ export type MeetupItemData = {
   capacity: number | null;
   status: string;
   category: MeetupCategory;
+  topic: MeetupTopic | null;
   image_url: string | null;
   lat: number | null;
   lng: number | null;
@@ -96,31 +99,41 @@ function Modal({
   onClose,
   children,
   wide,
+  wizard,
 }: {
   onClose: () => void;
   children: React.ReactNode;
   wide?: boolean;
+  /** The create wizard: 520px, and it owns its own Close/Exit affordance
+   *  because leaving mid-flow has to route through the discard confirm. A
+   *  backdrop click therefore does NOT dismiss — a stray click outside a
+   *  half-filled form should not throw the form away. */
+  wizard?: boolean;
 }) {
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-navy/40 p-4 overflow-y-auto"
-      onClick={onClose}
+      onClick={wizard ? undefined : onClose}
       role="presentation"
     >
       <div
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        className={`relative my-8 w-full ${wide ? "max-w-xl" : "max-w-lg"} rounded-xl border border-line bg-white shadow-lg`}
+        className={`relative my-8 w-full ${
+          wizard ? "max-w-[520px]" : wide ? "max-w-xl" : "max-w-lg"
+        } rounded-xl border border-line bg-white shadow-lg`}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink hover:text-navy"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {!wizard && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink hover:text-navy"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
         {children}
       </div>
     </div>
@@ -336,11 +349,8 @@ export function MeetupsClient({
       )}
 
       {createOpen && (
-        <Modal onClose={() => setCreateOpen(false)} wide>
-          <div className="p-6 sm:p-8">
-            <h2 className="text-xl mb-5">{tr("Create a meetup")}</h2>
-            <HostMeetupWizard />
-          </div>
+        <Modal onClose={() => setCreateOpen(false)} wizard>
+          <HostMeetupWizard inModal onClose={() => setCreateOpen(false)} />
         </Modal>
       )}
 
@@ -433,6 +443,14 @@ function MeetupCard({
             {when.weekday} · {when.day} {when.monthYear} · {when.time}
           </div>
           <h3 className="text-xl mt-2 line-clamp-2 min-h-[56px]">{m.title}</h3>
+
+          {/* What it is ABOUT, under what it IS. The category already leads on
+              the cover; the topic is what a founder actually scans for. */}
+          {m.topic && MEETUP_TOPICS[m.topic] && (
+            <div className="mt-2">
+              <CardChip>{tr(MEETUP_TOPICS[m.topic].label)}</CardChip>
+            </div>
+          )}
 
           <div className="mt-1 flex items-center gap-1.5 text-xs text-ink-muted min-w-0">
             {m.format === "online" ? (
@@ -569,6 +587,14 @@ function MeetupDialog({
           <span className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2.5 py-0.5 text-gold-ink">
             <span aria-hidden="true">{cat.emoji}</span> {tr(cat.label)}
           </span>
+          {/* What it is ABOUT, next to what it IS — the card and the [slug]
+              page both lead with this pair, and the dialog is the surface a
+              founder actually reads the meetup in. */}
+          {m.topic && MEETUP_TOPICS[m.topic] && (
+            <span className="inline-flex items-center rounded-full bg-navy/10 px-2.5 py-0.5 text-ink">
+              {tr(MEETUP_TOPICS[m.topic].label)}
+            </span>
+          )}
           {cancelled && (
             <span className="inline-flex items-center rounded-full bg-danger-surface border border-danger-line px-2.5 py-0.5 text-danger-ink">
               {tr("Cancelled")}

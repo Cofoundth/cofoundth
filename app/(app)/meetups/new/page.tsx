@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { isInvestorAccount } from "@/lib/account";
-import { Section } from "@/components/ui";
+import { Card, Section } from "@/components/ui";
 import { HostMeetupWizard } from "../HostMeetupWizard";
 
 export const dynamic = "force-dynamic";
@@ -21,17 +21,14 @@ export default async function NewMeetupPage() {
   return (
     <Section width="narrow">
       <div className="mb-8">
-        <h1 className="text-d2 mb-2">{await tServer("Host a meetup")}</h1>
-        <p className="text-sm text-ink-muted">
-          {await tServer(
-            "Pick a time and place — every founder on Cofoundee will see it.",
-          )}
-        </p>
+        <h1 className="text-d2">{await tServer("Host a meetup")}</h1>
       </div>
 
-      <div className="bg-white p-8 rounded-3xl shadow-xs">
+      {/* The wizard owns its own per-step subline and its own padding — the
+          page contributes only the h1 and the surface. */}
+      <Card padding="none">
         <HostMeetupWizard />
-      </div>
+      </Card>
     </Section>
   );
 }
