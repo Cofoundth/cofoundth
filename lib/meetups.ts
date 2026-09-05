@@ -2,6 +2,13 @@
 // that touch next/headers or the service role), so pages, the RSVP button, and
 // the admin form can all pull from here.
 
+// Ladprao — where the team actually is — not the tourist-map city centre.
+// [lat, lng]. Lives HERE rather than in components/MeetupMap.tsx because both
+// the map (client) and the geocode proxy (server route handler, which biases
+// place search to this point) need it, and MeetupMap imports leaflet's CSS at
+// module scope — not something a route handler should pull into its graph.
+export const MEETUP_MAP_CENTER: [number, number] = [13.8163, 100.5608];
+
 export type MeetupFormat = "in_person" | "online";
 export type MeetupStatus = "draft" | "published" | "cancelled";
 export type MeetupCategory =

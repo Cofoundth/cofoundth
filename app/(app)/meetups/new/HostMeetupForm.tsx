@@ -7,9 +7,10 @@
 // the same product.
 
 import { useActionState, useState } from "react";
-import { useT } from "@/lib/i18n-client";
+import { useLocale, useT } from "@/lib/i18n-client";
 import { MEETUP_CATEGORIES, type MeetupCategory } from "@/lib/meetups";
 import { MapPicker } from "@/components/MeetupMap";
+import { LocationSearch } from "./LocationSearch";
 import { hostMeetupAction, type HostMeetupState } from "../actions";
 import { Button } from "@/components/ui";
 
@@ -25,6 +26,7 @@ export function HostMeetupForm({
   fixedCategory?: MeetupCategory;
 } = {}) {
   const tr = useT();
+  const locale = useLocale();
   const [state, formAction, pending] = useActionState<HostMeetupState, FormData>(
     hostMeetupAction,
     undefined,
@@ -35,6 +37,33 @@ export function HostMeetupForm({
   const [format, setFormat] = useState<"in_person" | "online">("in_person");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
+  const [location, setLocation] = useState("");
+
+  // Clicking the map when the host has not written a location yet: name the
+  // spot for them. The functional setState is the guard — if they started
+  // typing while the lookup was in flight, their words win.
+  async function nameThePin(lat: number, lng: number) {
+    try {
+      const res = await fetch(
+        `/api/geocode?lat=${lat}&lng=${lng}&lang=${locale}`,
+      );
+      if (!res.ok) return;
+      const body: {
+        results?: { label: string; detail: string }[];
+      } = await res.json();
+      const first = body.results?.[0];
+      if (!first) return;
+      setLocation((current) =>
+        current.trim()
+          ? current
+          : first.detail
+            ? `${first.label}, ${first.detail}`
+            : first.label,
+      );
+    } catch {
+      // The pin is still valid without a name — say nothing.
+    }
+  }
 
   return (
     <form action={formAction} className="space-y-6">
@@ -109,23 +138,26 @@ export function HostMeetupForm({
 
       {format === "in_person" ? (
         <div>
-          <label htmlFor="location" className={LABEL}>
-            {tr("Where")}
-          </label>
-          <input
-            id="location"
-            name="location"
-            maxLength={200}
+          <LocationSearch
+            value={location}
+            onChange={setLocation}
+            onPick={setPin}
+            label={tr("Where")}
             placeholder={tr("Cafe, coworking space, or neighbourhood")}
-            className={FIELD}
           />
           <p className="text-xs text-ink-muted mt-3 mb-2">
             {tr("Pin it on the map so it shows in map view (optional)")}
           </p>
           <MapPicker
-            onPick={(lat, lng) =>
-              setPin(lat === null || lng === null ? null : { lat, lng })
-            }
+            pin={pin}
+            onPick={(lat, lng) => {
+              if (lat === null || lng === null) {
+                setPin(null);
+                return;
+              }
+              setPin({ lat, lng });
+              if (!location.trim()) void nameThePin(lat, lng);
+            }}
           />
           <input type="hidden" name="lat" value={pin ? String(pin.lat) : ""} />
           <input type="hidden" name="lng" value={pin ? String(pin.lng) : ""} />

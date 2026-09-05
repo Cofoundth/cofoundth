@@ -674,6 +674,7 @@
   "End time must be after the start time.": "เวลาจบต้องอยู่หลังเวลาเริ่ม",
   "Capacity must be between 2 and 500.": "จำนวนที่รับต้องอยู่ระหว่าง 2 ถึง 500",
   "Pin it on the map so it shows in map view (optional)": "ปักหมุดบนแผนที่ เพื่อให้เห็นในมุมมองแผนที่ (ไม่บังคับ)",
+  "No places found": "ไม่เจอสถานที่นี้",
   "Cover photo (optional)": "รูปปก (ไม่บังคับ)",
   "Skip it and we'll use the category artwork.": "ข้ามได้ เดี๋ยวใช้ภาพประจำหมวดให้เอง",
   "Who can see it": "ใครเห็นได้บ้าง",
