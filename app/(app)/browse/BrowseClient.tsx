@@ -12,16 +12,29 @@ import {
 } from "lucide-react";
 import {
   type ProfileLike,
+  type Wants,
   ROLE_LABELS,
   STAGE_LABELS,
   COMMITMENT_LABELS,
   INTENT_LABELS,
+  MATCH_FLOOR,
+  NOTE_MAX,
   complementScore,
+  complementReason,
+  draftIntroNote,
+  understoodWants,
 } from "@/lib/matching";
 import { toggleSaveAction } from "./actions";
 import { expressInterestAction } from "@/app/(app)/profile/[id]/actions";
 import { DirectoryCard } from "@/components/DirectoryCard";
-import { Button, EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  Button,
+  CardChip,
+  EmptyState,
+  LinkButton,
+  Section,
+  Textarea,
+} from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
 import { INDUSTRIES } from "@/lib/industries";
@@ -67,6 +80,38 @@ type Props = {
   initialTab?: "idea" | "exploring" | "saved";
 };
 
+// A query is scanned for label MENTIONS, not raw substrings. INDUSTRIES
+// contains the two-letter label "AI", and a plain includes() matched it inside
+// "Thai", "Thailand", "chain", "email" and "retail" — on a Thailand-first
+// product that is most queries, and the report then printed `Industry: AI`
+// directly under the reader's own words while every card claimed they had
+// named it. A Latin label needs a word boundary on both sides; Thai writes
+// without inter-word spaces, so a Thai label still matches as a substring.
+//
+// Written as an index scan rather than a lookbehind regex: `(?<!…)` is a
+// runtime SyntaxError in older Safari, and this runs on every keystroke's
+// worth of query text.
+const LATIN_ONLY = /^[\u0000-\u007F]+$/;
+
+function isWordChar(c: string): boolean {
+  return (c >= "a" && c <= "z") || (c >= "0" && c <= "9");
+}
+
+/** `haystack` must already be lower-cased. */
+function mentions(haystack: string, label: string): boolean {
+  const needle = label.trim().toLowerCase();
+  if (!needle) return false;
+  if (!LATIN_ONLY.test(needle)) return haystack.includes(needle);
+  for (let from = 0; ; ) {
+    const at = haystack.indexOf(needle, from);
+    if (at === -1) return false;
+    const before = at === 0 ? "" : haystack[at - 1];
+    const after = haystack[at + needle.length] ?? "";
+    if (!isWordChar(before) && !isWordChar(after)) return true;
+    from = at + 1;
+  }
+}
+
 const ROLE_OPTIONS = Object.entries(ROLE_LABELS);
 const STAGE_OPTIONS = Object.entries(STAGE_LABELS);
 const COMMITMENT_OPTIONS = Object.entries(COMMITMENT_LABELS);
@@ -100,9 +145,23 @@ export function BrowseClient({
   // Optimistic client state for the heart + the interest button.
   const [saved, setSaved] = useState<Set<string>>(() => new Set(savedIds));
   const [sent, setSent] = useState<Set<string>>(() => new Set(sentTo));
-  // Matchmaker: parsed wants (role keys) -> rank by Complement Score.
+  // Matchmaker: role keys PARSED FROM THE QUERY -> rank by Complement Score.
+  // Parsed-only is load-bearing. When the query names no role the ranking
+  // falls back to the viewer's stored looking_for, but the report and the card
+  // sentences must not present that fallback as something the reader asked
+  // for, so the two sources stay in different variables all the way down.
   const [matchWants, setMatchWants] = useState<string[] | null>(null);
+  const [matchIndustries, setMatchIndustries] = useState<string[]>([]);
+  // The industry filters a match REPLACED, kept so dismissing the match can
+  // put the reader's own filters back rather than leave the match's behind.
+  const [preMatchIndustries, setPreMatchIndustries] = useState<string[] | null>(
+    null,
+  );
   const [matchQuery, setMatchQuery] = useState("");
+  // What the report echoes back. FROZEN at the moment Match ran — matchQuery
+  // keeps changing as the box is typed in, and a report that silently rewrites
+  // "you asked" under the reader is worse than no report.
+  const [matchAsked, setMatchAsked] = useState("");
 
   const sorted = useMemo(
     () =>
@@ -232,6 +291,9 @@ export function BrowseClient({
     setSearchTerm("");
     setRoleFilters([]);
     setIndustryFilters([]);
+    // The reader has cleared the filters by hand — there is nothing left to
+    // restore, and restoring later would resurrect filters they just dropped.
+    setPreMatchIndustries(null);
     setStageFilter("");
     setCommitmentFilter("");
     setActivityFilters([]);
@@ -274,30 +336,93 @@ export function BrowseClient({
     const roles = Object.entries(ROLE_LABELS)
       .filter(
         ([key, en]) =>
-          t.includes(key) ||
-          t.includes(en.toLowerCase()) ||
-          t.includes(tr(en).toLowerCase()),
+          mentions(t, key) || mentions(t, en) || mentions(t, tr(en)),
       )
       .map(([key]) => key);
     const industries = INDUSTRIES.filter(
-      (i) => t.includes(i.toLowerCase()) || t.includes(tr(i).toLowerCase()),
+      (i) => mentions(t, i) || mentions(t, tr(i)),
     );
     return { roles, industries };
   };
 
-  const runMatch = (q: string) => {
+  const runMatch = (q: string, label?: string) => {
+    const asked = (label ?? q).trim();
+    // An empty box has asked for nothing. Ranking on it would print a report
+    // with no query in it and chips the reader never typed.
+    if (!asked) return;
     const { roles, industries } = parseWants(q);
-    if (industries.length) setIndustryFilters(industries);
-    setMatchWants(roles.length ? roles : viewer.looking_for ?? []);
+    if (industries.length) {
+      setPreMatchIndustries((prev) => (prev === null ? industryFilters : prev));
+      setIndustryFilters(industries);
+    }
+    setMatchIndustries(industries);
+    setMatchWants(roles);
+    setMatchAsked(asked);
   };
 
+  const clearMatch = () => {
+    // Dismissing the match undoes everything the match did, the industry
+    // filter it applied included — otherwise the grid stays narrowed with the
+    // report that explained the narrowing gone.
+    if (preMatchIndustries !== null) {
+      setIndustryFilters(preMatchIndustries);
+      setPreMatchIndustries(null);
+    }
+    setMatchWants(null);
+    setMatchIndustries([]);
+    setMatchQuery("");
+    setMatchAsked("");
+  };
+
+  const wants: Wants = useMemo(
+    () => ({ roles: matchWants ?? [], industries: matchIndustries }),
+    [matchWants, matchIndustries],
+  );
+
+  // What the SCORE ranks on: the query's roles when it named any, the
+  // viewer's profile otherwise. Never what the report attributes to them.
+  const rankRoles = useMemo(
+    () => (matchWants?.length ? matchWants : (viewer.looking_for ?? [])),
+    [matchWants, viewer.looking_for],
+  );
+
+  // One pass: score, sentence, sort. The card needs the reason and the report
+  // needs the top score, so computing the score twice (once to sort, once to
+  // explain) would be two chances for the two to disagree.
   const ranked = useMemo(() => {
-    if (!matchWants) return filtered;
-    const me = { ...viewer, looking_for: matchWants };
-    return [...filtered].sort(
-      (a, b) => complementScore(me, b).score - complementScore(me, a).score,
-    );
-  }, [filtered, matchWants, viewer]);
+    if (!matchWants) {
+      return filtered.map((profile) => ({
+        profile,
+        score: 0,
+        reason: null as string | null,
+      }));
+    }
+    const me = { ...viewer, looking_for: rankRoles };
+    return filtered
+      .map((profile) => ({
+        profile,
+        score: complementScore(me, profile).score,
+        // COMPANIES GET NO SENTENCE. The reason copy is co-founder copy —
+        // "is the technical co-founder you asked for" — and a company profile
+        // is a B2B partner, not a co-founder candidate. It still ranks; it is
+        // just not addressed as something it is not.
+        reason:
+          profile.type === "company"
+            ? null
+            : complementReason(me, profile, wants, tr, profile.full_name),
+      }))
+      .sort((a, b) => b.score - a.score);
+    // `wants` already carries matchIndustries — listing it too is redundant.
+  }, [filtered, matchWants, rankRoles, viewer, wants, tr]);
+
+  // Only the rows that CLEAR the floor are "worth meeting". ranked.length is
+  // the whole filtered tab — the same number already printed beside the h1 —
+  // so leading the report with it counted people the score just rejected.
+  const matchCount = useMemo(
+    () => ranked.filter((r) => r.score >= MATCH_FLOOR).length,
+    [ranked],
+  );
+  const understood = understoodWants(wants, tr);
 
   return (
     <Section>
@@ -401,7 +526,9 @@ export function BrowseClient({
               type="button"
               onClick={() => {
                 setMatchQuery(label);
-                setMatchWants([role]);
+                // The chip's own label is the query — it produces the same
+                // report a typed query does, rather than a silent re-sort.
+                runMatch(label, label);
               }}
               className="px-2.5 py-1 text-xs border border-line text-ink hover:border-navy rounded-full transition-colors"
             >
@@ -411,10 +538,7 @@ export function BrowseClient({
           {matchWants && (
             <button
               type="button"
-              onClick={() => {
-                setMatchWants(null);
-                setMatchQuery("");
-              }}
+              onClick={clearMatch}
               className="px-2.5 py-1 text-xs bg-navy text-white rounded-full"
             >
               {tr("Ranked by fit")} ×
@@ -424,6 +548,74 @@ export function BrowseClient({
             {tr("Powered by Complement Score")}
           </span>
         </div>
+
+        {/* THE REPORT. Placed INSIDE the matchmaker card (one of the two
+            placements the brief allows) so the answer sits with the question
+            that produced it, and so no sixth page-level margin is invented for
+            it — the card already owns its mb-8.
+
+            Ranking the grid without saying what was understood is the whole
+            bug this fixes: the reader saw a different order and had to take
+            it on faith. */}
+        {matchWants && (
+          <div className="mt-5 border-t border-line pt-5">
+            {matchAsked && (
+              <p className="text-sm text-ink-muted">
+                {tr("You asked:")}{" "}
+                <span className="text-ink">“{matchAsked}”</span>
+              </p>
+            )}
+            {(understood.roles.length > 0 ||
+              understood.industries.length > 0) && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {understood.roles.map((r) => (
+                  <CardChip key={`role-${r}`}>
+                    {tr("Role")}: {r}
+                  </CardChip>
+                ))}
+                {understood.industries.map((i) => (
+                  <CardChip key={`industry-${i}`}>
+                    {tr("Industry")}: {i}
+                  </CardChip>
+                ))}
+              </div>
+            )}
+            {/* The query named no role, so the ranking fell back to the
+                viewer's stored looking_for. Said out loud rather than shown
+                as a chip: the chips are what the QUERY was understood to say,
+                and attributing a profile preference to a sentence the reader
+                typed is the one thing a report exists not to do. */}
+            {matchWants.length === 0 && rankRoles.length > 0 && (
+              <p className="mt-3 text-sm text-ink-muted">
+                {tr("No role named — ranked using the roles on your profile.")}
+              </p>
+            )}
+            {/* MATCH_FLOOR is the ROLE weight (40): under it a profile is not
+                holding the whole role that was asked for, so counting it as
+                "worth meeting" would be a lie. Count, don't sample the top. */}
+            {matchCount === 0 ? (
+              <p className="mt-3 text-sm text-ink">
+                {tr("No strong matches yet")}
+                <span className="block text-ink-muted">
+                  {tr("Still ranked by fit — the closest ones are at the top.")}
+                </span>
+              </p>
+            ) : (
+              <p className="mt-3 text-sm text-ink">
+                {tr(
+                  matchCount === 1
+                    ? "{n} founder worth meeting, best first"
+                    : "{n} founders worth meeting, best first",
+                ).replace("{n}", String(matchCount))}
+              </p>
+            )}
+            <p className="mt-2 text-xs text-ink-muted">
+              {tr(
+                "Ranked by the Complement Score — no AI, just your role, intent, industry, stage, location and commitment.",
+              )}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Search + a filter TRIGGER, with the filters themselves in a panel that
@@ -723,10 +915,13 @@ export function BrowseClient({
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {ranked.map((profile) => (
+              {ranked.map(({ profile, reason }) => (
                 <ProfileCard
                   key={profile.id}
                   profile={profile}
+                  reason={reason}
+                  viewer={viewer}
+                  wants={wants}
                   saved={saved.has(profile.id)}
                   sent={sent.has(profile.id)}
                   onSave={(next) => {
@@ -909,12 +1104,19 @@ function FilterChip({
 // narrower than the two-column layout gives at the same width. xl gives 304px.
 function ProfileCard({
   profile,
+  reason,
+  viewer,
+  wants,
   saved,
   sent,
   onSave,
   onSent,
 }: {
   profile: Profile;
+  /** Matchmaker mode only — null outside it, and the card is unchanged then. */
+  reason: string | null;
+  viewer: ProfileLike;
+  wants: Wants;
   saved: boolean;
   sent: boolean;
   onSave: (next: boolean) => void;
@@ -923,28 +1125,89 @@ function ProfileCard({
   const locale = useLocale();
   const tr = useT();
   const [busy, setBusy] = useState(false);
+  // The inline note editor. Opened by "Draft intro", prefilled once — after
+  // that it is the reader's text, so re-opening must not overwrite an edit.
+  const [drafting, setDrafting] = useState(false);
+  const [note, setNote] = useState("");
+  // Every non-"already" failure used to end here silently: the button flipped
+  // back and nothing else changed, so a note the reader wrote looked sent.
+  const [error, setError] = useState<string | null>(null);
 
-  async function express() {
+  const displayName =
+    profile.type === "company" && profile.company_name
+      ? profile.company_name
+      : profile.full_name;
+
+  async function express(withNote?: string) {
     setBusy(true);
+    setError(null);
     const fd = new FormData();
     fd.set("toId", profile.id);
-    const res = await expressInterestAction(null, fd);
-    setBusy(false);
-    // "Already expressed" is success for the button's purposes.
-    if (!res?.error || res.error.includes("already")) onSent();
+    const clean = (withNote ?? "").trim();
+    if (clean) fd.set("note", clean);
+    try {
+      const res = await expressInterestAction(null, fd);
+      // "Already expressed" is success for the button's purposes.
+      if (!res?.error || res.error.includes("already")) {
+        setDrafting(false);
+        onSent();
+      } else {
+        setError(res.error);
+      }
+    } catch {
+      // A rejected action (dropped connection) never returns, and without this
+      // the card sat on a disabled "Sending…" until the page was reloaded.
+      setError("Something went wrong. Try again.");
+    } finally {
+      setBusy(false);
+    }
   }
+
+  function startDraft() {
+    if (!note)
+      setNote(
+        draftIntroNote(
+          { ...viewer, looking_for: wants.roles.length ? wants.roles : viewer.looking_for },
+          profile,
+          reason ?? "",
+          tr,
+          wants,
+          displayName,
+        ),
+      );
+    setDrafting(true);
+  }
+
+  // The deep-link fallback for the same note: ?note= + #connect, read by the
+  // profile page and pre-filled into ExpressInterestForm. Only in matchmaker
+  // mode — outside it there is no reason to carry.
+  const draftedNote = reason
+    ? draftIntroNote(
+        { ...viewer, looking_for: wants.roles.length ? wants.roles : viewer.looking_for },
+        profile,
+        reason,
+        tr,
+        wants,
+        displayName,
+      )
+    : null;
+  const profileHref = `/profile/${profile.slug}`;
+  // The reader's EDIT wins over the machine draft. draftedNote is recomputed
+  // every render and knows nothing about the textarea, so linking it alone
+  // handed the profile page the original sentence and dropped the rewrite.
+  // Sliced because the profile page caps the note at NOTE_MAX.
+  const carriedNote = (note.trim() || draftedNote || "").slice(0, NOTE_MAX);
+  const fullProfileHref = carriedNote
+    ? `${profileHref}?note=${encodeURIComponent(carriedNote)}#connect`
+    : profileHref;
   const isCompany = profile.type === "company";
   // Idea-havers sell the project; explorers sell their track record.
   const hasIdea = (profile.intent ?? []).includes("idea");
 
   return (
     <DirectoryCard
-      href={`/profile/${profile.slug}`}
-      name={
-        isCompany && profile.company_name
-          ? profile.company_name
-          : profile.full_name
-      }
+      href={profileHref}
+      name={displayName}
       avatarSeed={profile.full_name}
       photoUrl={profile.photo_url}
       location={
@@ -976,6 +1239,8 @@ function ProfileCard({
           : profile.work_experience || profile.background || profile.pitch
       }
       blurbLabel={tr("Working on")}
+      reason={reason}
+      reasonLabel={tr("Why they rank")}
       chipsIcon={Search}
       chipsLabel={tr("Looking for")}
       chips={
@@ -1002,28 +1267,106 @@ function ProfileCard({
       }
       footer={
         <>
-          {/* Their card's row is Message + Full Profile. Ours is Express
-              Interest + Full Profile — messaging unlocks on MUTUAL interest,
-              a deliberate product difference, so the first button is the
-              step that leads there. */}
-          <button
-            type="button"
-            disabled={sent || busy}
-            onClick={express}
-            className={`flex-1 rounded-full py-2 text-sm tracking-wide transition-colors ${
-              sent
-                ? "bg-gold-soft text-gold-ink cursor-default"
-                : "border border-line text-ink hover:border-navy"
-            }`}
-          >
-            {sent ? tr("Interest sent") : tr("Express Interest")}
-          </button>
-          <Link
-            href={`/profile/${profile.slug}`}
-            className="flex-1 rounded-full bg-navy py-2 text-sm text-white text-center tracking-wide hover:bg-navy-dark transition-colors"
-          >
-            {tr("Full Profile")}
-          </Link>
+          {drafting ? (
+            // The footer row keeps its 36px whether the editor is open or not.
+            // Growing it grew the CARD, and grid rows stretch: opening one
+            // card's editor inflated its untouched neighbours and opened a
+            // ~160px hole in each — the exact misalignment DirectoryCard's
+            // reserved heights exist to prevent. The editor floats over the
+            // card instead (below), so no sibling moves.
+            <div className="h-9 flex-1" aria-hidden="true" />
+          ) : (
+            <>
+              {/* Their card's row is Message + Full Profile. Ours is
+                  Express Interest + Full Profile — messaging unlocks on
+                  MUTUAL interest, a deliberate product difference, so the
+                  first button is the step that leads there.
+
+                  In matchmaker mode the first slot becomes "Draft intro":
+                  there is a reason sentence to turn into an opener, and a
+                  bare interest throws that away. */}
+              {reason && !sent ? (
+                // secondary, not the default primary: it takes the slot
+                // Express Interest held, and two solid-navy pills side by side
+                // in a 304px card give the row no hierarchy at all.
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
+                  onClick={startDraft}
+                >
+                  {tr("Draft intro")}
+                </Button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={sent || busy}
+                  onClick={() => void express()}
+                  className={`flex-1 rounded-full py-2 text-sm tracking-wide transition-colors ${
+                    sent
+                      ? "bg-gold-soft text-gold-ink cursor-default"
+                      : "border border-line text-ink hover:border-navy"
+                  }`}
+                >
+                  {sent ? tr("Interest sent") : tr("Express Interest")}
+                </button>
+              )}
+              <Link
+                href={fullProfileHref}
+                className="flex-1 rounded-full bg-navy py-2 text-sm text-white text-center tracking-wide hover:bg-navy-dark transition-colors"
+              >
+                {tr("Full Profile")}
+              </Link>
+            </>
+          )}
+
+          {/* The editor, as an overlay on the card rather than an expansion of
+              it. Overlay recipe per CLAUDE.md: rounded-xl, border-line,
+              shadow-lg — it floats, so it is the one surface that carries both
+              a border and a shadow. */}
+          {drafting && (
+            <div className="absolute inset-x-2 bottom-2 z-10 max-h-full overflow-y-auto rounded-xl border border-line bg-white p-3 shadow-lg">
+              <Textarea
+                id={`note-${profile.id}`}
+                label={tr("Your intro note")}
+                fieldSize="sm"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={4}
+                // 500 mirrors ExpressInterestForm's textarea. The server action
+                // itself sets no cap, so this is the app's only limit and the
+                // two note fields must not disagree.
+                maxLength={500}
+              />
+              <p className="mt-2 text-xs text-ink-muted">
+                {tr("Edit it before you send — they'll see it with your interest.")}
+              </p>
+              {error && (
+                <p className="mt-2 rounded-xl border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger-ink">
+                  {tr(error)}
+                </p>
+              )}
+              <div className="mt-3 flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
+                  disabled={busy}
+                  onClick={() => setDrafting(false)}
+                >
+                  {tr("Cancel")}
+                </Button>
+                <Button
+                  size="sm"
+                  className="flex-1"
+                  disabled={busy}
+                  onClick={() => void express(note)}
+                >
+                  {busy ? tr("Sending…") : tr("Send interest")}
+                </Button>
+              </div>
+            </div>
+          )}
         </>
       }
     />

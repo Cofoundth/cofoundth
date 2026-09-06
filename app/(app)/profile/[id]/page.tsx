@@ -19,6 +19,7 @@ import {
   COMMITMENT_LABELS,
   RUNWAY_LABELS,
   EXPERIENCE_LABELS,
+  NOTE_MAX,
 } from "@/lib/matching";
 import { getLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
@@ -37,7 +38,28 @@ import { isBlockedEitherWay } from "@/lib/blocking";
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
+
+/**
+ * `?note=` — an intro note drafted elsewhere (the /browse matchmaker's
+ * "Draft intro"), carried here as the fallback for when the reader opens the
+ * full profile instead of sending from the card. Paired with #connect.
+ *
+ * Treated as untrusted text even though we wrote it: it arrives via a URL
+ * anyone can hand-edit. Control characters and angle brackets are stripped,
+ * whitespace is collapsed, and it is capped at the same 280 the drafter emits
+ * (lib/matching NOTE_MAX) so a padded URL cannot fill the textarea.
+ */
+function sanitizeNote(raw: string | string[] | undefined): string {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/[\u0000-\u001F\u007F<>]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, NOTE_MAX);
+}
 
 export async function generateMetadata({
   params,
@@ -89,8 +111,12 @@ const STATUS_TAG_LABELS: Record<string, { en: string; tone: string }> = {
   },
 };
 
-export default async function ProfileDetailPage({ params }: Props) {
+export default async function ProfileDetailPage({
+  params,
+  searchParams,
+}: Props) {
   const { id } = await params;
+  const noteParam = sanitizeNote((await searchParams)?.note);
   const supabase = await createClient();
   const user = await requireUser();
 
@@ -109,7 +135,13 @@ export default async function ProfileDetailPage({ params }: Props) {
   const locale = await getLocale();
 
   if (lookupField === "id" && profile.slug) {
-    redirect(`/profile/${profile.slug}`);
+    // Carry the note through the legacy-UUID redirect, or a "Draft intro"
+    // link built from an old share URL would silently lose its note.
+    redirect(
+      `/profile/${profile.slug}${
+        noteParam ? `?note=${encodeURIComponent(noteParam)}` : ""
+      }`,
+    );
   }
 
   const isOwnProfile = user?.id === profile.id;
@@ -632,6 +664,7 @@ export default async function ProfileDetailPage({ params }: Props) {
                     relationship={relationship}
                     matchId={matchId}
                     otherName={otherName}
+                    initialNote={noteParam || undefined}
                   />
                 </div>
               )}

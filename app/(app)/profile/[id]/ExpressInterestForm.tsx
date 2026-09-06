@@ -15,6 +15,11 @@ type Props = {
   relationship: Relationship;
   matchId: string | null;
   otherName: string;
+  /** Pre-filled note from a ?note= deep link (sanitised + capped server-side
+   *  in page.tsx). This is the fallback path for a "Draft intro" link that
+   *  lands here instead of sending from the card, so an arriving note also
+   *  OPENS the form — a prefilled textarea nobody can see is not a prefill. */
+  initialNote?: string;
 };
 
 export function ExpressInterestForm({
@@ -22,13 +27,14 @@ export function ExpressInterestForm({
   relationship,
   matchId,
   otherName,
+  initialNote,
 }: Props) {
   const tr = useT();
   const [state, formAction, isPending] = useActionState<InterestState, FormData>(
     expressInterestAction,
     INITIAL,
   );
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(Boolean(initialNote));
 
   // Accepting an incoming interest creates the match immediately (DB trigger),
   // so confirm the connection rather than showing "interest sent".
@@ -157,6 +163,9 @@ export function ExpressInterestForm({
           name="note"
           rows={4}
           maxLength={500}
+          // defaultValue, not value: the field stays uncontrolled so the note
+          // remains editable, and a re-render can never stomp what was typed.
+          defaultValue={initialNote}
           placeholder={tr(
             "A short intro: who you are, why you connected with their pitch.",
           )}

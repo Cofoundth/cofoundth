@@ -22,12 +22,17 @@
 //                                   not RESERVE, which is what made this block
 //                                   41px on some cards and 61px on others
 //     3  label + chips, mt-auto     h-[22px]
+//   (+) label + reason, 2 lines   min-h-[39px] — MATCHMAKER ONLY, and it sits
+//                                 between 2 and 3. Optional, but all-or-nothing
+//                                 across a grid: half a grid with a fourth row
+//                                 is exactly the misalignment this skeleton
+//                                 exists to prevent.
 //
 // Reserving those heights is also why these pages measure CLS 0.00: nothing
 // moves on load, because nothing was ever sized by its content.
 
 import Link from "next/link";
-import { Building2, MapPin, Rocket } from "lucide-react";
+import { Building2, MapPin, Rocket, Sparkles } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
 import {
@@ -75,6 +80,15 @@ export type DirectoryCardProps = {
   /** Already translated, e.g. tr("Working on"). */
   blurbLabel: string;
 
+  /** MATCHMAKER ONLY. One sentence saying why this profile ranks where it
+   *  does (lib/matching complementReason). Already translated. Rendered as a
+   *  fourth body row at the SAME reserved height as the blurb, so a ranked
+   *  grid stays row-aligned — the reason is present on every card in that grid
+   *  or on none of them, which is what keeps the reservation honest. */
+  reason?: string | null;
+  /** Already translated, e.g. tr("Why they rank"). */
+  reasonLabel?: string;
+
   /** Already translated, e.g. tr("Role") or tr("Looking for"). */
   chipsLabel: string;
   chipsIcon: ComponentType<{ className?: string; strokeWidth?: number }>;
@@ -115,6 +129,8 @@ export function DirectoryCard({
   sectorMax = 2,
   blurb,
   blurbLabel,
+  reason,
+  reasonLabel,
   chipsLabel,
   chipsIcon: ChipsIcon,
   chips = [],
@@ -204,6 +220,17 @@ export function DirectoryCard({
             </div>
           )}
 
+          {reason && (
+            <div className="flex flex-col gap-1.5 min-w-0">
+              {reasonLabel && (
+                <CardLabel icon={Sparkles}>{reasonLabel}</CardLabel>
+              )}
+              <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted min-h-[39px]">
+                {reason}
+              </p>
+            </div>
+          )}
+
           {chips.length > 0 && (
             <div className="mt-auto flex flex-col gap-1.5 min-w-0">
               <CardLabel icon={ChipsIcon}>{chipsLabel}</CardLabel>
@@ -223,7 +250,11 @@ export function DirectoryCard({
   // min-w-0 on both roots — grid items default to min-width:auto and refuse
   // to shrink below their content (the app-wide overflow class of bug).
   return interactive ? (
-    <div className="group block h-full min-w-0">{inner}</div>
+    // `relative` is the positioning context for anything a footer floats over
+    // the card — /browse's inline note editor. An editor that EXPANDED the
+    // footer would grow the card, and grid rows stretch, so it would drag its
+    // untouched neighbours with it.
+    <div className="group relative block h-full min-w-0">{inner}</div>
   ) : (
     <Link href={href} className="group block h-full min-w-0">
       {inner}
