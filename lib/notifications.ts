@@ -37,7 +37,15 @@ export function notifHref(n: NotifLike): string {
       return n.data?.slug ? `/orgs/${n.data.slug}` : "/orgs";
     case "funding_proposed":
       return n.entityId ? `/funding/${n.entityId}` : "/funding";
+    // Every meetup notification lands on the meetup itself. That is also
+    // where the HOST's Requests list lives (MeetupJoinControls renders it on
+    // the detail page), so "someone requested a spot" deep-links to the place
+    // the host answers it.
     case "meetup_rsvp":
+    case "meetup_request":
+    case "meetup_request_approved":
+    case "meetup_request_declined":
+    case "meetup_invite":
       return n.data?.slug ? `/meetups/${n.data.slug}` : "/meetups";
     default:
       return "/dashboard";
@@ -73,6 +81,26 @@ export function notifText(
       return tr("{name} is going to your meetup")
         .replace("{name}", name)
         .concat(n.data?.title ? ` · ${n.data.title}` : "");
+    case "meetup_request":
+      return tr("{name} requested a spot at your meetup")
+        .replace("{name}", name)
+        .concat(n.data?.title ? ` · ${n.data.title}` : "");
+    case "meetup_invite":
+      return tr("{name} invited you to a meetup")
+        .replace("{name}", name)
+        .concat(n.data?.title ? ` · ${n.data.title}` : "");
+    // These two name the MEETUP rather than the host: what the reader wants
+    // to know is which door opened, not who turned the handle.
+    case "meetup_request_approved":
+      return tr("Your request to join {title} was approved").replace(
+        "{title}",
+        n.data?.title || tr("the meetup"),
+      );
+    case "meetup_request_declined":
+      return tr("Your request to join {title} was declined").replace(
+        "{title}",
+        n.data?.title || tr("the meetup"),
+      );
     default:
       return "";
   }

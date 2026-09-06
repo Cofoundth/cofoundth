@@ -34,11 +34,15 @@ export default async function AdminMeetupsPage() {
     .order("starts_at", { ascending: false });
   const meetups = (meetupsRaw ?? []) as Meetup[];
 
-  // RSVP counts for every meetup in one query.
+  // RSVP counts for every meetup in one query. SEATS only: since 0072 a
+  // meetup_rsvps row is either a seat ('going') or a pending request on a
+  // private meetup, and counting the knocks renders things like "12/10"
+  // against capacity.
   const { data: rsvps } = meetups.length
     ? await admin
         .from("meetup_rsvps")
         .select("meetup_id")
+        .eq("status", "going")
         .in(
           "meetup_id",
           meetups.map((m) => m.id),

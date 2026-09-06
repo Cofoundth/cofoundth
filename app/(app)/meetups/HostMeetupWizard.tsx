@@ -581,11 +581,12 @@ export function HostMeetupWizard({
                 <div>
                   <span className={LABEL}>{tr("Who can join?")}</span>
                   <div className="space-y-2">
-                    {/* The blurbs describe what `visibility` ACTUALLY does here
-                        — listed vs link-only. The reference product's private
-                        mode is request-and-approve, which we do not have;
-                        promising it in the copy would be a lie the product
-                        can't keep. */}
+                    {/* The blurbs describe what `visibility` ACTUALLY does
+                        here. Since 0072 that is request-and-approve, matching
+                        the reference product: a private meetup is LISTED with
+                        a lock, and the host lets people in. It used to be
+                        link-only, and this copy used to say so — the old
+                        sentence would now be the lie. */}
                     {(
                       [
                         [
@@ -596,7 +597,7 @@ export function HostMeetupWizard({
                         [
                           "private",
                           tr("Private"),
-                          tr("Only founders you send the link to can see it."),
+                          tr("Founders request a spot. You choose who joins."),
                         ],
                       ] as const
                     ).map(([key, label, blurb]) => {

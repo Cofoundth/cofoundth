@@ -4,8 +4,8 @@
 // nothing here navigates. A card opens a DIALOG with Join inside it, Create
 // opens the wizard modal, List/Map toggles instantly, and the header's
 // founder pile opens the roster. The /meetups/[slug] page still exists for
-// deep links and private (link-only) meetups — this component is how the
-// LISTED calendar behaves.
+// deep links — this component is how the LISTED calendar behaves, private
+// meetups included (0072: private means the host picks, not "unlisted").
 //
 // The server page fetches everything and hands it over serialised; every
 // mutation goes back through the same server actions the detail page uses
@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Flag,
   List as ListIcon,
+  Lock,
   Map as MapIcon,
   MapPin,
   Plus,
@@ -41,13 +42,18 @@ import {
 import { colorFor, getInitials } from "@/components/Avatar";
 import { MeetupMap, type MeetupPin } from "@/components/MeetupMap";
 import { CardChip, EmptyState } from "@/components/ui";
-import { rsvpAction, reportMeetupAction } from "./actions";
+import { reportMeetupAction, type InviteStatus, type MyRsvp } from "./actions";
+import {
+  MeetupJoinControls,
+  type JoinPerson,
+} from "./MeetupJoinControls";
 import { HostMeetupWizard } from "./HostMeetupWizard";
 
 export type MiniProfile = {
   id: string;
   full_name: string | null;
   photo_url: string | null;
+  slug: string | null;
 };
 
 export type MeetupItemData = {
@@ -65,12 +71,28 @@ export type MeetupItemData = {
   category: MeetupCategory;
   topic: MeetupTopic | null;
   image_url: string | null;
+  visibility: "public" | "private";
   lat: number | null;
   lng: number | null;
+  /**
+   * A private meetup the viewer is not in. Private is LISTED since 0072, so
+   * the where/link/pin have to be withheld by attendance instead of by
+   * discovery — the server nulls them out too, this only says why the copy
+   * reads the way it does.
+   */
+  restricted: boolean;
+  /** SEATS only — a 'requested' row is a knock, never a head count. */
   count: number;
   goers: MiniProfile[];
   host: MiniProfile | null;
-  going: boolean;
+  /** The viewer's own row. */
+  mine: MyRsvp;
+  invite: InviteStatus | null;
+  isHost: boolean;
+  hostMatchId: string | null;
+  hostSlug: string | null;
+  /** Host view only: who is waiting at the door. */
+  requesters: JoinPerson[];
 };
 
 function MiniFace({ p, size = 24 }: { p: MiniProfile; size?: number }) {
@@ -157,17 +179,25 @@ export function MeetupsClient({
 }) {
   const tr = useT();
   const [view, setView] = useState<"list" | "map">("list");
-  const [selected, setSelected] = useState<MeetupItemData | null>(null);
+  // The open dialog is held by ID, not by a captured object. A snapshot went
+  // stale the moment anything it showed changed on the server — the host's
+  // requester list, an invite's status — because `revalidatePath` refreshes
+  // these props while a captured object keeps whatever it was opened with, for
+  // the whole life of the dialog.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(initialCreate);
   const [rosterOpen, setRosterOpen] = useState(false);
-  // id → optimistic {going, count} overrides after an RSVP round-trip.
-  const [over, setOver] = useState<Record<string, { going: boolean; count: number }>>(
+  // id → optimistic {mine, count} overrides after a join/request round-trip.
+  const [over, setOver] = useState<Record<string, { mine: MyRsvp; count: number }>>(
     {},
   );
 
   const upcoming = [...thisMonth, ...later];
   const withOver = (m: MeetupItemData): MeetupItemData =>
     over[m.id] ? { ...m, ...over[m.id] } : m;
+  const selected = selectedId
+    ? ([...upcoming, ...past].find((m) => m.id === selectedId) ?? null)
+    : null;
 
   const pins: MeetupPin[] = upcoming
     .filter((m) => m.lat != null && m.lng != null && m.status !== "cancelled")
@@ -190,7 +220,7 @@ export function MeetupsClient({
     <MeetupCard
       key={m.id}
       m={withOver(m)}
-      onOpen={() => setSelected(m)}
+      onOpen={() => setSelectedId(m.id)}
       past={opts?.past}
       strip={opts?.strip}
     />
@@ -341,10 +371,8 @@ export function MeetupsClient({
         <MeetupDialog
           m={withOver(selected)}
           investor={investor}
-          onClose={() => setSelected(null)}
-          onRsvp={(id, going, count) =>
-            setOver((o) => ({ ...o, [id]: { going, count } }))
-          }
+          onClose={() => setSelectedId(null)}
+          onRsvp={(id, next) => setOver((o) => ({ ...o, [id]: next }))}
         />
       )}
 
@@ -395,8 +423,11 @@ function MeetupCard({
   const when = meetupWhenParts(m.starts_at);
   const cancelled = m.status === "cancelled";
   const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
-  const where =
-    m.format === "online" ? tr("Online") : m.location ?? tr("In person");
+  const where = m.restricted
+    ? tr("Shared once you're in")
+    : m.format === "online"
+      ? tr("Online")
+      : m.location ?? tr("In person");
   const spotsLeft = m.capacity != null ? Math.max(0, m.capacity - m.count) : null;
 
   return (
@@ -420,10 +451,17 @@ function MeetupCard({
             <span aria-hidden="true">{cat.emoji}</span>
             {tr(cat.label)}
           </span>
-          {cancelled && (
+          {cancelled ? (
             <span className="absolute top-3 right-3 text-xs uppercase tracking-[0.15em] text-danger-ink bg-danger-surface border border-danger-line rounded-full px-2 py-0.5">
               {tr("Cancelled")}
             </span>
+          ) : (
+            m.visibility === "private" && (
+              // Listed, but locked — the reference product's private card.
+              <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-xs text-ink">
+                <Lock className="h-3 w-3" /> {tr("Private")}
+              </span>
+            )
           )}
           {m.host && (
             <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 pl-1 pr-2.5 py-1 text-xs text-ink max-w-[85%]">
@@ -496,9 +534,14 @@ function MeetupCard({
                   : tr("{n} spots left").replace("{n}", String(spotsLeft))}
               </span>
             )}
-            {m.going && !cancelled && (
+            {m.mine === "going" && !cancelled && (
               <span className="shrink-0 inline-flex items-center gap-1 text-xs text-navy">
                 <Check className="w-3 h-3" /> {tr("You're going")}
+              </span>
+            )}
+            {m.mine === "requested" && !cancelled && (
+              <span className="shrink-0 text-xs text-ink-muted">
+                {tr("Requested")}
               </span>
             )}
             <span className="ml-auto shrink-0 w-8 h-8 rounded-full border border-line grid place-items-center text-ink group-hover:bg-navy group-hover:border-navy group-hover:text-white transition-colors">
@@ -520,7 +563,7 @@ function MeetupDialog({
   m: MeetupItemData;
   investor: boolean;
   onClose: () => void;
-  onRsvp: (id: string, going: boolean, count: number) => void;
+  onRsvp: (id: string, next: { mine: MyRsvp; count: number }) => void;
 }) {
   const tr = useT();
   const [busy, setBusy] = useState(false);
@@ -536,7 +579,6 @@ function MeetupDialog({
   const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
   const cancelled = m.status === "cancelled";
   const isPast = new Date(m.starts_at).getTime() < openedAt;
-  const full = m.capacity != null && !m.going && m.count >= m.capacity;
   // "Open" on the address, the way their dialog does it: the pin when the
   // host placed one, else a text search — never a geocode guess.
   const mapsUrl =
@@ -545,18 +587,6 @@ function MeetupDialog({
       : m.location
         ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.location)}`
         : null;
-
-  async function toggleRsvp() {
-    setBusy(true);
-    setError(null);
-    const res = await rsvpAction(m.id, !m.going);
-    setBusy(false);
-    if (res.error) {
-      setError(tr(res.error));
-      return;
-    }
-    onRsvp(m.id, res.going ?? !m.going, res.count ?? m.count);
-  }
 
   async function sendReport() {
     setBusy(true);
@@ -595,6 +625,11 @@ function MeetupDialog({
               {tr(MEETUP_TOPICS[m.topic].label)}
             </span>
           )}
+          {m.visibility === "private" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-navy px-2.5 py-0.5 text-white">
+              <Lock className="h-3 w-3" /> {tr("Private")}
+            </span>
+          )}
           {cancelled && (
             <span className="inline-flex items-center rounded-full bg-danger-surface border border-danger-line px-2.5 py-0.5 text-danger-ink">
               {tr("Cancelled")}
@@ -629,19 +664,24 @@ function MeetupDialog({
                 <MapPin className="w-4 h-4 text-gold-ink shrink-0" />
               )}
               <span className="truncate">
-                {m.format === "online"
-                  ? tr("Online")
-                  : m.location ?? tr("To be announced")}
+                {m.restricted
+                  ? tr("Shared once you're in")
+                  : m.format === "online"
+                    ? tr("Online")
+                    : m.location ?? tr("To be announced")}
               </span>
             </span>
-            {m.format === "online" && m.online_url ? (
+            {/* The link and the address ARE the door on a private meetup —
+                withholding them is what makes "request to join" mean
+                anything now that private meetups are listed. */}
+            {m.restricted ? null : m.format === "online" && m.online_url ? (
               <a
                 href={m.online_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink"
               >
-                <ExternalLink className="w-3.5 h-3.5" /> {tr("Open")}
+                <ExternalLink className="w-3.5 h-3.5" /> {tr("Open link")}
               </a>
             ) : mapsUrl ? (
               <a
@@ -650,7 +690,7 @@ function MeetupDialog({
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink"
               >
-                <ExternalLink className="w-3.5 h-3.5" /> {tr("Open")}
+                <ExternalLink className="w-3.5 h-3.5" /> {tr("Open in maps")}
               </a>
             ) : null}
           </div>
@@ -694,26 +734,28 @@ function MeetupDialog({
           </p>
         )}
 
-        {!investor && !cancelled && !isPast && (
-          <button
-            type="button"
-            disabled={busy || (full && !m.going)}
-            onClick={toggleRsvp}
-            className={`mt-5 w-full rounded-full py-3 text-sm tracking-wide transition-colors ${
-              m.going
-                ? "border border-line text-ink hover:border-navy"
-                : full
-                  ? "bg-line text-ink-muted cursor-not-allowed"
-                  : "bg-navy text-white hover:bg-navy-dark"
-            }`}
-          >
-            {m.going
-              ? tr("You're going — tap to cancel")
-              : full
-                ? tr("Fully booked")
-                : tr("Join Meetup")}
-          </button>
-        )}
+        {/* The door — one component, shared with /meetups/[slug], so the
+            two surfaces cannot drift apart on what private means. */}
+        <div className="mt-5">
+          <MeetupJoinControls
+            meetupId={m.id}
+            investor={investor}
+            closed={cancelled || isPast}
+            state={{
+              isHost: m.isHost,
+              mine: m.mine,
+              invite: m.invite,
+              count: m.count,
+              capacity: m.capacity,
+              visibility: m.visibility,
+              hostMatchId: m.hostMatchId,
+              hostSlug: m.hostSlug,
+              requesters: m.requesters,
+            }}
+            ctaFullWidth
+            onChange={(next) => onRsvp(m.id, next)}
+          />
+        </div>
 
         <div className="mt-4 text-center">
           {reported ? (

@@ -75,10 +75,14 @@ export default async function ConnectionsPage({
   // ---- Meetup chats (the reference app's Messages > Meetups tab) --------
   // Every meetup the viewer RSVP'd to is a group chat they belong to; show
   // newest-start first with the latest chat line as the preview.
+  // SEATS only (0072): a pending request is not attendance, and the chat's
+  // own RLS policies gate on status = 'going' too — listing a requested
+  // meetup here would open a thread the reader cannot read.
   const { data: myRsvpRows } = await supabase
     .from("meetup_rsvps")
     .select("meetup_id")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("status", "going");
   const myMeetupIds = (myRsvpRows ?? []).map((r) => r.meetup_id as string);
   const [{ data: myMeetupsRaw }, { data: chatRows }] = await Promise.all([
     myMeetupIds.length

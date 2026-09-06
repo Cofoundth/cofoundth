@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   CalendarClock,
   CalendarPlus,
+  Lock,
   MapPin,
   Video,
   Users,
@@ -28,7 +29,11 @@ import { Avatar } from "@/components/Avatar";
 import { MeetupChat, type ChatMessage } from "./MeetupChat";
 import { getLocale } from "@/lib/i18n-server";
 import { EmptyState, LinkButton } from "@/components/ui";
-import { RsvpButton } from "../RsvpButton";
+import {
+  MeetupJoinControls,
+  type JoinPerson,
+} from "../MeetupJoinControls";
+import type { InviteStatus, MyRsvp } from "../actions";
 import { isInvestorAccount } from "@/lib/account";
 import { getBlockedIds } from "@/lib/blocking";
 
@@ -49,6 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 type AttendeeRow = {
   user_id: string;
+  status: string;
   profile: {
     id: string;
     full_name: string | null;
@@ -72,10 +78,18 @@ export default async function MeetupDetailPage({ params }: Props) {
   if (!meetup) notFound();
   const m = meetup as Meetup;
 
-  const [{ data: attendeesRaw }, admin, investor, { data: host }, blocked] = await Promise.all([
+  const [
+    { data: attendeesRaw },
+    admin,
+    investor,
+    { data: host },
+    blocked,
+    { data: inviteRow },
+    { data: matchRows },
+  ] = await Promise.all([
     supabase
       .from("meetup_rsvps")
-      .select("user_id, profile:profiles(id, full_name, photo_url, slug)")
+      .select("user_id, status, profile:profiles(id, full_name, photo_url, slug)")
       .eq("meetup_id", m.id)
       .order("created_at", { ascending: true }),
     isAdminUser(supabase, user),
@@ -86,13 +100,27 @@ export default async function MeetupDetailPage({ params }: Props) {
       .eq("id", m.created_by)
       .maybeSingle(),
     getBlockedIds(user.id),
+    supabase
+      .from("meetup_invites")
+      .select("status")
+      .eq("meetup_id", m.id)
+      .eq("invitee_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("matches")
+      .select("id, profile_a_id, profile_b_id")
+      .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`),
   ]);
 
   // A blocked host takes the whole meetup with them — there is no version of
   // this page that doesn't put the two of you in the same room.
   if (blocked.has(m.created_by)) notFound();
 
-  const allAttendees = (attendeesRaw ?? []) as unknown as AttendeeRow[];
+  const allRows = (attendeesRaw ?? []) as unknown as AttendeeRow[];
+  // SEATS only. Since 0072 a meetup_rsvps row is either a seat ('going') or a
+  // knock at the door ('requested'); the roster, the count and the chat gate
+  // all mean the first one.
+  const allAttendees = allRows.filter((a) => a.status === "going");
   // The COUNT stays honest (it is the room's size, and rsvpAction returns the
   // unfiltered figure — a filtered one here would flicker on RSVP); only the
   // faces the viewer sees are filtered.
@@ -101,6 +129,43 @@ export default async function MeetupDetailPage({ params }: Props) {
   const attendees = allAttendees.filter(
     (a) => !blocked.has(a.user_id),
   );
+  const isHost = m.created_by === user.id;
+  // Private meetups are LISTED since 0072, so being undiscoverable is no
+  // longer what protects their contents — attendance is. For an online private
+  // meetup the URL *is* the door: handing it to every member who opens the
+  // page would make the host's approval decorative. Everything else on the
+  // page (title, description, when, who's going) stays readable — that is what
+  // someone decides to knock on.
+  const restricted = m.visibility === "private" && !isHost && !going;
+  const mSafe = restricted
+    ? { ...m, location: null, online_url: null, lat: null, lng: null }
+    : m;
+  const mineStatus: MyRsvp = going
+    ? "going"
+    : allRows.some((a) => a.user_id === user.id)
+      ? "requested"
+      : "none";
+  // Requests are the HOST's business, and a blocked pair never reaches each
+  // other — not even as a name on a request row.
+  const requesters: JoinPerson[] = isHost
+    ? allRows
+        .filter(
+          (a) =>
+            a.status === "requested" && a.profile && !blocked.has(a.user_id),
+        )
+        .map((a) => ({
+          id: a.user_id,
+          slug: a.profile?.slug ?? null,
+          full_name: a.profile?.full_name ?? null,
+          photo_url: a.profile?.photo_url ?? null,
+        }))
+    : [];
+  const hostMatchId =
+    (matchRows ?? []).find(
+      (row) =>
+        (row.profile_a_id as string) === m.created_by ||
+        (row.profile_b_id as string) === m.created_by,
+    )?.id ?? null;
 
   const cancelled = m.status === "cancelled";
   const past = isPast(m.starts_at);
@@ -142,6 +207,7 @@ export default async function MeetupDetailPage({ params }: Props) {
     tServer("This meetup is full."),
     tServer("Edit"),
   ]);
+  const tShared = await tServer("Shared once you're in");
 
   const spotsFull = m.capacity != null && !going && count >= m.capacity;
   const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
@@ -169,7 +235,7 @@ export default async function MeetupDetailPage({ params }: Props) {
   // existed has none, and those rows must still render.
   const topic = m.topic ? MEETUP_TOPICS[m.topic] : null;
   const tTopicLabel = topic ? await tServer(topic.label) : null;
-  const tPrivate = await tServer("Only people with the link");
+  const tPrivate = await tServer("Private");
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
@@ -211,8 +277,10 @@ export default async function MeetupDetailPage({ params }: Props) {
           </span>
         )}
         {m.visibility === "private" && (
+          // The same chip the dialog renders, down to the vector lock: an OS
+          // emoji here and a lucide icon there is one chip with two faces.
           <span className="inline-flex items-center gap-1.5 rounded-full bg-navy px-2.5 py-0.5 text-xs text-white">
-            🔒 {tPrivate}
+            <Lock className="h-3 w-3" /> {tPrivate}
           </span>
         )}
         {host && (
@@ -268,14 +336,16 @@ export default async function MeetupDetailPage({ params }: Props) {
               <MapPin className="w-4 h-4 mt-0.5 text-gold-ink shrink-0" />
             )}
             <div>
-              {m.format === "online" ? (
+              {restricted ? (
+                tShared
+              ) : m.format === "online" ? (
                 <>
                   {tOnline}
-                  {m.online_url && (
+                  {mSafe.online_url && (
                     <>
                       <br />
                       <a
-                        href={m.online_url}
+                        href={mSafe.online_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-navy hover:text-gold-ink inline-flex items-center gap-1 break-all"
@@ -286,7 +356,7 @@ export default async function MeetupDetailPage({ params }: Props) {
                   )}
                 </>
               ) : (
-                m.location || tTba
+                mSafe.location || tTba
               )}
             </div>
           </div>
@@ -299,19 +369,29 @@ export default async function MeetupDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Actions */}
-      {!cancelled && !past && (
-        <div className="flex flex-wrap items-center gap-4 mb-12">
-          {!investor && (
-            <RsvpButton
-              meetupId={m.id}
-              initialGoing={going}
-              goingCount={count}
-              capacity={m.capacity}
-            />
-          )}
+      {/* Actions — the same door component the /meetups dialog renders, so
+          the two surfaces cannot disagree about what private means. */}
+      <div className="mb-12 space-y-4">
+        <MeetupJoinControls
+          meetupId={m.id}
+          investor={investor}
+          closed={cancelled || past}
+          state={{
+            isHost,
+            mine: mineStatus,
+            invite: (inviteRow?.status as InviteStatus | undefined) ?? null,
+            count,
+            capacity: m.capacity,
+            visibility:
+              m.visibility === "private" ? "private" : "public",
+            hostMatchId: (hostMatchId as string | null) ?? null,
+            hostSlug: (host?.slug as string | null) ?? m.created_by,
+            requesters,
+          }}
+        />
+        {!cancelled && !past && (
           <LinkButton
-            href={meetupCalendarUrl(m)}
+            href={meetupCalendarUrl(mSafe)}
             target="_blank"
             rel="noopener noreferrer"
             variant="secondary"
@@ -319,8 +399,8 @@ export default async function MeetupDetailPage({ params }: Props) {
           >
             <CalendarPlus className="w-4 h-4" /> {tAddCal}
           </LinkButton>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Attendees */}
       <div>

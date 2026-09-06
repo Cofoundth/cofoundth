@@ -24,7 +24,16 @@ export const dynamic = "force-dynamic";
 // co-founder flow. All is the default; the unread figure follows the open
 // tab, but Mark-all-read clears everything (one read state, not three).
 const TAB_TYPES: Record<string, string[]> = {
-  meetups: ["meetup_rsvp"],
+  meetups: [
+    "meetup_rsvp",
+    "meetup_request",
+    "meetup_request_approved",
+    "meetup_request_declined",
+  ],
+  // Invites are their own tab, the way the reference app splits them: an
+  // invite is something asked OF you, not news about a meetup you already
+  // chose. Requests still live under Meetups — they are the host's inbox.
+  invites: ["meetup_invite"],
   connections: ["interest", "match", "message"],
 };
 
@@ -136,6 +145,11 @@ export default async function NotificationsPage({
               await tServer("Meetups"),
             ],
             [
+              "invites",
+              "/notifications?tab=invites",
+              await tServer("Invites"),
+            ],
+            [
               "connections",
               "/notifications?tab=connections",
               await tServer("Connections"),
@@ -161,7 +175,9 @@ export default async function NotificationsPage({
           icon={Bell}
           title={await tServer("Nothing here yet")}
           description={await tServer(
-            "Interest, replies, messages, and profile views land here as they happen.",
+            tab === "invites"
+              ? "Invites, requests and meetup updates land here the moment they happen."
+              : "Interest, replies, messages, and profile views land here as they happen.",
           )}
         />
       ) : (
