@@ -48,7 +48,11 @@ export function PublicPostActions({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 p-4 rounded-xl"
+          // The shared modal scrim: bg-navy/40 + backdrop-blur-sm, and NO
+          // radius. A full-viewport scrim has no corners to round — the
+          // rounded thing is the panel below. (It carried a stray rounded-xl,
+          // which curved the dim away from the screen corners.)
+          className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 backdrop-blur-sm p-4"
           onClick={() => setOpen(false)}
         >
           <div

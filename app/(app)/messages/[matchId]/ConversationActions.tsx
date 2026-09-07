@@ -125,7 +125,9 @@ function ScheduleDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-navy/40 flex items-center justify-center px-4"
+      // The shared modal scrim: bg-navy/40 + backdrop-blur-sm, no radius —
+      // same as the partnership dialog and the meetup modal.
+      className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm flex items-center justify-center px-4"
       onClick={onClose}
     >
       <div

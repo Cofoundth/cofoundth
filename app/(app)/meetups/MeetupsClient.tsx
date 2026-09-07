@@ -134,7 +134,10 @@ function Modal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-navy/40 p-4 overflow-y-auto"
+      // The shared modal scrim: bg-navy/40 + backdrop-blur-sm, no radius —
+      // same as the partnership dialog and the sign-in prompt, so overlays
+      // stop drifting apart.
+      className="fixed inset-0 z-50 grid place-items-center bg-navy/40 backdrop-blur-sm p-4 overflow-y-auto"
       onClick={wizard ? undefined : onClose}
       role="presentation"
     >

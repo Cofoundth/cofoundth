@@ -74,7 +74,20 @@ export function MobileMenu({
             type="button"
             aria-label="Close menu"
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-40 bg-navy/20 cursor-default"
+            // `rounded-none` is load-bearing — do not delete it as redundant.
+            // globals.css @layer base pills EVERY <button> (border-radius:
+            // 9999px, the Onfound geometry rule), and this one is a
+            // full-viewport backdrop, so without the reset it renders as a
+            // giant ellipse: the four screen corners stay undimmed, and
+            // because border-radius clips hit-testing too, a click in a corner
+            // falls through to the page instead of closing the menu.
+            // Utilities are a later cascade layer than base, so this wins.
+            //
+            // bg-navy/20 stays lighter than the /40 modal scrim on purpose:
+            // this is a nav dropdown hanging off the header, not a modal that
+            // takes the screen over. The blur is what the founder asked for —
+            // it separates the panel from the page without darkening it.
+            className="fixed inset-0 z-40 rounded-none bg-navy/20 backdrop-blur-sm cursor-default"
           />
           <div
             // Scrolls internally: with the body locked, a list taller than the

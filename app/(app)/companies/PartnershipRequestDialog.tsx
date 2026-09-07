@@ -360,7 +360,11 @@ function DialogShell({
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelledBy}
-      className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto rounded-xl"
+      // The shared modal scrim: bg-navy/40 + backdrop-blur-sm, and NO radius.
+      // A full-viewport scrim has no corners to round — the rounded thing is
+      // the panel below. (It carried a stray rounded-xl, which curved the dim
+      // away from the screen corners.)
+      className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
