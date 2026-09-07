@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
+import { FEATURES } from "@/lib/features";
 import { tServer } from "@/lib/i18n-server";
 import { signOutAction } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/Avatar";
@@ -31,9 +32,21 @@ export async function AppSidebar() {
   const myProfileHref =
     profile?.account_type === "investor" ? "/investor" : "/profile";
 
-  const myOrgs = await getUserOrgs(supabase, user.id);
+  // "Acting as" company switcher — only meaningful when in >1 company, and it
+  // is company chrome, so it hides for the meetups soft launch along with the
+  // Companies nav above: a combobox of company names has nothing to point at in
+  // a rail with no company surface left in it.
+  //
+  // The flag gates the READS too, not just the render. These are org_members
+  // round-trips on every app page render for every signed-in user, and while
+  // the flag is off nothing consumes the result. /orgs keeps working by direct
+  // URL regardless — it calls getActiveOrgId itself, which falls back to the
+  // earliest-joined org when no cookie has been set.
+  const myOrgs = FEATURES.companies ? await getUserOrgs(supabase, user.id) : [];
   const activeOrgId =
-    myOrgs.length > 1 ? await getActiveOrgId(supabase, user.id) : null;
+    FEATURES.companies && myOrgs.length > 1
+      ? await getActiveOrgId(supabase, user.id)
+      : null;
 
   const [
     { count: receivedPending },
@@ -120,8 +133,14 @@ export async function AppSidebar() {
           label: await tServer("Connections"),
           badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
         },
-        { href: "/orgs", label: await tServer("Companies") },
-        { href: "/funding", label: await tServer("Funding") },
+        // Hidden for the meetups soft launch, kept in place so flipping the
+        // flag puts them back exactly here. Investors keep theirs above.
+        ...(FEATURES.companies
+          ? [{ href: "/orgs", label: await tServer("Companies") }]
+          : []),
+        ...(FEATURES.funding
+          ? [{ href: "/funding", label: await tServer("Funding") }]
+          : []),
         { href: "/activity", label: await tServer("Profile insights") },
       ];
   if (
@@ -150,7 +169,11 @@ export async function AppSidebar() {
         <SidebarNav items={navItems} />
 
         <div className="shrink-0 border-t border-line p-3 space-y-3">
-          {activeOrgId && <OrgSwitcher orgs={myOrgs} activeId={activeOrgId} />}
+          {/* Hidden for the meetups soft launch — company chrome. The reads
+              above are gated on the same flag, so this is off, not just empty. */}
+          {FEATURES.companies && activeOrgId && (
+            <OrgSwitcher orgs={myOrgs} activeId={activeOrgId} />
+          )}
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
             <NotificationBell
@@ -208,7 +231,10 @@ export async function AppSidebar() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
-            {activeOrgId && <OrgSwitcher orgs={myOrgs} activeId={activeOrgId} />}
+            {/* Hidden for the meetups soft launch — same gate as the rail. */}
+            {FEATURES.companies && activeOrgId && (
+              <OrgSwitcher orgs={myOrgs} activeId={activeOrgId} />
+            )}
             <LanguageSwitcher />
             <NotificationBell
               items={notifItems}

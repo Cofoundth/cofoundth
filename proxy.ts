@@ -78,6 +78,39 @@ export async function proxy(request: NextRequest) {
     // (app) shell AND someone is signed in, so marketing, auth and asset
     // requests pay nothing for it.
     const path = request.nextUrl.pathname;
+
+    // ---- Signed-in visitors don't need the pitch -------------------------
+    // "/" is the logged-out landing. Someone who is already a member asking for
+    // it wants the app, so send them there. Anonymous requests fall straight
+    // through — the check is gated on session.user, so the landing page keeps
+    // exactly the rendering path it has today for the people it is written for.
+    //
+    // Everyone goes to /dashboard, investors included. That costs them one
+    // extra hop: the follow-up request re-enters this middleware, where the
+    // gate below already owns the account_type lookup and forwards them to
+    // INVESTOR_HOME. Naming /funding here directly would mean a SECOND profiles
+    // query on a path that is overwhelmingly anonymous traffic — one hop for
+    // the few beats one query for everyone. Founders who have not onboarded are
+    // handled the same way: app/(app)/layout.tsx sends them to /onboarding,
+    // which only redirects onward to /login when there is no user, so the chain
+    // terminates either way.
+    if (session.user && path === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.search = "";
+      const redirect = NextResponse.redirect(url);
+      // Carry the refreshed auth cookies onto the redirect, or the bounce
+      // silently signs the user out.
+      response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
+      redirect.headers.set(
+        CSP_REPORT_ONLY
+          ? "content-security-policy-report-only"
+          : "content-security-policy",
+        csp,
+      );
+      return redirect;
+    }
+
     if (session.user && isAppShellRoute(path) && !isInvestorReadableRoute(path)) {
       const { data: profile } = await session.supabase
         .from("profiles")

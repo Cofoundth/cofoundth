@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
+import { FEATURES } from "@/lib/features";
 import { tServer } from "@/lib/i18n-server";
 import { signOutAction } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/Avatar";
@@ -30,10 +31,20 @@ export async function AppHeader() {
       ? "/investor"
       : `/profile/${(profile?.slug as string | undefined) ?? user.id}`;
 
-  // "Acting as" company switcher — only meaningful when in >1 company.
-  const myOrgs = await getUserOrgs(supabase, user.id);
+  // "Acting as" company switcher — only meaningful when in >1 company, and
+  // hidden for the meetups soft launch with the Companies nav below it: this
+  // header is what a signed-in founder sees on marketing routes, so it has to
+  // hide the switcher for the same reason AppSidebar does.
+  //
+  // The flag gates the READS too, not just the render — two org_members
+  // round-trips nothing consumes while it is off. /orgs still works by direct
+  // URL: it calls getActiveOrgId itself, which falls back to the earliest-joined
+  // org when no cookie has been set.
+  const myOrgs = FEATURES.companies ? await getUserOrgs(supabase, user.id) : [];
   const activeOrgId =
-    myOrgs.length > 1 ? await getActiveOrgId(supabase, user.id) : null;
+    FEATURES.companies && myOrgs.length > 1
+      ? await getActiveOrgId(supabase, user.id)
+      : null;
 
   const [
     { count: receivedPending },
@@ -123,8 +134,16 @@ export async function AppHeader() {
             label: await tServer("Connections"),
             badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
           },
-          { href: "/orgs", label: await tServer("Companies") },
-          { href: "/funding", label: await tServer("Funding") },
+          // Hidden for the meetups soft launch, kept in place so flipping the
+          // flag puts them back exactly here. This header is what a signed-in
+          // founder sees on marketing routes, so it has to hide them too —
+          // AppSidebar only covers the (app) shell.
+          ...(FEATURES.companies
+            ? [{ href: "/orgs", label: await tServer("Companies") }]
+            : []),
+          ...(FEATURES.funding
+            ? [{ href: "/funding", label: await tServer("Funding") }]
+            : []),
         ];
   if (
     isAdmin({
@@ -175,7 +194,10 @@ export async function AppHeader() {
           </div>
 
           <div className="flex items-center gap-4">
-            {activeOrgId && (
+            {/* Hidden for the meetups soft launch — company chrome. The reads
+                above are gated on the same flag, so this is off, not just
+                empty. */}
+            {FEATURES.companies && activeOrgId && (
               <OrgSwitcher orgs={myOrgs} activeId={activeOrgId} />
             )}
             <LanguageSwitcher />

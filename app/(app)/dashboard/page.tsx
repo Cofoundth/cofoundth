@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, MapPin, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import { FEATURES } from "@/lib/features";
 import { tServer } from "@/lib/i18n-server";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
@@ -96,12 +97,12 @@ export default async function DashboardPage() {
   const myPostIds = (myPosts ?? []).map((r) => r.id as string);
 
   // ---- The other areas, one summary query each ----------------------
+  // The organizations read feeds the Companies rail and the org_members read
+  // exists only to scope the Funding count, so both are skipped outright while
+  // those blocks are hidden — a soft launch should not pay for rows nothing
+  // renders. `null` in the Promise.all keeps the tuple positional.
   const nowIso = new Date().toISOString();
-  const [
-    { data: upcomingMeetups },
-    { data: latestOrgs, count: orgCount },
-    { data: myOrgRows },
-  ] = await Promise.all([
+  const [{ data: upcomingMeetups }, orgsRes, myOrgsRes] = await Promise.all([
     supabase
       .from("meetups")
       .select("id, slug, title, format, location, starts_at")
@@ -110,15 +111,21 @@ export default async function DashboardPage() {
       .gte("starts_at", nowIso)
       .order("starts_at", { ascending: true })
       .limit(2),
-    supabase
-      .from("organizations")
-      .select("id, slug, name, tagline, logo_url", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .limit(2),
-    supabase.from("org_members").select("org_id").eq("user_id", user.id),
+    FEATURES.companies
+      ? supabase
+          .from("organizations")
+          .select("id, slug, name, tagline, logo_url", { count: "exact" })
+          .order("created_at", { ascending: false })
+          .limit(2)
+      : null,
+    FEATURES.funding
+      ? supabase.from("org_members").select("org_id").eq("user_id", user.id)
+      : null,
   ]);
-  const myOrgIds = (myOrgRows ?? []).map((r) => r.org_id as string);
-  const [{ count: pendingReceivedCount }, { count: matchesCount }, { count: fundingCount }] =
+  const latestOrgs = orgsRes?.data ?? null;
+  const orgCount = orgsRes?.count ?? 0;
+  const myOrgIds = (myOrgsRes?.data ?? []).map((r) => r.org_id as string);
+  const [{ count: pendingReceivedCount }, { count: matchesCount }, fundingRes] =
     await Promise.all([
       supabase
         .from("interests")
@@ -136,8 +143,9 @@ export default async function DashboardPage() {
             .from("investor_connections")
             .select("id", { count: "exact", head: true })
             .in("org_id", myOrgIds)
-        : Promise.resolve({ count: 0 }),
+        : null,
     ]);
+  const fundingCount = fundingRes?.count ?? 0;
 
   const [
     { count: postsCount },
@@ -593,68 +601,77 @@ export default async function DashboardPage() {
                   {matchesCount ?? 0}
                 </span>
               </Link>
-              <Link
-                href="/funding"
-                className="flex items-center justify-between group"
-              >
-                <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
-                  {await tServer("Funding")}
-                </span>
-                <span className="font-serif text-base text-navy font-medium tabular-nums">
-                  {fundingCount ?? 0}
-                </span>
-              </Link>
+              {/* Hidden for the meetups soft launch. /funding stays live for
+                  the notification deep links and for investors. */}
+              {FEATURES.funding && (
+                <Link
+                  href="/funding"
+                  className="flex items-center justify-between group"
+                >
+                  <span className="text-sm text-ink-muted group-hover:text-navy transition-colors">
+                    {await tServer("Funding")}
+                  </span>
+                  <span className="font-serif text-base text-navy font-medium tabular-nums">
+                    {fundingCount ?? 0}
+                  </span>
+                </Link>
+              )}
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold tracking-normal">
-                {await tServer("Companies")}
-              </h2>
-              <Link
-                href="/orgs"
-                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
-              >
-                {(orgCount ?? 0) > 0 ? `${orgCount}` : ""}{" "}
-                {await tServer("See all")}
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            {!latestOrgs?.length ? (
-              <EmptyState
-                padding="md"
-                dense
-                description={await tServer("No companies yet")}
-              />
-            ) : (
-              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
-                {latestOrgs.map((o) => (
-                  <Link
-                    key={o.id as string}
-                    href={`/orgs/${o.slug as string}`}
-                    className="flex items-start gap-3 p-4 hover:bg-cream transition-colors group"
-                  >
-                    <Avatar
-                      name={o.name as string}
-                      url={o.logo_url as string | null}
-                      size="sm"
-                    />
-                    <div className="min-w-0 flex-1">
-                    <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
-                      {o.name as string}
-                    </div>
-                    {o.tagline && (
-                      <div className="text-xs text-ink-muted mt-1 truncate">
-                        {o.tagline as string}
-                      </div>
-                    )}
-                    </div>
-                  </Link>
-                ))}
+          {/* Hidden for the meetups soft launch. The aside is a space-y-8
+              stack, so dropping the last block just ends it earlier — no gap,
+              no stretched card. /orgs itself stays live. */}
+          {FEATURES.companies && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold tracking-normal">
+                  {await tServer("Companies")}
+                </h2>
+                <Link
+                  href="/orgs"
+                  className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
+                >
+                  {(orgCount ?? 0) > 0 ? `${orgCount}` : ""}{" "}
+                  {await tServer("See all")}
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
-            )}
-          </div>
+              {!latestOrgs?.length ? (
+                <EmptyState
+                  padding="md"
+                  dense
+                  description={await tServer("No companies yet")}
+                />
+              ) : (
+                <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+                  {latestOrgs.map((o) => (
+                    <Link
+                      key={o.id as string}
+                      href={`/orgs/${o.slug as string}`}
+                      className="flex items-start gap-3 p-4 hover:bg-cream transition-colors group"
+                    >
+                      <Avatar
+                        name={o.name as string}
+                        url={o.logo_url as string | null}
+                        size="sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
+                          {o.name as string}
+                        </div>
+                        {o.tagline && (
+                          <div className="text-xs text-ink-muted mt-1 truncate">
+                            {o.tagline as string}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </aside>
       </div>
     </Section>

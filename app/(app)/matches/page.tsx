@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import { FEATURES } from "@/lib/features";
 import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { MEETUP_CATEGORIES } from "@/lib/meetups";
@@ -64,7 +65,11 @@ export default async function ConnectionsPage({
     .select("org_id")
     .eq("user_id", user.id);
   const myOrgIds = (myMemberships ?? []).map((m) => m.org_id as string);
-  const hasCompany = myOrgIds.length > 0;
+  // The flag gates the TAB, not membership: while B2B is hidden for the meetups
+  // soft launch, ?tab=company falls through to Personal the same way it already
+  // does for a founder who belongs to no company — a quiet fallback, not a 404.
+  // /orgs/<slug>/chat itself stays reachable.
+  const hasCompany = FEATURES.companies && myOrgIds.length > 0;
   const tab =
     tabParam === "company" && hasCompany
       ? "company"
@@ -222,8 +227,11 @@ export default async function ConnectionsPage({
 
   // ---- Company conversations (B2B chat) ---------------------------------
   // org_connections / org_messages reads are RLS-scoped to the viewer's orgs.
+  // Only the Company panel reads these, so the three round-trips are scoped to
+  // the tab that renders them — which also means they cost nothing while the
+  // tab is hidden.
   let companyConvos: CompanyConvo[] = [];
-  if (hasCompany) {
+  if (tab === "company") {
     const { data: conns } = await supabase
       .from("org_connections")
       .select("id, requester_org, target_org")
