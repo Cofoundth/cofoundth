@@ -16,11 +16,24 @@
 // original position. That is the whole reason this is one imported module
 // rather than a boolean repeated in four files: the copies cannot drift.
 //
-// Typed as `boolean` rather than inferred as literal `false` so both branches
-// of every call site keep type-checking while the flag is off.
-export const FEATURES: { companies: boolean; funding: boolean } = {
+// `meetupsNew` is the odd one out: it is a MARKER, not a surface. The other two
+// decide whether a nav item exists at all; this one only decorates an item that
+// is already there with a "New" chip for the soft launch. Nothing is hidden when
+// it is false — the Meetups link renders either way. Set it false once Meetups
+// has stopped being news (a few weeks after launch); a permanent "New" badge is
+// just noise that teaches people to ignore the chip.
+//
+// Typed as `boolean` rather than inferred as literal `false`/`true` so both
+// branches of every call site keep type-checking whichever way a flag points.
+export const FEATURES: {
+  companies: boolean;
+  funding: boolean;
+  meetupsNew: boolean;
+} = {
   /** /orgs — the multi-user company directory, B2B connect/chat/deals. */
   companies: false,
   /** /funding — investor connections and funding talks, founder side. */
   funding: false,
+  /** "New" chip on the Meetups nav item — a launch marker, not a surface. */
+  meetupsNew: true,
 };

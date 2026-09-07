@@ -8,6 +8,12 @@ export type SidebarNavItem = {
   /** ALREADY translated by the server component that renders this. */
   label: string;
   badge?: number;
+  /**
+   * A word-shaped marker ("New") rather than a count — ALREADY translated, the
+   * same as `label`. Nothing carries both `tag` and `badge` today, but the type
+   * does not forbid it; the render puts the tag first if it ever happens.
+   */
+  tag?: string;
 };
 
 // The rail's nav links, as a CLIENT component purely so the active item can
@@ -48,9 +54,36 @@ export function SidebarNav({ items }: { items: SidebarNavItem[] }) {
           }`}
         >
           <span>{i.label}</span>
-          {i.badge !== undefined && i.badge > 0 && (
-            <span className="min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
-              {i.badge > 9 ? "9+" : i.badge}
+          {/* One trailing group, not two more children: `justify-between` on
+              the row spreads three siblings evenly, which would strand a tag
+              in the middle of the rail. */}
+          {(i.tag || (i.badge !== undefined && i.badge > 0)) && (
+            <span className="flex items-center gap-1.5 shrink-0">
+              {i.tag && (
+                // 12px, not the 11px the numeric badge uses: that tier is
+                // "Latin-and-digits only" and this is a word — "New" renders
+                // as "ใหม่" in the default locale, and 12px is the floor for
+                // anything translatable. No uppercase/tracking either, since
+                // Thai has neither (globals.css strips tracking under
+                // lang="th"); font-medium carries the emphasis instead.
+                //
+                // The active row is itself bg-gold, so a gold chip would
+                // vanish into it — it flips to white there. text-navy on
+                // both (13.50:1 on gold, 17.40:1 on white); text-gold-ink on
+                // gold measures 4.49:1 and misses AA at this size.
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    isActive(i.href) ? "bg-white text-navy" : "bg-gold text-navy"
+                  }`}
+                >
+                  {i.tag}
+                </span>
+              )}
+              {i.badge !== undefined && i.badge > 0 && (
+                <span className="min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
+                  {i.badge > 9 ? "9+" : i.badge}
+                </span>
+              )}
             </span>
           )}
         </Link>

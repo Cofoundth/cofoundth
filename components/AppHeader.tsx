@@ -116,35 +116,50 @@ export async function AppHeader() {
   // Investors are funding actors + read-only community members (the layout
   // bounces them off founder-only pages). Their nav is funding + the read
   // surfaces they're allowed on.
+  //
+  // Meetups sits directly under Dashboard in the FOUNDER nav, matching
+  // AppSidebar. The two used to disagree — this file had Meetups before
+  // Founders, the rail had it after — which was drift, not a decision, so one
+  // person could see two different navs depending on whether they were on a
+  // marketing route. Investors have no Dashboard here, so their order stands.
   const isInvestor = profile?.account_type === "investor";
-  const navItems: { href: string; label: string; badge?: number }[] =
-    isInvestor
-      ? [
-          { href: "/funding", label: await tServer("Funding") },
-          { href: "/community", label: await tServer("Community") },
-          { href: "/orgs", label: await tServer("Companies") },
-        ]
-      : [
-          { href: "/dashboard", label: await tServer("Dashboard") },
-          { href: "/community", label: await tServer("Community") },
-          { href: "/meetups", label: await tServer("Meetups") },
-          { href: "/browse", label: await tServer("Founders") },
-          {
-            href: "/matches",
-            label: await tServer("Connections"),
-            badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
-          },
-          // Hidden for the meetups soft launch, kept in place so flipping the
-          // flag puts them back exactly here. This header is what a signed-in
-          // founder sees on marketing routes, so it has to hide them too —
-          // AppSidebar only covers the (app) shell.
-          ...(FEATURES.companies
-            ? [{ href: "/orgs", label: await tServer("Companies") }]
-            : []),
-          ...(FEATURES.funding
-            ? [{ href: "/funding", label: await tServer("Funding") }]
-            : []),
-        ];
+  const navItems: {
+    href: string;
+    label: string;
+    badge?: number;
+    tag?: string;
+  }[] = isInvestor
+    ? [
+        { href: "/funding", label: await tServer("Funding") },
+        { href: "/community", label: await tServer("Community") },
+        { href: "/orgs", label: await tServer("Companies") },
+      ]
+    : [
+        { href: "/dashboard", label: await tServer("Dashboard") },
+        {
+          href: "/meetups",
+          label: await tServer("Meetups"),
+          // Launch marker, not a surface gate: the item renders either way.
+          ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
+        },
+        { href: "/community", label: await tServer("Community") },
+        { href: "/browse", label: await tServer("Founders") },
+        {
+          href: "/matches",
+          label: await tServer("Connections"),
+          badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
+        },
+        // Hidden for the meetups soft launch, kept in place so flipping the
+        // flag puts them back exactly here. This header is what a signed-in
+        // founder sees on marketing routes, so it has to hide them too —
+        // AppSidebar only covers the (app) shell.
+        ...(FEATURES.companies
+          ? [{ href: "/orgs", label: await tServer("Companies") }]
+          : []),
+        ...(FEATURES.funding
+          ? [{ href: "/funding", label: await tServer("Funding") }]
+          : []),
+      ];
   if (
     isAdmin({
       email: user.email,
@@ -186,7 +201,7 @@ export async function AppHeader() {
             </Link>
             <nav className="hidden xl:flex items-center gap-1">
               {navItems.map((i) => (
-                <NavLink key={i.href} href={i.href} badge={i.badge}>
+                <NavLink key={i.href} href={i.href} badge={i.badge} tag={i.tag}>
                   {i.label}
                 </NavLink>
               ))}
@@ -235,17 +250,34 @@ function NavLink({
   href,
   children,
   badge,
+  tag,
 }: {
   href: string;
   children: React.ReactNode;
   badge?: number;
+  /** ALREADY translated, like the label. A word ("New"), not a count. */
+  tag?: string;
 }) {
   return (
     <Link
       href={href}
-      className="relative px-4 py-2 rounded-lg text-sm text-ink hover:bg-cream tracking-wide whitespace-nowrap transition-colors"
+      className="relative inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm text-ink hover:bg-cream tracking-wide whitespace-nowrap transition-colors"
     >
       {children}
+      {tag && (
+        // INLINE, not the badge's `absolute top-1 -right-1`: that offset is cut
+        // for a two-character numeric pill, and a word hangs off the link box.
+        //
+        // 12px rather than the badge's 11px — that tier is Latin-and-digits
+        // only, and this word is "ใหม่" in the default locale, where 12px is
+        // the floor for translatable text. No uppercase/tracking (Thai has
+        // neither, and globals.css strips tracking under lang="th"), so
+        // font-medium carries the emphasis. No active state exists in this
+        // horizontal nav, so the chip is always the gold surface here.
+        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gold text-navy shrink-0">
+          {tag}
+        </span>
+      )}
       {badge !== undefined && badge > 0 && (
         <span className="absolute top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
           {badge > 9 ? "9+" : badge}

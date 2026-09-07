@@ -5,7 +5,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
-export type MobileLink = { href: string; label: string; badge?: number };
+export type MobileLink = {
+  href: string;
+  label: string;
+  badge?: number;
+  /**
+   * A word-shaped marker ("New") rather than a count — ALREADY translated, the
+   * same as `label`. Mirrors SidebarNavItem; this menu is what BOTH the
+   * sidebar's mobile top bar and the marketing header's hamburger render, so
+   * anything the rail shows has to show here too.
+   */
+  tag?: string;
+};
 
 // Hamburger + drop-down panel for small screens. The desktop nav links are
 // `hidden md:flex` / `hidden lg:flex`; this fills the gap so the app is
@@ -84,9 +95,37 @@ export function MobileMenu({
                   }`}
                 >
                   <span>{l.label}</span>
-                  {l.badge && l.badge > 0 ? (
-                    <span className="min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
-                      {l.badge > 9 ? "9+" : l.badge}
+                  {/* One trailing group, not two more children: the row is
+                      `justify-between` and would spread three siblings evenly,
+                      stranding a tag in the middle of the panel. */}
+                  {l.tag || (l.badge && l.badge > 0) ? (
+                    <span className="flex items-center gap-1.5 shrink-0">
+                      {l.tag ? (
+                        // 12px, not the numeric badge's 11px: that tier is
+                        // "Latin-and-digits only" and this is a word — "New"
+                        // is "ใหม่" in the default locale, where 12px is the
+                        // floor for translatable text. No uppercase/tracking
+                        // (Thai has neither, and globals.css strips tracking
+                        // under lang="th"); font-medium does that work.
+                        //
+                        // The active row is bg-gold, so the gold chip would
+                        // disappear into it — white there instead. text-navy
+                        // on both (13.50:1 on gold, 17.40:1 on white).
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            isActive(l.href)
+                              ? "bg-white text-navy"
+                              : "bg-gold text-navy"
+                          }`}
+                        >
+                          {l.tag}
+                        </span>
+                      ) : null}
+                      {l.badge && l.badge > 0 ? (
+                        <span className="min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
+                          {l.badge > 9 ? "9+" : l.badge}
+                        </span>
+                      ) : null}
                     </span>
                   ) : null}
                 </Link>

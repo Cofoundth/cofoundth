@@ -115,19 +115,40 @@ export async function AppSidebar() {
     };
   });
 
+  // Meetups sits directly under Dashboard in the FOUNDER nav: it is the surface
+  // the soft launch is about, and the two navs used to disagree with each other
+  // about where it went (this one had it after Founders, AppHeader had it
+  // before) — that was drift, not a decision. Both are on this order now.
+  // Investors have no Dashboard, so "below Dashboard" has nothing to mean for
+  // them; their order is untouched.
   const isInvestor = profile?.account_type === "investor";
-  const navItems: { href: string; label: string; badge?: number }[] = isInvestor
+  const navItems: {
+    href: string;
+    label: string;
+    badge?: number;
+    tag?: string;
+  }[] = isInvestor
     ? [
         { href: "/funding", label: await tServer("Funding") },
         { href: "/community", label: await tServer("Community") },
-        { href: "/meetups", label: await tServer("Meetups") },
+        {
+          href: "/meetups",
+          label: await tServer("Meetups"),
+          // Equally new to investors — only the ORDER above is founder-specific.
+          ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
+        },
         { href: "/orgs", label: await tServer("Companies") },
       ]
     : [
         { href: "/dashboard", label: await tServer("Dashboard") },
+        {
+          href: "/meetups",
+          label: await tServer("Meetups"),
+          // Launch marker, not a surface gate: the item renders either way.
+          ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
+        },
         { href: "/community", label: await tServer("Community") },
         { href: "/browse", label: await tServer("Founders") },
-        { href: "/meetups", label: await tServer("Meetups") },
         {
           href: "/matches",
           label: await tServer("Connections"),
