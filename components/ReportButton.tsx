@@ -47,7 +47,7 @@ export function ReportButton({
         rows={2}
         maxLength={1000}
         placeholder={tr("What’s wrong with this?")}
-        className="w-full px-2 py-1.5 border border-line bg-white text-ink text-xs focus:outline-none focus:border-navy resize-none rounded-full"
+        className="w-full px-2 py-1.5 border border-line bg-white text-ink text-xs focus:outline-none focus:border-navy leading-relaxed resize-none"
       />
       {error && <div className="text-xs text-danger-ink">{error}</div>}
       <div className="flex gap-2">

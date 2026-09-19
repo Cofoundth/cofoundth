@@ -52,6 +52,23 @@ const PICK = "rounded-xl border text-left transition-colors";
 const PICK_ON = "border-navy bg-cream";
 const PICK_OFF = "border-line bg-white hover:border-navy";
 
+/** Step 1 at sm+: a section spans one five-column track per tile it holds.
+ *  Literal class strings, indexed by tile count, so Tailwind can see them. */
+const SPAN: Record<number, string> = {
+  1: "sm:col-span-1",
+  2: "sm:col-span-2",
+  3: "sm:col-span-3",
+  4: "sm:col-span-4",
+  5: "sm:col-span-5",
+};
+const COLS: Record<number, string> = {
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+  5: "sm:grid-cols-5",
+};
+
 /** Mirrors `urlOk` in actions.ts. Checked here so a bad link fails ON the step
  *  that holds the field, not four steps later in the server's error panel —
  *  the field is unmounted by then, so the browser's own `type="url"` check
@@ -389,12 +406,31 @@ export function HostMeetupWizard({
         ) : (
           <>
             {/* ── 1. Format ───────────────────────────────────────────── */}
+            {/* Phone: one section per band, two tiles across. sm+: the
+                sections pack side by side on a five-column track, each
+                spanning as many columns as it has tiles (3+2 / 4+1 today), so
+                all ten tiles fit the dialog without scrolling on a short
+                laptop screen. Each section is a row SUBGRID — eyebrow row +
+                tile row — so a label that wraps to two lines ("Something
+                else" in one column) lifts its whole row's eyebrows instead of
+                knocking that one section's tiles out of line. */}
             {step === 1 && (
-              <div className="space-y-6">
+              <div className="space-y-6 sm:grid sm:grid-cols-5 sm:gap-x-3 sm:gap-y-3 sm:space-y-0">
                 {MEETUP_CATEGORY_SECTIONS.map((section) => (
-                  <div key={section.label}>
-                    <Eyebrow className="mb-3">{tr(section.label)}</Eyebrow>
-                    <div className="grid grid-cols-2 gap-3">
+                  <div
+                    key={section.label}
+                    className={`${
+                      SPAN[Math.min(section.keys.length, 5)]
+                    } sm:row-span-2 sm:grid sm:grid-rows-subgrid sm:pb-2`}
+                  >
+                    <Eyebrow className="mb-3 sm:mb-0 sm:self-end">
+                      {tr(section.label)}
+                    </Eyebrow>
+                    <div
+                      className={`grid grid-cols-2 gap-3 ${
+                        COLS[Math.min(section.keys.length, 5)]
+                      }`}
+                    >
                       {section.keys.map((key) => {
                         const c = MEETUP_CATEGORIES[key];
                         const on = category === key;
@@ -406,11 +442,11 @@ export function HostMeetupWizard({
                             aria-pressed={on}
                             className={`${PICK} ${
                               on ? PICK_ON : PICK_OFF
-                            } flex flex-col gap-3 p-4`}
+                            } flex flex-col gap-3 p-4 sm:gap-2 sm:p-3`}
                           >
                             <span
                               aria-hidden="true"
-                              className="grid h-10 w-10 place-items-center rounded-lg bg-gold-soft"
+                              className="grid h-10 w-10 place-items-center rounded-lg bg-gold-soft text-xl"
                             >
                               {c.emoji}
                             </span>
@@ -427,8 +463,10 @@ export function HostMeetupWizard({
             )}
 
             {/* ── 2. Topic ────────────────────────────────────────────── */}
+            {/* Two across at sm+: twelve full-width rows stretched to the
+                dialog's 576px read as a long ledger and scroll twice as far. */}
             {step === 2 && (
-              <div className="space-y-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {(
                   Object.entries(MEETUP_TOPICS) as [
                     MeetupTopic,
@@ -450,7 +488,7 @@ export function HostMeetupWizard({
                         <span className="block text-sm font-medium text-ink">
                           {tr(t.label)}
                         </span>
-                        <span className="block text-xs text-ink-muted">
+                        <span className="block text-xs leading-relaxed text-ink-muted">
                           {tr(t.blurb)}
                         </span>
                       </span>
@@ -553,7 +591,7 @@ export function HostMeetupWizard({
                           <span className="block text-sm font-medium text-ink">
                             {tr("Add location")}
                           </span>
-                          <span className="block text-xs text-ink-muted">
+                          <span className="block text-xs leading-relaxed text-ink-muted">
                             {tr("Search, drop a pin, or type it in")}
                           </span>
                         </span>
@@ -580,7 +618,7 @@ export function HostMeetupWizard({
 
                 <div>
                   <span className={LABEL}>{tr("Who can join?")}</span>
-                  <div className="space-y-2">
+                  <div className="grid gap-2 sm:grid-cols-2">
                     {/* The blurbs describe what `visibility` ACTUALLY does
                         here. Since 0072 that is request-and-approve, matching
                         the reference product: a private meetup is LISTED with
@@ -616,7 +654,7 @@ export function HostMeetupWizard({
                             <span className="block text-sm font-medium text-ink">
                               {label}
                             </span>
-                            <span className="block text-xs text-ink-muted">
+                            <span className="block text-xs leading-relaxed text-ink-muted">
                               {blurb}
                             </span>
                           </span>

@@ -53,6 +53,19 @@ export const INTENT_LABELS: Record<string, string> = {
   explore: "Exploring",
 };
 
+/**
+ * The ONE intent a card shows when it has room for a single pill, picked by a
+ * FIXED priority — idea, then explore, then open — never by the order the
+ * member happened to tick them. /browse's first tab lists everyone whose
+ * intent INCLUDES "idea"; picking by selection order put an "Open to ideas"
+ * pill on cards listed under "Has an idea". Returns the key, not the label,
+ * so callers translate with whichever t() their side of the wire has.
+ */
+const INTENT_PRIORITY = ["idea", "explore", "open"] as const;
+export function primaryIntent(intent: string[] | null | undefined): string | null {
+  return INTENT_PRIORITY.find((k) => (intent ?? []).includes(k)) ?? null;
+}
+
 export const STAGE_LABELS: Record<string, string> = {
   exploring: "Exploring",
   building: "Building MVP",

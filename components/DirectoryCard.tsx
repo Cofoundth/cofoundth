@@ -16,8 +16,13 @@
 // ── THE SKELETON (measured against app.onfound.com, and shared) ────────────
 //   header  48px   avatar | name 14/600 + meta | stage glyph in the corner
 //   body    gap-4  three blocks, each at a RESERVED height, so the rows land
-//                  on the same y on every card: 80 / 117 / 194, card 254px
-//     1  pill + tags + sector dot   h-[21px]
+//                  on the same y on every card: 80 / 141 / 218, card 278px
+//     1  pill + tags              h-[21px]
+//        sector dot, own line      h-5, gap-1 above — ALWAYS reserved, even
+//                                  when empty. On one line the pill, the roles
+//                                  and the sector all truncated against each
+//                                  other at a 336px card (11 clipped runs at
+//                                  1536, most short by 3-9px: "Busine…").
 //     2  label + blurb, 2 lines     min-h-[39px] — line-clamp CLAMPS but does
 //                                   not RESERVE, which is what made this block
 //                                   41px on some cards and 61px on others
@@ -30,6 +35,11 @@
 //
 // Reserving those heights is also why these pages measure CLS 0.00: nothing
 // moves on load, because nothing was ever sized by its content.
+//
+// `reserveRows={false}` drops the two-line reservation on the blurb/reason
+// rows. ONLY for a single-column stack (the dashboard), where there is no
+// sibling to line up with and the reserve is ~20px of blank per card. A grid
+// must never pass it.
 
 import Link from "next/link";
 import { Building2, MapPin, Rocket, Sparkles } from "lucide-react";
@@ -108,6 +118,10 @@ export type DirectoryCardProps = {
    *  Message / Full Profile row). */
   headerAction?: ReactNode;
   footer?: ReactNode;
+
+  /** Default true. false = the blurb/reason rows size to their text instead
+   *  of reserving two lines. Single-column stacks only — see the header. */
+  reserveRows?: boolean;
 };
 
 export function DirectoryCard({
@@ -137,8 +151,10 @@ export function DirectoryCard({
   as: Heading = "h3",
   headerAction,
   footer,
+  reserveRows = true,
 }: DirectoryCardProps) {
   const interactive = Boolean(headerAction || footer);
+  const twoLineReserve = reserveRows ? " min-h-[39px]" : "";
   const inner = (
     // min-w-0 is load-bearing: a grid item defaults to min-width:auto and will
     // not shrink below its content's min-content width, so without it the card
@@ -195,26 +211,37 @@ export function DirectoryCard({
 
         {/* BODY — three reserved rows. */}
         <div className="mt-4 flex flex-col gap-4 flex-1 min-h-0">
-          <div className="flex h-[21px] items-center gap-2 overflow-hidden">
-            {pill && <CardPill>{pill}</CardPill>}
-            {/* The dot inside SectorList marks where identity ends and sector
-                begins — merged into one run they read as a single taxonomy. */}
-            {tags.length > 0 && (
-              <span className="min-w-0 truncate text-xs text-ink-muted">
-                {tags.slice(0, tagMax).join(" · ")}
-              </span>
-            )}
-            <SectorList
-              items={sectors}
-              max={sectorMax}
-              fallback={stageLabel || undefined}
-            />
+          <div className="flex flex-col gap-1">
+            <div className="flex h-[21px] items-center gap-2 overflow-hidden">
+              {pill && <CardPill>{pill}</CardPill>}
+              {tags.length > 0 && (
+                // leading-5, not text-xs's 16px: truncate clips at the line
+                // box, and a stacked Thai tone mark (ที่) inks 13px above the
+                // baseline — ~1px outside a 16px box, inside a 20px one.
+                <span className="min-w-0 truncate text-xs leading-5 text-ink-muted">
+                  {tags.slice(0, tagMax).join(" · ")}
+                </span>
+              )}
+            </div>
+            {/* Identity above, sector below — the dot inside SectorList still
+                marks the change of taxonomy. h-5 even when empty, so every
+                card in a row keeps the same height. */}
+            <div className="flex h-5 items-center overflow-hidden">
+              <SectorList
+                items={sectors}
+                max={sectorMax}
+                fallback={stageLabel || undefined}
+                className="leading-5"
+              />
+            </div>
           </div>
 
           {blurb && (
             <div className="flex flex-col gap-1.5 min-w-0">
               <CardLabel icon={Rocket}>{blurbLabel}</CardLabel>
-              <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted min-h-[39px]">
+              <p
+                className={`text-xs leading-relaxed line-clamp-2 text-ink-muted${twoLineReserve}`}
+              >
                 {blurb}
               </p>
             </div>
@@ -225,7 +252,9 @@ export function DirectoryCard({
               {reasonLabel && (
                 <CardLabel icon={Sparkles}>{reasonLabel}</CardLabel>
               )}
-              <p className="text-xs leading-relaxed line-clamp-2 text-ink-muted min-h-[39px]">
+              <p
+                className={`text-xs leading-relaxed line-clamp-2 text-ink-muted${twoLineReserve}`}
+              >
                 {reason}
               </p>
             </div>

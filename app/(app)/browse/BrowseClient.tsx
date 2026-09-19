@@ -17,6 +17,7 @@ import {
   STAGE_LABELS,
   COMMITMENT_LABELS,
   INTENT_LABELS,
+  primaryIntent,
   MATCH_FLOOR,
   NOTE_MAX,
   complementScore,
@@ -1225,11 +1226,10 @@ function ProfileCard({
           ? tr(STAGE_LABELS[profile.stage])
           : undefined
       }
-      pill={
-        (profile.intent ?? [])
-          .map((i) => (INTENT_LABELS[i] ? tr(INTENT_LABELS[i]) : null))
-          .filter(Boolean)[0] ?? null
-      }
+      pill={(() => {
+        const k = primaryIntent(profile.intent);
+        return k ? tr(INTENT_LABELS[k]) : null;
+      })()}
       tags={(profile.i_am ?? []).map((r) => tr(ROLE_LABELS[r])).filter(Boolean)}
       sectors={profile.industry}
       sectorMax={1}

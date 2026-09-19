@@ -271,8 +271,12 @@ export function PostCard({
               </div>
             )}
 
-            {/* Footer: like + comment */}
-            <div className="mt-3 flex items-center gap-4 text-xs">
+            {/* Footer: like + comment + share, and Report as the last, quietest
+                item. It used to sit on a row of its own (24px per post).
+                `flex-wrap` is load-bearing: opening Report swaps the link
+                for a full-width reason box, which then wraps onto its own
+                line under the row instead of squeezing it. */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
               <button
                 type="button"
                 onClick={() =>
@@ -311,13 +315,8 @@ export function PostCard({
                 title={post.title ?? post.content.slice(0, 80)}
                 className="inline-flex items-center gap-1 text-ink-muted hover:text-navy transition-colors ml-auto"
               />
+              {!post.isOwn && <ReportButton kind="post" targetId={post.id} />}
             </div>
-
-            {!post.isOwn && (
-              <div className="mt-2">
-                <ReportButton kind="post" targetId={post.id} />
-              </div>
-            )}
           </div>
         </div>
       </div>

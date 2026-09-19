@@ -126,8 +126,10 @@ function Modal({
   onClose: () => void;
   children: React.ReactNode;
   wide?: boolean;
-  /** The create wizard: 520px, and it owns its own Close/Exit affordance
-   *  because leaving mid-flow has to route through the discard confirm. A
+  /** The create wizard: 640px (the system's narrow-column width — at 520 the
+   *  format tiles scrolled on a short laptop screen), and it owns its own
+   *  Close/Exit affordance because leaving mid-flow has to route through the
+   *  discard confirm. A
    *  backdrop click therefore does NOT dismiss — a stray click outside a
    *  half-filled form should not throw the form away. */
   wizard?: boolean;
@@ -146,7 +148,7 @@ function Modal({
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className={`relative my-8 w-full ${
-          wizard ? "max-w-[520px]" : wide ? "max-w-xl" : "max-w-lg"
+          wizard ? "max-w-[640px]" : wide ? "max-w-xl" : "max-w-lg"
         } rounded-xl border border-line bg-white shadow-lg`}
       >
         {!wizard && (
@@ -196,6 +198,10 @@ export function MeetupsClient({
   );
 
   const upcoming = [...thisMonth, ...later];
+  const hasUpcoming = upcoming.length > 0;
+  // With the toggle hidden, a map chosen before the last meetup dropped off
+  // (a revalidate after a cancel) must not strand the viewer on an empty map.
+  const shownView = hasUpcoming ? view : "list";
   const withOver = (m: MeetupItemData): MeetupItemData =>
     over[m.id] ? { ...m, ...over[m.id] } : m;
   const selected = selectedId
@@ -260,20 +266,26 @@ export function MeetupsClient({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setView("list")}
-            className={toggleCls(view === "list")}
-          >
-            <ListIcon className="w-3.5 h-3.5" /> {tr("List")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("map")}
-            className={toggleCls(view === "map")}
-          >
-            <MapIcon className="w-3.5 h-3.5" /> {tr("Map")}
-          </button>
+          {/* Nothing upcoming = nothing to list or map; the empty state
+              already carries the one useful action. */}
+          {hasUpcoming && (
+            <>
+              <button
+                type="button"
+                onClick={() => setView("list")}
+                className={toggleCls(view === "list")}
+              >
+                <ListIcon className="w-3.5 h-3.5" /> {tr("List")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("map")}
+                className={toggleCls(view === "map")}
+              >
+                <MapIcon className="w-3.5 h-3.5" /> {tr("Map")}
+              </button>
+            </>
+          )}
           {!investor && (
             <button
               type="button"
@@ -287,7 +299,7 @@ export function MeetupsClient({
         </div>
       </div>
 
-      {view === "map" ? (
+      {shownView === "map" ? (
         <div>
           <MeetupMap pins={pins} />
           {pins.length === 0 && (
@@ -296,7 +308,7 @@ export function MeetupsClient({
             </p>
           )}
         </div>
-      ) : upcoming.length === 0 ? (
+      ) : !hasUpcoming ? (
         <EmptyState
           icon={Calendar}
           title={tr("No meetups on the calendar")}

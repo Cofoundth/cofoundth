@@ -9,6 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import {
   ROLE_LABELS,
   INTENT_LABELS,
+  primaryIntent,
   STAGE_LABELS,
   complementScore,
 } from "@/lib/matching";
@@ -278,6 +279,66 @@ export default async function DashboardPage() {
             here the Complement-Score ranking, there the composer + full feed.
             The feed itself survives as a digest in the right rail. */}
         <section className="lg:col-span-5 min-w-0 space-y-8">
+          {/* MEETUPS FIRST — the soft launch's headline, and the nav lists it
+              directly under Dashboard. Below four ranked founder cards it sat
+              ~1.5 screens down on a 1536x674 laptop. The empty-state panel
+              carries no eyebrow of its own: the h2 right above it already
+              says "Meetups". */}
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold tracking-normal">
+                {await tServer("Meetups")}
+              </h2>
+              <Link
+                href="/meetups"
+                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
+              >
+                {await tServer("See all")}
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            {!upcomingMeetups?.length ? (
+              <div className="bg-navy p-6 rounded-3xl">
+                <p className="text-white leading-relaxed mb-5">
+                  {await tServer(
+                    "No meetups on the calendar yet. Host one — every founder on Cofoundee will see it.",
+                  )}
+                </p>
+                <Link
+                  href="/meetups/new"
+                  className="inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-5 py-2.5 text-sm tracking-wide transition-colors rounded-full"
+                >
+                  {await tServer("Start the first meetup")}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            ) : (
+              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+                {upcomingMeetups.map((mt) => (
+                  <Link
+                    key={mt.id as string}
+                    href={`/meetups/${mt.slug as string}`}
+                    className="block p-4 hover:bg-cream transition-colors group"
+                  >
+                    <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
+                      {mt.title as string}
+                    </div>
+                    <div className="text-xs text-ink-muted mt-1 truncate">
+                      {new Date(mt.starts_at as string).toLocaleDateString(
+                        locale === "th" ? "th-TH" : "en-GB",
+                        { day: "numeric", month: "short" },
+                      )}
+                      {" · "}
+                      {mt.format === "online"
+                        ? t("Online", locale)
+                        : ((mt.location as string | null) ?? t("In person", locale))}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold tracking-normal">
@@ -332,13 +393,10 @@ export default async function DashboardPage() {
                         ? t(STAGE_LABELS[f.stage as string], locale)
                         : undefined
                     }
-                    pill={
-                      ((f.intent as string[] | null) ?? [])
-                        .map((x) =>
-                          INTENT_LABELS[x] ? t(INTENT_LABELS[x], locale) : null,
-                        )
-                        .filter(Boolean)[0] ?? null
-                    }
+                    pill={(() => {
+                      const k = primaryIntent(f.intent as string[] | null);
+                      return k ? t(INTENT_LABELS[k], locale) : null;
+                    })()}
                     tags={((f.i_am as string[] | null) ?? []).map((r) =>
                       t(ROLE_LABELS[r] ?? r, locale),
                     )}
@@ -358,69 +416,15 @@ export default async function DashboardPage() {
                     chips={((f.looking_for as string[] | null) ?? []).map((r) =>
                       t(ROLE_LABELS[r] ?? r, locale),
                     )}
+                    // A stack, not a grid, from lg up — nothing to align with.
+                    // In the sm 2-up the rows stretch and "Looking for" is
+                    // mt-auto, so the bottom row still lands level.
+                    reserveRows={false}
                   />
                 );
               })}
             </div>
           )}
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold tracking-normal">
-                {await tServer("Meetups")}
-              </h2>
-              <Link
-                href="/meetups"
-                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
-              >
-                {await tServer("See all")}
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            {!upcomingMeetups?.length ? (
-              <div className="bg-navy p-6 rounded-3xl">
-                <p className="eyebrow text-xs uppercase tracking-[0.25em] text-gold mb-3">
-                  {await tServer("Meetups")}
-                </p>
-                <p className="text-white leading-relaxed mb-5">
-                  {await tServer(
-                    "No meetups on the calendar yet. Host one — every founder on Cofoundee will see it.",
-                  )}
-                </p>
-                <Link
-                  href="/meetups/new"
-                  className="inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-5 py-2.5 text-sm tracking-wide transition-colors rounded-full"
-                >
-                  {await tServer("Start the first meetup")}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            ) : (
-              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
-                {upcomingMeetups.map((mt) => (
-                  <Link
-                    key={mt.id as string}
-                    href={`/meetups/${mt.slug as string}`}
-                    className="block p-4 hover:bg-cream transition-colors group"
-                  >
-                    <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
-                      {mt.title as string}
-                    </div>
-                    <div className="text-xs text-ink-muted mt-1 truncate">
-                      {new Date(mt.starts_at as string).toLocaleDateString(
-                        locale === "th" ? "th-TH" : "en-GB",
-                        { day: "numeric", month: "short" },
-                      )}
-                      {" · "}
-                      {mt.format === "online"
-                        ? t("Online", locale)
-                        : ((mt.location as string | null) ?? t("In person", locale))}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
 
           <div>
