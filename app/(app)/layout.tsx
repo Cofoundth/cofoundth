@@ -2,9 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
-import { tServer } from "@/lib/i18n-server";
-import { AppSidebar } from "@/components/AppSidebar";
-import { AppFooter } from "@/components/AppFooter";
+import { AppShell } from "@/components/AppShell";
 import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 import {
   isInvestorReadableRoute,
@@ -53,27 +51,18 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
+  // Gates above, chrome below. The chrome is shared with signed-in marketing
+  // routes (app/(marketing)/layout.tsx) through AppShell; the gates are not.
   return (
-    <div className="min-h-screen bg-cream">
-      {/* First tab stop on every app page: lets keyboard users jump the ~8-item
-          nav instead of tabbing through it on each navigation. */}
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-cream focus:text-navy focus:border focus:border-navy focus:px-4 focus:py-2 focus:text-sm focus:tracking-wide"
-      >
-        {await tServer("Skip to content")}
-      </a>
-      {/* Persistent left rail on desktop, slim top bar on mobile. */}
-      <AppSidebar />
-      <div className="lg:pl-64 min-h-[calc(100vh-4rem)] lg:min-h-screen flex flex-col">
-        <main id="main" className="flex-1">
-          <IncompleteProfileBanner
-            complete={isInvestor || !!profile?.profile_complete}
-          />
-          {children}
-        </main>
-        {!isConversation && <AppFooter />}
-      </div>
-    </div>
+    <AppShell
+      footer={!isConversation}
+      banner={
+        <IncompleteProfileBanner
+          complete={isInvestor || !!profile?.profile_complete}
+        />
+      }
+    >
+      {children}
+    </AppShell>
   );
 }

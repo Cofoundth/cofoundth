@@ -30,7 +30,10 @@ export default async function InsightsPage() {
     <Section rhythm="marketing">
       {/* Narrow intro over a wide grid — their editorial rhythm. */}
       <div className="max-w-[640px] mb-8">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
+        {/* Hidden inside the app shell: the rail names the section there, the
+            same call app pages made ("Eyebrow removed — the sidebar names the
+            section"), and it is what puts the title on the app offset. */}
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6 in-data-[shell=public]:hidden">
           {tr("Insights")}
         </div>
         <h1 className="text-d2 lg:text-d3 mb-4">

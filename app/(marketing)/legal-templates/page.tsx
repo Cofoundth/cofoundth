@@ -99,7 +99,8 @@ export default async function LegalTemplatesPage() {
   return (
     <Section rhythm="marketing">
       <div className="mb-8 max-w-[640px]">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
+        {/* Hidden inside the app shell — see insights/page.tsx. */}
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6 in-data-[shell=public]:hidden">
           {resources}
         </div>
         <h1 className="text-d2 lg:text-d3 mb-4">{heading}</h1>

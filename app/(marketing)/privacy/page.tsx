@@ -8,14 +8,17 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <article className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
+      {/* Both hidden inside the app shell (see insights/page.tsx): signed in,
+          the rail is the way back and it already names the section, so the two
+          of them only push this h1 off the 56px offset every app page shares. */}
       <Link
         href="/"
-        className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
+        className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5 in-data-[shell=public]:hidden"
       >
         <ArrowLeft className="w-4 h-4" /> Back to home
       </Link>
 
-      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
+      <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6 in-data-[shell=public]:hidden">
         Legal &middot; PDPA compliant
       </div>
       <h1 className="text-d2 lg:text-d3 mb-4">

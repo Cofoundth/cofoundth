@@ -41,7 +41,8 @@ export default function EventsPage() {
   return (
     <Section rhythm="marketing">
       <div className="mb-8 max-w-[640px]">
-        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
+        {/* Hidden inside the app shell — see insights/page.tsx. */}
+        <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6 in-data-[shell=public]:hidden">
           Community
         </div>
         <h1 className="text-d2 lg:text-d3 mb-4">Events</h1>
@@ -109,7 +110,8 @@ export default function EventsPage() {
         })}
       </div>
 
-      <div className="mt-16 p-6 bg-cream border border-line rounded-xl">
+      {/* A signup pitch — meaningless to a member, so hidden in the app shell. */}
+      <div className="mt-16 p-6 bg-cream border border-line rounded-xl in-data-[shell=public]:hidden">
         <h3 className="text-xl mb-2">
           Want to host an event?
         </h3>

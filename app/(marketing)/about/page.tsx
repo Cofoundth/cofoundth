@@ -46,7 +46,8 @@ export default async function AboutPage() {
       <section className="py-[88px] bg-cream border-b border-line">
         <div className="max-w-[1120px] mx-auto px-6 lg:px-10">
           <div className="max-w-[640px]">
-            <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6">
+            {/* Hidden inside the app shell — see insights/page.tsx. */}
+            <p className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-6 in-data-[shell=public]:hidden">
               {tr("Our story")}
             </p>
             <h1 className="text-d2 lg:text-d3 mb-4">

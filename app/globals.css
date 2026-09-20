@@ -249,3 +249,64 @@
     cursor: not-allowed;
   }
 }
+
+/* ── A public page inside the app shell ───────────────────────────────────
+   A signed-in visitor gets the app shell on marketing routes too
+   (components/AppShell.tsx marks that <main> data-shell="public"). Such a page
+   is acting as an app page, so it takes the app's layout rules instead of the
+   marketing ones it was written with:
+
+     py-[88px]       -> 56px   CLAUDE.md: app routes are py-14; "do not put an
+                               app page back on 88". Covers <Section
+                               rhythm="marketing"> AND every hand-typed
+                               py-[88px] (articles, legal) in one place.
+     lg:text-d3      -> d2     app page titles are text-d2, flat.
+     lg:grid-cols-3  -> 2 below xl   the content column is viewport minus the
+                               256px rail, so a three-up grid at lg is ~219px
+                               columns at 1024 — the bug CLAUDE.md records.
+                               App grids go three-up at xl; so do these here.
+
+   Why global CSS rather than a prop on every page: the marketing pages are
+   written once for the logged-out reader, and the SAME markup has to serve
+   both. Editing each page to branch on auth would thread `user` into a dozen
+   server components that otherwise never need it, and the next public page
+   would forget. Logged out, nothing here matches — the attribute is absent.
+
+   UNLAYERED on purpose: these must beat the `utilities` layer, and unlayered
+   styles outrank every layer regardless of specificity. (Inside @layer base
+   they would silently lose.) The Thai line-height guard above is !important
+   and still applies to the d2 titles, since those elements carry .text-d2.
+
+   ⚠️ COUPLED TO THREE LITERAL CLASS STRINGS — change one, change both ends.
+   These selectors match class NAMES, not roles, so a rename does not error:
+   the rule simply stops matching and the page silently reverts to marketing
+   spacing/size for signed-in members. If you touch any of these, update the
+   matching selector below in the same commit:
+
+     .py-\[88px\]      <- RHYTHM.marketing in components/ui/Section.tsx (and
+                          every hand-typed py-[88px]: the legal pages, the
+                          article/insight layouts, app/(marketing)/p/[id]).
+     .lg\:text-d3      <- the marketing page-title class `text-d2 lg:text-d3`
+                          (CLAUDE.md "Typography"; e.g. founders/[slug],
+                          insights/[slug], p/[id]).
+     .lg\:grid-cols-3  <- the marketing card-grid class
+                          `gap-4 sm:grid-cols-2 lg:grid-cols-3`.
+
+   Grep for the class before renaming it — `rg 'py-\[88px\]|lg:text-d3|lg:grid-cols-3'`
+   — and if a rhythm/title/grid class is ever tokenised, this block must be
+   re-keyed at the same time. */
+[data-shell="public"] .py-\[88px\] {
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
+}
+@media (width >= 64rem) {
+  [data-shell="public"] .lg\:text-d3 {
+    font-size: 2.0625rem; /* --text-d2 (33px); literal, @theme inline does not guarantee the var */
+    line-height: 1.25;
+  }
+}
+@media (width >= 64rem) and (width < 80rem) {
+  [data-shell="public"] .lg\:grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

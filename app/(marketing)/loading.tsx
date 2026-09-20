@@ -12,9 +12,31 @@ import { Section } from "@/components/ui";
 
 export default function Loading() {
   return (
+    <>
+    {/* Signed in, this fallback streams inside AppShell's <main
+        data-shell="public">, beside the 256px rail. The landing-hero copy
+        below makes no sense there, so the app surface gets a plain page
+        skeleton instead: 640px intro, flat text-d2 title (33px x 1.3 ≈ 43px),
+        app rhythm py-14 / mb-2 / mb-8. */}
+    <div
+      aria-hidden="true"
+      className="hidden in-data-[shell=public]:block animate-pulse motion-reduce:animate-none"
+    >
+      <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-14">
+        <div className="max-w-[640px] mb-8">
+          <div className="h-[43px] w-2/3 bg-line/70 mb-2" />
+          <div className="h-4 w-full bg-line/50" />
+        </div>
+        <div className="space-y-2.5">
+          <div className="h-4 w-full bg-line/50" />
+          <div className="h-4 w-full bg-line/50" />
+          <div className="h-4 w-2/3 bg-line/50" />
+        </div>
+      </div>
+    </div>
     <section
       aria-hidden="true"
-      className="bg-cream border-b border-line animate-pulse motion-reduce:animate-none"
+      className="bg-cream border-b border-line animate-pulse motion-reduce:animate-none in-data-[shell=public]:hidden"
     >
       <Section rhythm="marketing">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
@@ -82,5 +104,6 @@ export default function Loading() {
         </div>
       </Section>
     </section>
+    </>
   );
 }

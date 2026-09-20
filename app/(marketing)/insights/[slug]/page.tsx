@@ -85,7 +85,8 @@ export default async function InsightPage({ params }: Props) {
         ))}
       </div>
 
-      <div className="mt-16 pt-8 border-t border-line">
+      {/* Signup CTA — hidden for members inside the app shell. */}
+      <div className="mt-16 pt-8 border-t border-line in-data-[shell=public]:hidden">
         <Link
           href="/signup"
           className="inline-block px-8 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"

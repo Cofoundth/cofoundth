@@ -15,8 +15,10 @@ import { getUserOrgs, getActiveOrgId } from "@/lib/active-org";
 import { SidebarNav } from "@/components/SidebarNav";
 
 // App chrome, Onfound-style: a persistent left rail on desktop, a slim top bar
-// on mobile. Public/marketing pages keep the horizontal AppHeader — the same
-// split their product uses (marketing site = top nav, product = sidebar).
+// on mobile. Mounted through components/AppShell.tsx on EVERY signed-in page,
+// public/marketing routes included. Onfound splits chrome (marketing = top nav,
+// product = sidebar) because their marketing site is another domain; here it
+// is one domain, and two menus meant members bounced between them.
 export async function AppSidebar() {
   const user = await getUser();
   if (!user) return null;
@@ -53,6 +55,7 @@ export async function AppSidebar() {
     { count: unreadMessages },
     { count: unreadNotifs },
     { data: notifRows },
+    { count: publishedInsights },
   ] = await Promise.all([
     supabase
       .from("interests")
@@ -75,6 +78,14 @@ export async function AppSidebar() {
       .eq("recipient_id", user.id)
       .order("created_at", { ascending: false })
       .limit(12),
+    // Gates the Insights nav item: a permanent item pointing at an empty
+    // "nothing published yet" page would be a dead end. Same predicate as the
+    // public list in lib/insights.ts (status = 'published'; RLS also exposes
+    // only published rows), head-only so it returns a count and no rows.
+    supabase
+      .from("insights")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published"),
   ]);
 
   const actorIds = [
@@ -116,12 +127,19 @@ export async function AppSidebar() {
   });
 
   // Meetups sits directly under Dashboard in the FOUNDER nav: it is the surface
-  // the soft launch is about, and the two navs used to disagree with each other
-  // about where it went (this one had it after Founders, AppHeader had it
-  // before) — that was drift, not a decision. Both are on this order now.
+  // the soft launch is about. (A second, horizontal copy of this array used to
+  // live in AppHeader and disagreed about where Meetups went — drift, not a
+  // decision. That copy is gone; public pages render this rail too.)
   // Investors have no Dashboard, so "below Dashboard" has nothing to mean for
   // them; their order is untouched.
   const isInvestor = profile?.account_type === "investor";
+  // Directly after Community in BOTH arrays, and only once something is
+  // published. Kept well apart from "Profile insights" (/activity) — different
+  // things, and the Thai labels differ too (บทความ vs อินไซต์).
+  const insightsItem =
+    (publishedInsights ?? 0) > 0
+      ? [{ href: "/insights", label: await tServer("Insights") }]
+      : [];
   const navItems: {
     href: string;
     label: string;
@@ -131,6 +149,7 @@ export async function AppSidebar() {
     ? [
         { href: "/funding", label: await tServer("Funding") },
         { href: "/community", label: await tServer("Community") },
+        ...insightsItem,
         {
           href: "/meetups",
           label: await tServer("Meetups"),
@@ -148,6 +167,7 @@ export async function AppSidebar() {
           ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
         },
         { href: "/community", label: await tServer("Community") },
+        ...insightsItem,
         { href: "/browse", label: await tServer("Founders") },
         {
           href: "/matches",

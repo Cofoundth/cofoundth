@@ -33,7 +33,8 @@ export default async function PublicFoundersPage() {
     <Section rhythm="marketing">
       {/* Header */}
       <div className="max-w-[640px] mb-8">
-        <Eyebrow className="mb-6">{tr("Community")}</Eyebrow>
+        {/* Hidden inside the app shell — see insights/page.tsx. */}
+        <Eyebrow className="mb-6 in-data-[shell=public]:hidden">{tr("Community")}</Eyebrow>
         <h1 className="text-d2 lg:text-d3 mb-4">
           {tr("Founders")}
         </h1>
@@ -95,7 +96,8 @@ export default async function PublicFoundersPage() {
       )}
 
       {/* Conversion — the whole point of the preview. */}
-      <div className="mt-16 bg-navy text-white p-10 lg:p-12 text-center rounded-xl">
+      {/* A member is already converted: hidden inside the app shell. */}
+      <div className="mt-16 bg-navy text-white p-10 lg:p-12 text-center rounded-xl in-data-[shell=public]:hidden">
         <h2 className="text-d2 lg:text-d3 text-white mb-4">
           {tr("Where Thai founders connect")}
         </h2>

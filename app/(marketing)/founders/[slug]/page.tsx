@@ -12,8 +12,9 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, Lock, MapPin } from "lucide-react";
+import { getUser } from "@/lib/auth";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { ROLE_LABELS, STAGE_LABELS } from "@/lib/matching";
@@ -39,6 +40,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicFounderPage({ params }: Props) {
   const { slug } = await params;
+
+  // Signed in? Send them to the real profile. Same shape as app/(marketing)/p/
+  // [id]/page.tsx, which bounces a member to /community/[id]: a member landing
+  // here was shown the logged-out "Join free to see the full profile" wall —
+  // inside their own app shell, sidebar and all. /profile/[id] resolves a slug
+  // as well as a legacy UUID (lib/slug.ts isUuid decides which column it reads),
+  // so the slug carries straight over, and /profile/... is investor-readable
+  // (lib/investor-routes.ts), so this is not a trap for an investor account.
+  //
+  // A slug that does not resolve gets /profile's notFound() instead of this
+  // page's — the same 404, rendered in the app chrome. The gates on the (app)
+  // layout still apply: a founder who has not finished onboarding is sent to
+  // /onboarding, exactly as any other in-app link would send them.
+  if (await getUser()) redirect(`/profile/${slug}`);
+
   const founder = await getPublicFounder(slug);
   if (!founder) notFound();
 

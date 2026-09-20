@@ -1,20 +1,12 @@
 import Link from "next/link";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
-import { getUser } from "@/lib/auth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
-import { AppHeader } from "@/components/AppHeader";
 
-// Logged-in visitors get the exact app navbar (so public content like
-// /insights and /legal-templates feels in-app); logged-out visitors get the
-// minimal landing nav focused on signup.
+// The logged-out bar only. A signed-in visitor never reaches this: the
+// marketing layout hands them the app shell (components/AppShell.tsx) instead.
 export async function MarketingNav() {
-  const user = await getUser();
-  if (user) {
-    return <AppHeader />;
-  }
-
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);
 

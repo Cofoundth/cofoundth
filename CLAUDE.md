@@ -492,14 +492,28 @@ two-column row at 272px each, and the insight editor's body textarea lands at
 page containers, and this does not apply to them.
 
 ### App chrome — sidebar, not top nav
-Same split their product uses:
-- **App routes** (`app/(app)/*`, including `/investor`): `components/AppSidebar.tsx` — a
-  fixed `w-64` left rail on `lg+` (brand → vertical nav with badges → org switcher /
-  language / notifications / avatar / sign out), and a slim `sticky` top bar with the
-  hamburger below `lg`. The layout offsets content with `lg:pl-64`.
-- **Marketing routes**: keep the horizontal `AppHeader` (rendered by `MarketingNav`).
-- Adding an app route that investors may read means adding it to the allowlist in
-  `app/(app)/layout.tsx` **and** to `navItems` in `AppSidebar`.
+**Signed in = the app shell on EVERY page.** Onfound splits chrome by surface because
+their marketing site is a different domain; ours is one domain, so a member gets one menu.
+- **The shell** is `components/AppShell.tsx` (skip link → `AppSidebar` → `lg:pl-64`
+  wrapper → `<main id="main">` → `AppFooter`). `AppSidebar` is a fixed `w-64` left rail
+  on `lg+` (brand → vertical nav with badges → org switcher / language / notifications /
+  avatar / sign out) and a slim `sticky` top bar with the hamburger below `lg`.
+- **App routes** (`app/(app)/*`, including `/investor`): `app/(app)/layout.tsx` runs its
+  gates (login, onboarding, investor allowlist) and then renders `AppShell`.
+- **Marketing routes, signed in**: `app/(marketing)/layout.tsx` renders the same
+  `AppShell` with `surface="public"` and **no gates** (public pages stay readable to a
+  founder mid-onboarding and to investors). Its `<main>` carries `data-shell="public"`,
+  and an unlayered block at the end of `globals.css` puts those pages on app rules:
+  `py-[88px]` → 56px, `lg:text-d3` → d2, `lg:grid-cols-3` → two-up below `xl`. A page
+  element that only makes sense logged out takes `in-data-[shell=public]:hidden`.
+- **Marketing routes, logged out**: `MarketingNav` (logo / `LanguageSwitcher` / sign in /
+  join) + `MarketingFooter`. There is no second nav array anymore — `AppHeader` was
+  deleted; do not bring it back.
+- Adding an app route that investors may read means adding it to
+  `isInvestorReadableRoute` in `lib/investor-routes.ts` — the ONE allowlist, read by
+  `proxy.ts` (the real gate, the only layer that sees client-side navigation) and by
+  `app/(app)/layout.tsx` (defence in depth on a full load) — **and** to `navItems` in
+  `AppSidebar`.
 
 ### Surfaces — one radius per role
 This table REPLACES the old "cards/panels `rounded-xl`" line, which described

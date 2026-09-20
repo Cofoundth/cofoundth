@@ -27,8 +27,11 @@ export function LandingCta({
   const tr = (en: string) => t(en, locale);
   const showCount = founderCount >= SOCIAL_PROOF_FLOOR;
 
+  // A signed-in member already has a profile: inside the app shell
+  // (data-shell="public") this sign-up pitch — and its landing-only d4
+  // heading — is meaningless, so it disappears there.
   return (
-    <section className="border-t border-line bg-cream py-[88px]">
+    <section className="border-t border-line bg-cream py-[88px] in-data-[shell=public]:hidden">
       <div className="mx-auto max-w-[780px] px-6 text-center lg:px-10">
         <h2 className="text-d3 lg:text-d4">
           {tr("It's still early — which is the best reason to join now.")}
