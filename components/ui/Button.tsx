@@ -20,6 +20,9 @@
 // NOT in the scale on purpose: `px-5 py-2.5` (7 sites) and `px-5 py-3` (4)
 // sit between sm and md. When migrating those, use the nearest size AND pass
 // className="px-5 py-2.5" if the exact pixels matter — do not silently resize.
+// Since cn() merges, such an override now wins in BOTH directions; before it
+// only worked upward, which is why the migration notes list per-site pixel
+// deltas for the sizes that had to round up.
 //
 // Disabled state was three different opacities in the wild (40 / 50 / 60);
 // `disabled:opacity-50` is now the single answer, always applied.
@@ -36,21 +39,42 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 import { cn } from "./cn";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "inverse"
+  | "danger-outline";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
-// ⚠️ A destructive button must pass variant="danger" — appending
-// `className="bg-danger-ink"` to the default primary does NOT work. `cn` does
-// not de-duplicate conflicting utilities, so both backgrounds land on the
-// element at equal specificity and CSS source order decides; Tailwind emits
-// colour utilities alphabetically, which puts `.bg-navy` AFTER `.bg-danger-ink`
-// and paints the button navy. The variant REPLACES the background instead —
-// the same reason Input.tsx swaps its border colour rather than appending one.
+// ⚠️ A destructive button must pass variant="danger" rather than appending
+// `className="bg-danger-ink"` to the default primary. cn() now merges, so an
+// appended background would in fact win — but the variant is still the only
+// honest way to say it, because a variant also swaps the TEXT and HOVER
+// colours, which a single appended `bg-*` does not.
+//
+// ── THE SIX VARIANTS, AND THE TWO THAT WERE DELIBERATELY NOT ADDED ─────────
+//   primary         the navy CTA (~63 hand-rolled sites)
+//   secondary       hairline outline (41 sites). ALSO the home for the 3
+//                   `outline-navy` buttons — decision D5 merged them here
+//                   rather than adding a seventh variant for three call sites.
+//   ghost           text-only actions
+//   danger          solid destructive (4 sites)
+//   inverse         white-on-navy CTA, for a button sitting ON a dark panel
+//                   (4 sites). Decision D4 merged the 2 gold-on-navy `accent`
+//                   buttons into this rather than keeping a gold variant: gold
+//                   is a SURFACE token, and the two faces were doing one job.
+//   danger-outline  the quiet destructive (5 sites) — and the home for the 2
+//                   "secondary that turns red on hover" buttons (D5).
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-navy hover:bg-navy-dark text-white",
   secondary: "bg-transparent border border-line hover:border-navy text-navy",
   ghost: "bg-transparent text-ink hover:text-navy",
   danger: "bg-danger-ink hover:bg-danger-ink-dark text-white",
+  inverse: "bg-white text-navy hover:bg-cream",
+  "danger-outline":
+    "bg-transparent border border-danger-line text-danger-ink hover:bg-danger-surface",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {

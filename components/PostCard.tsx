@@ -45,20 +45,18 @@ function timeAgo(iso: string, locale: Locale): string {
 
 const KIND_META: Record<
   PostKind,
-  { icon: typeof Trophy; en: string; tone: string; bg: string } | null
+  { icon: typeof Trophy; en: string; tone: string } | null
 > = {
   post: null,
   milestone: {
     icon: Trophy,
     en: "hit a milestone",
     tone: "text-gold-ink",
-    bg: "bg-gold-soft",
   },
   show_and_tell: {
     icon: Rocket,
     en: "shipped",
     tone: "text-navy",
-    bg: "bg-cream",
   },
 };
 
@@ -154,7 +152,16 @@ export function PostCard({
   }
 
   return (
-    <article className={`bg-white rounded-3xl shadow-xs overflow-hidden ${meta?.bg ?? ""}`}>
+    // Decision D6, 2026-09: KIND_META used to carry a `bg` tint
+    // (bg-gold-soft for a milestone, bg-cream for show-and-tell) appended
+    // after `bg-white`. Tailwind emits both of those BEFORE `.bg-white`, so
+    // the tint has never rendered once — verified at runtime on a live
+    // milestone post, which computed rgb(255,255,255) with `bg-gold-soft`
+    // sitting right there in its class attribute. It was deleted rather than
+    // switched on: a post kind is already marked by its icon and its label,
+    // and turning two card tints on after the fact is a design change nobody
+    // asked for. The kind still colours its LABEL via `meta.tone`.
+    <article className="bg-white rounded-3xl shadow-xs overflow-hidden">
       <div className="p-5">
         <div className="flex items-start gap-3">
           <Link href={authorHref} className="shrink-0">
