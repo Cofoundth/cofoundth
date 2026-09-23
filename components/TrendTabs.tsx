@@ -22,7 +22,7 @@ export function TrendTabs({
             key={s.name}
             type="button"
             onClick={() => setActive(i)}
-            className={`px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
+            className={`px-4 py-2 text-sm tracking-wide border-b-2 -mb-px rounded-none transition-colors ${
               i === active
                 ? "border-navy text-navy font-medium"
                 : "border-transparent text-ink-muted hover:text-navy"

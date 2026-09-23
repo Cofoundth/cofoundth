@@ -463,7 +463,7 @@ export function BrowseClient({
             key={key}
             type="button"
             onClick={() => setIdeaTab(key)}
-            className={`pb-3 -mb-px text-sm tracking-wide border-b-2 transition-colors ${
+            className={`pb-3 -mb-px text-sm tracking-wide border-b-2 rounded-none transition-colors ${
               ideaTab === key
                 ? "border-navy text-navy font-medium"
                 : "border-transparent text-ink-muted hover:text-navy"
