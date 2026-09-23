@@ -8,7 +8,10 @@ import { signOutAction } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/Avatar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
-import { NotificationBell, type NotifItem } from "@/components/NotificationBell";
+import {
+  NotificationBell,
+  type NotifItem,
+} from "@/components/NotificationBell";
 import { MobileMenu } from "@/components/MobileMenu";
 import { OrgSwitcher } from "@/components/OrgSwitcher";
 import { getUserOrgs, getActiveOrgId } from "@/lib/active-org";
@@ -104,22 +107,25 @@ export async function AppSidebar() {
   const actorMap = new Map((actorRows ?? []).map((a) => [a.id as string, a]));
   const notifItems: NotifItem[] = (notifRows ?? []).map((n) => {
     const actor = n.actor_id
-      ? (actorMap.get(n.actor_id as string) as
+      ? ((actorMap.get(n.actor_id as string) as
           | {
               id: string;
               slug: string | null;
               photo_url: string | null;
               full_name: string | null;
             }
-          | undefined) ?? null
+          | undefined) ?? null)
       : null;
     return {
       id: n.id as string,
       type: n.type as string,
       entityId: (n.entity_id as string | null) ?? null,
       data:
-        (n.data as { actor_name?: string; post_title?: string; slug?: string }) ??
-        null,
+        (n.data as {
+          actor_name?: string;
+          post_title?: string;
+          slug?: string;
+        }) ?? null,
       readAt: (n.read_at as string | null) ?? null,
       createdAt: n.created_at as string,
       actor,
@@ -200,11 +206,19 @@ export async function AppSidebar() {
     <>
       {/* Desktop rail */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 z-30 flex-col bg-white border-r border-line">
-        <div className="px-5 h-16 flex items-center shrink-0">
+        {/* Brand left, bell right — alerts belong where the eye lands, and it
+            matches the mobile top bar. The rail's FOOTER is account territory:
+            language, avatar, sign out. */}
+        <div className="px-5 h-16 flex items-center justify-between gap-2 shrink-0">
           <Link href="/dashboard" className="flex items-center gap-2.5">
             <BrandMark size="sm" />
             <Wordmark className="text-base" />
           </Link>
+          <NotificationBell
+            items={notifItems}
+            unreadCount={unreadNotifs ?? 0}
+            placement="down-left"
+          />
         </div>
 
         <SidebarNav items={navItems} />
@@ -217,11 +231,6 @@ export async function AppSidebar() {
           )}
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            <NotificationBell
-              items={notifItems}
-              unreadCount={unreadNotifs ?? 0}
-              placement="up-right"
-            />
           </div>
           <Link
             href={myProfileHref}

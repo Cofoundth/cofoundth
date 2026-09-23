@@ -29,19 +29,24 @@ export type NotifItem = {
   } | null;
 };
 
-
 // Where the panel opens from. "down-right" suits a top bar (the marketing
 // header, the mobile app bar). "up-right" is for the desktop sidebar rail,
 // where the bell sits in the bottom-left corner: opening down-and-left there
 // puts most of the panel off the left edge and below the fold, and the rail is
 // `fixed`, so nothing can be scrolled into view.
-export type BellPlacement = "down-right" | "up-right";
+// "down-left" is the rail's TOP corner: opening down-and-right from a bell
+// 220px from the left edge, anchored on the bell's left so the panel runs INTO
+// the page rather than off it (right-anchoring would push a 384px panel to
+// x=-164). Named for the anchor, like the other two.
+export type BellPlacement = "down-right" | "up-right" | "down-left";
 
 const PANEL_PLACEMENT: Record<BellPlacement, string> = {
   "down-right":
     "sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:bottom-auto sm:mt-2 sm:w-96",
   "up-right":
     "sm:absolute sm:right-auto sm:left-0 sm:top-auto sm:bottom-full sm:mb-2 sm:w-80",
+  "down-left":
+    "sm:absolute sm:right-auto sm:left-0 sm:bottom-auto sm:top-full sm:mt-2 sm:w-80",
 };
 
 export function NotificationBell({
@@ -124,7 +129,8 @@ export function NotificationBell({
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -156,7 +162,6 @@ export function NotificationBell({
     setUnread(0);
     await clearAllNotifications();
   }
-
 
   return (
     <div className="relative" ref={ref}>
@@ -232,7 +237,9 @@ export function NotificationBell({
                     // screen will miss. The gold marker carries it visually,
                     // the aria-label carries it for screen readers.
                     aria-label={
-                      n.readAt ? undefined : `${tr("Unread")}: ${notifText(n, tr)}`
+                      n.readAt
+                        ? undefined
+                        : `${tr("Unread")}: ${notifText(n, tr)}`
                     }
                     className={`flex items-start gap-3 px-4 py-3 pr-9 border-b border-line last:border-b-0 hover:bg-cream transition-colors ${
                       n.readAt ? "" : "bg-cream/60"
