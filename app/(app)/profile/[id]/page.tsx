@@ -645,8 +645,6 @@ export default async function ProfileDetailPage({
             // one. tone="navy" swaps the background out of the base string, so
             // shadow-xs is correctly absent on the dark surface.
             <Card tone="navy">
-              {/* design-ok: eyebrow ON bg-navy (from <Card tone="navy">) —
-                  isDarkContext() reads class strings, not props. */}
               <div className="text-xs uppercase tracking-[0.2em] text-gold mb-2.5">
                 {t("Looking for", locale)}
               </div>

@@ -32,8 +32,6 @@ export function IncomingInterestBanner({
       <div className="flex items-center justify-between gap-5 flex-wrap p-6 lg:p-7">
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-12 h-12 bg-gold/15 border border-gold/50 rounded-xl flex items-center justify-center shrink-0">
-            {/* design-ok: gold ON bg-navy, which arrives as <Card tone="navy">
-                above — isDarkContext() reads classes, not props. */}
             <Heart className="w-6 h-6 text-gold" strokeWidth={1.75} />
           </div>
           <div className="min-w-0">

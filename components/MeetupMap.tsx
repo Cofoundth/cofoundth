@@ -16,6 +16,7 @@ import type { LatLngExpression, Map as LeafletMap, Marker } from "leaflet";
 // Ladprao. Shared with the geocode proxy, which biases place search to the same
 // point — see lib/meetups.ts for why the constant lives there and not here.
 import { MEETUP_MAP_CENTER as DEFAULT_CENTER } from "@/lib/meetups";
+import { Card } from "@/components/ui";
 
 export type MeetupPin = {
   slug: string;
@@ -76,10 +77,17 @@ export function MeetupMap({ pins }: { pins: MeetupPin[] }) {
   }, []);
 
   // `isolate` for the same reason as MapPicker below — see that comment.
+  //
+  // A Card, because that is what it is: the map panel wears the app card's
+  // surface (24px + shadow-xs) and sits in the same column as the meetup cards.
+  // `padding="none"` — Leaflet fills the box edge to edge — and `bg-gold-soft`
+  // overrides the white tone: it is the sand the tiles fade in over, visible
+  // only until they load. cn() merges, so the later background wins.
   return (
-    <div
+    <Card
       ref={ref}
-      className="relative isolate h-[480px] w-full rounded-3xl overflow-hidden shadow-xs bg-gold-soft"
+      padding="none"
+      className="relative isolate h-[480px] w-full overflow-hidden bg-gold-soft"
       aria-label="Meetup map"
     />
   );

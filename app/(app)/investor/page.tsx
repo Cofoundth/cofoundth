@@ -80,7 +80,17 @@ export default async function InvestorPage({
               {[typeLabel, inv?.location].filter(Boolean).join(" · ")}
             </p>
 
-            {/* The live investor surface — discovering + backing companies. */}
+            {/* The live investor surface — discovering + backing companies.
+                It wears the primary FACE but is a full-width BANNER, not a
+                button: two stacked lines of copy (an 18px title over a 12px
+                white/70 subtitle) plus a trailing chevron, laid `justify-
+                between` across the whole column at `px-6 py-5`. No Button size
+                is `py-5`, and none can hold a two-line child without the
+                caller re-doing items-center/gap — so `variant="primary"` here
+                would be a className rewrite wearing a primitive's name, not a
+                migration. Batch 3 left it for this reason and it still holds.
+                If a second banner appears, the answer is a banner primitive. */}
+            {/* design-ok: primary FACE on a two-line banner, not a button — see above. */}
             <Link
               href="/funding"
               className="flex items-center justify-between gap-4 bg-navy hover:bg-navy-dark text-white px-6 py-5 mb-8 transition-colors rounded-full"

@@ -98,9 +98,12 @@ export function EmptyState({
         />
       )}
       {eyebrow && (
-        // design-ok: `dark` means tone="navy" — this eyebrow is ON bg-navy,
-        // where text-gold is the correct accent (~13.4:1). isDarkContext()
-        // reads class strings and cannot see a surface that comes from a prop.
+        // isDarkContext() now recognises a LITERAL `tone="navy"` — that is what
+        // retired the six call-site markers this one outlived. Here the wrapper
+        // is `<Card tone={tone}>`, known only at runtime, so this marker stays:
+        // the last of its kind, a tone forwarded from a caller.
+        // design-ok: `dark` means tone="navy", so this eyebrow is ON bg-navy,
+        // where text-gold is the correct accent (~13.4:1).
         <Eyebrow className={cn("mb-2", dark && "text-gold")}>{eyebrow}</Eyebrow>
       )}
       {title && (

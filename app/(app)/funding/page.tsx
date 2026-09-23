@@ -369,18 +369,14 @@ export default async function FundingPage() {
           page's one dark accent, per the design system. */}
       <aside className="lg:col-span-4 min-w-0 lg:sticky lg:top-24 self-start">
         <Card tone="navy">
-          {/* design-ok: the dark panel is <Card tone="navy">, so the surface is
-              a prop and design-lint's class-string dark-context check cannot
-              see it. text-gold measures ~13.4:1 here. */}
+          {/* text-gold is the dark-panel eyebrow, ~13.4:1 here. */}
           <p className="eyebrow text-xs uppercase tracking-[0.25em] text-gold mb-4">
             {tHow.title}
           </p>
           <ol className="space-y-4">
             {tHow.steps.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                {/* design-ok: same dark panel — bg-gold/15 + text-gold is the
-                    dark-panel icon-well vocabulary, invisible to the linter
-                    once the surface moved into Card's `tone` prop. */}
+                {/* bg-gold/15 + text-gold is the dark-panel icon-well. */}
                 <span className="shrink-0 w-6 h-6 rounded-full bg-gold/15 text-gold text-xs grid place-items-center font-medium">
                   {i + 1}
                 </span>

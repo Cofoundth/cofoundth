@@ -30,6 +30,7 @@ import {
   Card,
   CardChip,
   CardLabel,
+  cardClasses,
   SectorList,
   VerifiedBadge,
 } from "@/components/ui";
@@ -210,10 +211,17 @@ export function OrgCard({
     );
   }
 
+  // `cardClasses()`, not <Card>: the whole card is the link, and Card renders
+  // no <Link> on purpose (Card.tsx: "typing that is not worth it"). Same recipe
+  // either way — `hoverable` IS this card's `hover:shadow-sm transition-shadow`.
   return (
     <Link
       href={target}
-      className="block min-w-0 bg-white rounded-3xl shadow-xs p-5 hover:shadow-sm transition-shadow group"
+      className={cardClasses({
+        padding: "sm",
+        hoverable: true,
+        className: "block min-w-0 group",
+      })}
     >
       {body}
     </Link>

@@ -28,7 +28,10 @@
 //       text-gold-ink   #6A655D, the muted FOREGROUND           -> CORRECT
 //       text-gold-soft  another surface tint                    -> not a foreground
 //   On a dark surface (bg-navy #1B1A17) gold reads as a warm off-white and is
-//   correct - those sites are detected and skipped, see isDarkContext().
+//   correct - those sites are detected and skipped, see isDarkContext(). That
+//   surface can arrive as a CLASS or as a PROP: batch 3 moved the funding
+//   rail's panel onto `<Card tone="navy">` and the rule went blind on the spot,
+//   turning a legitimate gold eyebrow into a violation. Both forms count now.
 //
 // RULE 2 - bordered surface with no radius.
 //   The product is rounded: cards/panels `rounded-xl`, chips/badges
@@ -109,6 +112,21 @@ const GOLD_FOREGROUND =
 // off-white there). `fill-navy` covers the SVG brand mark.
 const DARK_SURFACE =
   /(?<![\w-])(?:bg-(?:navy(?:-dark)?|ink|black)|fill-navy)(?:\/\d{1,3})?(?![\w-])/;
+
+// A dark surface can also arrive as a PROP, not a class. `<Card tone="navy">`
+// renders `bg-navy text-white` (Card.tsx TONE_CLASSES) and `<EmptyState
+// tone="navy">` delegates to it - the two are the only components in the repo
+// that take a navy tone, and both mean the dark panel. Batch 3 moved the
+// funding rail's panel onto the prop and Rule 1 went blind on the spot: a
+// legitimate `text-gold` inside it became a violation, and two `design-ok`
+// markers stood in until this landed.
+//
+// Matched on the ATTRIBUTE, deliberately loosely (any Capitalised tag), rather
+// than on the tag name: a wrapper that forwards `tone` is the same surface by
+// another name, and being wrong here costs a false NEGATIVE - the same safe
+// direction the indentation walk already accepts. `tone="danger"` and Badge's
+// `tone="gold"` are not matched; only the literal navy is.
+const DARK_TONE_PROP = /\btone\s*=\s*["']navy["']/;
 
 // ---------------------------------------------------------------------------
 // Rule 2 - full box border with no radius
@@ -600,9 +618,13 @@ function literalChunks(text, base) {
  * safe direction for a rule whose false positives would hit every legitimate
  * navy panel in the app.
  */
+function isDark(tagText) {
+  return DARK_SURFACE.test(tagText) || DARK_TONE_PROP.test(tagText);
+}
+
 function isDarkContext(src, lines, starts, idx) {
   const own = resolveOwningTag(src, idx);
-  if (own && DARK_SURFACE.test(own.text)) return true;
+  if (own && isDark(own.text)) return true;
 
   const { line } = positionOf(starts, idx);
   let minIndent = indentOf(lines[line - 1] ?? "");
@@ -614,7 +636,7 @@ function isDarkContext(src, lines, starts, idx) {
     minIndent = ind;
     if (!/^<[A-Za-z]/.test(raw.trimStart())) continue; // `</div>`, `>`, `/>`, code
     const tag = readOpenTag(src, starts[i] + ind);
-    if (tag && DARK_SURFACE.test(tag.text)) return true;
+    if (tag && isDark(tag.text)) return true;
   }
   return false;
 }
@@ -953,6 +975,340 @@ function checkRule2(src, lines, starts, mask, push) {
 }
 
 // ---------------------------------------------------------------------------
+// RULE 6 - a hand-written copy of a recipe a primitive already owns
+// ---------------------------------------------------------------------------
+//
+// The primitives sweep (batches 0-4) rests on one finding: the app's
+// inconsistency never came from LACKING a library, it came from BYPASSING the
+// primitives that already existed. The pre-sweep counts are the whole
+// argument - 70 hand-written card recipes against 14 <Card>, and 63
+// hand-rolled primary buttons against 52 uses of the primitive. Nothing in the
+// repo stopped copy number 71 from being written, so the sweep buys one clean
+// tree and nothing else unless a rule holds the line.
+//
+// This is the only rule in this file that is about AUTHORSHIP rather than
+// about pixels: every site it reports renders correctly today. That is exactly
+// why it needs a linter - a reviewer has no reason to object to a class string
+// that looks right, and by the time drift is visible it is 70 sites deep.
+//
+// == HOW THE RECIPES ARE OBTAINED =========================================
+// They are READ OUT OF THE PRIMITIVES at startup (primitiveRecipes below), not
+// written down here. A rule that hardcodes `bg-navy hover:bg-navy-dark` starts
+// lying the day someone edits VARIANT_CLASSES, and it would lie silently. If a
+// primitive is renamed or restructured the derivation THROWS and the whole run
+// exits 2 with the reason - loud, never quiet.
+//
+// The signature of a button variant is its COLOUR IDENTITY: every token in the
+// variant string except
+//   - `border`        a WIDTH, not a colour (`secondary` and `outline` share it)
+//   - `bg-transparent` an inert reset. Batch 3 already recorded this: it lists
+//                      "bg-transparent on an already transparent element" among
+//                      the differences it accepted as having no visual effect.
+// VARIANT_CLASSES holds colours only - sizes live in SIZE_CLASSES - so nothing
+// else in those strings needs filtering. Deriving it this way lands on exactly
+// the pairs a reviewer would name: primary = the navy fill AND its hover,
+// secondary = the hairline AND its hover, each plus its text colour.
+//
+// The card signature is `cardClasses()`'s own radius plus TONE_CLASSES.white.
+//
+// == WHAT IT MUST NOT FIRE ON =============================================
+//   components/ui/**      the recipes are DEFINED there. Card.tsx, Button.tsx
+//                         and Dialog.tsx (`card: "bg-white rounded-3xl
+//                         shadow-xs"`) all write them out in full, correctly.
+//   marketing BUTTONS     app/(marketing)/** and components/marketing/**. Six
+//                         hand-rolled navy CTAs live there today - five under
+//                         app/(marketing) (contact, founders/[slug],
+//                         insights/[slug], p/[id] x2) and MarketingNav - and
+//                         marketing was never in the sweep's file set. They are
+//                         a future batch, not lint debt, and failing the build
+//                         on six sites nobody agreed to migrate is how a linter
+//                         gets switched off. DELIBERATE, and reversed by
+//                         deleting `scope` from the two button recipes when
+//                         that batch lands. Marketing is NOT exempt from the
+//                         CARD recipe: 24px + shadow-xs is a treatment
+//                         marketing deliberately does not use (its cards are
+//                         `rounded-[22px]` + `border-line`, no shadow), so an
+//                         app card appearing there is drift either way. It
+//                         currently matches nothing on a marketing page.
+//   marketing CARDS       not by a path rule but by the signature: they carry
+//                         no `rounded-3xl` and no `shadow-xs`, so they cannot
+//                         match. The split between the two surfaces is
+//                         deliberate on Onfound's side and ours - do not unify.
+//   legacy rounded-xl     out of the sweep's scope throughout; the card
+//                         signature requires `rounded-3xl`, so a 14px card is
+//                         invisible to this rule by construction.
+//   <Card className=...>  a Capitalised tag is skipped wholesale (same rule as
+//   <Button className=…>  checkRule2), so overriding a primitive - the
+//                         DOCUMENTED pattern for off-scale padding, per
+//                         Button.tsx's `px-5 py-2.5` note - never reports.
+//   bordered sub-panels   MeetupJoinControls' `PANEL` is `rounded-3xl border
+//                         border-line bg-white p-5`: deliberately NOT a Card
+//                         (it needs a boundary that survives a white ground).
+//                         No `shadow-xs`, so no match - the recipe it copies is
+//                         not one a primitive owns.
+//
+// == THE ONE CARVE-OUT THAT IS A JUDGEMENT CALL ===========================
+// A button recipe also has to carry a padding from the canonical SIZE scale
+// (every SIZE_CLASSES entry is `px-*`-based, asserted at load). Without it the
+// rule reports icon-only buttons - MeetupChat's send button is `grid h-11 w-11
+// place-items-center rounded-full bg-navy text-white hover:bg-navy-dark`, a
+// complete primary face on a FIXED BOX. Icon-only buttons are out of the
+// sweep's scope throughout (batches 1, 3 and 4 each say so) and they are not
+// copies of the primitive: they use none of its four sizes. KNOWN LIMIT, stated
+// rather than hidden: a navy button padded with `p-3` instead of `px-3 py-3`
+// slips through. Widening to `p-*` would instead report navy CARD-shaped tiles,
+// which is the worse error.
+
+// Where the recipes are read from. Paths, not imports: this file is ESM with
+// zero dependencies and cannot parse TSX.
+const PRIMITIVE_CARD = "components/ui/Card.tsx";
+const PRIMITIVE_BUTTON = "components/ui/Button.tsx";
+
+const RULE6_UI_PATH = /^components[\/]ui[\/]/;
+const RULE6_MARKETING_PATH =
+  /^(?:app[\/]\(marketing\)|components[\/]marketing)[\/]/;
+
+/** A token that names no colour and so carries no identity. See the header. */
+const RECIPE_NOISE = new Set(["bg-transparent"]);
+
+/** `const NAME ...= { key: "value", ... }` -> Map(key -> value). */
+function recordLiteralOf(src, mask, name, where) {
+  const decl = new RegExp(`(?:const|let|var)\\s+${name}\\b[^=]*=\\s*\\{`);
+  const m = decl.exec(src);
+  if (!m || mask[m.index]) {
+    throw new Error(`${where}: cannot find \`${name}\``);
+  }
+  const open = m.index + m[0].length - 1;
+  const body = src.slice(open, endOfInitialiser(src, open, true));
+  const out = new Map();
+  const ENTRY = /(?:"([^"]+)"|([A-Za-z_$][\w$]*))\s*:\s*"([^"]*)"/g;
+  let e;
+  while ((e = ENTRY.exec(body))) out.set(e[1] ?? e[2], e[3]);
+  if (!out.size) throw new Error(`${where}: \`${name}\` has no string entries`);
+  return out;
+}
+
+function tokensOf(s) {
+  return s.split(/\s+/).filter(Boolean);
+}
+
+/** A variant string reduced to the tokens that give it its face. */
+function colourIdentityOf(variant) {
+  return tokensOf(variant).filter(
+    (t) => !RECIPE_NOISE.has(t) && !FULL_BOX_BORDER.test(t),
+  );
+}
+
+let RECIPES = null;
+
+/**
+ * Read the recipes out of the primitives. Throws - loudly, with the file and
+ * the symbol - rather than degrading into a rule that silently matches
+ * nothing. Called once from main() before the walk.
+ */
+function primitiveRecipes() {
+  if (RECIPES) return RECIPES;
+
+  const read = (rel) => {
+    const abs = path.resolve(process.cwd(), rel);
+    let src;
+    try {
+      src = fs.readFileSync(abs, "utf8");
+    } catch {
+      throw new Error(`${rel}: unreadable (run from the repo root)`);
+    }
+    const lines = src.split(/\r?\n/);
+    // Comment-masked, because both primitives DOCUMENT their own recipes in
+    // prose above the code - Card.tsx's header writes `bg-white + shadow-xs`
+    // and Button.tsx's writes `bg-navy hover:bg-navy-dark` - and parsing the
+    // documentation instead of the code would be a very quiet way to be wrong.
+    return { src, mask: commentMaskOf(src, lineStartsOf(src), lines) };
+  };
+
+  const card = read(PRIMITIVE_CARD);
+  const radius = /export function cardClasses[\s\S]*?return cn\(\s*"([^"]*)"/.exec(
+    card.src,
+  );
+  if (!radius) {
+    throw new Error(`${PRIMITIVE_CARD}: cannot read cardClasses()'s base`);
+  }
+  const tones = recordLiteralOf(card.src, card.mask, "TONE_CLASSES", PRIMITIVE_CARD);
+  if (!tones.has("white")) {
+    throw new Error(`${PRIMITIVE_CARD}: TONE_CLASSES has no \`white\``);
+  }
+
+  const button = read(PRIMITIVE_BUTTON);
+  const variants = recordLiteralOf(
+    button.src,
+    button.mask,
+    "VARIANT_CLASSES",
+    PRIMITIVE_BUTTON,
+  );
+  const sizes = recordLiteralOf(
+    button.src,
+    button.mask,
+    "SIZE_CLASSES",
+    PRIMITIVE_BUTTON,
+  );
+  for (const key of ["primary", "secondary"]) {
+    if (!variants.has(key)) {
+      throw new Error(`${PRIMITIVE_BUTTON}: VARIANT_CLASSES has no \`${key}\``);
+    }
+  }
+  // The size carve-out is only honest while the scale really is px-based.
+  const SIZE_PAD = /^px-/;
+  for (const [key, value] of sizes) {
+    if (!tokensOf(value).some((t) => SIZE_PAD.test(t))) {
+      throw new Error(
+        `${PRIMITIVE_BUTTON}: SIZE_CLASSES.${key} has no px-* padding - ` +
+          "rule 6's icon-only carve-out assumed every size is px-based",
+      );
+    }
+  }
+
+  const isButtonish = (tagName) => tagName === "button" || tagName === "a";
+  const notMarketing = (rel) => !RULE6_MARKETING_PATH.test(rel);
+
+  RECIPES = [
+    {
+      key: "app-card",
+      what: "the app content card",
+      // `cardClasses()`'s own radius + the default tone.
+      tokens: [...tokensOf(radius[1]), ...colourIdentityOf(tones.get("white"))],
+      onElement: () => true,
+      fix:
+        "use `<Card>` - or `cardClasses()` when the surface must be a <Link>, " +
+        "which Card deliberately does not render",
+    },
+    {
+      key: "primary button",
+      what: "the primary button face",
+      tokens: colourIdentityOf(variants.get("primary")),
+      onElement: isButtonish,
+      needsSize: SIZE_PAD,
+      scope: notMarketing,
+      fix: 'use `<Button variant="primary">`, or `<LinkButton>` for a navigation',
+    },
+    {
+      key: "secondary button",
+      what: "the secondary button face",
+      tokens: colourIdentityOf(variants.get("secondary")),
+      onElement: isButtonish,
+      needsSize: SIZE_PAD,
+      scope: notMarketing,
+      fix: 'use `<Button variant="secondary">` / `<LinkButton variant="secondary">`',
+    },
+  ];
+  return RECIPES;
+}
+
+function checkRule6(src, lines, starts, mask, push, relPath) {
+  const rel = (relPath || "").replace(/\\/g, "/");
+  if (RULE6_UI_PATH.test(rel)) return; // the recipes are DEFINED here
+  const recipes = primitiveRecipes();
+
+  const passthrough = passthroughComponentsOf(src);
+  const symbols = symbolTableOf(src, mask);
+
+  const anchor = /\bclassName\s*=/g;
+  let m;
+  while ((m = anchor.exec(src))) {
+    const idx = m.index;
+    if (mask[idx]) continue; // prose, not markup
+
+    const value = readClassNameValue(src, anchor.lastIndex);
+    if (!value) continue;
+    anchor.lastIndex = value.end;
+
+    const tag = resolveOwningTag(src, idx);
+    if (!tag) continue;
+    let tagName = tag.tagName;
+    let renderedAs = "";
+    if (!/^[a-z]/.test(tagName)) {
+      // A Capitalised tag is a component. <Card>/<Button>/<LinkButton> ARE the
+      // primitives, and passing them a className override is the documented
+      // pattern - never drift. Anything else cannot be resolved without
+      // following the import. Both are skipped, exactly as in checkRule2; the
+      // exception is the same one, next/link, which renders a bare <a>.
+      const dom = passthrough.get(tagName);
+      if (!dom) continue;
+      renderedAs = ` (a <${tagName}>, which renders a plain <${dom}>)`;
+      tagName = dom;
+    }
+
+    // The token universe of this className: the literals written in place plus
+    // the bodies of every module-level constant it reaches. Rule 2 follows the
+    // same path for the opposite reason (there, to find a radius hidden in a
+    // shared const). The direction of the error is worth stating: expansion
+    // UNIONS text, so in principle two mutually-exclusive ternary branches
+    // could assemble a recipe neither one renders. Nothing in the tree does -
+    // the nearest miss is HostMeetupWizard's PICK/PICK_ON/PICK_OFF trio, whose
+    // union holds `border-line` and `hover:border-navy` but not `text-navy`,
+    // one token short of the secondary face - and `design-ok:` covers it if a
+    // real collision ever appears.
+    const at = new Map();
+    const tokens = new Set();
+    const add = (chunk, offset) => {
+      let scan = 0;
+      for (const t of tokensOf(chunk)) {
+        tokens.add(t);
+        if (offset === null || at.has(t)) continue;
+        const k = chunk.indexOf(t, scan);
+        if (k < 0) continue;
+        scan = k + t.length;
+        at.set(t, offset + k);
+      }
+    };
+    for (const c of literalChunks(value.text, value.start)) add(c.text, c.offset);
+    const borrowed = reachableSymbols(value.text, symbols);
+    for (const sym of borrowed) {
+      for (const c of literalChunks(sym.text, 0)) add(c.text, null);
+    }
+    if (!tokens.size) continue;
+
+    for (const recipe of recipes) {
+      if (recipe.scope && !recipe.scope(rel)) continue;
+      if (!recipe.onElement(tagName)) continue;
+      if (!recipe.tokens.every((t) => tokens.has(t))) continue;
+      if (
+        recipe.needsSize &&
+        ![...tokens].some((t) => recipe.needsSize.test(t))
+      ) {
+        continue;
+      }
+      const via = borrowed
+        .filter((s) => recipe.tokens.some((t) => tokensOf(s.text).includes(t)))
+        .map((s) => s.name);
+      // Anchor on the first recipe token written in place, so the caret lands
+      // on the class itself; a recipe assembled entirely inside a constant
+      // anchors on the className expression instead.
+      const hit = recipe.tokens.map((t) => at.get(t)).filter((x) => x != null);
+      const pos = positionOf(starts, hit.length ? Math.min(...hit) : value.start);
+      push({
+        rule: "hand-rolled-primitive",
+        line: pos.line,
+        column: pos.column,
+        class: recipe.tokens.join(" "),
+        element: `<${tag.tagName}>`,
+        snippet: (lines[pos.line - 1] ?? "").trim(),
+        message:
+          `<${tag.tagName}>${renderedAs} hand-writes ${recipe.what} ` +
+          `(\`${recipe.tokens.join(" ")}\`` +
+          `${via.length ? `, partly via \`${via.join("`, `")}\`` : ""}). ` +
+          `That recipe belongs to a primitive: ${recipe.fix}. ` +
+          `70 hand-written cards against 14 <Card>, and 63 hand-rolled navy ` +
+          `buttons against 52 primitive uses, is what the sweep just undid.`,
+      });
+      // One report per element. A string CAN satisfy two recipes at once (a
+      // card surface that also wears the secondary face), but the fix is the
+      // same conversation either way and two carets on one line reads as a
+      // linter shouting.
+      break;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Driver
 // ---------------------------------------------------------------------------
 
@@ -999,6 +1355,7 @@ function lintFile(absPath, relPath, errors) {
     checkRule3(src, lines, starts, mask, (v) => raw.push(v), relPath);
     checkRule4(src, lines, starts, mask, (v) => raw.push(v));
     checkRule5(src, lines, starts, mask, (v) => raw.push(v), relPath);
+    checkRule6(src, lines, starts, mask, (v) => raw.push(v), relPath);
   } catch (err) {
     errors.push({ path: relPath, message: `scan failed: ${err.message}` });
     return null;
@@ -1047,7 +1404,10 @@ const RULE_DOCS = {
     "  times: the admin Verified pill, the onboarding step indicator, and eight",
     "  sites on the meetups pages.",
     "  FIX   muted text -> text-gold-ink (#6A655D)    a surface -> bg-gold / border-gold",
-    "  NOTE  gold as a foreground on bg-navy is CORRECT and is not reported.",
+    "  NOTE  gold as a foreground on bg-navy is CORRECT and is not reported -",
+    "        whether the dark surface arrives as a class (`bg-navy`) or as a prop",
+    "        (`<Card tone=\"navy\">`). A tone computed at runtime still cannot be",
+    "        seen, and is the one place a `design-ok:` marker is still needed.",
   ],
   "unrounded-surface": [
     "unrounded-surface - a full box border with no radius is a square card in a",
@@ -1081,6 +1441,36 @@ const RULE_DOCS = {
     "        at 560px and a two-column row at 272px each.",
     "  NOTE  only the OUTERMOST container of a page.tsx is checked. Reading/article",
     "        and chat routes are exempt by the design rules and are skipped.",
+  ],
+  "hand-rolled-primitive": [
+    "hand-rolled-primitive - a class string that REBUILDS a recipe a primitive",
+    "  already owns. The app's inconsistency never came from lacking a library, it",
+    "  came from bypassing the primitives that existed: 70 hand-written card",
+    "  recipes against 14 <Card>, and 63 hand-rolled primary buttons against 52",
+    "  uses of the primitive. Batches 0-4 migrated all of them; nothing else stops",
+    "  copy number 71. This is the one rule here about AUTHORSHIP, not pixels -",
+    "  every site it reports renders correctly today, which is exactly why review",
+    "  never catches it.",
+    "  FIX   card -> <Card> (cardClasses() when the surface must be a <Link>);",
+    "        navy CTA -> <Button variant=\"primary\"> / <LinkButton>;",
+    "        hairline outline -> <Button variant=\"secondary\">.",
+    "  NOTE  the recipes are READ OUT OF Card.tsx and Button.tsx at startup, never",
+    "        written down here - a hardcoded copy would start lying the day",
+    "        VARIANT_CLASSES changed, and would lie silently. If a primitive is",
+    "        renamed the derivation throws and the run exits 2.",
+    "  NOTE  NOT reported: components/ui/** (the recipes are DEFINED there);",
+    "        Capitalised tags, so passing <Card>/<Button> a className override -",
+    "        the documented pattern for off-scale padding - is never drift;",
+    "        marketing cards (rounded-[22px] + border-line, no shadow: a",
+    "        deliberately different surface, do not unify) and legacy rounded-xl",
+    "        cards, both invisible by signature rather than by exemption;",
+    "        icon-only buttons, which carry no px-* from the size scale.",
+    "  SCOPE the two BUTTON recipes skip app/(marketing)/** and",
+    "        components/marketing/**. Six hand-rolled navy CTAs live there and",
+    "        marketing was never in the sweep's file set - they are a future batch,",
+    "        not lint debt. Deliberate: delete `scope` from those two recipes when",
+    "        that batch lands. The CARD recipe is NOT scoped - 24px + shadow-xs is",
+    "        a treatment marketing does not use, so it would be drift there too.",
   ],
 };
 
@@ -1202,6 +1592,20 @@ function main(argv) {
     else files.push(abs);
   }
   files.sort();
+
+  // Rule 6 reads its recipes out of the primitives. Do it ONCE, here, so a
+  // renamed primitive or a restructured VARIANT_CLASSES stops the run with the
+  // reason instead of turning into a rule that quietly matches nothing.
+  try {
+    primitiveRecipes();
+  } catch (err) {
+    process.stderr.write(
+      `design-lint: cannot derive rule 6's recipes from the primitives.\n` +
+        `  ${err.message}\n` +
+        "  This rule reads them from the source on purpose - see RULE 6.\n",
+    );
+    return EXIT_SCRIPT_FAILURE;
+  }
 
   const violations = [];
   const invalidSuppressions = [];

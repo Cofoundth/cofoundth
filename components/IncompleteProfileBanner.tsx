@@ -29,8 +29,6 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
       >
         <div className="flex items-start gap-5">
           <div className="w-12 h-12 bg-gold/15 border border-gold/50 rounded-xl flex items-center justify-center shrink-0">
-            {/* design-ok: gold ON bg-navy, which now arrives as <Card
-                tone="navy"> — isDarkContext() reads classes, not props. */}
             <TriangleAlert
               className="w-6 h-6 text-gold"
               strokeWidth={1.75}
@@ -38,7 +36,6 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
             />
           </div>
           <div className="flex-1">
-            {/* design-ok: eyebrow ON bg-navy (from <Card tone="navy">). */}
             <div className="text-xs uppercase tracking-[0.2em] text-gold mb-2">
               {tr("Action needed")}
             </div>
