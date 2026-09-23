@@ -94,47 +94,55 @@ export default async function MessagePage({ params }: Props) {
             {/* The surface is full-bleed; the ROW inside it is capped so the
                 header, the thread and the composer share one left edge. */}
             <div className="mx-auto w-full max-w-[1120px]">
-              <Link
-                href="/matches"
-                className="text-xs text-ink-muted hover:text-navy mb-3 inline-flex items-center gap-1.5"
-              >
-                <ArrowLeft className="w-3 h-3" /> {t("All matches", locale)}
-              </Link>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <Link
-                  href={`/profile/${otherId}`}
-                  className="flex items-center gap-4 group min-w-0"
-                >
-                  <Avatar
-                    name={other?.full_name as string}
-                    url={other?.photo_url as string | null}
-                    size="md"
-                  />
-                  <div className="min-w-0">
-                    <div className="font-serif text-xl text-navy group-hover:text-gold-ink truncate">
-                      {otherName}
-                    </div>
-                    {/* Chips, not a dot-separated run: this is the same
+                {/* Back sits INLINE, left of the avatar, the way a messenger
+                    does it. On its own row above the name it was an orphan
+                    line costing the header 28px, and the label was doing work
+                    the arrow already does. */}
+                <div className="flex min-w-0 items-center gap-2">
+                  <Link
+                    href="/matches"
+                    aria-label={t("All matches", locale)}
+                    title={t("All matches", locale)}
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-muted transition-colors hover:bg-cream hover:text-navy"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href={`/profile/${otherId}`}
+                    className="flex items-center gap-4 group min-w-0"
+                  >
+                    <Avatar
+                      name={other?.full_name as string}
+                      url={other?.photo_url as string | null}
+                      size="md"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-serif text-xl text-navy group-hover:text-gold-ink truncate">
+                        {otherName}
+                      </div>
+                      {/* Chips, not a dot-separated run: this is the same
                         who-are-they row the directory cards show, so it uses
                         the same vocabulary — CardChip per role, one CardPill
                         for the intent. */}
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      {((other?.intent as string[] | null) ?? [])
-                        .map((x) => t(INTENT_LABELS[x], locale))
-                        .filter(Boolean)
-                        .slice(0, 1)
-                        .map((label) => (
-                          <CardPill key={label}>{label}</CardPill>
-                        ))}
-                      {((other?.i_am as string[] | null) ?? [])
-                        .map((r) => t(ROLE_LABELS[r], locale))
-                        .filter(Boolean)
-                        .map((label) => (
-                          <CardChip key={label}>{label}</CardChip>
-                        ))}
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {((other?.intent as string[] | null) ?? [])
+                          .map((x) => t(INTENT_LABELS[x], locale))
+                          .filter(Boolean)
+                          .slice(0, 1)
+                          .map((label) => (
+                            <CardPill key={label}>{label}</CardPill>
+                          ))}
+                        {((other?.i_am as string[] | null) ?? [])
+                          .map((r) => t(ROLE_LABELS[r], locale))
+                          .filter(Boolean)
+                          .map((label) => (
+                            <CardChip key={label}>{label}</CardChip>
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
                 <ConversationActions
                   matchId={matchId}
                   myName={myName}
