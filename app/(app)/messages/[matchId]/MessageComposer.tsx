@@ -1,11 +1,25 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Send } from "lucide-react";
 import { sendMessageAction, type SendMessageState } from "./actions";
 import { useT } from "@/lib/i18n-client";
 
 const INITIAL: SendMessageState = null;
+
+// The box is MIN_ROWS tall at rest and grows with what's typed up to MAX_ROWS,
+// after which it scrolls internally. 8 is the ceiling because the chat page is
+// a fixed-height column (h-dvh) and the composer's height comes out of the
+// thread's: at the shortest screen we support this leaves the thread ~47% of
+// the column, still comfortably scrollable.
+const MIN_ROWS = 3;
+const MAX_ROWS = 8;
 
 export const QUICK_REPLY_EVENT = "cofoundee:quick-reply";
 
@@ -32,6 +46,28 @@ export function MessageComposer({ matchId }: { matchId: string }) {
     setPrevSettled({ isPending, state });
     if (!isPending && !state?.error) setDraft("");
   }
+
+  // Grow the box with its content. Keyed on `draft`, so the one effect covers
+  // typing, the quick-reply insertion below, and the reset to MIN_ROWS after a
+  // successful send (which clears the draft during render, above).
+  useLayoutEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const cs = getComputedStyle(el);
+    const line = parseFloat(cs.lineHeight);
+    const border =
+      parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+    const padding = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+    const min = line * MIN_ROWS + padding + border;
+    const max = line * MAX_ROWS + padding + border;
+    // "auto" releases the previous measurement so the box can shrink as well
+    // as grow; scrollHeight is then the content's own height (border-box, so
+    // it covers the padding but not the border).
+    el.style.height = "auto";
+    const wanted = el.scrollHeight + border;
+    el.style.height = `${Math.min(Math.max(wanted, min), max)}px`;
+    el.style.overflowY = wanted > max ? "auto" : "hidden";
+  }, [draft]);
 
   // Refocus the box after a successful send. focus() is a real DOM effect, so
   // it stays in an effect.
@@ -71,7 +107,7 @@ export function MessageComposer({ matchId }: { matchId: string }) {
         <textarea
           ref={textareaRef}
           name="content"
-          rows={2}
+          rows={MIN_ROWS}
           maxLength={4000}
           required
           value={draft}
