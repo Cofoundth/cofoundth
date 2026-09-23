@@ -11,7 +11,7 @@
 // mutation goes back through the same server actions the detail page uses
 // (rsvpAction / reportMeetupAction), with optimistic going/count updates.
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -26,7 +26,6 @@ import {
   MapPin,
   Plus,
   Video,
-  X,
 } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
 import {
@@ -41,7 +40,7 @@ import {
 } from "@/lib/meetups";
 import { colorFor, getInitials } from "@/components/Avatar";
 import { MeetupMap, type MeetupPin } from "@/components/MeetupMap";
-import { CardChip, EmptyState } from "@/components/ui";
+import { Button, Card, CardChip, Dialog, EmptyState, ToggleChip } from "@/components/ui";
 import { reportMeetupAction, type InviteStatus, type MyRsvp } from "./actions";
 import {
   MeetupJoinControls,
@@ -115,58 +114,6 @@ function MiniFace({ p, size = 24 }: { p: MiniProfile; size?: number }) {
   );
 }
 
-// Overlay shell per the surface rules: overlays are the one border+shadow
-// surface, rounded-xl.
-function Modal({
-  onClose,
-  children,
-  wide,
-  wizard,
-}: {
-  onClose: () => void;
-  children: React.ReactNode;
-  wide?: boolean;
-  /** The create wizard: 640px (the system's narrow-column width — at 520 the
-   *  format tiles scrolled on a short laptop screen), and it owns its own
-   *  Close/Exit affordance because leaving mid-flow has to route through the
-   *  discard confirm. A
-   *  backdrop click therefore does NOT dismiss — a stray click outside a
-   *  half-filled form should not throw the form away. */
-  wizard?: boolean;
-}) {
-  return (
-    <div
-      // The shared modal scrim: bg-navy/40 + backdrop-blur-sm, no radius —
-      // same as the partnership dialog and the sign-in prompt, so overlays
-      // stop drifting apart.
-      className="fixed inset-0 z-50 grid place-items-center bg-navy/40 backdrop-blur-sm p-4 overflow-y-auto"
-      onClick={wizard ? undefined : onClose}
-      role="presentation"
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        onClick={(e) => e.stopPropagation()}
-        className={`relative my-8 w-full ${
-          wizard ? "max-w-[640px]" : wide ? "max-w-xl" : "max-w-lg"
-        } rounded-xl border border-line bg-white shadow-lg`}
-      >
-        {!wizard && (
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink hover:text-navy"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-        {children}
-      </div>
-    </div>
-  );
-}
-
 export function MeetupsClient({
   thisMonth,
   later,
@@ -192,6 +139,7 @@ export function MeetupsClient({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(initialCreate);
   const [rosterOpen, setRosterOpen] = useState(false);
+  const rosterTitleId = useId();
   // id → optimistic {mine, count} overrides after a join/request round-trip.
   const [over, setOver] = useState<Record<string, { mine: MyRsvp; count: number }>>(
     {},
@@ -217,13 +165,6 @@ export function MeetupsClient({
       lng: m.lng as number,
       emoji: (MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other).emoji,
     }));
-
-  const toggleCls = (active: boolean) =>
-    `inline-flex items-center gap-1.5 px-3 py-1.5 text-sm tracking-wide transition-colors border rounded-full ${
-      active
-        ? "bg-navy border-navy text-white"
-        : "bg-white border-line text-ink hover:border-navy"
-    }`;
 
   const card = (m: MeetupItemData, opts?: { past?: boolean; strip?: boolean }) => (
     <MeetupCard
@@ -270,31 +211,35 @@ export function MeetupsClient({
               already carries the one useful action. */}
           {hasUpcoming && (
             <>
-              <button
-                type="button"
+              {/* The icons ride as CHILDREN, not through ToggleChip's `icon`
+                  prop: that prop renders them at strokeWidth 1.5 and these
+                  have always been the lucide default. */}
+              <ToggleChip
+                selected={view === "list"}
                 onClick={() => setView("list")}
-                className={toggleCls(view === "list")}
               >
                 <ListIcon className="w-3.5 h-3.5" /> {tr("List")}
-              </button>
-              <button
-                type="button"
+              </ToggleChip>
+              <ToggleChip
+                selected={view === "map"}
                 onClick={() => setView("map")}
-                className={toggleCls(view === "map")}
               >
                 <MapIcon className="w-3.5 h-3.5" /> {tr("Map")}
-              </button>
+              </ToggleChip>
             </>
           )}
+          {/* `py-1.5 tracking-normal` holds this button's exact pixels:
+              size="sm" is px-4 py-2 + tracking-wide, and both overrides now
+              win because cn() merges. */}
           {!investor && (
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={() => setCreateOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-1.5 text-sm text-white hover:bg-navy-dark transition-colors"
+              className="py-1.5 tracking-normal"
             >
               <Plus className="w-4 h-4" />
               {tr("Create a meetup")}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -317,13 +262,12 @@ export function MeetupsClient({
           )}
           action={
             investor ? undefined : (
-              <button
-                type="button"
+              <Button
                 onClick={() => setCreateOpen(true)}
-                className="inline-flex items-center justify-center rounded-full bg-navy px-6 py-3 text-sm text-white hover:bg-navy-dark transition-colors"
+                className="tracking-normal"
               >
                 {tr("Host the first meetup")}
-              </button>
+              </Button>
             )
           }
         />
@@ -392,15 +336,39 @@ export function MeetupsClient({
       )}
 
       {createOpen && (
-        <Modal onClose={() => setCreateOpen(false)} wizard>
+        // dismissible={false} is load-bearing, not a preference: the wizard is
+        // ONE <form> holding a cover <input type="file">, and a File cannot be
+        // rebuilt from state. A stray backdrop click must not throw away a
+        // half-filled form, so the wizard owns its own Exit affordance and
+        // routes it through the discard confirm. Escape is left doing nothing
+        // (today's behaviour) — routing it is a follow-up, and it must not
+        // fire while the location sheet is open.
+        <Dialog
+          onClose={() => setCreateOpen(false)}
+          ariaLabel={tr("Host a meetup")}
+          size="narrow"
+          padding="none"
+          surface="overlay"
+          dismissible={false}
+          panelClassName="my-8"
+        >
           <HostMeetupWizard inModal onClose={() => setCreateOpen(false)} />
-        </Modal>
+        </Dialog>
       )}
 
       {rosterOpen && (
-        <Modal onClose={() => setRosterOpen(false)}>
+        <Dialog
+          onClose={() => setRosterOpen(false)}
+          labelledBy={rosterTitleId}
+          size="lg"
+          padding="none"
+          surface="overlay"
+          closeButton="overlay"
+          closeLabel={tr("Close")}
+          panelClassName="my-8"
+        >
           <div className="p-6">
-            <h2 className="text-xl mb-5">
+            <h2 id={rosterTitleId} className="text-xl mb-5">
               {tr("{n} founders joining meetups").replace(
                 "{n}",
                 String(nearby.length),
@@ -417,7 +385,7 @@ export function MeetupsClient({
               ))}
             </div>
           </div>
-        </Modal>
+        </Dialog>
       )}
     </>
   );
@@ -454,7 +422,11 @@ function MeetupCard({
         strip ? "snap-start shrink-0 w-[300px]" : "h-full w-full"
       } ${past ? "opacity-70" : ""}`}
     >
-      <div className="bg-white rounded-3xl shadow-xs hover:shadow-sm transition-shadow h-full flex flex-col overflow-hidden">
+      <Card
+        padding="none"
+        hoverable
+        className="h-full flex flex-col overflow-hidden"
+      >
         <div className="relative h-32 shrink-0 bg-gold-soft">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -564,7 +536,7 @@ function MeetupCard({
             </span>
           </div>
         </div>
-      </div>
+      </Card>
     </button>
   );
 }
@@ -581,6 +553,7 @@ function MeetupDialog({
   onRsvp: (id: string, next: { mine: MyRsvp; count: number }) => void;
 }) {
   const tr = useT();
+  const titleId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
@@ -617,7 +590,16 @@ function MeetupDialog({
   }
 
   return (
-    <Modal onClose={onClose}>
+    <Dialog
+      onClose={onClose}
+      labelledBy={titleId}
+      size="lg"
+      padding="none"
+      surface="overlay"
+      closeButton="overlay"
+      closeLabel={tr("Close")}
+      panelClassName="my-8"
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={meetupCoverUrl(m)}
@@ -652,7 +634,9 @@ function MeetupDialog({
           )}
         </div>
 
-        <h2 className="text-xl mb-4">{m.title}</h2>
+        <h2 id={titleId} className="text-xl mb-4">
+          {m.title}
+        </h2>
 
         <div className="space-y-3 text-sm">
           <div className="flex items-center justify-between gap-3">
@@ -795,14 +779,17 @@ function MeetupDialog({
                 >
                   {tr("Cancel")}
                 </button>
-                <button
-                  type="button"
+                {/* size="xs" is px-3 py-1.5 text-xs; only the horizontal pad
+                    needed holding. It also gains the disabled treatment it
+                    never had — `disabled={busy}` was styled as if enabled. */}
+                <Button
+                  size="xs"
                   disabled={busy}
                   onClick={sendReport}
-                  className="rounded-full bg-navy px-4 py-1.5 text-xs text-white hover:bg-navy-dark"
+                  className="px-4"
                 >
                   {tr("Send report")}
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -816,6 +803,6 @@ function MeetupDialog({
           )}
         </div>
       </div>
-    </Modal>
+    </Dialog>
   );
 }

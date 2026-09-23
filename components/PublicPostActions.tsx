@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useId, useState } from "react";
 import { Heart, MessageCircle, UserPlus, X } from "lucide-react";
+import { Dialog, LinkButton } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 // Read-only like/comment/connect buttons for the public (logged-out) post page.
@@ -15,6 +15,7 @@ export function PublicPostActions({
   commentCount: number;
 }) {
   const tr = useT();
+  const titleId = useId();
   const [open, setOpen] = useState(false);
 
   return (
@@ -47,53 +48,56 @@ export function PublicPostActions({
       </div>
 
       {open && (
-        <div
-          // The shared modal scrim: bg-navy/40 + backdrop-blur-sm, and NO
-          // radius. A full-viewport scrim has no corners to round — the
-          // rounded thing is the panel below. (It carried a stray rounded-xl,
-          // which curved the dim away from the screen corners.)
-          className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 backdrop-blur-sm p-4"
-          onClick={() => setOpen(false)}
+        // `surface="card"` holds today's 24px borderless panel; Dialog's own
+        // default is the overlay treatment (decision D1). The close button
+        // stays hand-rolled: Dialog's `closeButton="overlay"` is the meetup
+        // dialog's chunkier affordance (a 32px white disc), and swapping this
+        // bare glyph for it would be a visible change nobody asked for.
+        <Dialog
+          onClose={() => setOpen(false)}
+          labelledBy={titleId}
+          size="sm"
+          padding="lg"
+          surface="card"
+          panelClassName="text-center"
         >
-          <div
-            className="relative bg-white rounded-3xl shadow-xs max-w-sm w-full p-8 text-center"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="absolute top-3 right-3 text-ink-muted hover:text-navy"
+            aria-label={tr("Close")}
           >
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="absolute top-3 right-3 text-ink-muted hover:text-navy"
-              aria-label={tr("Close")}
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-              Cofoundee
-            </div>
-            <h3 className="text-2xl mb-2">
-              {tr("Join the community")}
-            </h3>
-            <p className="text-sm text-ink-muted leading-relaxed mb-6">
-              {tr(
-                "Sign in or create your founder profile to like, comment, and connect.",
-              )}
-            </p>
-            <div className="space-y-3">
-              <Link
-                href="/signup"
-                className="block rounded-full bg-navy hover:bg-navy-dark text-white py-3 text-sm tracking-wide transition-colors text-center"
-              >
-                {tr("Create your profile")}
-              </Link>
-              <Link
-                href="/login"
-                className="block border border-line hover:border-navy text-ink hover:text-navy py-3 text-sm tracking-wide transition-colors rounded-full text-center"
-              >
-                {tr("Sign in")}
-              </Link>
-            </div>
+            <X className="w-4 h-4" />
+          </button>
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
+            Cofoundee
           </div>
-        </div>
+          <h3 id={titleId} className="text-2xl mb-2">
+            {tr("Join the community")}
+          </h3>
+          <p className="text-sm text-ink-muted leading-relaxed mb-6">
+            {tr(
+              "Sign in or create your founder profile to like, comment, and connect.",
+            )}
+          </p>
+          {/* `px-0`: both buttons are full-width with centred labels, so the
+              scale's horizontal pad only narrows the line box. Drop the
+              override if the canonical inner padding is wanted — it has no
+              visual effect here either way. */}
+          <div className="space-y-3">
+            <LinkButton href="/signup" fullWidth className="px-0">
+              {tr("Create your profile")}
+            </LinkButton>
+            <LinkButton
+              href="/login"
+              variant="secondary"
+              fullWidth
+              className="px-0"
+            >
+              {tr("Sign in")}
+            </LinkButton>
+          </div>
+        </Dialog>
       )}
     </>
   );

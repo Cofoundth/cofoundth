@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { Calendar, Video, X } from "lucide-react";
+import { Button, Dialog } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 import { postScheduleNoticeAction } from "./scheduleNoticeAction";
 
@@ -70,6 +71,7 @@ function ScheduleDialog({
   onClose: () => void;
 }) {
   const tr = useT();
+  const titleId = useId();
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(16, 0, 0, 0);
@@ -124,127 +126,128 @@ function ScheduleDialog({
   }
 
   return (
-    <div
-      // The shared modal scrim: bg-navy/40 + backdrop-blur-sm, no radius —
-      // same as the partnership dialog and the meetup modal.
-      className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm flex items-center justify-center px-4"
-      onClick={onClose}
+    // <Dialog> also fixes what this scrim could not do on its own: it was
+    // `px-4` only, so on a short screen (a phone in landscape) the panel's
+    // top and bottom had no gutter and nothing scrolled. The primitive's
+    // scrim is `p-4 overflow-y-auto`.
+    <Dialog
+      onClose={onClose}
+      labelledBy={titleId}
+      size="md"
+      padding="responsive"
+      surface="card"
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="bg-white max-w-md w-full p-6 lg:p-8 rounded-3xl shadow-xs"
-      >
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
-              {tr("Schedule")}
-            </div>
-            <h2 className="text-d1">{tr("Co-founder intro call")}</h2>
-            <p className="text-sm text-ink-muted mt-1">
-              {tr("with")} {otherName}
-            </p>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-2">
+            {tr("Schedule")}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-ink-muted hover:text-navy p-1 -m-1"
-            aria-label={tr("Close")}
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <h2 id={titleId} className="text-d1">
+            {tr("Co-founder intro call")}
+          </h2>
+          <p className="text-sm text-ink-muted mt-1">
+            {tr("with")} {otherName}
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-ink-muted hover:text-navy p-1 -m-1"
+          aria-label={tr("Close")}
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label
-                htmlFor="date"
-                className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-              >
-                {tr("Date")}
-              </label>
-              <input
-                id="date"
-                type="date"
-                value={date}
-                min={formatDateInput(new Date())}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="time"
-                className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-              >
-                {tr("Time (Bangkok)")}
-              </label>
-              <input
-                id="time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
-              />
-            </div>
-          </div>
-
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label
-              htmlFor="duration"
+              htmlFor="date"
               className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
             >
-              {tr("Duration")}
+              {tr("Date")}
             </label>
-            <select
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
+            <input
+              id="date"
+              type="date"
+              value={date}
+              min={formatDateInput(new Date())}
+              onChange={(e) => setDate(e.target.value)}
+              required
               className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
-            >
-              <option value="15">{tr("15 minutes")}</option>
-              <option value="30">{tr("30 minutes")}</option>
-              <option value="45">{tr("45 minutes")}</option>
-              <option value="60">{tr("1 hour")}</option>
-              <option value="90">{tr("1.5 hours")}</option>
-            </select>
+            />
           </div>
+          <div>
+            <label
+              htmlFor="time"
+              className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+            >
+              {tr("Time (Bangkok)")}
+            </label>
+            <input
+              id="time"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
+            />
+          </div>
+        </div>
 
-          <div className="bg-cream border-l-2 border-navy p-3 text-xs text-ink leading-relaxed rounded-xl">
-            {tr("Opens Google Calendar with the event pre-filled.")}{" "}
-            {otherEmail
-              ? `${otherName} ${tr("will be added as an invitee.")} `
-              : null}
-            <strong className="text-navy">
-              {tr('Tick "Google Meet" conferencing')}
-            </strong>{" "}
-            {tr(
-              "inside Google Calendar before saving — Google generates the link automatically.",
-            )}
-          </div>
+        <div>
+          <label
+            htmlFor="duration"
+            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+          >
+            {tr("Duration")}
+          </label>
+          <select
+            id="duration"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
+          >
+            <option value="15">{tr("15 minutes")}</option>
+            <option value="30">{tr("30 minutes")}</option>
+            <option value="45">{tr("45 minutes")}</option>
+            <option value="60">{tr("1 hour")}</option>
+            <option value="90">{tr("1.5 hours")}</option>
+          </select>
+        </div>
 
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isPending}
-              className="flex-1 px-4 py-3 border border-line bg-white hover:border-navy disabled:opacity-60 text-ink text-sm tracking-wide transition-colors"
-            >
-              {tr("Cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="flex-1 px-4 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors"
-            >
-              {isPending ? tr("Posting…") : tr("Open Google Calendar")}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="bg-cream border-l-2 border-navy p-3 text-xs text-ink leading-relaxed rounded-xl">
+          {tr("Opens Google Calendar with the event pre-filled.")}{" "}
+          {otherEmail
+            ? `${otherName} ${tr("will be added as an invitee.")} `
+            : null}
+          <strong className="text-navy">
+            {tr('Tick "Google Meet" conferencing')}
+          </strong>{" "}
+          {tr(
+            "inside Google Calendar before saving — Google generates the link automatically.",
+          )}
+        </div>
+
+        {/* `px-4` rather than md's px-6: both buttons are flex-1, so the
+            horizontal pad only shrinks the label's line box. cn() merges,
+            so the smaller value now actually wins. */}
+        <div className="flex gap-3 pt-2">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={isPending}
+            className="flex-1 px-4"
+          >
+            {tr("Cancel")}
+          </Button>
+          <Button type="submit" disabled={isPending} className="flex-1 px-4">
+            {isPending ? tr("Posting…") : tr("Open Google Calendar")}
+          </Button>
+        </div>
+      </form>
+    </Dialog>
   );
 }
 

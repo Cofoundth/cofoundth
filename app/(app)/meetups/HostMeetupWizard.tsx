@@ -44,7 +44,7 @@ import {
 import { MapPicker } from "@/components/MeetupMap";
 import { LocationSearch } from "./new/LocationSearch";
 import { hostMeetupAction, type HostMeetupState } from "./actions";
-import { Button, Eyebrow, Input, Textarea } from "@/components/ui";
+import { Button, Eyebrow, Input, Textarea, ToggleChip } from "@/components/ui";
 
 const LABEL = "block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2";
 /** Selectable surface — tiles, topic rows, the two audience cards. */
@@ -547,19 +547,16 @@ export function HostMeetupWizard({
                         ["online", tr("Online")],
                       ] as const
                     ).map(([key, label]) => (
-                      <button
+                      // tracking={false}: this picker never carried
+                      // tracking-wide, and the chip's default would add it.
+                      <ToggleChip
                         key={key}
-                        type="button"
+                        selected={format === key}
                         onClick={() => setFormat(key)}
-                        aria-pressed={format === key}
-                        className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                          format === key
-                            ? "border-navy bg-navy text-white"
-                            : "border-line bg-white text-ink hover:border-navy"
-                        }`}
+                        tracking={false}
                       >
                         {label}
-                      </button>
+                      </ToggleChip>
                     ))}
                   </div>
 

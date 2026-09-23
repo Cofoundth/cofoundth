@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useActionState, useEffect, useId, useState } from "react";
 import { Check, HandshakeIcon, X } from "lucide-react";
 import { sendPartnershipRequestAction, type RequestState } from "./actions";
 import type { CompanyProfile } from "./CompaniesClient";
 import { Avatar } from "@/components/Avatar";
-import { Button, Input, Textarea } from "@/components/ui";
+import { Button, Dialog, Input, Textarea } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 
@@ -80,8 +80,11 @@ export function PartnershipRequestDialog({
     }
   }, [state, onClose]);
 
-  // Escape-to-close now lives in <DialogShell> alongside the focus trap — one
-  // keydown listener owns every dialog-level key.
+  // Escape-to-close, the focus trap and the scroll lock all live in <Dialog>
+  // (components/ui/Dialog.tsx) — this file is where that shell was lifted FROM,
+  // so it now consumes the primitive instead of carrying a private copy.
+  // `surface="card"` keeps the 24px borderless panel this dialog already had;
+  // Dialog's own default is the overlay treatment (decision D1).
 
   const contextRemaining = LONG_TEXT_MAX - context.length;
   const contextTooShort = context.length < 50;
@@ -89,7 +92,14 @@ export function PartnershipRequestDialog({
 
   if (state?.ok) {
     return (
-      <DialogShell onClose={onClose} labelledBy={sentTitleId}>
+      <Dialog
+        onClose={onClose}
+        labelledBy={sentTitleId}
+        size="2xl"
+        padding="responsive"
+        surface="card"
+        panelClassName="max-h-[90vh] overflow-y-auto"
+      >
         <div className="text-center py-8">
           <div className="w-12 h-12 mx-auto mb-4 bg-gold-soft border border-line inline-flex items-center justify-center rounded-xl">
             <Check className="w-6 h-6 text-gold-ink" strokeWidth={1.5} />
@@ -103,12 +113,19 @@ export function PartnershipRequestDialog({
             ).replace("{name}", target.company_name)}
           </p>
         </div>
-      </DialogShell>
+      </Dialog>
     );
   }
 
   return (
-    <DialogShell onClose={onClose} labelledBy={`${eyebrowId} ${titleId}`}>
+    <Dialog
+      onClose={onClose}
+      labelledBy={`${eyebrowId} ${titleId}`}
+      size="2xl"
+      padding="responsive"
+      surface="card"
+      panelClassName="max-h-[90vh] overflow-y-auto"
+    >
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="min-w-0 flex items-start gap-3">
           <Avatar
@@ -262,124 +279,6 @@ export function PartnershipRequestDialog({
           </Button>
         </div>
       </form>
-    </DialogShell>
-  );
-}
-
-// Tab-order members inside the panel. Deliberately excludes tabindex="-1" —
-// the panel itself is programmatically focusable but must never sit in the
-// Tab cycle.
-const FOCUSABLE_SELECTOR = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  '[tabindex]:not([tabindex="-1"])',
-].join(",");
-
-function DialogShell({
-  onClose,
-  labelledBy,
-  children,
-}: {
-  onClose: () => void;
-  /** Space-separated ids of the elements that name this dialog. */
-  labelledBy: string;
-  children: React.ReactNode;
-}) {
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  // Lock the page behind the overlay, and hand focus back to whatever opened
-  // the dialog on the way out. Mount-once on purpose: the success panel swaps
-  // the *children*, not this shell, so the page never unlocks mid-flow.
-  // paddingRight compensates for the scrollbar the lock removes, otherwise the
-  // page underneath visibly jumps sideways as the dialog opens.
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    const { overflow, paddingRight } = document.body.style;
-    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
-    if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
-    return () => {
-      document.body.style.overflow = overflow;
-      document.body.style.paddingRight = paddingRight;
-      opener?.focus?.();
-    };
-  }, []);
-
-  // Pull focus in on open — and again when the dialog swaps content (the
-  // labelling ids change with it) and the focused control was unmounted along
-  // with the old content.
-  useEffect(() => {
-    const panel = panelRef.current;
-    if (!panel || panel.contains(document.activeElement)) return;
-    const first = panel.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-    (first ?? panel).focus();
-  }, [labelledBy]);
-
-  // Escape closes. Tab / Shift+Tab cycle within the panel instead of walking
-  // into the page behind the overlay.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (e.key !== "Tab") return;
-      const panel = panelRef.current;
-      if (!panel) return;
-      const items = Array.from(
-        panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      ).filter((el) => el.getClientRects().length > 0);
-      if (items.length === 0) {
-        e.preventDefault();
-        panel.focus();
-        return;
-      }
-      const first = items[0];
-      const last = items[items.length - 1];
-      const active = document.activeElement as HTMLElement | null;
-      if (!active || !panel.contains(active)) {
-        e.preventDefault();
-        (e.shiftKey ? last : first).focus();
-      } else if (e.shiftKey && active === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={labelledBy}
-      // The shared modal scrim: bg-navy/40 + backdrop-blur-sm, and NO radius.
-      // A full-viewport scrim has no corners to round — the rounded thing is
-      // the panel below. (It carried a stray rounded-xl, which curved the dim
-      // away from the screen corners.)
-      className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      {/* tabIndex -1 makes the panel a focus fallback for content with no
-          controls (the "Request sent" panel). globals.css only rings
-          a/button/input/textarea/select/summary on :focus-visible, so this
-          adds no outline. */}
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        className="bg-white p-6 lg:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-xs"
-      >
-        {children}
-      </div>
-    </div>
+    </Dialog>
   );
 }
