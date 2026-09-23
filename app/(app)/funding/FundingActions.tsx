@@ -7,6 +7,7 @@ import {
   investorConnectAction,
   respondInvestorConnectionAction,
 } from "./actions";
+import { Button } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 // Funding is investor-initiated: an investor connects to a company (targetId =
@@ -28,16 +29,16 @@ export function FundingConnect({ targetId }: { targetId: string }) {
 
   return (
     <div>
-      <button
-        type="button"
+      <Button
+        size="sm"
         disabled={pending}
         aria-busy={pending}
         onClick={go}
-        className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm transition-colors"
+        className="tracking-normal"
       >
         <Handshake className="w-4 h-4" />
         {pending ? tr("Connecting…") : tr("Connect")}
-      </button>
+      </Button>
       {error && (
         <p role="alert" className="text-xs text-danger-ink mt-1.5">
           {tr(error)}
@@ -65,26 +66,25 @@ export function FundingRespond({ connectionId }: { connectionId: string }) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <Button
+          size="xs"
           disabled={pending}
           aria-busy={pending}
           onClick={() => go(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-xs transition-colors"
         >
           <Check className="w-3.5 h-3.5" />
           {tr("Accept")}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
+          size="xs"
           disabled={pending}
           aria-busy={pending}
           onClick={() => go(false)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors rounded-full"
         >
           <X className="w-3.5 h-3.5" />
           {tr("Decline")}
-        </button>
+        </Button>
       </div>
       {error && (
         <p role="alert" className="text-xs text-danger-ink mt-1.5">

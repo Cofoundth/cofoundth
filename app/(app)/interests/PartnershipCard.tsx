@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
+import { Button, Card, Textarea } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 import {
   acceptPartnershipAction,
@@ -81,7 +82,7 @@ export function PartnershipCard({ row, locale }: Props) {
     : "#";
 
   return (
-    <div className="bg-white rounded-3xl shadow-xs p-5">
+    <Card padding="sm">
       <div className="flex items-start gap-4">
         <Link href={profileHref} className="shrink-0">
           <Avatar
@@ -158,15 +159,19 @@ export function PartnershipCard({ row, locale }: Props) {
             <div className="mt-4 pt-3 border-t border-line">
               {showResponse ? (
                 <div className="space-y-3">
-                  <textarea
+                  {/* The field had no accessible name at all; `Response`
+                      is the label the card already renders elsewhere, so
+                      it needs no new dictionary key. */}
+                  <Textarea
                     rows={2}
                     maxLength={LONG_TEXT_MAX}
                     value={responseNote}
                     onChange={(e) => setResponseNote(e.target.value)}
+                    fieldSize="sm"
+                    aria-label={tr("Response")}
                     placeholder={tr(
                       "Optional note — let them know why you're accepting or declining.",
                     )}
-                    className="w-full px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
                   />
                   <div className="flex flex-wrap items-center gap-2">
                     <form
@@ -177,13 +182,10 @@ export function PartnershipCard({ row, locale }: Props) {
                         });
                       }}
                     >
-                      <button
-                        type="submit"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide"
-                      >
+                      <Button type="submit" size="sm">
                         <Check className="w-3.5 h-3.5" />
                         {tr("Accept & open chat")}
-                      </button>
+                      </Button>
                     </form>
                     <form
                       action={(fd) => {
@@ -193,13 +195,10 @@ export function PartnershipCard({ row, locale }: Props) {
                         });
                       }}
                     >
-                      <button
-                        type="submit"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy text-ink hover:text-navy text-sm tracking-wide"
-                      >
+                      <Button type="submit" variant="secondary" size="sm">
                         <X className="w-3.5 h-3.5" />
                         {tr("Decline")}
-                      </button>
+                      </Button>
                     </form>
                     <button
                       type="button"
@@ -215,14 +214,10 @@ export function PartnershipCard({ row, locale }: Props) {
                 </div>
               ) : (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setShowResponse(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide"
-                  >
+                  <Button size="sm" onClick={() => setShowResponse(true)}>
                     <Check className="w-3.5 h-3.5" />
                     {tr("Respond")}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -258,6 +253,6 @@ export function PartnershipCard({ row, locale }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

@@ -9,6 +9,7 @@ import {
   updateMemberRoleAction,
   removeMemberAction,
 } from "../actions";
+import { Button, Card } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 export type PanelMember = {
@@ -70,7 +71,9 @@ export function ManagePanel({
   const ownerCount = members.filter((m) => m.role === "owner").length;
 
   return (
-    <div className="bg-white p-6 space-y-6 rounded-3xl shadow-xs">
+    <Card className="space-y-6">
+      {/* Left as a bare h3-sized title, not <SectionHeading>: this is the
+          20px card-title register, and SectionHeading is the 18px UI one. */}
       <h2 className="text-xl">{tr("Manage team")}</h2>
 
       {/* Invite */}
@@ -94,14 +97,14 @@ export function ManagePanel({
             <option value="member">{tr("Member")}</option>
             <option value="admin">{tr("Admin")}</option>
           </select>
-          <button
+          <Button
             type="submit"
             disabled={pending || !email.trim()}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm transition-colors"
+            className="px-5 py-2.5 tracking-normal"
           >
             <UserPlus className="w-4 h-4" />
             {tr("Invite")}
-          </button>
+          </Button>
         </div>
         {msg && (
           <p
@@ -131,6 +134,10 @@ export function ManagePanel({
                     {tr(inv.role === "admin" ? "Admin" : "Member")}
                   </span>
                 </span>
+                {/* Left hand-rolled. Nearest variant is `ghost`, but ghost is
+                    text-ink -> hover:text-navy with a size's padding; this is
+                    a bare 12px muted link that turns red, with no padding and
+                    no size on the scale. */}
                 <button
                   type="button"
                   disabled={pending}
@@ -191,6 +198,9 @@ export function ManagePanel({
                     </select>
                   )}
                   {!lockOwner && (
+                    // Icon-only, no padding and no surface — not a Button
+                    // variant. Nearest is `ghost`, which brings a size's
+                    // padding and would grow the row.
                     <button
                       type="button"
                       disabled={pending}
@@ -209,6 +219,6 @@ export function ManagePanel({
           })}
         </ul>
       </div>
-    </div>
+    </Card>
   );
 }

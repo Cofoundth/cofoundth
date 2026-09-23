@@ -20,7 +20,13 @@ import { getLocale, tServer } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { STAGE_LABELS } from "@/lib/matching";
 import { Avatar } from "@/components/Avatar";
-import { LinkButton, VerifiedBadge, buttonClasses } from "@/components/ui";
+import {
+  Card,
+  LinkButton,
+  SectionHeading,
+  VerifiedBadge,
+  buttonClasses,
+} from "@/components/ui";
 import { ManagePanel, type PanelMember } from "./ManagePanel";
 import { LeaveButton } from "./LeaveButton";
 import { ConnectActions, type ConnState } from "./ConnectActions";
@@ -299,7 +305,9 @@ export default async function OrgPage({ params }: Props) {
       </Link>
 
       {/* ---- Hero ---- */}
-      <header className="bg-white p-6 sm:p-8 lg:p-10 mb-8 rounded-3xl shadow-xs">
+      {/* p-6 is the md tier; sm:p-8 lg:p-10 are breakpoint variants, which
+          never conflict with the base pad (see Card's header). */}
+      <Card as="header" className="sm:p-8 lg:p-10 mb-8">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           {org.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -367,27 +375,25 @@ export default async function OrgPage({ params }: Props) {
             </div>
           </div>
         </div>
-      </header>
+      </Card>
 
       <div className="grid xl:grid-cols-12 gap-8 xl:gap-10">
         {/* ---- Main column ---- */}
         <div className="xl:col-span-8 space-y-6">
           {pitch && (
-            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-lg font-bold tracking-normal mb-5">
-                {await tServer("What this company does")}
-              </h2>
+            <Card as="section" className="sm:p-8 lg:p-10">
+              <SectionHeading
+                title={await tServer("What this company does")}
+              />
               <p className="text-ink leading-relaxed whitespace-pre-wrap">
                 {pitch}
               </p>
-            </section>
+            </Card>
           )}
 
           {productImages.length > 0 && (
-            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-lg font-bold tracking-normal mb-5">
-                {await tServer("Product")}
-              </h2>
+            <Card as="section" className="sm:p-8 lg:p-10">
+              <SectionHeading title={await tServer("Product")} />
               <div className="grid grid-cols-2 gap-3">
                 {productImages.map((src, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -410,67 +416,66 @@ export default async function OrgPage({ params }: Props) {
                   {await tServer("View product")}
                 </a>
               )}
-            </section>
+            </Card>
           )}
 
           {industry.length > 0 && (
-            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-lg font-bold tracking-normal mb-5">
-                {await tServer("Industry")}
-              </h2>
+            <Card as="section" className="sm:p-8 lg:p-10">
+              <SectionHeading title={await tServer("Industry")} />
               <Chips items={industry} />
-            </section>
+            </Card>
           )}
 
           {capabilities.length > 0 && (
-            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-lg font-bold tracking-normal mb-5">
-                {await tServer("What we offer")}
-              </h2>
+            <Card as="section" className="sm:p-8 lg:p-10">
+              <SectionHeading title={await tServer("What we offer")} />
               <Chips items={capabilities} />
-            </section>
+            </Card>
           )}
 
           {seeking.length > 0 && (
-            <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xs">
-              <h2 className="text-lg font-bold tracking-normal mb-5">
-                {await tServer("Partnerships we're seeking")}
-              </h2>
+            <Card as="section" className="sm:p-8 lg:p-10">
+              <SectionHeading
+                title={await tServer("Partnerships we're seeking")}
+              />
               <Chips items={seeking} />
-            </section>
+            </Card>
           )}
         </div>
 
         {/* ---- Sidebar — connect + deals + team ---- */}
         <aside className="xl:col-span-4 space-y-5">
           {connState !== "self" && !isInvestor && (
-            <div
-              id="connect"
-              className="bg-white p-6 scroll-mt-6 rounded-3xl shadow-xs"
-            >
-              <h2 className="text-lg font-bold tracking-normal mb-5">
-                {await tServer("Connect")}
-              </h2>
+            <Card id="connect" className="scroll-mt-6">
+              <SectionHeading title={await tServer("Connect")} />
               <ConnectActions
                 targetOrgId={org.id as string}
                 slug={org.slug as string}
                 state={connState}
                 connectionId={connectionId}
               />
-            </div>
+            </Card>
           )}
           {connState === "connected" && (
-            <div className="bg-white p-6 rounded-3xl shadow-xs">
-              <h2 className="text-lg font-bold tracking-normal mb-5">
-                {await tServer("Deals")}
-              </h2>
-              <Link
+            <Card>
+              <SectionHeading title={await tServer("Deals")} />
+              {/* The third `outline` site. Four overrides keep it identical:
+                  `flex` (cn() drops the base `inline-flex`), the off-scale
+                  px-4 py-2.5, rounded-xl — this one button is a 14px
+                  rectangle, not the pill every other button in the app is —
+                  and `tracking-normal`, since the site carries no tracking
+                  utility at HEAD. `flex` rather than `fullWidth`: both measure
+                  272x42 in this panel today, but `flex` is the declaration
+                  HEAD actually makes, and `w-full` on an inline-level box also
+                  depends on the panel never gaining sibling inline content. */}
+              <LinkButton
                 href={`/orgs/${org.slug as string}/propose`}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-navy text-navy hover:bg-navy hover:text-white text-sm transition-colors rounded-xl"
+                variant="outline"
+                className="flex px-4 py-2.5 rounded-xl tracking-normal"
               >
                 <HandshakeIcon className="w-4 h-4" />
                 {proposeLabel}
-              </Link>
+              </LinkButton>
               {dealsView.length > 0 && (
                 <ul className="divide-y divide-line border-t border-line mt-3">
                   {dealsView.map((d) => (
@@ -495,7 +500,7 @@ export default async function OrgPage({ params }: Props) {
                             href={COFOUNDEE_CALENDLY_URL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark text-white text-xs transition-colors rounded-full"
+                            className={buttonClasses({ size: "xs" })}
                           >
                             <CalendarClock className="w-3.5 h-3.5" />
                             {bookSigningLabel}
@@ -506,16 +511,16 @@ export default async function OrgPage({ params }: Props) {
                   ))}
                 </ul>
               )}
-            </div>
+            </Card>
           )}
 
-          <div className="bg-white p-6 rounded-3xl shadow-xs">
-            <h2 className="text-lg font-bold tracking-normal mb-5">
-              {(await tServer("Team ({n})")).replace(
+          <Card>
+            <SectionHeading
+              title={(await tServer("Team ({n})")).replace(
                 "{n}",
                 String(members.length),
               )}
-            </h2>
+            />
             <ul className="space-y-3">
               {members.map((m) => {
                 const inner = (
@@ -547,7 +552,7 @@ export default async function OrgPage({ params }: Props) {
                 );
               })}
             </ul>
-          </div>
+          </Card>
 
           {isMember && !isManager && (
             <LeaveButton orgId={org.id as string} userId={user.id} />

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import { sendOrgMessageAction } from "../../chat-actions";
+import { Button } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 import { MESSAGE_MAX } from "@/lib/limits";
 
@@ -48,15 +49,15 @@ export function OrgChatComposer({ connectionId }: { connectionId: string }) {
           aria-label={tr("Message")}
           className="flex-1 resize-none px-4 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
-        <button
-          type="button"
+        <Button
+          size="sm"
           disabled={pending || !body.trim()}
           onClick={send}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm transition-colors shrink-0"
+          className="py-2.5 tracking-normal shrink-0"
         >
           <Send className="w-4 h-4" />
           {pending ? tr("Sending…") : tr("Send")}
-        </button>
+        </Button>
       </div>
     </div>
   );

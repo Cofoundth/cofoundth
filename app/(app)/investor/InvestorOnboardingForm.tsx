@@ -6,6 +6,7 @@ import {
   saveInvestorProfileAction,
   type InvestorFormState,
 } from "./actions";
+import { Button, Input, Textarea, ToggleChip } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { INVESTOR_TYPES } from "@/lib/investor";
@@ -20,17 +21,21 @@ const STAGE_OPTS: { value: string; en: string }[] = [
   { value: "growth", en: "Growth" },
 ];
 
-const inputCls =
+// There is no Select primitive, so the one <select> on this form keeps the
+// canonical field recipe as a literal. It is byte-identical to Input's
+// FIELD_BASE + the md size tier; the 14px radius comes from @layer base.
+const selectCls =
   "w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy";
 
+// Kept for the <select> and the stage-chip group — neither is a field the
+// Input primitive covers. Every real text field below is an <Input> /
+// <Textarea>, which renders this same label itself.
 function Field({
   label,
-  hint,
   required,
   children,
 }: {
   label: string;
-  hint?: string;
   required?: boolean;
   children: React.ReactNode;
 }) {
@@ -41,7 +46,6 @@ function Field({
         {required && <span className="text-gold-ink ml-1">*</span>}
       </label>
       {children}
-      {hint && <p className="text-xs text-ink-muted mt-1.5">{hint}</p>}
     </div>
   );
 }
@@ -82,7 +86,7 @@ export function InvestorOnboardingForm({
           name="investor_type"
           required
           defaultValue={initial?.investor_type ?? ""}
-          className={inputCls}
+          className={selectCls}
         >
           <option value="" disabled>
             {tr("Select…")}
@@ -95,92 +99,97 @@ export function InvestorOnboardingForm({
         </select>
       </Field>
 
-      <Field label={tr("Firm / fund name")}>
-        <input
-          name="firm_name"
-          type="text"
-          maxLength={120}
-          defaultValue={initial?.firm_name ?? ""}
-          placeholder={tr("e.g. Siam Ventures")}
-          className={inputCls}
-        />
-      </Field>
+      <Input
+        id="firm_name"
+        name="firm_name"
+        type="text"
+        maxLength={120}
+        defaultValue={initial?.firm_name ?? ""}
+        label={tr("Firm / fund name")}
+        placeholder={tr("e.g. Siam Ventures")}
+      />
 
-      <Field
-        label={tr("Focus industries")}
-        hint={tr("Comma-separated, e.g. Fintech, Logistics")}
-      >
-        <input
+      <div>
+        <Input
+          id="focus_industries"
           name="focus_industries"
           type="text"
           defaultValue={(initial?.focus_industries ?? []).join(", ")}
-          className={inputCls}
+          label={tr("Focus industries")}
         />
-      </Field>
+        <p className="text-xs text-ink-muted mt-1.5">
+          {tr("Comma-separated, e.g. Fintech, Logistics")}
+        </p>
+      </div>
 
       <Field label={tr("Stages you back")}>
         <div className="flex flex-wrap gap-2">
+          {/* ToggleChip's `sm` tier is px-3 py-1.5 text-sm — this group's
+              exact geometry. Two HEAD-preserving overrides: tracking={false},
+              because these chips never carried tracking-wide, and a selected
+              fill of bg-cream/text-navy rather than the primitive's solid
+              navy. The Check stays a child so it keeps its gold-ink tint. */}
           {STAGE_OPTS.map((s) => {
             const on = stages.includes(s.value);
             return (
-              <button
+              <ToggleChip
                 key={s.value}
-                type="button"
+                selected={on}
+                size="sm"
+                tracking={false}
                 onClick={() => toggleStage(s.value)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-sm transition-colors ${
-                  on
-                    ? "bg-cream border-navy text-navy"
-                    : "bg-white border-line text-ink hover:border-navy"
-                }`}
+                className={on ? "bg-cream text-navy" : undefined}
               >
                 {on && <Check className="w-3.5 h-3.5 text-gold-ink" />}
                 {tr(s.en)}
-              </button>
+              </ToggleChip>
             );
           })}
         </div>
       </Field>
 
-      <Field
-        label={tr("Typical ticket size")}
-        hint={tr("e.g. ฿500K–฿5M")}
-      >
-        <input
+      <div>
+        <Input
+          id="ticket_size"
           name="ticket_size"
           type="text"
           maxLength={60}
           defaultValue={initial?.ticket_size ?? ""}
-          className={inputCls}
+          label={tr("Typical ticket size")}
         />
-      </Field>
+        <p className="text-xs text-ink-muted mt-1.5">
+          {tr("e.g. ฿500K–฿5M")}
+        </p>
+      </div>
 
-      <Field
-        label={tr("What you look for")}
-        hint={tr("Your thesis — the kind of founders and companies you back.")}
-      >
-        <textarea
+      <div>
+        <Textarea
+          id="thesis"
           name="thesis"
           rows={4}
           maxLength={THESIS_MAX}
           value={thesis}
           onChange={(e) => setThesis(e.target.value)}
-          className={`${inputCls} resize-y`}
+          resize="y"
+          label={tr("What you look for")}
         />
         <div className="text-right text-xs text-ink-muted mt-1 tabular-nums">
           {thesis.length} / {THESIS_MAX}
         </div>
-      </Field>
+        <p className="text-xs text-ink-muted mt-1.5">
+          {tr("Your thesis — the kind of founders and companies you back.")}
+        </p>
+      </div>
 
-      <Field label={tr("Location")}>
-        <input
-          name="location"
-          type="text"
-          maxLength={80}
-          defaultValue={initial?.location ?? ""}
-          placeholder={tr("e.g. Bangkok")}
-          className={inputCls}
-        />
-      </Field>
+      <Input
+        id="location"
+        name="location"
+        type="text"
+        maxLength={80}
+        defaultValue={initial?.location ?? ""}
+        label={tr("Location")}
+        placeholder={tr("e.g. Bangkok")}
+      />
 
       {state?.error && (
         <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
@@ -189,13 +198,9 @@ export function InvestorOnboardingForm({
       )}
 
       <div className="pt-4 border-t border-line flex items-center justify-end">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm tracking-wide transition-colors"
-        >
+        <Button type="submit" disabled={isPending}>
           {isPending ? tr("Saving…") : tr("Save investor profile")}
-        </button>
+        </Button>
       </div>
     </form>
   );

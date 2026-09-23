@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n-client";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { INDUSTRIES } from "@/lib/industries";
 import Combobox from "@/components/Combobox";
+import { Button, SectionHeading } from "@/components/ui";
 
 const INITIAL: OrgFormState = null;
 const PITCH_MAX = LONG_TEXT_MAX;
@@ -23,9 +24,9 @@ const STAGES: { value: string; en: string }[] = [
 const inputCls =
   "w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy";
 
-// The app's section register: 18px / 700 / normal tracking. Both overrides are
-// load-bearing — @layer base sets every h1-h6 to weight 600 and -0.02em, so
-// without font-bold + tracking-normal this silently renders as display type.
+// The app's section register, now via the primitive that cannot get the two
+// load-bearing overrides wrong. `className=""` rather than the default "mb-5":
+// the wrapper's space-y-5 already supplies the gap, and HEAD carried no margin.
 function Section({
   title,
   children,
@@ -35,9 +36,7 @@ function Section({
 }) {
   return (
     <section className="space-y-5">
-      <h2 className="text-lg font-bold tracking-normal border-b border-line pb-2">
-        {title}
-      </h2>
+      <SectionHeading title={title} divider className="" />
       {children}
     </section>
   );
@@ -226,6 +225,12 @@ export function CreateOrgForm() {
           <Field label={tr("Industry")}>
             {industry.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
+                {/* Left hand-rolled. `<ToggleChip selected removable>` is the
+                    near variant, but `removable` renders the ✕ as its own flex
+                    item behind gap-1.5, replacing the literal space here — the
+                    chip gets ~2px wider. It is also the ninth site of this
+                    exact shape (settings x5, onboarding x3), all still
+                    hand-rolled after batch 2; they should move together. */}
                 {industry.map((i) => (
                   <button
                     key={i}
@@ -283,6 +288,10 @@ export function CreateOrgForm() {
         </div>
       </Section>
 
+      {/* Left hand-rolled. <Card tone="danger"> is the same colours but a 24px
+          card with a padding tier; this is an inline 14px alert strip at
+          px-4 py-3. Making Card produce it needs padding="none" plus a radius
+          override — fighting the primitive rather than using it. */}
       {state?.error && (
         <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
           {tr(state.error)}
@@ -290,14 +299,10 @@ export function CreateOrgForm() {
       )}
 
       <div className="pt-4 border-t border-line flex items-center justify-end">
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm tracking-wide transition-colors"
-        >
+        <Button type="submit" disabled={!canSubmit}>
           <Building2 className="w-4 h-4" />
           {isPending ? tr("Creating…") : tr("Create company")}
-        </button>
+        </Button>
       </div>
     </form>
   );

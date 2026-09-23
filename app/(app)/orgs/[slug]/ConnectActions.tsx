@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Clock, Handshake, MessageCircle, X } from "lucide-react";
 import {
   requestConnectionAction,
   respondConnectionAction,
 } from "../actions";
-import { LinkButton } from "@/components/ui";
+import { Button, LinkButton } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 export type ConnState =
@@ -68,13 +67,16 @@ export function ConnectActions({
           <Check className="w-4 h-4" />
           {tr("Connected")}
         </span>
-        <Link
+        {/* `flex` (not fullWidth): it is the declaration HEAD makes, and cn()
+            drops the primitive's base `inline-flex` for it. px-5 py-2.5 is the
+            documented off-scale pad. Measured 272x40, same as HEAD. */}
+        <LinkButton
           href={`/orgs/${slug}/chat`}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
+          className="flex px-5 py-2.5"
         >
           <MessageCircle className="w-4 h-4" />
           {tr("Message")}
-        </Link>
+        </LinkButton>
       </div>
     );
   }
@@ -95,28 +97,29 @@ export function ConnectActions({
           {tr("This company wants to connect.")}
         </p>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Button
+            size="sm"
             disabled={pending}
             onClick={() =>
               run(() => respondConnectionAction(connectionId ?? "", true))
             }
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm transition-colors"
+            className="tracking-normal"
           >
             <Check className="w-4 h-4" />
             {tr("Accept")}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             disabled={pending}
             onClick={() =>
               run(() => respondConnectionAction(connectionId ?? "", false))
             }
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy disabled:opacity-50 text-ink text-sm transition-colors rounded-xl"
+            className="rounded-xl tracking-normal"
           >
             <X className="w-4 h-4" />
             {tr("Decline")}
-          </button>
+          </Button>
         </div>
         {error && <p className="text-xs text-danger-ink mt-1.5">{tr(error)}</p>}
       </div>
@@ -126,15 +129,14 @@ export function ConnectActions({
   // state === "none"
   return (
     <div>
-      <button
-        type="button"
+      <Button
         disabled={pending}
         onClick={() => run(() => requestConnectionAction(targetOrgId))}
-        className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm tracking-wide transition-colors"
+        className="px-5 py-2.5"
       >
         <Handshake className="w-4 h-4" />
         {pending ? tr("Connecting…") : tr("Connect")}
-      </button>
+      </Button>
       {error && <p className="text-xs text-danger-ink mt-1.5">{tr(error)}</p>}
     </div>
   );

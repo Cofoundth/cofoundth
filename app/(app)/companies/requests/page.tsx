@@ -10,7 +10,13 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { Avatar } from "@/components/Avatar";
-import { CardChip, EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  Card,
+  CardChip,
+  EmptyState,
+  LinkButton,
+  Section,
+} from "@/components/ui";
 import { AskRowActions } from "./AskRowActions";
 import { isWithinMs, DAY_MS } from "@/lib/time";
 
@@ -144,13 +150,13 @@ export default async function PartnershipRequestsBoardPage() {
           </h1>
         </div>
         {canPost ? (
-          <Link
+          <LinkButton
             href="/companies/requests/new"
-            className="px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2 shrink-0 rounded-full"
+            className="px-5 shrink-0"
           >
             <Plus className="w-4 h-4" />
             {await tServer("Post an ask")}
-          </Link>
+          </LinkButton>
         ) : (
           <div className="bg-cream border-l-2 border-navy p-4 text-sm text-ink max-w-md rounded-xl">
             {await tServer(
@@ -210,11 +216,10 @@ export default async function PartnershipRequestsBoardPage() {
               !isMine && canPost && ask.status === "open";
 
             return (
-              <div
+              <Card
                 key={ask.id as string}
-                className={`bg-white rounded-3xl shadow-xs p-5 ${
-                  ask.status === "open" ? "" : "opacity-80"
-                }`}
+                padding="sm"
+                className={ask.status === "open" ? undefined : "opacity-80"}
               >
                 <div className="flex items-start gap-4">
                   <Link href={authorHref} className="shrink-0">
@@ -302,13 +307,13 @@ export default async function PartnershipRequestsBoardPage() {
                           />
                         )}
                         {canRespond && (
-                          <Link
+                          <LinkButton
                             href={`/companies?focus=${ask.author_id}`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
+                            size="sm"
                           >
                             {labels.respond}
                             <ArrowRight className="w-3.5 h-3.5" />
-                          </Link>
+                          </LinkButton>
                         )}
                         {!canRespond && !isMine && (
                           <Link
@@ -323,7 +328,7 @@ export default async function PartnershipRequestsBoardPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>

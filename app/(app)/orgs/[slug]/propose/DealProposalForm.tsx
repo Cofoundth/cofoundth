@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { HandshakeIcon, ShieldCheck } from "lucide-react";
 import { proposeDealAction, type DealFormState } from "../../deal-actions";
+import { Button, Card } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 const INITIAL: DealFormState = null;
@@ -182,15 +183,18 @@ export function DealProposalForm({
         </Field>
       </div>
 
-      <div className="flex items-start gap-3 p-4 bg-cream rounded-3xl">
+      <Card tone="cream" padding="xs" className="flex items-start gap-3">
         <ShieldCheck className="w-5 h-5 text-gold-ink shrink-0 mt-0.5" />
         <p className="text-xs text-ink leading-relaxed">
           {tr(
             "Cofoundee charges 1% of the deal value (minimum ฿2,000) per signed deal. A partner law firm drafts and handles the contract; signing happens in person.",
           )}
         </p>
-      </div>
+      </Card>
 
+      {/* Left hand-rolled, same as CreateOrgForm: <Card tone="danger"> is the
+          same colours but a 24px card with a padding tier, and this is an
+          inline 14px alert strip at px-4 py-3. */}
       {state?.error && (
         <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
           {tr(state.error)}
@@ -198,16 +202,12 @@ export function DealProposalForm({
       )}
 
       <div className="pt-4 border-t border-line flex items-center justify-end">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm tracking-wide transition-colors"
-        >
+        <Button type="submit" disabled={isPending}>
           <HandshakeIcon className="w-4 h-4" />
           {isPending
             ? tr("Sending…")
             : (tr("Send proposal to {company}")).replace("{company}", targetName)}
-        </button>
+        </Button>
       </div>
     </form>
   );

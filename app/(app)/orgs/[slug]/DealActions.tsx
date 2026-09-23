@@ -8,6 +8,7 @@ import {
   declineDealAction,
   cancelDealAction,
 } from "../deal-actions";
+import { Button } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 export function DealActions({
@@ -35,24 +36,23 @@ export function DealActions({
     return (
       <div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Button
+            size="xs"
             disabled={pending}
             onClick={() => run(() => confirmDealAction(dealId))}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-xs transition-colors"
           >
             <Check className="w-3.5 h-3.5" />
             {pending ? tr("Confirming…") : tr("Confirm")}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="secondary"
+            size="xs"
             disabled={pending}
             onClick={() => run(() => declineDealAction(dealId))}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors rounded-full"
           >
             <X className="w-3.5 h-3.5" />
             {pending ? tr("Declining…") : tr("Decline")}
-          </button>
+          </Button>
         </div>
         {error && <p className="text-xs text-danger-ink mt-1">{tr(error)}</p>}
       </div>
@@ -61,6 +61,9 @@ export function DealActions({
 
   return (
     <div>
+      {/* Left hand-rolled, same as ManagePanel's Revoke: a bare 12px muted
+          link that turns red. `ghost` is the nearest variant but is
+          text-ink -> hover:text-navy and brings a size's padding. */}
       <button
         type="button"
         disabled={pending}

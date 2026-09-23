@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Building2, ImagePlus, Loader2, X } from "lucide-react";
 import { uploadOrgImageAction } from "../upload-actions";
+import { Button } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 const MAX_PRODUCT_IMAGES = 6;
@@ -97,15 +98,19 @@ export function OrgLogoField({
         )}
       </div>
       <div className="flex-1">
-        <button
-          type="button"
+        {/* `bg-white` kept rather than falling back to the variant's
+            bg-transparent: identical on this white card, but it keeps the
+            button's own surface if it is ever moved. */}
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-line bg-white hover:border-navy text-ink text-sm transition-colors disabled:opacity-60 rounded-xl"
+          className="gap-2 bg-white rounded-xl tracking-normal"
         >
           <ImagePlus className="w-4 h-4" />
           {value ? tr("Change logo") : tr("Upload logo")}
-        </button>
+        </Button>
         <p className="text-xs text-ink-muted mt-2">{tr("JPG/PNG, up to 5MB.")}</p>
         {error && <p className="text-xs text-danger-ink mt-1">{tr(error)}</p>}
         <input
@@ -163,6 +168,9 @@ export function OrgProductImagesField({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt={tr("Product image")} className="w-full h-full object-cover" />
+            {/* Left hand-rolled: an absolutely-positioned 20x20 icon overlay
+                that fades in on hover. No Button variant is a fixed-box
+                overlay, and every size on the scale brings padding. */}
             <button
               type="button"
               onClick={() => onChange(value.filter((u) => u !== url))}
@@ -174,6 +182,9 @@ export function OrgProductImagesField({
           </div>
         ))}
         {!full && (
+          // Left hand-rolled: nearest variant is `secondary`, but this is a
+          // DASHED border on a fixed 96x80 tile — a drop target, not a button
+          // face. No variant carries border-dashed and no size is a fixed box.
           <button
             type="button"
             onClick={() => inputRef.current?.click()}

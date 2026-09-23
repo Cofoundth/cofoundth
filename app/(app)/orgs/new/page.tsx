@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { CreateOrgForm } from "./CreateOrgForm";
-import { Section } from "@/components/ui";
+import { Card, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +29,9 @@ export default async function NewOrgPage() {
         )}
       </p>
 
-      <div className="bg-white p-6 lg:p-8 rounded-3xl shadow-xs">
+      <Card padding="responsive">
         <CreateOrgForm />
-      </div>
+      </Card>
     </Section>
   );
 }

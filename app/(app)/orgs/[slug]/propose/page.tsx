@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { getActiveOrgId } from "@/lib/active-org";
 import { tServer } from "@/lib/i18n-server";
 import { DealProposalForm } from "./DealProposalForm";
-import { Section } from "@/components/ui";
+import { Card, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -63,13 +63,13 @@ export default async function ProposePage({
         )}
       </p>
 
-      <div className="bg-white p-6 lg:p-8 rounded-3xl shadow-xs">
+      <Card padding="responsive">
         <DealProposalForm
           targetOrgId={org.id as string}
           targetSlug={org.slug as string}
           targetName={org.name as string}
         />
-      </div>
+      </Card>
     </Section>
   );
 }

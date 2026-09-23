@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { HandshakeIcon } from "lucide-react";
 import { createAskAction, type AskState } from "../actions";
+import { Button, Input, Textarea } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 
@@ -90,42 +91,19 @@ export function NewAskForm() {
         </div>
       </div>
 
-      <div>
-        <label
-          htmlFor="subject"
-          className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-        >
-          {tr("Subject")}
-        </label>
-        <input
-          id="subject"
-          name="subject"
-          type="text"
-          required
-          minLength={5}
-          maxLength={200}
-          placeholder={tr('e.g. "Logistics partner covering Northern Thailand"')}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
-        />
-      </div>
+      <Input
+        id="subject"
+        name="subject"
+        type="text"
+        required
+        minLength={5}
+        maxLength={200}
+        label={tr("Subject")}
+        placeholder={tr('e.g. "Logistics partner covering Northern Thailand"')}
+      />
 
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <label
-            htmlFor="context"
-            className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
-          >
-            {tr("Context")}
-          </label>
-          <span
-            className={`text-xs tabular-nums ${
-              tooLong || tooShort ? "text-ink-muted" : "text-gold-ink"
-            }`}
-          >
-            {context.length} / {LONG_TEXT_MAX}
-          </span>
-        </div>
-        <textarea
+        <Textarea
           id="context"
           name="context"
           rows={8}
@@ -134,10 +112,20 @@ export function NewAskForm() {
           maxLength={LONG_TEXT_MAX}
           value={context}
           onChange={(e) => setContext(e.target.value)}
+          resize="y"
+          label={tr("Context")}
+          hint={
+            <span
+              className={`text-xs tabular-nums ${
+                tooLong || tooShort ? "text-ink-muted" : "text-gold-ink"
+              }`}
+            >
+              {context.length} / {LONG_TEXT_MAX}
+            </span>
+          }
           placeholder={tr(
             "Describe your business, why you need this kind of partner, expected volume, timeline, and any key conditions.",
           )}
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y rounded-xl"
         />
         {tooShort && context.length > 0 && (
           <p className="text-xs text-ink-muted mt-1">
@@ -149,21 +137,16 @@ export function NewAskForm() {
         )}
       </div>
 
-      <div>
-        <label
-          htmlFor="deadline_at"
-          className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-        >
-          {tr("Deadline (optional)")}
-        </label>
-        <input
-          id="deadline_at"
-          name="deadline_at"
-          type="date"
-          min={new Date().toISOString().slice(0, 10)}
-          className="px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
-        />
-      </div>
+      {/* `w-auto` keeps HEAD's intrinsic date-picker width — the field
+          primitive is w-full, this one never was. */}
+      <Input
+        id="deadline_at"
+        name="deadline_at"
+        type="date"
+        min={new Date().toISOString().slice(0, 10)}
+        label={tr("Deadline (optional)")}
+        className="w-auto"
+      />
 
       {state?.error && (
         <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
@@ -172,14 +155,10 @@ export function NewAskForm() {
       )}
 
       <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
-        <button
-          type="submit"
-          disabled={isPending || tooShort || tooLong}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm tracking-wide transition-colors"
-        >
+        <Button type="submit" disabled={isPending || tooShort || tooLong}>
           <HandshakeIcon className="w-4 h-4" />
           {isPending ? tr("Posting…") : tr("Post ask")}
-        </button>
+        </Button>
       </div>
     </form>
   );

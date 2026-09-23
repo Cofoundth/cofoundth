@@ -1,11 +1,17 @@
-import Link from "next/link";
 import { Building2, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { isInvestorAccount } from "@/lib/account";
 import { tServer } from "@/lib/i18n-server";
 import { OrgCard, OrgLogo, type OrgCardOrg } from "@/components/OrgCard";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  Card,
+  EmptyState,
+  LinkButton,
+  Section,
+  SectionHeading,
+  Tabs,
+} from "@/components/ui";
 import { InviteActions } from "./InviteActions";
 
 export const dynamic = "force-dynamic";
@@ -105,12 +111,11 @@ export default async function OrgsPage({
   const browseFoundersLabel = await tServer("Browse founders");
   const noneInTab = await tServer("No companies in this tab yet.");
   const seeAllLabel = await tServer("See all");
-  const tabCls = (active: boolean) =>
-    `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
-      active
-        ? "border-navy text-navy font-medium"
-        : "border-transparent text-ink-muted hover:text-navy"
-    }`;
+  const directoryTabs = [
+    { key: "all", label: tabAll, href: "/orgs" },
+    { key: "partner", label: tabPartner, href: "/orgs?tab=partner" },
+    { key: "funding", label: tabFunding, href: "/orgs?tab=funding" },
+  ];
 
   const invitedAsTpl = await tServer("Invited you as {role}");
   const offerLabel = await tServer("What we offer");
@@ -134,27 +139,29 @@ export default async function OrgsPage({
           </span>
         </div>
         {!isInvestor && (
-          <Link
+          // px-5 py-2.5 is the documented off-scale pad (between sm and md) —
+          // kept as an override so the migration is a pixel no-op. `hidden
+          // sm:inline-flex` replaces the primitive's base `inline-flex`.
+          <LinkButton
             href="/orgs/new"
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors shrink-0 rounded-full"
+            className="hidden sm:inline-flex px-5 py-2.5 shrink-0"
           >
             <Plus className="w-4 h-4" />
             {await tServer("Create company")}
-          </Link>
+          </LinkButton>
         )}
       </div>
 
       {/* Pending invites */}
       {!isInvestor && invites.length > 0 && (
         <section className="mb-14">
-          <h2 className="text-lg font-bold tracking-normal mb-5">
-            {await tServer("Invitations")}
-          </h2>
+          <SectionHeading title={await tServer("Invitations")} />
           <div className="space-y-3">
             {invites.map((inv) => (
-              <div
+              <Card
                 key={inv.id}
-                className="bg-white p-5 flex items-center justify-between gap-4 rounded-3xl shadow-xs"
+                padding="sm"
+                className="flex items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-4 min-w-0">
                   <OrgLogo org={{ name: inv.org!.name, logo_url: null }} />
@@ -168,7 +175,7 @@ export default async function OrgsPage({
                   </div>
                 </div>
                 <InviteActions inviteId={inv.id} />
-              </div>
+              </Card>
             ))}
           </div>
         </section>
@@ -177,9 +184,7 @@ export default async function OrgsPage({
       {/* Your companies (founders only) */}
       {!isInvestor && (
         <section className="mb-14">
-          <h2 className="text-lg font-bold tracking-normal mb-5">
-            {await tServer("Your companies")}
-          </h2>
+          <SectionHeading title={await tServer("Your companies")} />
         {myOrgs.length === 0 ? (
           <EmptyState
             padding="lg"
@@ -214,26 +219,13 @@ export default async function OrgsPage({
 
       {/* Directory */}
       <section>
-        <h2 className="text-lg font-bold tracking-normal mb-5">
-          {await tServer("All companies")}
-        </h2>
-        <nav className="flex items-center gap-1 mb-5 border-b border-line">
-          <Link href="/orgs" className={tabCls(activeTab === "all")}>
-            {tabAll}
-          </Link>
-          <Link
-            href="/orgs?tab=partner"
-            className={tabCls(activeTab === "partner")}
-          >
-            {tabPartner}
-          </Link>
-          <Link
-            href="/orgs?tab=funding"
-            className={tabCls(activeTab === "funding")}
-          >
-            {tabFunding}
-          </Link>
-        </nav>
+        <SectionHeading title={await tServer("All companies")} />
+        <Tabs
+          items={directoryTabs}
+          value={activeTab}
+          className="mb-5"
+          aria-label={await tServer("All companies")}
+        />
         {filteredDirectory.length === 0 ? (
           directory.length === 0 ? (
             <EmptyState

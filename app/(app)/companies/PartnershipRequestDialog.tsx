@@ -240,21 +240,16 @@ export function PartnershipRequestDialog({
           )}
         </div>
 
-        <div>
-          <label
-            htmlFor="deadline_at"
-            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-          >
-            {tr("Deadline (optional)")}
-          </label>
-          <input
-            id="deadline_at"
-            name="deadline_at"
-            type="date"
-            min={new Date().toISOString().slice(0, 10)}
-            className="px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
-          />
-        </div>
+        {/* `w-auto` keeps HEAD's intrinsic date-picker width — the field
+            primitive is w-full, this one never was. */}
+        <Input
+          id="deadline_at"
+          name="deadline_at"
+          type="date"
+          min={new Date().toISOString().slice(0, 10)}
+          label={tr("Deadline (optional)")}
+          className="w-auto"
+        />
 
         {state?.error && (
           <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
@@ -263,13 +258,9 @@ export function PartnershipRequestDialog({
         )}
 
         <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-3 text-ink hover:text-navy text-sm tracking-wide"
-          >
+          <Button variant="ghost" onClick={onClose} className="px-5">
             {tr("Cancel")}
-          </button>
+          </Button>
           <Button
             type="submit"
             disabled={isPending || contextTooShort || contextTooLong}

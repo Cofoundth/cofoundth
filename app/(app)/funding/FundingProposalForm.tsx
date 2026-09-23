@@ -4,13 +4,10 @@ import { useActionState, useState } from "react";
 import { HandshakeIcon, ShieldCheck } from "lucide-react";
 import { proposeInvestorDealAction, type FundingFormState } from "./actions";
 import { cofoundeeFee } from "@/lib/fee";
+import { Button, Card, Input, Textarea } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 const INITIAL: FundingFormState = null;
-const inputCls =
-  "w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy";
-const labelCls =
-  "block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2";
 
 export function FundingProposalForm({ connectionId }: { connectionId: string }) {
   const tr = useT();
@@ -40,82 +37,58 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
       <input type="hidden" name="connection_id" value={connectionId} />
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="equity_pct" className={labelCls}>
-            {tr("Equity %")}
-          </label>
-          <input
-            id="equity_pct"
-            name="equity_pct"
-            type="text"
-            inputMode="decimal"
-            placeholder={tr("e.g. 10")}
-            className={inputCls}
-          />
-        </div>
-        <div>
-          <label htmlFor="monthly_amount" className={labelCls}>
-            {tr("Monthly amount (฿)")}
-          </label>
-          <input
-            id="monthly_amount"
-            name="monthly_amount"
-            type="text"
-            inputMode="decimal"
-            placeholder={tr("e.g. 50,000")}
-            value={monthly}
-            onChange={(e) => setMonthly(e.target.value)}
-            className={inputCls}
-          />
-        </div>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="contract_months" className={labelCls}>
-            {tr("Contract length (months)")}
-          </label>
-          <input
-            id="contract_months"
-            name="contract_months"
-            type="text"
-            inputMode="numeric"
-            placeholder={tr("e.g. 12")}
-            value={months}
-            onChange={(e) => setMonths(e.target.value)}
-            className={inputCls}
-          />
-        </div>
-        <div>
-          <label htmlFor="payment_terms" className={labelCls}>
-            {tr("Payment terms")}
-          </label>
-          <input
-            id="payment_terms"
-            name="payment_terms"
-            type="text"
-            maxLength={500}
-            placeholder={tr("e.g. monthly transfer")}
-            className={inputCls}
-          />
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="description" className={labelCls}>
-          {tr("Notes (optional)")}
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={3}
-          maxLength={5000}
-          placeholder={tr("Anything else about the terms.")}
-          className={`${inputCls} resize-y`}
+        <Input
+          id="equity_pct"
+          name="equity_pct"
+          type="text"
+          inputMode="decimal"
+          label={tr("Equity %")}
+          placeholder={tr("e.g. 10")}
+        />
+        <Input
+          id="monthly_amount"
+          name="monthly_amount"
+          type="text"
+          inputMode="decimal"
+          label={tr("Monthly amount (฿)")}
+          placeholder={tr("e.g. 50,000")}
+          value={monthly}
+          onChange={(e) => setMonthly(e.target.value)}
         />
       </div>
 
-      <div className="flex items-start gap-3 p-4 bg-cream rounded-3xl">
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Input
+          id="contract_months"
+          name="contract_months"
+          type="text"
+          inputMode="numeric"
+          label={tr("Contract length (months)")}
+          placeholder={tr("e.g. 12")}
+          value={months}
+          onChange={(e) => setMonths(e.target.value)}
+        />
+        <Input
+          id="payment_terms"
+          name="payment_terms"
+          type="text"
+          maxLength={500}
+          label={tr("Payment terms")}
+          placeholder={tr("e.g. monthly transfer")}
+        />
+      </div>
+
+      <Textarea
+        id="description"
+        name="description"
+        rows={3}
+        maxLength={5000}
+        resize="y"
+        label={tr("Notes (optional)")}
+        placeholder={tr("Anything else about the terms.")}
+      />
+
+      <Card tone="cream" padding="xs" className="flex items-start gap-3">
         <ShieldCheck className="w-5 h-5 text-gold-ink shrink-0 mt-0.5" />
         <div className="text-xs text-ink leading-relaxed">
           <p>
@@ -134,7 +107,7 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
             )}
           </p>
         </div>
-      </div>
+      </Card>
 
       {state?.error && (
         <div
@@ -146,15 +119,10 @@ export function FundingProposalForm({ connectionId }: { connectionId: string }) 
       )}
 
       <div className="flex items-center justify-end">
-        <button
-          type="submit"
-          disabled={isPending}
-          aria-busy={isPending}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm tracking-wide transition-colors"
-        >
+        <Button type="submit" disabled={isPending} aria-busy={isPending}>
           <HandshakeIcon className="w-4 h-4" />
           {isPending ? tr("Sending…") : tr("Send proposal")}
-        </button>
+        </Button>
       </div>
     </form>
   );

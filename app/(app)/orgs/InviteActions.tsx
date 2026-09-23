@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { respondInviteAction } from "./actions";
+import { Button } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 export function InviteActions({ inviteId }: { inviteId: string }) {
@@ -24,24 +25,25 @@ export function InviteActions({ inviteId }: { inviteId: string }) {
   return (
     <div className="flex items-center gap-2">
       {error && <span className="text-xs text-danger-ink mr-1">{tr(error)}</span>}
-      <button
-        type="button"
+      <Button
+        size="sm"
         disabled={pending}
         onClick={() => respond(true)}
-        className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm transition-colors"
+        className="tracking-normal"
       >
         <Check className="w-4 h-4" />
         {tr("Accept")}
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
         disabled={pending}
         onClick={() => respond(false)}
-        className="inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy disabled:opacity-50 text-ink text-sm transition-colors rounded-xl"
+        className="rounded-xl tracking-normal"
       >
         <X className="w-4 h-4" />
         {tr("Decline")}
-      </button>
+      </Button>
     </div>
   );
 }

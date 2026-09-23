@@ -8,6 +8,7 @@ import {
   declineInvestorDealAction,
   cancelInvestorDealAction,
 } from "./actions";
+import { Button } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 // role="confirm": the viewer is the responder (didn't propose) — confirm/decline
@@ -57,26 +58,25 @@ export function FundingDealActions({
   return (
     <div>
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <Button
+          size="xs"
           disabled={pending}
           aria-busy={pending}
           onClick={() => run(() => confirmInvestorDealAction(dealId))}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-xs transition-colors"
         >
           <Check className="w-3.5 h-3.5" />
           {pending ? tr("Confirming…") : tr("Confirm")}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
+          size="xs"
           disabled={pending}
           aria-busy={pending}
           onClick={() => run(() => declineInvestorDealAction(dealId))}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-line hover:border-navy disabled:opacity-50 text-ink text-xs transition-colors rounded-full"
         >
           <X className="w-3.5 h-3.5" />
           {tr("Decline")}
-        </button>
+        </Button>
       </div>
       {error && (
         <p role="alert" className="text-xs text-danger-ink mt-1">

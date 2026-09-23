@@ -7,7 +7,12 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { isUuid } from "@/lib/slug";
 import { COFOUNDEE_CALENDLY_URL } from "@/lib/calendly";
-import { EmptyState } from "@/components/ui";
+import {
+  buttonClasses,
+  Card,
+  EmptyState,
+  SectionHeading,
+} from "@/components/ui";
 import { FundingProposalForm } from "../FundingProposalForm";
 import { FundingDealActions } from "../FundingDealActions";
 
@@ -143,18 +148,14 @@ export default async function FundingDetailPage({ params }: Props) {
       </p>
 
       {/* Propose */}
-      <div className="bg-white p-6 mb-8 rounded-3xl shadow-xs">
-        <h2 className="text-lg font-bold tracking-normal mb-5">
-          {await tServer("Send a proposal")}
-        </h2>
+      <Card className="mb-8">
+        <SectionHeading title={await tServer("Send a proposal")} />
         <FundingProposalForm connectionId={connectionId} />
-      </div>
+      </Card>
 
       {/* Existing proposals */}
       <div>
-        <h2 className="text-lg font-bold tracking-normal mb-5">
-          {await tServer("Proposals")}
-        </h2>
+        <SectionHeading title={await tServer("Proposals")} />
         {dealsView.length === 0 ? (
           // KIND A — a two-sided negotiation, so "neither of us has proposed
           // anything" is real information. The form that fixes it is directly
@@ -169,7 +170,7 @@ export default async function FundingDetailPage({ params }: Props) {
         ) : (
           <div className="space-y-3">
             {dealsView.map((d) => (
-              <div key={d.id} className="bg-white p-5 rounded-3xl shadow-xs">
+              <Card key={d.id} padding="sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="text-sm text-navy">
                     {d.equity != null && (
@@ -214,18 +215,22 @@ export default async function FundingDetailPage({ params }: Props) {
                 )}
                 {(d.status === "confirmed" || d.status === "admin_review") && (
                   <div className="mt-3">
+                    {/* A raw <a>, not LinkButton: this is an absolute
+                        third-party URL opened in a new tab, so next/link would
+                        add nothing. buttonClasses is the documented escape
+                        hatch for a surface that cannot BE the component. */}
                     <a
                       href={COFOUNDEE_CALENDLY_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-navy hover:bg-navy-dark text-white text-xs transition-colors rounded-full"
+                      className={buttonClasses({ size: "xs" })}
                     >
                       <CalendarClock className="w-3.5 h-3.5" />
                       {bookSigning}
                     </a>
                   </div>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
         )}

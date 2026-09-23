@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { investorTypeLabel } from "@/lib/investor";
+import { Card } from "@/components/ui";
 import {
   InvestorOnboardingForm,
   type InvestorInitial,
@@ -58,11 +59,11 @@ export default async function InvestorPage({
                 "Tell us how you invest. This is separate from the founder profile — no company or co-founder details needed.",
               )}
             </p>
-            <div className="bg-white rounded-3xl shadow-xs p-6 lg:p-8">
+            <Card padding="responsive">
               <InvestorOnboardingForm
                 initial={(inv as InvestorInitial | null) ?? undefined}
               />
-            </div>
+            </Card>
           </div>
         ) : (
           <div className="max-w-[640px] mx-auto">
@@ -97,7 +98,7 @@ export default async function InvestorPage({
               <ArrowRight className="w-5 h-5 shrink-0" />
             </Link>
 
-            <div className="bg-white rounded-3xl shadow-xs p-6 lg:p-8 space-y-5">
+            <Card padding="responsive" className="space-y-5">
               {((inv?.focus_industries as string[] | null) ?? []).length > 0 && (
                 <div>
                   <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
@@ -156,7 +157,7 @@ export default async function InvestorPage({
                   {await tServer("Edit profile")}
                 </Link>
               </div>
-            </div>
+            </Card>
           </div>
         )}
     </div>

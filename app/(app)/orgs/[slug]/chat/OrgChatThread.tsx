@@ -61,6 +61,10 @@ export function OrgChatThread({
   }, [messages.length]);
 
   if (messages.length === 0) {
+    // Left hand-rolled. `<EmptyState bare dense>` is the near shape but adds
+    // `max-w-md mx-auto` (this line runs the full chat column today) and
+    // `leading-relaxed` on top of text-sm — a width AND a line-height change
+    // on Thai copy, not a no-op.
     return (
       <p className="text-center text-sm text-ink-muted py-12">{emptyText}</p>
     );

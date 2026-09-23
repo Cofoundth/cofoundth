@@ -13,6 +13,7 @@ import {
 import { Avatar } from "@/components/Avatar";
 import {
   Button,
+  Card,
   CardChip,
   CardLabel,
   CardPill,
@@ -20,6 +21,7 @@ import {
   LinkButton,
   Section,
   SectorList,
+  ToggleChip,
   VerifiedBadge,
 } from "@/components/ui";
 import { STAGE_LABELS } from "@/lib/matching";
@@ -166,13 +168,19 @@ export function CompaniesClient({
               </span>
             </h1>
           </div>
-          <Link
+          {/* `rounded-xl` and `tracking-normal` are HEAD's pixels kept: this
+              header action is a 14px-radius rectangle, not the pill, and it
+              never carried tracking. `hover:text-gold-ink` is its own hover —
+              `secondary` only moves the border. */}
+          <LinkButton
             href="/companies/requests"
-            className="text-sm text-navy hover:text-gold-ink inline-flex items-center gap-1.5 px-4 py-2 border border-line hover:border-navy transition-colors rounded-xl"
+            variant="secondary"
+            size="sm"
+            className="rounded-xl tracking-normal hover:text-gold-ink"
           >
             <HandshakeIcon className="w-4 h-4" strokeWidth={1.5} />
             {tr("Partnership board")}
-          </Link>
+          </LinkButton>
         </div>
 
         {!currentUserIsCompany && (
@@ -265,24 +273,27 @@ export function CompaniesClient({
             </span>
             <div className="flex items-center gap-2">
               {activeFilters > 0 && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={clearFilters}
-                  className="px-4 py-2 text-sm text-ink-muted hover:text-navy tracking-wide"
+                  className="text-ink-muted"
                 >
                   {tr("Clear filters ({n})").replace(
                     "{n}",
                     String(activeFilters),
                   )}
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
+              {/* px-5 is between the sm and md steps — kept as an override
+                  rather than silently resized, same as /browse's Done. */}
+              <Button
+                size="sm"
                 onClick={() => setFiltersOpen(false)}
-                className="px-5 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
+                className="px-5"
               >
                 {tr("Done")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -405,6 +416,10 @@ function FilterGroup({
   );
 }
 
+// ToggleChip's `xs` tier is px-2.5 py-1 text-xs — the exact geometry and the
+// exact selected/unselected palette this file already shipped. The primitive
+// adds `aria-pressed`, which these chips never had: a screen reader had only
+// the colour to go on.
 function FilterChip({
   selected,
   onClick,
@@ -415,17 +430,9 @@ function FilterChip({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-2.5 py-1 text-xs tracking-wide border transition-colors ${
-        selected
-          ? "bg-navy border-navy text-white"
-          : "bg-white border-line text-ink hover:border-navy"
-      }`}
-    >
+    <ToggleChip selected={selected} size="xs" onClick={onClick}>
       {children}
-    </button>
+    </ToggleChip>
   );
 }
 
@@ -446,7 +453,7 @@ function CompanyCard({
     .filter(Boolean)[0];
 
   return (
-    <div className="group h-full min-w-0 bg-white rounded-3xl shadow-xs hover:shadow-sm transition-shadow p-4 flex flex-col">
+    <Card padding="xs" hoverable className="group h-full min-w-0 flex flex-col">
       {/* HEADER — logo shares the 48px row; nothing below is indented. */}
       <div className="shrink-0 flex gap-3 items-center">
         <Avatar name={c.company_name} url={c.photo_url} size="md" />
@@ -517,24 +524,25 @@ function CompanyCard({
         )}
       </div>
 
-      {/* FOOTER — the /browse card's two-button row: act, or read more. */}
+      {/* FOOTER — the /browse card's two-button row: act, or read more.
+          `px-0` is load-bearing, not tidiness: the buttons are `flex-1` in a
+          ~148px half-column, where the sm tier's px-4 would take 32px off the
+          text box and re-wrap "Send partnership request" onto a third line. */}
       <div className="pt-4 flex gap-2">
         {canRequest && (
-          <button
-            type="button"
-            onClick={onRequest}
-            className="flex-1 rounded-full bg-navy py-2 text-sm text-white tracking-wide hover:bg-navy-dark transition-colors"
-          >
+          <Button size="sm" onClick={onRequest} className="flex-1 px-0">
             {tr("Send partnership request")}
-          </button>
+          </Button>
         )}
-        <Link
+        <LinkButton
           href={`/profile/${c.slug}`}
-          className={`flex-1 rounded-full border border-line py-2 text-sm text-ink text-center tracking-wide hover:border-navy transition-colors`}
+          variant="secondary"
+          size="sm"
+          className="flex-1 px-0 text-center"
         >
           {tr("Full profile")}
-        </Link>
+        </LinkButton>
       </div>
-    </div>
+    </Card>
   );
 }

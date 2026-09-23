@@ -6,7 +6,13 @@ import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
 import { INVESTOR_TYPE_LABELS } from "@/lib/investor";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  Card,
+  EmptyState,
+  LinkButton,
+  Section,
+  SectionHeading,
+} from "@/components/ui";
 import { OrgCard, type OrgCardOrg } from "@/components/OrgCard";
 import { FundingConnect, FundingRespond } from "./FundingActions";
 
@@ -76,9 +82,7 @@ export default async function FundingPage() {
         </div>
 
         <section className="mb-14">
-          <h2 className="text-lg font-bold tracking-normal mb-5">
-            {await tServer("Your companies")}
-          </h2>
+          <SectionHeading title={await tServer("Your companies")} />
           {connectedOrgs.length === 0 ? (
             // KIND A — nothing here yet, and the fix is the list right below,
             // so the copy points at it rather than carrying a button. When
@@ -139,9 +143,7 @@ export default async function FundingPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-bold tracking-normal mb-5">
-            {await tServer("Discover companies")}
-          </h2>
+          <SectionHeading title={await tServer("Discover companies")} />
           {discover.length === 0 ? (
             orgList.length > 0 ? (
               // Every company on the platform is already a connection of
@@ -294,9 +296,7 @@ export default async function FundingPage() {
 
       <div className="grid lg:grid-cols-9 gap-8 lg:items-start">
       <section className="lg:col-span-5 min-w-0">
-        <h2 className="text-lg font-bold tracking-normal mb-5">
-          {await tServer("Your investors")}
-        </h2>
+        <SectionHeading title={await tServer("Your investors")} />
         {connected.length === 0 ? (
           // KIND A — funding is investor-initiated, so there is deliberately no
           // "browse investors" CTA to offer here. The line says what the
@@ -316,9 +316,10 @@ export default async function FundingPage() {
               const respondable =
                 c.status === "pending" && c.requested_by === "investor";
               return (
-                <div
+                <Card
                   key={uid}
-                  className="bg-white p-5 flex items-start gap-4 rounded-3xl shadow-xs"
+                  padding="sm"
+                  className="flex items-start gap-4"
                 >
                   <Avatar
                     name={personById.get(uid)?.full_name as string}
@@ -355,7 +356,7 @@ export default async function FundingPage() {
                     />
                     {respondable && <FundingRespond connectionId={c.id} />}
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -367,13 +368,19 @@ export default async function FundingPage() {
           explains what a founder CAN do instead of pretending otherwise. The
           page's one dark accent, per the design system. */}
       <aside className="lg:col-span-4 min-w-0 lg:sticky lg:top-24 self-start">
-        <div className="bg-navy p-6 rounded-3xl">
+        <Card tone="navy">
+          {/* design-ok: the dark panel is <Card tone="navy">, so the surface is
+              a prop and design-lint's class-string dark-context check cannot
+              see it. text-gold measures ~13.4:1 here. */}
           <p className="eyebrow text-xs uppercase tracking-[0.25em] text-gold mb-4">
             {tHow.title}
           </p>
           <ol className="space-y-4">
             {tHow.steps.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
+                {/* design-ok: same dark panel — bg-gold/15 + text-gold is the
+                    dark-panel icon-well vocabulary, invisible to the linter
+                    once the surface moved into Card's `tone` prop. */}
                 <span className="shrink-0 w-6 h-6 rounded-full bg-gold/15 text-gold text-xs grid place-items-center font-medium">
                   {i + 1}
                 </span>
@@ -384,15 +391,18 @@ export default async function FundingPage() {
             ))}
           </ol>
           {myOrg && (
-            <Link
+            /* px-5 py-2.5 sits between the sm and md steps — kept as an
+               override rather than silently resized. */
+            <LinkButton
               href={`/orgs/${myOrg.slug as string}`}
-              className="mt-6 inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-5 py-2.5 text-sm tracking-wide transition-colors rounded-full"
+              variant="inverse"
+              className="mt-6 px-5 py-2.5"
             >
               {tHow.cta}
               <ArrowRight className="w-4 h-4" />
-            </Link>
+            </LinkButton>
           )}
-        </div>
+        </Card>
       </aside>
       </div>
 
