@@ -299,7 +299,7 @@ export default async function OrgPage({ params }: Props) {
       </Link>
 
       {/* ---- Hero ---- */}
-      <header className="bg-cream p-6 sm:p-8 lg:p-10 mb-8 rounded-3xl">
+      <header className="bg-white p-6 sm:p-8 lg:p-10 mb-8 rounded-3xl shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           {org.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element

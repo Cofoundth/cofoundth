@@ -43,8 +43,8 @@ export function ExpressInterestForm({
   // ── Connected (matched, or just accepted) ──────────────────────────
   if (relationship === "matched" || justConnected) {
     return (
-      <div className="bg-cream p-6 text-center rounded-3xl">
-        <div className="w-12 h-12 bg-white border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
+      <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
+        <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Check className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
         <div className="text-sm font-medium text-navy mb-1">
@@ -67,9 +67,9 @@ export function ExpressInterestForm({
   // ── Incoming interest → one-click accept ───────────────────────────
   if (relationship === "incoming") {
     return (
-      <div className="bg-cream p-6 rounded-3xl">
+      <div className="bg-white p-6 rounded-3xl shadow-xs">
         <div className="text-center mb-4">
-          <div className="w-12 h-12 bg-white border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
+          <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
             <Heart className="w-5 h-5 text-gold-ink" strokeWidth={2} />
           </div>
           <div className="text-sm font-medium text-navy">
@@ -105,8 +105,8 @@ export function ExpressInterestForm({
   // ── Outgoing interest already sent (waiting) ───────────────────────
   if (relationship === "outgoing" || state?.ok) {
     return (
-      <div className="bg-cream p-6 text-center rounded-3xl">
-        <div className="w-12 h-12 bg-white border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
+      <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
+        <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Check className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
         <div className="text-sm font-medium text-navy mb-1">
@@ -124,8 +124,8 @@ export function ExpressInterestForm({
   // ── No relationship yet → express interest ─────────────────────────
   if (!open) {
     return (
-      <div className="bg-cream p-6 text-center rounded-3xl">
-        <div className="w-12 h-12 bg-white border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
+      <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
+        <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Heart className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
         <div className="text-base font-medium text-navy mb-1">

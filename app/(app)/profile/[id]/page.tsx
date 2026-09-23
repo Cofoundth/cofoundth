@@ -322,7 +322,7 @@ export default async function ProfileDetailPage({
       )}
 
       {/* ---- Hero ---- */}
-      <header className="bg-cream p-8 mb-8 rounded-3xl">
+      <header className="bg-white p-8 mb-8 rounded-3xl shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
           <div className="flex-1 min-w-0">
@@ -676,7 +676,7 @@ export default async function ProfileDetailPage({
           )}
 
           {isOwnProfile && (
-            <div className="bg-cream p-6 text-center rounded-3xl">
+            <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
               <p className="text-sm text-ink mb-3">
                 {t(
                   profile.onboarded
