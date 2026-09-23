@@ -15,7 +15,13 @@ import {
 } from "@/lib/matching";
 import { DirectoryCard } from "@/components/DirectoryCard";
 import { provinceLabel } from "@/lib/provinces";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  Card,
+  EmptyState,
+  LinkButton,
+  Section,
+  SectionHeading,
+} from "@/components/ui";
 import { getFeedPosts } from "@/lib/posts";
 import { getBlockedIds } from "@/lib/blocking";
 import { isWithinMs, DAY_MS } from "@/lib/time";
@@ -262,35 +268,32 @@ export default async function DashboardPage() {
               carries no eyebrow of its own: the h2 right above it already
               says "Meetups". */}
           <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold tracking-normal">
-                {await tServer("Meetups")}
-              </h2>
-              <Link
-                href="/meetups"
-                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
-              >
-                {await tServer("See all")}
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
+            <SectionHeading
+              title={await tServer("Meetups")}
+              action={{ href: "/meetups", label: await tServer("See all") }}
+            />
             {!upcomingMeetups?.length ? (
-              <div className="bg-navy p-6 rounded-3xl">
+              // No border: this panel shipped without one and D2 is still open.
+              <Card tone="navy">
                 <p className="text-white leading-relaxed mb-5">
                   {await tServer(
                     "No meetups on the calendar yet. Host one — every founder on Cofoundee will see it.",
                   )}
                 </p>
-                <Link
+                {/* size="md" is the gap-2 tier; only the padding comes down to
+                    the px-5 py-2.5 this CTA shipped with (cn() merges, so a
+                    downward override is safe now). */}
+                <LinkButton
                   href="/meetups/new"
-                  className="inline-flex items-center justify-center gap-2 bg-white text-navy hover:bg-cream px-5 py-2.5 text-sm tracking-wide transition-colors rounded-full"
+                  variant="inverse"
+                  className="px-5 py-2.5"
                 >
                   {await tServer("Start the first meetup")}
                   <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
+                </LinkButton>
+              </Card>
             ) : (
-              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+              <Card padding="none" className="divide-y divide-line overflow-hidden">
                 {upcomingMeetups.map((mt) => (
                   <Link
                     key={mt.id as string}
@@ -312,23 +315,15 @@ export default async function DashboardPage() {
                     </div>
                   </Link>
                 ))}
-              </div>
+              </Card>
             )}
           </div>
 
           <div>
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold tracking-normal">
-              {await tServer("Founders you should meet")}
-            </h2>
-            <Link
-              href="/browse"
-              className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
-            >
-              {await tServer("Browse")}
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
+          <SectionHeading
+            title={await tServer("Founders you should meet")}
+            action={{ href: "/browse", label: await tServer("Browse") }}
+          />
 
           {!suggested.length ? (
             // KIND A — and deliberately CTA-less. This query is byte-identical
@@ -405,18 +400,10 @@ export default async function DashboardPage() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold tracking-normal">
-                {await tServer("Latest from the community")}
-              </h2>
-              <Link
-                href="/community"
-                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
-              >
-                {await tServer("See all")}
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
+            <SectionHeading
+              title={await tServer("Latest from the community")}
+              action={{ href: "/community", label: await tServer("See all") }}
+            />
             {feed.length === 0 ? (
               <EmptyState
                 padding="md"
@@ -426,7 +413,7 @@ export default async function DashboardPage() {
                 )}
               />
             ) : (
-              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+              <Card padding="none" className="divide-y divide-line overflow-hidden">
                 {feed.slice(0, 3).map((post) => (
                   <Link
                     key={post.id}
@@ -452,7 +439,7 @@ export default async function DashboardPage() {
                     </div>
                   </Link>
                 ))}
-              </div>
+              </Card>
             )}
           </div>
         </section>
@@ -469,7 +456,7 @@ export default async function DashboardPage() {
             <h2 className="text-lg font-bold tracking-normal mb-5">
               {await tServer("Your network")}
             </h2>
-            <div className="bg-white p-6 rounded-3xl shadow-xs">
+            <Card>
               <div className="flex items-center -space-x-3">
                 {founderPool.slice(0, 5).map((f) => (
                   <div
@@ -495,14 +482,14 @@ export default async function DashboardPage() {
                   {await tServer("Browse founders")}
                 </LinkButton>
               </div>
-            </div>
+            </Card>
           </div>
 
           <div>
             <h2 className="text-lg font-bold tracking-normal mb-5">
               {await tServer("Your activity")}
             </h2>
-            <div className="bg-white p-6 rounded-3xl shadow-xs">
+            <Card>
               <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-ink-muted">
@@ -538,28 +525,40 @@ export default async function DashboardPage() {
 
               <div className="border-t border-line my-4" />
 
+              {/* Both rail links shipped as full-width BLOCKS with no
+                  horizontal padding and no tracking, so the size token's
+                  px-4/tracking-wide are overridden rather than inherited: the
+                  label is centred in a full-width button, where those two would
+                  be invisible on one line and wrong on a wrapped Thai one.
+                  `flex` beats BASE's inline-flex so the stack keeps its exact
+                  heights (an inline-level box adds line-box leading). */}
               <div className="space-y-2">
-                  <Link
+                  <LinkButton
                     href={myProfileHref}
-                    className="block bg-navy hover:bg-navy-dark text-white text-center py-2.5 text-sm transition-colors rounded-full"
+                    size="sm"
+                    fullWidth
+                    className="flex px-0 py-2.5 text-center tracking-normal"
                   >
                     {await tServer("View profile")}
-                  </Link>
-                  <Link
+                  </LinkButton>
+                  <LinkButton
                     href="/settings"
-                    className="block border border-line hover:border-navy text-ink hover:text-navy text-center py-2.5 text-sm transition-colors rounded-full"
+                    variant="secondary"
+                    size="sm"
+                    fullWidth
+                    className="flex px-0 py-2.5 text-center tracking-normal"
                   >
                     {await tServer("Edit profile")}
-                  </Link>
+                  </LinkButton>
               </div>
-            </div>
+            </Card>
           </div>
 
           <div>
             <h2 className="text-lg font-bold tracking-normal mb-5">
               {await tServer("Connections")}
             </h2>
-            <div className="bg-white p-6 rounded-3xl shadow-xs space-y-2.5">
+            <Card className="space-y-2.5">
               <Link
                 href="/matches"
                 className="flex items-center justify-between group"
@@ -597,7 +596,7 @@ export default async function DashboardPage() {
                   </span>
                 </Link>
               )}
-            </div>
+            </Card>
           </div>
 
           {/* Hidden for the meetups soft launch. The aside is a space-y-8
@@ -605,19 +604,15 @@ export default async function DashboardPage() {
               no stretched card. /orgs itself stays live. */}
           {FEATURES.companies && (
             <div>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold tracking-normal">
-                  {await tServer("Companies")}
-                </h2>
-                <Link
-                  href="/orgs"
-                  className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
-                >
-                  {(orgCount ?? 0) > 0 ? `${orgCount}` : ""}{" "}
-                  {await tServer("See all")}
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
+              <SectionHeading
+                title={await tServer("Companies")}
+                action={{
+                  href: "/orgs",
+                  // The count is part of the link's label here, exactly as it
+                  // was rendered before: `{count} See all`.
+                  label: `${(orgCount ?? 0) > 0 ? `${orgCount} ` : " "}${await tServer("See all")}`,
+                }}
+              />
               {!latestOrgs?.length ? (
                 <EmptyState
                   padding="md"
@@ -625,7 +620,10 @@ export default async function DashboardPage() {
                   description={await tServer("No companies yet")}
                 />
               ) : (
-                <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+                <Card
+                  padding="none"
+                  className="divide-y divide-line overflow-hidden"
+                >
                   {latestOrgs.map((o) => (
                     <Link
                       key={o.id as string}
@@ -649,7 +647,7 @@ export default async function DashboardPage() {
                       </div>
                     </Link>
                   ))}
-                </div>
+                </Card>
               )}
             </div>
           )}

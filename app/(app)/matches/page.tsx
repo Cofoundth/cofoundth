@@ -17,7 +17,15 @@ import { MEETUP_CATEGORIES } from "@/lib/meetups";
 import { provinceLabel } from "@/lib/provinces";
 import { t, type Locale } from "@/lib/i18n";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  Card,
+  EmptyState,
+  LinkButton,
+  Section,
+  SectionHeading,
+  Tabs,
+  cardClasses,
+} from "@/components/ui";
 import { getBlockedIds } from "@/lib/blocking";
 
 export const dynamic = "force-dynamic";
@@ -406,12 +414,23 @@ export default async function ConnectionsPage({
   const whoToMeetLabel = await tServer("Founders you should meet");
   const browseLabel = await tServer("Browse");
 
-  const tabClass = (active: boolean) =>
-    `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
-      active
-        ? "border-navy text-navy font-medium"
-        : "border-transparent text-ink-muted hover:text-navy"
-    }`;
+  const tabItems = [
+    { key: "personal", href: "/matches", label: await tServer("Personal") },
+    ...(hasCompany
+      ? [
+          {
+            key: "company",
+            href: "/matches?tab=company",
+            label: await tServer("Company"),
+          },
+        ]
+      : []),
+    {
+      key: "meetups",
+      href: "/matches?tab=meetups",
+      label: await tServer("Meetups"),
+    },
+  ];
 
   return (
     <Section>
@@ -419,25 +438,12 @@ export default async function ConnectionsPage({
         <h1 className="text-d2">{await tServer("Connections")}</h1>
       </div>
 
-      <nav className="flex items-center gap-1 mb-8 border-b border-line">
-        <Link href="/matches" className={tabClass(tab === "personal")}>
-          {await tServer("Personal")}
-        </Link>
-        {hasCompany && (
-          <Link
-            href="/matches?tab=company"
-            className={tabClass(tab === "company")}
-          >
-            {await tServer("Company")}
-          </Link>
-        )}
-        <Link
-          href="/matches?tab=meetups"
-          className={tabClass(tab === "meetups")}
-        >
-          {await tServer("Meetups")}
-        </Link>
-      </nav>
+      <Tabs
+        value={tab}
+        items={tabItems}
+        className="mb-8"
+        aria-label={await tServer("Connections")}
+      />
 
       {tab === "meetups" ? (
         <section>
@@ -458,7 +464,7 @@ export default async function ConnectionsPage({
               }
             />
           ) : (
-            <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+            <Card padding="none" className="divide-y divide-line overflow-hidden">
               {(myMeetupsRaw ?? []).map((mt) => {
                 const last = lastChatBy.get(mt.id as string);
                 const cat =
@@ -491,7 +497,7 @@ export default async function ConnectionsPage({
                   </Link>
                 );
               })}
-            </div>
+            </Card>
           )}
         </section>
       ) : tab === "company" ? (
@@ -519,7 +525,11 @@ export default async function ConnectionsPage({
                 <Link
                   key={c.connectionId}
                   href={`/orgs/${c.slug}/chat`}
-                  className="block bg-white shadow-xs hover:shadow-sm transition-shadow p-5 group rounded-3xl"
+                  className={cardClasses({
+                    padding: "sm",
+                    hoverable: true,
+                    className: "block group",
+                  })}
                 >
                   <div className="flex items-start gap-4">
                     {c.logo_url ? (
@@ -583,7 +593,10 @@ export default async function ConnectionsPage({
                         )
                       ).replace("{n}", String(received.length))}
                     </div>
-                    <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+                    <Card
+                      padding="none"
+                      className="divide-y divide-line overflow-hidden"
+                    >
                       {received.map((r) => {
                         const p = profiles.get(r.from_profile_id as string);
                         return (
@@ -617,7 +630,7 @@ export default async function ConnectionsPage({
                           </Link>
                         );
                       })}
-                    </div>
+                    </Card>
                   </div>
                 )}
 
@@ -630,7 +643,10 @@ export default async function ConnectionsPage({
                         String(sent.length),
                       )}
                     </div>
-                    <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+                    <Card
+                      padding="none"
+                      className="divide-y divide-line overflow-hidden"
+                    >
                       {sent.map((s) => {
                         const p = profiles.get(s.to_profile_id as string);
                         return (
@@ -658,7 +674,7 @@ export default async function ConnectionsPage({
                           </Link>
                         );
                       })}
-                    </div>
+                    </Card>
                   </div>
                 )}
               </section>
@@ -666,17 +682,20 @@ export default async function ConnectionsPage({
 
             {/* ---- Conversations (matches) ---- */}
             <section>
-              <div className="flex items-baseline justify-between mb-5">
-                <h2 className="text-lg font-bold tracking-normal">
-                  {await tServer("Conversations")}
-                </h2>
-                {(matches?.length ?? 0) > 0 && (
-                  <span className="text-xs text-ink-muted">
-                    {matches?.length}{" "}
-                    {await tServer("match(es) · messaging unlocked")}
-                  </span>
-                )}
-              </div>
+              {/* `meta` is what switches the row to items-baseline. The row
+                  also gains gap-3, which only shows if the count ever grows
+                  long enough to touch the heading. */}
+              <SectionHeading
+                title={await tServer("Conversations")}
+                meta={
+                  (matches?.length ?? 0) > 0 ? (
+                    <span className="text-xs text-ink-muted">
+                      {matches?.length}{" "}
+                      {await tServer("match(es) · messaging unlocked")}
+                    </span>
+                  ) : undefined
+                }
+              />
 
               {!matches?.length ? (
                 <EmptyState
@@ -706,7 +725,11 @@ export default async function ConnectionsPage({
                       <Link
                         key={m.id as string}
                         href={`/messages/${m.id}`}
-                        className="block bg-white shadow-xs hover:shadow-sm transition-shadow p-5 group rounded-3xl"
+                        className={cardClasses({
+                          padding: "sm",
+                          hoverable: true,
+                          className: "block group",
+                        })}
                       >
                         <div className="flex items-start gap-4">
                           <Avatar
@@ -773,18 +796,13 @@ export default async function ConnectionsPage({
           </div>
 
           <aside className="mt-14 xl:col-span-4 xl:mt-0">
-            <div className="flex items-baseline justify-between mb-5">
-              <h2 className="text-lg font-bold tracking-normal">
-                {whoToMeetLabel}
-              </h2>
-              <Link
-                href="/browse"
-                className="text-xs text-ink-muted hover:text-navy inline-flex items-center gap-1"
-              >
-                {browseLabel}
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
+            {/* items-baseline via className: the action row defaults to
+                items-center, and this row shipped baseline-aligned. */}
+            <SectionHeading
+              title={whoToMeetLabel}
+              action={{ href: "/browse", label: browseLabel }}
+              className="items-baseline mb-5"
+            />
             {suggestions.length === 0 ? (
               <EmptyState
                 padding="md"
@@ -792,7 +810,10 @@ export default async function ConnectionsPage({
                 description={await tServer("No founders to show yet")}
               />
             ) : (
-              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+              <Card
+                padding="none"
+                className="divide-y divide-line overflow-hidden"
+              >
                 {suggestions.map(({ row: f }) => (
                   <Link
                     key={f.id as string}
@@ -818,7 +839,7 @@ export default async function ConnectionsPage({
                     <ArrowRight className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-navy transition-colors" />
                   </Link>
                 ))}
-              </div>
+              </Card>
             )}
           </aside>
         </div>

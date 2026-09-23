@@ -27,6 +27,17 @@
 // Disabled state was three different opacities in the wild (40 / 50 / 60);
 // `disabled:opacity-50` is now the single answer, always applied.
 //
+// ⚠️ TRACKING IS NOT PART OF THAT "SINGLE ANSWER". sm/md/lg carry
+// `tracking-wide`, which a hand-rolled button often did NOT have. The sweep's
+// standing rule (set in B1, held in B2a and B2b) is: if the site had no
+// tracking utility at HEAD, pass `className="tracking-normal"` so the
+// migration stays a pixel no-op. `tracking-wide` is EN-only — the
+// `html[lang="th"] * { letter-spacing: normal !important }` kill-switch in
+// globals.css strips it — so a gained tracking never shows in the default
+// locale and will not be caught by testing in Thai. Converging every button
+// onto the tracked face is a deliberate, EN-visible restyle; it belongs in
+// B5 with D4/D5, not in a call-site batch.
+//
 // PILL CORNERS ALWAYS (`rounded-full`, part of BASE). @layer base already
 // rounds every <button>; BASE carries it explicitly so LinkButton — an <a>,
 // which the base rule does not match — comes out identical.

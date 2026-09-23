@@ -18,7 +18,7 @@ import { DeleteAccountForm } from "./DeleteAccountForm";
 import { UnblockButton } from "./UnblockButton";
 import { signOutAction } from "@/app/(auth)/actions";
 import { tServer } from "@/lib/i18n-server";
-import { Card, Section } from "@/components/ui";
+import { Button, Card, Section, SectionHeading, Tabs } from "@/components/ui";
 
 const SUPPORT_EMAIL = "chayanonr@cofoundee.co";
 
@@ -116,14 +116,6 @@ export default async function SettingsPage({
     tabAccount: await tServer("Account"),
   };
 
-  const tabClass = (active: boolean) =>
-    `px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
-      active
-        ? "border-navy text-navy font-medium"
-        : "border-transparent text-ink-muted hover:text-navy"
-    }`;
-
-  const heading = "text-lg font-bold tracking-normal border-b border-line pb-2 mb-4";
   const row =
     "flex items-center justify-between gap-3 p-4 text-sm text-ink hover:bg-cream transition-colors";
 
@@ -140,19 +132,24 @@ export default async function SettingsPage({
       </div>
       <p className="text-sm text-ink-muted mb-8">{t.sub}</p>
 
-      <nav className="flex items-center gap-1 mb-8 border-b border-line">
-        <Link href="/settings" className={tabClass(tab === "profile")}>
-          {t.tabProfile}
-        </Link>
-        <Link href="/settings?tab=account" className={tabClass(tab === "account")}>
-          {t.tabAccount}
-        </Link>
-      </nav>
+      <Tabs
+        className="mb-8"
+        value={tab}
+        aria-label={t.title}
+        items={[
+          { key: "profile", label: t.tabProfile, href: "/settings" },
+          {
+            key: "account",
+            label: t.tabAccount,
+            href: "/settings?tab=account",
+          },
+        ]}
+      />
 
       {tab === "profile" ? (
         <>
           <div className="mb-14">
-            <h2 className={heading}>{t.photo}</h2>
+            <SectionHeading title={t.photo} divider className="mb-4" />
             <AvatarUploader
               userId={user.id}
               initialUrl={profile.photo_url ?? null}
@@ -166,7 +163,11 @@ export default async function SettingsPage({
         <div className="space-y-14">
           {/* ---- Account ---- */}
           <section>
-            <h2 className={heading}>{await tServer("Account")}</h2>
+            <SectionHeading
+              title={await tServer("Account")}
+              divider
+              className="mb-4"
+            />
             <Card
               padding="none"
               className="divide-y divide-line overflow-hidden mb-5"
@@ -186,7 +187,11 @@ export default async function SettingsPage({
 
           {/* ---- Privacy & safety ---- */}
           <section>
-            <h2 className={heading}>{await tServer("Privacy & safety")}</h2>
+            <SectionHeading
+              title={await tServer("Privacy & safety")}
+              divider
+              className="mb-4"
+            />
             <Card padding="none" className="divide-y divide-line overflow-hidden">
               <div className="flex items-center gap-2 p-4 text-sm text-ink">
                 <ShieldCheck
@@ -225,7 +230,11 @@ export default async function SettingsPage({
 
           {/* ---- Help & support ---- */}
           <section>
-            <h2 className={heading}>{await tServer("Help & support")}</h2>
+            <SectionHeading
+              title={await tServer("Help & support")}
+              divider
+              className="mb-4"
+            />
             <Card padding="none" className="divide-y divide-line overflow-hidden">
               <a href={`mailto:${SUPPORT_EMAIL}`} className={row}>
                 <span className="inline-flex items-center gap-2 min-w-0">
@@ -255,7 +264,11 @@ export default async function SettingsPage({
 
           {/* ---- About & legal ---- */}
           <section>
-            <h2 className={heading}>{await tServer("About & legal")}</h2>
+            <SectionHeading
+              title={await tServer("About & legal")}
+              divider
+              className="mb-4"
+            />
             <Card padding="none" className="divide-y divide-line overflow-hidden">
               <Link href="/terms" className={row}>
                 <span className="inline-flex items-center gap-2 min-w-0">
@@ -292,31 +305,44 @@ export default async function SettingsPage({
 
           {/* ---- Session ---- */}
           <section>
-            <h2 className={heading}>{await tServer("Session")}</h2>
+            <SectionHeading
+              title={await tServer("Session")}
+              divider
+              className="mb-4"
+            />
             <form action={signOutAction}>
-              <button
+              {/* tracking-normal: size="sm" brings the CTA face's tracking-wide
+                  and this button never had it (HEAD: no tracking utility).
+                  Same call as notifications:134 and BlockButton — the sweep
+                  stays a no-op. */}
+              <Button
                 type="submit"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-line text-sm text-ink hover:border-navy transition-colors rounded-full"
+                variant="secondary"
+                size="sm"
+                className="gap-2 tracking-normal"
               >
                 <LogOut className="w-4 h-4" strokeWidth={1.5} />
                 {await tServer("Sign out")}
-              </button>
+              </Button>
             </form>
           </section>
 
           {/* ---- Danger zone ---- */}
           <section>
-            <h2 className="text-lg font-bold tracking-normal border-b border-danger-line pb-2 mb-4 text-danger-ink">
-              {await tServer("Danger zone")}
-            </h2>
-            <div className="bg-danger-surface border border-danger-line rounded-3xl p-6">
+            <SectionHeading
+              title={await tServer("Danger zone")}
+              divider
+              tone="danger"
+              className="mb-4"
+            />
+            <Card tone="danger">
               <p className="text-sm text-ink mb-5 max-w-lg leading-relaxed">
                 {await tServer(
                   "Permanently delete your account and all of your data.",
                 )}
               </p>
               <DeleteAccountForm />
-            </div>
+            </Card>
           </section>
         </div>
       )}

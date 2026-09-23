@@ -2,7 +2,7 @@
 // Nav chrome is rendered by the layout (stays visible during nav);
 // this fills the main content area with a subtle skeleton.
 
-import { Section } from "@/components/ui";
+import { Card, Section } from "@/components/ui";
 
 export default function Loading() {
   return (
@@ -14,14 +14,14 @@ export default function Loading() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mb-10">
-        <div className="bg-white rounded-3xl shadow-xs p-5 h-28" />
-        <div className="bg-white rounded-3xl shadow-xs p-5 h-28" />
-        <div className="bg-white rounded-3xl shadow-xs p-5 h-28" />
+        <Card padding="sm" className="h-28" />
+        <Card padding="sm" className="h-28" />
+        <Card padding="sm" className="h-28" />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="bg-white rounded-3xl shadow-xs p-6 h-40" />
-        <div className="bg-white rounded-3xl shadow-xs p-6 h-40" />
+        <Card className="h-40" />
+        <Card className="h-40" />
       </div>
     </Section>
   );

@@ -5,6 +5,7 @@
 
 import Link from "next/link";
 import { Bell, Check, ChevronRight } from "lucide-react";
+import { Button, Card, EmptyState, Section, Tabs } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { t } from "@/lib/i18n";
@@ -13,7 +14,6 @@ import { timeAgo } from "@/lib/time";
 import { notifHref, notifText, type NotifLike } from "@/lib/notifications";
 import { getBlockedIds } from "@/lib/blocking";
 import { Avatar } from "@/components/Avatar";
-import { Card, EmptyState, Section } from "@/components/ui";
 import { markAllNotificationsRead } from "./actions";
 import { revalidatePath } from "next/cache";
 
@@ -124,51 +124,45 @@ export default async function NotificationsPage({
         </div>
         {unread > 0 && (
           <form action={markAll}>
-            <button
+            {/* tracking-normal: size="sm" brings the CTA face's tracking-wide
+                and this button never had it. text-ink and secondary's
+                text-navy are the same hex (#1B1A17). */}
+            <Button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-ink border border-line hover:border-navy transition-colors rounded-full"
+              variant="secondary"
+              size="sm"
+              className="tracking-normal"
             >
               <Check className="w-3.5 h-3.5" />
               {await tServer("Mark all as read")}
-            </button>
+            </Button>
           </form>
         )}
       </div>
 
-      <nav className="flex items-center gap-1 mb-8 border-b border-line">
-        {(
-          [
-            ["all", "/notifications", await tServer("All")],
-            [
-              "meetups",
-              "/notifications?tab=meetups",
-              await tServer("Meetups"),
-            ],
-            [
-              "invites",
-              "/notifications?tab=invites",
-              await tServer("Invites"),
-            ],
-            [
-              "connections",
-              "/notifications?tab=connections",
-              await tServer("Connections"),
-            ],
-          ] as const
-        ).map(([key, href, label]) => (
-          <Link
-            key={key}
-            href={href}
-            className={`px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
-              tab === key
-                ? "border-navy text-navy font-medium"
-                : "border-transparent text-ink-muted hover:text-navy"
-            }`}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <Tabs
+        value={tab}
+        className="mb-8"
+        aria-label={await tServer("Notifications")}
+        items={[
+          { key: "all", href: "/notifications", label: await tServer("All") },
+          {
+            key: "meetups",
+            href: "/notifications?tab=meetups",
+            label: await tServer("Meetups"),
+          },
+          {
+            key: "invites",
+            href: "/notifications?tab=invites",
+            label: await tServer("Invites"),
+          },
+          {
+            key: "connections",
+            href: "/notifications?tab=connections",
+            label: await tServer("Connections"),
+          },
+        ]}
+      />
 
       {items.length === 0 ? (
         <EmptyState

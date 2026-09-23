@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
+import { CountBadge } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { timeAgo } from "@/lib/time";
 import { notifHref, notifText } from "@/lib/notifications";
@@ -185,9 +186,7 @@ export function NotificationBell({
           />
         </svg>
         {unread > 0 && (
-          <span className="absolute top-0.5 right-0 min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
-            {unread > 9 ? "9+" : unread}
-          </span>
+          <CountBadge n={unread} cap className="absolute top-0.5 right-0" />
         )}
       </button>
 

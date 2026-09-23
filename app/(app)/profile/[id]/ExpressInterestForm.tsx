@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
 import { ArrowRight, Check, MessageCircle, Heart } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
+import { Button, Card, LinkButton } from "@/components/ui";
 import { expressInterestAction, type InterestState } from "./actions";
 
 const INITIAL: InterestState = null;
@@ -43,7 +43,7 @@ export function ExpressInterestForm({
   // ── Connected (matched, or just accepted) ──────────────────────────
   if (relationship === "matched" || justConnected) {
     return (
-      <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
+      <Card className="text-center">
         <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Check className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
@@ -53,21 +53,21 @@ export function ExpressInterestForm({
         <p className="text-xs text-ink-muted leading-relaxed mb-4">
           {tr("Messaging is unlocked — start the conversation.")}
         </p>
-        <Link
+        <LinkButton
           href={matchId ? `/messages/${matchId}` : "/matches"}
-          className="w-full px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2 rounded-full"
+          fullWidth
         >
           <MessageCircle className="w-4 h-4" />
           {tr("Message {name}").replace("{name}", otherName)}
-        </Link>
-      </div>
+        </LinkButton>
+      </Card>
     );
   }
 
   // ── Incoming interest → one-click accept ───────────────────────────
   if (relationship === "incoming") {
     return (
-      <div className="bg-white p-6 rounded-3xl shadow-xs">
+      <Card>
         <div className="text-center mb-4">
           <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
             <Heart className="w-5 h-5 text-gold-ink" strokeWidth={2} />
@@ -89,23 +89,21 @@ export function ExpressInterestForm({
         )}
         <form action={formAction}>
           <input type="hidden" name="toId" value={toId} />
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full px-6 py-4 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
-          >
+          {/* py-4 on the md size rather than size="lg": lg is px-8, and this
+              button shipped at px-6. */}
+          <Button type="submit" disabled={isPending} fullWidth className="py-4">
             {isPending ? tr("Connecting…") : tr("Accept & connect")}
             {!isPending && <Check className="w-4 h-4" />}
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     );
   }
 
   // ── Outgoing interest already sent (waiting) ───────────────────────
   if (relationship === "outgoing" || state?.ok) {
     return (
-      <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
+      <Card className="text-center">
         <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Check className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
@@ -117,14 +115,14 @@ export function ExpressInterestForm({
             "You'll be notified if they also express interest. Messaging unlocks on mutual interest.",
           )}
         </p>
-      </div>
+      </Card>
     );
   }
 
   // ── No relationship yet → express interest ─────────────────────────
   if (!open) {
     return (
-      <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
+      <Card className="text-center">
         <div className="w-12 h-12 bg-cream border border-line flex items-center justify-center mx-auto mb-3 rounded-xl">
           <Heart className="w-5 h-5 text-gold-ink" strokeWidth={2} />
         </div>
@@ -134,22 +132,15 @@ export function ExpressInterestForm({
         <p className="text-xs text-ink-muted leading-relaxed mb-4">
           {tr("Express interest. If it's mutual, you match and messaging unlocks.")}
         </p>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="w-full px-6 py-4 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
-        >
+        <Button onClick={() => setOpen(true)} fullWidth className="py-4">
           {tr("Express Interest")} <ArrowRight className="w-4 h-4" />
-        </button>
-      </div>
+        </Button>
+      </Card>
     );
   }
 
   return (
-    <form
-      action={formAction}
-      className="bg-white p-6 space-y-4 rounded-3xl shadow-xs"
-    >
+    <Card as="form" action={formAction} className="space-y-4">
       <input type="hidden" name="toId" value={toId} />
       <div>
         <label
@@ -180,23 +171,23 @@ export function ExpressInterestForm({
       )}
 
       <div className="flex gap-3">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           onClick={() => setOpen(false)}
           disabled={isPending}
-          className="flex-1 px-6 py-3 border border-line bg-white hover:border-navy text-ink text-sm tracking-wide transition-colors rounded-xl"
+          className="flex-1"
         >
           {tr("Cancel")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
           disabled={isPending}
-          className="flex-1 px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
+          className="flex-1"
         >
           {isPending ? tr("Sending…") : tr("Send interest")}
           {!isPending && <ArrowRight className="w-4 h-4" />}
-        </button>
+        </Button>
       </div>
-    </form>
+    </Card>
   );
 }

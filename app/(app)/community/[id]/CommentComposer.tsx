@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { Send } from "lucide-react";
 import { createPostCommentAction, type PostFormState } from "@/lib/post-actions";
 import { useT } from "@/lib/i18n-client";
+import { Button } from "@/components/ui";
 
 const INITIAL: PostFormState = null;
 
@@ -37,14 +38,14 @@ export function CommentComposer({ postId }: { postId: string }) {
         <div className="text-xs text-danger-ink">{state.error}</div>
       )}
       <div className="flex justify-end">
-        <button
+        <Button
           type="submit"
           disabled={isPending}
-          className="px-5 py-2.5 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide inline-flex items-center gap-2"
+          className="px-5 py-2.5"
         >
           <Send className="w-4 h-4" />
           {isPending ? tr("Posting…") : tr("Comment")}
-        </button>
+        </Button>
       </div>
     </form>
   );

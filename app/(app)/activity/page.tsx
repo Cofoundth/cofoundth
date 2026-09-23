@@ -15,7 +15,7 @@ import { getBlockedIds } from "@/lib/blocking";
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { timeAgo, msAgoISO, DAY_MS } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import { Card, EmptyState, LinkButton, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -119,7 +119,7 @@ export default async function ActivityPage() {
       {/* The stat hero — their layout: eyebrow period, the big number, the
           aggregate lines. The number uses the numeral register (digits only,
           so the Thai leading guard leaves it alone). */}
-      <div className="bg-white rounded-3xl shadow-xs p-8 text-center">
+      <Card padding="lg" className="text-center">
         <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-4">
           {tLast30}
         </div>
@@ -158,7 +158,7 @@ export default async function ActivityPage() {
             )}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Who looked — the part the reference app blurs and sells. */}
       <section className="mt-14">
@@ -171,7 +171,7 @@ export default async function ActivityPage() {
             action={<LinkButton href="/browse">{tBrowse}</LinkButton>}
           />
         ) : (
-          <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+          <Card padding="none" className="divide-y divide-line overflow-hidden">
             {viewerIds.map((id) => {
               const p = profileById.get(id);
               if (!p) return null;
@@ -204,7 +204,7 @@ export default async function ActivityPage() {
                 </Link>
               );
             })}
-          </div>
+          </Card>
         )}
       </section>
     </Section>

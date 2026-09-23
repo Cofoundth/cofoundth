@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Flag } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
 import { reportContentAction } from "@/lib/post-actions";
+import { Button } from "@/components/ui";
 
 // Flag a post or comment. Collapsed = a small "Report" link; expanded = a
 // reason box. On success it collapses to a "Reported" note.
@@ -51,16 +52,16 @@ export function ReportButton({
       />
       {error && <div className="text-xs text-danger-ink">{error}</div>}
       <div className="flex gap-2">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="xs"
           onClick={() => setOpen(false)}
           disabled={pending}
-          className="px-2 py-1 border border-line text-xs text-ink hover:border-navy rounded-full"
         >
           {tr("Cancel")}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          size="xs"
           disabled={pending || reason.trim().length < 5}
           onClick={() =>
             start(async () => {
@@ -70,10 +71,9 @@ export function ReportButton({
               else setDone(true);
             })
           }
-          className="px-2 py-1 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-xs"
         >
           {pending ? tr("Submitting…") : tr("Submit report")}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, MessageSquareQuote, Plus } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
+import { Card } from "@/components/ui";
 import { QUICK_REPLY_EVENT } from "./MessageComposer";
 
 type Social = {
@@ -65,7 +66,7 @@ export function NextStepsPanel({ social }: { social?: Social }) {
   return (
     <div className="space-y-6">
       {/* Quick-reply templates */}
-      <div className="bg-white p-5 rounded-3xl shadow-xs">
+      <Card padding="sm">
         <div className="flex items-center gap-2 mb-4">
           <MessageSquareQuote
             className="w-4 h-4 text-gold-ink"
@@ -103,7 +104,7 @@ export function NextStepsPanel({ social }: { social?: Social }) {
             </li>
           ))}
         </ul>
-      </div>
+      </Card>
     </div>
   );
 }

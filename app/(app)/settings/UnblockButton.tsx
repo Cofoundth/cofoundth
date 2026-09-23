@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useT } from "@/lib/i18n-client";
+import { Button } from "@/components/ui";
 import {
   unblockProfileAction,
   type BlockState,
@@ -23,13 +24,14 @@ export function UnblockButton({ targetId }: { targetId: string }) {
   return (
     <form action={formAction}>
       <input type="hidden" name="targetId" value={targetId} />
-      <button
+      <Button
         type="submit"
+        variant="secondary"
+        size="xs"
         disabled={isPending}
-        className="px-3 py-1.5 border border-line text-xs text-ink hover:border-navy disabled:opacity-60 transition-colors rounded-full"
       >
         {isPending ? tr("Unblocking…") : tr("Unblock")}
-      </button>
+      </Button>
       {state?.error && (
         <span className="block text-xs text-danger-ink mt-1">
           {tr(state.error)}

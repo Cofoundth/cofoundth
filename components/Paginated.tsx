@@ -1,6 +1,7 @@
 "use client";
 
 import { Children, useState } from "react";
+import { Button } from "@/components/ui";
 
 // Client-side pagination over a list of (already-rendered) children. Cheap and
 // works up to the server fetch cap; swap to a cursor query if a list ever
@@ -25,25 +26,27 @@ export function Paginated({
       <div className={className}>{slice}</div>
       {pages > 1 && (
         <div className="flex items-center justify-between mt-4 text-sm">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="xs"
             disabled={p === 0}
             onClick={() => setPage(p - 1)}
-            className="px-3 py-1.5 border border-line text-ink hover:border-navy disabled:opacity-40 disabled:cursor-not-allowed tracking-wide rounded-full"
+            className="tracking-wide"
           >
             ← Prev
-          </button>
+          </Button>
           <span className="text-ink-muted text-xs">
             {p + 1} / {pages}
           </span>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="xs"
             disabled={p >= pages - 1}
             onClick={() => setPage(p + 1)}
-            className="px-3 py-1.5 border border-line text-ink hover:border-navy disabled:opacity-40 disabled:cursor-not-allowed tracking-wide rounded-full"
+            className="tracking-wide"
           >
             Next →
-          </button>
+          </Button>
         </div>
       )}
     </>

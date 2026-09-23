@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Check, Heart } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
+import { Card } from "@/components/ui";
 import { expressInterestAction, type InterestState } from "./actions";
 
 // Full-width, high-contrast banner at the top of a profile when this founder
@@ -23,10 +24,16 @@ export function IncomingInterestBanner({
   >(expressInterestAction, null);
 
   return (
-    <div className="mb-6 bg-navy border border-gold/50 rounded-3xl">
+    <Card
+      tone="navy"
+      padding="none"
+      className="mb-6 border border-gold/50"
+    >
       <div className="flex items-center justify-between gap-5 flex-wrap p-6 lg:p-7">
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-12 h-12 bg-gold/15 border border-gold/50 rounded-xl flex items-center justify-center shrink-0">
+            {/* design-ok: gold ON bg-navy, which arrives as <Card tone="navy">
+                above — isDarkContext() reads classes, not props. */}
             <Heart className="w-6 h-6 text-gold" strokeWidth={1.75} />
           </div>
           <div className="min-w-0">
@@ -43,6 +50,10 @@ export function IncomingInterestBanner({
         </div>
         <form action={formAction} className="shrink-0">
           <input type="hidden" name="toId" value={toId} />
+          {/* NOT migrated to <Button variant="inverse">: see the same note in
+              components/IncompleteProfileBanner — batch 0's D4 makes inverse
+              bg-white, so adopting it here turns this gold CTA white. Visible
+              change, founder decision, out of this batch's scope. */}
           <button
             type="submit"
             disabled={isPending}
@@ -58,6 +69,6 @@ export function IncomingInterestBanner({
           {state.error}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

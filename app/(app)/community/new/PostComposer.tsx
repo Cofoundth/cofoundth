@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { ArrowRight } from "lucide-react";
 import { createPostAction, type PostState } from "./actions";
+import { Button } from "@/components/ui";
 
 const INITIAL: PostState = null;
 
@@ -78,14 +79,10 @@ export function PostComposer() {
       )}
 
       <div className="pt-4 border-t border-line flex justify-end">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="px-8 py-4 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2"
-        >
+        <Button type="submit" size="lg" disabled={isPending}>
           {isPending ? "Publishing…" : "Publish post"}
           {!isPending && <ArrowRight className="w-4 h-4" />}
-        </button>
+        </Button>
       </div>
     </form>
   );

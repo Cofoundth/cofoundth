@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Flag } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
+import { Button } from "@/components/ui";
 import {
   reportProfileAction,
   type ReportState,
@@ -60,22 +61,27 @@ export function ReportForm({ targetId }: { targetId: string }) {
       {state?.error && (
         <div className="text-xs text-danger-ink">{state.error}</div>
       )}
+      {/* size="xs" is px-3/text-xs already; only py comes up from 1.5 to the
+          2 these two shipped with. Cancel goes rounded-xl -> pill, a listed
+          exception for this file. */}
       <div className="flex gap-2">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="xs"
           onClick={() => setOpen(false)}
           disabled={isPending}
-          className="flex-1 px-3 py-2 border border-line text-xs text-ink hover:border-navy rounded-xl"
+          className="flex-1 py-2"
         >
           {tr("Cancel")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          size="xs"
           disabled={isPending}
-          className="flex-1 px-3 py-2 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-xs"
+          className="flex-1 py-2"
         >
           {isPending ? tr("Submitting…") : tr("Submit report")}
-        </button>
+        </Button>
       </div>
     </form>
   );

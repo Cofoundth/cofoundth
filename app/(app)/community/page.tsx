@@ -5,7 +5,13 @@ import { tServer, getLocale } from "@/lib/i18n-server";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { PostComposer } from "@/components/PostComposer";
 import { SearchablePostFeed } from "@/components/SearchablePostFeed";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  Card,
+  EmptyState,
+  LinkButton,
+  Section,
+  SectionHeading,
+} from "@/components/ui";
 import { getFeedPosts } from "@/lib/posts";
 import { isInvestorAccount } from "@/lib/account";
 import { getBlockedIds } from "@/lib/blocking";
@@ -142,10 +148,8 @@ export default async function CommunityPage({
             "Name joined" with the age beneath, chevron. Every row is real
             data; nothing here is seeded copy. */}
         <aside className="lg:col-span-4 min-w-0 lg:sticky lg:top-24 self-start">
-          <h2 className="text-lg font-bold tracking-normal mb-5">
-            {tTicker}
-          </h2>
-          <div className="bg-white rounded-3xl shadow-xs px-4 py-1 divide-y divide-line">
+          <SectionHeading title={tTicker} />
+          <Card padding="none" className="px-4 py-1 divide-y divide-line">
             {(recentJoins ?? []).map((p) => (
               <Link
                 key={p.id as string}
@@ -180,7 +184,7 @@ export default async function CommunityPage({
                 <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-navy transition-colors" />
               </Link>
             )}
-          </div>
+          </Card>
         </aside>
       </div>
     </Section>

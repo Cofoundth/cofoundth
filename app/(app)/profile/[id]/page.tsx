@@ -29,7 +29,7 @@ import { SocialLinks } from "@/components/SocialIcons";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { Avatar } from "@/components/Avatar";
-import { LinkButton, StageEmblem, buttonClasses } from "@/components/ui";
+import { Card, LinkButton, StageEmblem, buttonClasses } from "@/components/ui";
 import { ExpressInterestForm } from "./ExpressInterestForm";
 import { IncomingInterestBanner } from "./IncomingInterestBanner";
 import { ReportForm } from "./ReportForm";
@@ -322,7 +322,7 @@ export default async function ProfileDetailPage({
       )}
 
       {/* ---- Hero ---- */}
-      <header className="bg-white p-8 mb-8 rounded-3xl shadow-xs">
+      <Card as="header" padding="lg" className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
           <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
           <div className="flex-1 min-w-0">
@@ -398,7 +398,7 @@ export default async function ProfileDetailPage({
             )}
           </div>
         </div>
-      </header>
+      </Card>
 
       <div className="grid xl:grid-cols-12 gap-8 xl:gap-10">
         {/* ---- Main column ---- */}
@@ -408,7 +408,7 @@ export default async function ProfileDetailPage({
             capabilities.length > 0 ||
             projectImages.length > 0 ||
             projectUrl) && (
-            <section className="bg-white p-8 rounded-3xl shadow-xs">
+            <Card as="section" padding="lg">
               <h2 className="text-lg font-bold tracking-normal mb-5">
                 {t("What I'm building", locale)}
               </h2>
@@ -478,12 +478,12 @@ export default async function ProfileDetailPage({
                   </div>
                 </div>
               )}
-            </section>
+            </Card>
           )}
 
           {/* Who I am */}
           {hasAbout && (
-            <section className="bg-white p-8 rounded-3xl shadow-xs">
+            <Card as="section" padding="lg">
               <h2 className="text-lg font-bold tracking-normal mb-5">
                 {t("Background & experience", locale)}
               </h2>
@@ -575,12 +575,12 @@ export default async function ProfileDetailPage({
                   </div>
                 )}
               </div>
-            </section>
+            </Card>
           )}
 
           {/* Recent milestones */}
           {(recentMilestones?.length ?? 0) > 0 && (
-            <section className="bg-white p-8 rounded-3xl shadow-xs">
+            <Card as="section" padding="lg">
               <h2 className="text-lg font-bold tracking-normal mb-5">
                 {t("Recent milestones & launches", locale)}
               </h2>
@@ -634,7 +634,7 @@ export default async function ProfileDetailPage({
                   );
                 })}
               </div>
-            </section>
+            </Card>
           )}
         </div>
 
@@ -642,7 +642,12 @@ export default async function ProfileDetailPage({
         <aside className="xl:col-span-4 space-y-5 xl:sticky xl:top-24 self-start">
           {/* What I'm looking for — the headline ask */}
           {seeking.length > 0 && (
-            <div className="bg-navy p-6 rounded-3xl">
+            // No border: decision D2 is open, and this panel shipped without
+            // one. tone="navy" swaps the background out of the base string, so
+            // shadow-xs is correctly absent on the dark surface.
+            <Card tone="navy">
+              {/* design-ok: eyebrow ON bg-navy (from <Card tone="navy">) —
+                  isDarkContext() reads class strings, not props. */}
               <div className="text-xs uppercase tracking-[0.2em] text-gold mb-2.5">
                 {t("Looking for", locale)}
               </div>
@@ -652,7 +657,7 @@ export default async function ProfileDetailPage({
               {intentLabel && !isCompany && (
                 <div className="text-sm text-white/60 mt-2">{intentLabel}</div>
               )}
-            </div>
+            </Card>
           )}
 
           {!isOwnProfile && (
@@ -668,15 +673,15 @@ export default async function ProfileDetailPage({
                   />
                 </div>
               )}
-              <div className="bg-white p-4 rounded-3xl shadow-xs flex flex-col gap-3">
+              <Card padding="xs" className="flex flex-col gap-3">
                 <ReportForm targetId={profile.id} />
                 <BlockButton targetId={profile.id} />
-              </div>
+              </Card>
             </>
           )}
 
           {isOwnProfile && (
-            <div className="bg-white p-6 text-center rounded-3xl shadow-xs">
+            <Card className="text-center">
               <p className="text-sm text-ink mb-3">
                 {t(
                   profile.onboarded
@@ -685,6 +690,12 @@ export default async function ProfileDetailPage({
                   locale,
                 )}
               </p>
+              {/* One of the three "outline-navy" buttons (with orgs/[slug]:469
+                  and PasswordForm:54). Button.tsx's header records D5 as
+                  "outline-navy converges onto secondary", but secondary is a
+                  LINE hairline that does not fill on hover — a different face,
+                  and a visible change this batch is not authorised to make.
+                  Left hand-rolled; it matches no design-lint pattern. */}
               <Link
                 href={profile.onboarded ? "/settings" : "/onboarding"}
                 className="inline-block px-4 py-2 border border-navy text-navy hover:bg-navy hover:text-white text-sm tracking-wide transition-colors rounded-xl"
@@ -694,11 +705,11 @@ export default async function ProfileDetailPage({
                   locale,
                 )}
               </Link>
-            </div>
+            </Card>
           )}
 
           {/* Founder facts */}
-          <div className="bg-white p-6 space-y-4 text-sm rounded-3xl shadow-xs">
+          <Card className="space-y-4 text-sm">
             <div className="text-xs uppercase tracking-[0.2em] text-ink-muted mb-2">
               {t("Founder facts", locale)}
             </div>
@@ -740,20 +751,20 @@ export default async function ProfileDetailPage({
               label={t("Industries", locale)}
               value={(profile.industry ?? []).join(", ") || null}
             />
-          </div>
+          </Card>
 
           {(profile.linkedin_url ||
             profile.x_url ||
             profile.instagram_url ||
             profile.facebook_url) && (
-            <div className="bg-white p-6 rounded-3xl shadow-xs">
+            <Card>
               <SocialLinks
                 linkedin={profile.linkedin_url as string | null}
                 x={profile.x_url as string | null}
                 instagram={profile.instagram_url as string | null}
                 facebook={profile.facebook_url as string | null}
               />
-            </div>
+            </Card>
           )}
         </aside>
       </div>

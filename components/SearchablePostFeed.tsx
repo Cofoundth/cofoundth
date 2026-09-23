@@ -6,7 +6,7 @@ import type { PostItem } from "@/lib/post-types";
 import type { Locale } from "@/lib/i18n";
 import { useT } from "@/lib/i18n-client";
 import { loadMoreFeedAction, searchFeedAction } from "@/lib/post-actions";
-import { Button, EmptyState } from "@/components/ui";
+import { Button, Card, EmptyState } from "@/components/ui";
 import { PostCard } from "./PostCard";
 
 const LOAD_MORE_PAGE = 20;
@@ -150,9 +150,9 @@ export function SearchablePostFeed({
       {!searchActive && composer}
 
       {searchActive && searching && results === null ? (
-        <div className="bg-white rounded-3xl shadow-xs p-8 text-center text-sm text-ink-muted">
+        <Card padding="lg" className="text-center text-sm text-ink-muted">
           {tr("Searching…")}
-        </div>
+        </Card>
       ) : list.length === 0 ? (
         searchActive ? (
           // KIND B — the posts exist, this query just missed them. Never offer
@@ -200,14 +200,15 @@ export function SearchablePostFeed({
 
       {!searchActive && hasMore && (
         <div ref={sentinelRef} className="pt-1 text-center">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => void loadMore()}
             disabled={loadingMore}
-            className="px-5 py-2 border border-line bg-white hover:border-navy text-sm text-ink tracking-wide transition-colors disabled:opacity-60 rounded-xl"
+            className="px-5 bg-white"
           >
             {loadingMore ? tr("Loading…") : tr("Load more")}
-          </button>
+          </Button>
         </div>
       )}
     </div>

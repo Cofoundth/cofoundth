@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   ChevronDown,
@@ -30,11 +29,15 @@ import { expressInterestAction } from "@/app/(app)/profile/[id]/actions";
 import { DirectoryCard } from "@/components/DirectoryCard";
 import {
   Button,
+  Card,
   CardChip,
+  CountBadge,
   EmptyState,
   LinkButton,
   Section,
+  Tabs,
   Textarea,
+  ToggleChip,
 } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceLabel } from "@/lib/provinces";
@@ -451,35 +454,26 @@ export function BrowseClient({
         </div>
       </div>
 
-      <div className="flex gap-6 border-b border-line mb-8">
-        {(
-          [
-            ["idea", tr("Has an idea"), ideaCount],
-            ["exploring", tr("Exploring"), exploringCount],
-            ["saved", tr("Saved"), saved.size],
-          ] as const
-        ).map(([key, label, count]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setIdeaTab(key)}
-            className={`pb-3 -mb-px text-sm tracking-wide border-b-2 rounded-none transition-colors ${
-              ideaTab === key
-                ? "border-navy text-navy font-medium"
-                : "border-transparent text-ink-muted hover:text-navy"
-            }`}
-          >
-            {label}{" "}
-            <span className="text-xs text-ink-muted">({count})</span>
-          </button>
-        ))}
-      </div>
+      {/* density="flush" is this strip's gap-6 + pb-3; the six other strips in
+          the app are the default gap-1 + px-4 py-2. */}
+      <Tabs
+        density="flush"
+        className="mb-8"
+        aria-label={tr("All founders")}
+        value={ideaTab}
+        onChange={(key) => setIdeaTab(key as typeof ideaTab)}
+        items={[
+          { key: "idea", label: tr("Has an idea"), count: ideaCount },
+          { key: "exploring", label: tr("Exploring"), count: exploringCount },
+          { key: "saved", label: tr("Saved"), count: saved.size },
+        ]}
+      />
 
       {/* Matchmaker — their "Who are you looking for?" card, honestly
           powered: theirs runs an LLM ("Onfound Intelligence"), ours runs the
           Complement Score and says so. Free text is scanned for role/industry
           words in Thai or English; the grid re-ranks by fit. */}
-      <div className="mb-8 bg-white rounded-3xl shadow-xs p-6">
+      <Card className="mb-8">
         <h2 className="text-lg font-bold tracking-normal mb-1">
           {tr("Who are you looking for?")}
         </h2>
@@ -507,12 +501,17 @@ export function BrowseClient({
               className="w-full h-11 pl-11 pr-4 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
             />
           </div>
-          <button
+          {/* No vertical padding on purpose: this button is a flex item beside
+              an h-11 input and takes its height from the row (align-items
+              stretch). py-0 keeps that true — size="sm"'s py-2 would only
+              matter if the row ever stopped stretching. */}
+          <Button
             type="submit"
-            className="shrink-0 rounded-full bg-navy px-5 text-sm text-white hover:bg-navy-dark transition-colors"
+            size="sm"
+            className="shrink-0 px-5 py-0 tracking-normal"
           >
             {tr("Match")}
-          </button>
+          </Button>
         </form>
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           {(
@@ -617,7 +616,7 @@ export function BrowseClient({
             </p>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Search + a filter TRIGGER, with the filters themselves in a panel that
           opens below. Measured off Onfound's /community: a flex row where the
@@ -656,9 +655,9 @@ export function BrowseClient({
         >
           <SlidersHorizontal className="w-4 h-4" strokeWidth={1.5} />
           {filterCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 text-[11px] bg-navy text-white rounded-full inline-flex items-center justify-center font-medium">
-              {filterCount}
-            </span>
+            // The pin stays at the call site: the three overlay sites each pin
+            // the badge differently and the two rail ones do not pin it at all.
+            <CountBadge n={filterCount} className="absolute -top-1.5 -right-1.5" />
           )}
         </button>
       </div>
@@ -882,21 +881,18 @@ export function BrowseClient({
             </span>
             <div className="flex items-center gap-2">
               {filterCount > 0 && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={clearAll}
-                  className="px-4 py-2 text-sm text-ink-muted hover:text-navy tracking-wide"
+                  className="text-ink-muted"
                 >
                   {tr("Clear all filters")}
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
-                onClick={() => setFiltersOpen(false)}
-                className="px-5 py-2 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
-              >
+              <Button size="sm" onClick={() => setFiltersOpen(false)} className="px-5">
                 {tr("Done")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1067,6 +1063,10 @@ function FilterGroup({
   );
 }
 
+// `compact` is ToggleChip's xs tier (px-2.5 py-1 text-xs) and the default is
+// its sm tier (px-3 py-1.5 text-sm) — the same two sizes this file already
+// shipped. The primitive adds `aria-pressed`, which every one of these chips
+// was missing: a screen reader had only colour to go on.
 function FilterChip({
   children,
   selected,
@@ -1079,17 +1079,13 @@ function FilterChip({
   compact?: boolean;
 }) {
   return (
-    <button
-      type="button"
+    <ToggleChip
+      selected={selected}
+      size={compact ? "xs" : "sm"}
       onClick={onClick}
-      className={`${compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"} tracking-wide transition-colors border ${
-        selected
-          ? "bg-navy border-navy text-white"
-          : "bg-white border-line text-ink hover:border-navy"
-      }`}
     >
       {children}
-    </button>
+    </ToggleChip>
   );
 }
 
@@ -1285,6 +1281,13 @@ function ProfileCard({
                   In matchmaker mode the first slot becomes "Draft intro":
                   there is a reason sentence to turn into an opener, and a
                   bare interest throws that away. */}
+              {/* The Express Interest button below stays hand-rolled. It is
+                  one button with two faces — an outline CTA, and a gold-soft
+                  "Interest sent" state that is `disabled` but must NOT dim or
+                  show not-allowed. Button's BASE applies disabled:opacity-50
+                  and disabled:cursor-not-allowed to every disabled button, so
+                  migrating it needs three overrides that each undo the
+                  primitive. It matches no design-lint pattern. */}
               {reason && !sent ? (
                 // secondary, not the default primary: it takes the slot
                 // Express Interest held, and two solid-navy pills side by side
@@ -1311,12 +1314,19 @@ function ProfileCard({
                   {sent ? tr("Interest sent") : tr("Express Interest")}
                 </button>
               )}
-              <Link
+              {/* px-0 + text-center keep this exactly where it was: the CTA is
+                  a flex-1 half of the footer row, so the size token's px-4
+                  would only eat into a label that can wrap in Thai, and
+                  text-center centres each wrapped line the way the old
+                  `text-center` block did (justify-center alone centres the
+                  block, not its lines). */}
+              <LinkButton
                 href={fullProfileHref}
-                className="flex-1 rounded-full bg-navy py-2 text-sm text-white text-center tracking-wide hover:bg-navy-dark transition-colors"
+                size="sm"
+                className="flex-1 px-0 text-center"
               >
                 {tr("Full Profile")}
-              </Link>
+              </LinkButton>
             </>
           )}
 

@@ -12,6 +12,7 @@ import { COMMON_SKILLS } from "@/lib/skills";
 import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
 import { LONG_TEXT_MAX } from "@/lib/limits";
+import { Button, SectionHeading, ToggleChip } from "@/components/ui";
 
 type SaveResult = { error?: string; ok?: boolean } | null;
 
@@ -666,15 +667,10 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
 
       {/* Save bar */}
       <div className="sticky bottom-0 -mx-6 lg:-mx-10 px-6 lg:px-10 py-4 bg-cream/95 backdrop-blur border-t border-line flex items-center gap-4">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isPending}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-navy text-white text-sm tracking-wide hover:bg-navy/90 disabled:opacity-60 transition-colors"
-        >
+        <Button onClick={handleSave} disabled={isPending} className="py-2.5">
           {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           {tr("Save changes")}
-        </button>
+        </Button>
         {state?.ok && (
           <span className="inline-flex items-center gap-1.5 text-sm text-green-700">
             <Check className="w-4 h-4" /> {tr("Saved")}
@@ -718,9 +714,9 @@ function Section({
 }) {
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-bold tracking-normal border-b border-line pb-2">
-        {title}
-      </h2>
+      {/* className="" keeps the primitive's default mb-5 OFF: the wrapper
+          already spaces its children with space-y-4. */}
+      <SectionHeading title={title} divider className="" />
       {children}
     </section>
   );
@@ -769,18 +765,12 @@ function Chip({
   onClick: () => void;
   children: React.ReactNode;
 }) {
+  // tracking={false}: these never carried tracking-wide, and the primitive
+  // adds it by default.
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-4 py-2 text-sm border transition-colors ${
-        on
-          ? "border-navy bg-navy text-white"
-          : "border-line bg-white text-ink hover:border-navy"
-      }`}
-    >
+    <ToggleChip selected={on} size="md" tracking={false} onClick={onClick}>
       {children}
-    </button>
+    </ToggleChip>
   );
 }
 

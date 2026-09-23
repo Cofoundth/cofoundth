@@ -5,6 +5,7 @@ import { Camera, Loader2 } from "lucide-react";
 import { uploadAvatarAction } from "@/components/avatar-actions";
 import { getInitials, colorFor } from "@/components/Avatar";
 import { useT } from "@/lib/i18n-client";
+import { Button } from "@/components/ui";
 
 type Props = {
   /** Accepted for call-site compatibility; the server action derives the user from the session. */
@@ -120,15 +121,16 @@ export function AvatarUploader({ initialUrl, name }: Props) {
       </div>
 
       <div className="flex-1">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-line bg-white hover:border-navy text-ink text-sm tracking-wide transition-colors disabled:opacity-60 rounded-xl"
+          className="gap-2"
         >
           <Camera className="w-4 h-4" />
           {url ? tr("Change photo") : tr("Add photo")}
-        </button>
+        </Button>
         <p className="text-xs text-ink-muted mt-2">
           {tr("Optional. JPG/PNG, up to 5MB.")}
         </p>

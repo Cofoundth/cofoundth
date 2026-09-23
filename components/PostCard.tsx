@@ -20,6 +20,7 @@ import { useT } from "@/lib/i18n-client";
 import { t, type Locale } from "@/lib/i18n";
 import { isWithinMs } from "@/lib/time";
 import type { PostComment, PostItem, PostKind } from "@/lib/post-types";
+import { Button, Card } from "@/components/ui";
 import {
   createPostCommentAction,
   deletePostAction,
@@ -161,7 +162,7 @@ export function PostCard({
     // switched on: a post kind is already marked by its icon and its label,
     // and turning two card tints on after the fact is a design change nobody
     // asked for. The kind still colours its LABEL via `meta.tone`.
-    <article className="bg-white rounded-3xl shadow-xs overflow-hidden">
+    <Card as="article" padding="none" className="overflow-hidden">
       <div className="p-5">
         <div className="flex items-start gap-3">
           <Link href={authorHref} className="shrink-0">
@@ -352,13 +353,14 @@ export function PostCard({
                 }}
                 className="flex-1 px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
               />
-              <button
+              <Button
                 type="submit"
+                size="sm"
                 disabled={submitting || draft.trim().length === 0}
-                className="inline-flex items-center gap-1 px-3 py-2 bg-navy hover:bg-navy-dark disabled:opacity-50 text-white text-sm shrink-0"
+                className="shrink-0"
               >
                 <Send className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </form>
           )}
 
@@ -451,6 +453,6 @@ export function PostCard({
           )}
         </div>
       )}
-    </article>
+    </Card>
   );
 }

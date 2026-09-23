@@ -10,6 +10,7 @@ import {
 import { Send } from "lucide-react";
 import { sendMessageAction, type SendMessageState } from "./actions";
 import { useT } from "@/lib/i18n-client";
+import { Button } from "@/components/ui";
 
 const INITIAL: SendMessageState = null;
 
@@ -137,14 +138,14 @@ export function MessageComposer({ matchId }: { matchId: string }) {
               }
             }}
           />
-          <button
+          <Button
             type="submit"
             disabled={isPending || draft.trim().length === 0}
-            className="px-5 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2 shrink-0"
+            className="px-5 shrink-0"
           >
             <Send className="w-4 h-4" />
             {isPending ? tr("Sending…") : tr("Send")}
-          </button>
+          </Button>
         </div>
         {state?.error && (
           <div className="mt-2 text-xs text-danger-ink">{state.error}</div>

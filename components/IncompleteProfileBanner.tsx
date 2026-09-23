@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
+import { Card } from "@/components/ui";
 
 // Global nudge shown on every authenticated page until the profile clears the
 // directory gate (migration 0046's profile_complete). `onboarded` is guaranteed
@@ -22,9 +23,15 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
   if (complete || pathname?.startsWith("/messages/")) return null;
   return (
     <div className="max-w-[1120px] mx-auto px-6 lg:px-10 pt-8">
-      <div className="bg-navy border border-gold/50 p-6 lg:p-8 rounded-3xl">
+      <Card
+        tone="navy"
+        padding="responsive"
+        className="border border-gold/50"
+      >
         <div className="flex items-start gap-5">
           <div className="w-12 h-12 bg-gold/15 border border-gold/50 rounded-xl flex items-center justify-center shrink-0">
+            {/* design-ok: gold ON bg-navy, which now arrives as <Card
+                tone="navy"> — isDarkContext() reads classes, not props. */}
             <TriangleAlert
               className="w-6 h-6 text-gold"
               strokeWidth={1.75}
@@ -32,6 +39,7 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
             />
           </div>
           <div className="flex-1">
+            {/* design-ok: eyebrow ON bg-navy (from <Card tone="navy">). */}
             <div className="text-xs uppercase tracking-[0.2em] text-gold mb-2">
               {tr("Action needed")}
             </div>
@@ -46,6 +54,14 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
                 "Add a bit about you, what you’re looking for, and what you’re working on — then your profile shows on the Founders page for others to find.",
               )}
             </p>
+            {/* NOT migrated to <LinkButton variant="inverse">. Batch 0 recorded
+                decision D4 as "the two gold-on-navy CTAs converge onto
+                inverse", and inverse is bg-white — so adopting the primitive
+                here repaints the most prominent CTA in the app from gold to
+                white. That is a visible design change, not an adoption, and it
+                is not on this batch's approved exception list. Left as-is
+                pending the founder's look at the two banners (this one and
+                profile/[id]/IncomingInterestBanner). */}
             <Link
               href="/settings"
               className="px-5 py-2.5 bg-gold hover:bg-gold-soft text-navy font-medium text-sm tracking-wide transition-colors inline-flex items-center gap-2 rounded-full"
@@ -54,7 +70,7 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
             </Link>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

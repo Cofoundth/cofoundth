@@ -17,6 +17,7 @@ import {
   type PostFormState,
 } from "@/lib/post-actions";
 import { useT } from "@/lib/i18n-client";
+import { Button, ToggleChip, cardClasses } from "@/components/ui";
 
 const INITIAL: PostFormState = null;
 
@@ -83,7 +84,7 @@ export function PostComposer() {
     <form
       ref={formRef}
       action={formAction}
-      className="bg-white rounded-3xl shadow-xs p-4"
+      className={cardClasses({ padding: "xs" })}
     >
       <input type="hidden" name="kind" value={kind} />
       <input
@@ -101,19 +102,15 @@ export function PostComposer() {
           const Icon = k.icon;
           const active = kind === k.value;
           return (
-            <button
+            <ToggleChip
               key={k.value}
-              type="button"
+              selected={active}
+              size="xs"
               onClick={() => setKind(k.value)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs tracking-wide border transition-colors ${
-                active
-                  ? "bg-navy border-navy text-white"
-                  : "bg-white border-line text-ink hover:border-navy"
-              }`}
             >
               <Icon className="w-3 h-3" strokeWidth={1.5} />
               {tr(k.en)}
-            </button>
+            </ToggleChip>
           );
         })}
       </div>
@@ -226,14 +223,14 @@ export function PostComposer() {
             </span>
           )}
         </div>
-        <button
+        <Button
           type="submit"
+          size="sm"
           disabled={isPending || tooLong || content.trim().length === 0}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy hover:bg-navy-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm tracking-wide"
         >
           <Send className="w-3.5 h-3.5" />
           {isPending ? tr("Posting…") : tr("Post")}
-        </button>
+        </Button>
       </div>
     </form>
   );

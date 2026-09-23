@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isInvestorAccount } from "@/lib/account";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState } from "@/components/ui";
+import { Card, EmptyState, SectionHeading } from "@/components/ui";
 import { ROLE_LABELS } from "@/lib/matching";
 import { t } from "@/lib/i18n";
 import { getLocale, tServer } from "@/lib/i18n-server";
@@ -127,7 +127,7 @@ export default async function PostPage({ params }: Props) {
         <ArrowLeft className="w-4 h-4" /> {await tServer("Back to community")}
       </Link>
 
-      <article className="bg-white p-8 lg:p-12 rounded-3xl shadow-xs">
+      <Card as="article" padding="lg" className="lg:p-12">
         {meta && KindIcon && (
           <div
             className={`inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] mb-4 ${meta.tone}`}
@@ -250,13 +250,11 @@ export default async function PostPage({ params }: Props) {
             <span className="sr-only">{commentsLabel}</span>
           </span>
         </div>
-      </article>
+      </Card>
 
       {/* Comments thread */}
       <section className="mt-14">
-        <h2 className="text-lg font-bold tracking-normal mb-5">
-          {commentsLabel}
-        </h2>
+        <SectionHeading title={commentsLabel} />
 
         <RealtimeRefresh
           table="forum_comments"
@@ -267,7 +265,7 @@ export default async function PostPage({ params }: Props) {
         />
 
         {comments.length ? (
-          <div className="bg-white divide-y divide-line px-6 mb-6 rounded-3xl shadow-xs overflow-hidden">
+          <Card padding="none" className="divide-y divide-line px-6 mb-6 overflow-hidden">
             {comments.map((c) => {
               const a = authorMap.get(c.author_id as string);
               return (
@@ -290,7 +288,7 @@ export default async function PostPage({ params }: Props) {
                 />
               );
             })}
-          </div>
+          </Card>
         ) : (
           // KIND A — no replies yet. The composer renders directly below for
           // anyone who may write, so the copy names two easy openings instead

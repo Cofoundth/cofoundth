@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Ban } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
+import { Button } from "@/components/ui";
 import { blockProfileAction, type BlockState } from "./actions";
 
 const INITIAL: BlockState = null;
@@ -43,22 +44,29 @@ export function BlockButton({ targetId }: { targetId: string }) {
       {state?.error && (
         <div className="text-xs text-danger-ink">{tr(state.error)}</div>
       )}
+      {/* `tracking-normal` is not decoration: size="sm" carries tracking-wide
+          (the canonical CTA face) and this pair never had it. cn() merges, so
+          the override wins and the row keeps its exact letter-spacing. The
+          px-3 -> px-4 the size brings IS accepted (the plan's +4px), and it is
+          invisible on a flex-1 button with a centred label. */}
       <div className="flex gap-2">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => setOpen(false)}
           disabled={isPending}
-          className="flex-1 px-3 py-2 border border-line text-sm text-ink hover:border-navy rounded-full"
+          className="flex-1 tracking-normal"
         >
           {tr("Cancel")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          size="sm"
           disabled={isPending}
-          className="flex-1 px-3 py-2 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm rounded-full"
+          className="flex-1 tracking-normal"
         >
           {isPending ? tr("Blocking…") : tr("Block")}
-        </button>
+        </Button>
       </div>
     </form>
   );

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PostComposer } from "./PostComposer";
-import { Section } from "@/components/ui";
+import { Card, Section } from "@/components/ui";
 
 export default function NewPostPage() {
   return (
@@ -20,9 +20,9 @@ export default function NewPostPage() {
         </p>
       </div>
 
-      <div className="bg-white p-8 lg:p-10 rounded-3xl shadow-xs">
+      <Card padding="lg" className="lg:p-10">
         <PostComposer />
-      </div>
+      </Card>
     </Section>
   );
 }

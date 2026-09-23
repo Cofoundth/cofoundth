@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useT } from "@/lib/i18n-client";
+import { Button } from "@/components/ui";
 import { deleteAccountAction, type DeleteAccountState } from "./actions";
 
 const INITIAL: DeleteAccountState = null;
@@ -19,15 +20,21 @@ export function DeleteAccountForm() {
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState("");
 
+  // `tracking-normal` on all three buttons: size="sm" carries the canonical
+  // CTA face's tracking-wide and none of these had a tracking utility at HEAD.
+  // Matches notifications:134 / BlockButton / MeetupsClient — the sweep keeps
+  // letter-spacing byte-identical rather than restyling it here.
+
   if (!open) {
     return (
-      <button
-        type="button"
+      <Button
+        variant="danger-outline"
+        size="sm"
         onClick={() => setOpen(true)}
-        className="px-4 py-2 border border-danger-line text-sm text-danger-ink hover:bg-danger-surface transition-colors rounded-full"
+        className="tracking-normal"
       >
         {tr("Delete account")}
-      </button>
+      </Button>
     );
   }
 
@@ -57,24 +64,27 @@ export function DeleteAccountForm() {
         <div className="text-xs text-danger-ink">{tr(state.error)}</div>
       )}
       <div className="flex gap-2">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => {
             setOpen(false);
             setConfirm("");
           }}
           disabled={isPending}
-          className="px-4 py-2 border border-line text-sm text-ink hover:border-navy rounded-full"
+          className="tracking-normal"
         >
           {tr("Cancel")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          variant="danger"
+          size="sm"
           disabled={isPending || confirm.trim() !== "DELETE"}
-          className="px-4 py-2 bg-danger-ink hover:bg-danger-ink-dark disabled:opacity-50 text-white text-sm transition-colors rounded-full"
+          className="tracking-normal"
         >
           {isPending ? tr("Deleting…") : tr("Delete my account")}
-        </button>
+        </Button>
       </div>
     </form>
   );
