@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
-import { Card } from "@/components/ui";
+import { Card, LinkButton } from "@/components/ui";
 
 // Global nudge shown on every authenticated page until the profile clears the
 // directory gate (migration 0046's profile_complete). `onboarded` is guaranteed
@@ -54,20 +53,19 @@ export function IncompleteProfileBanner({ complete }: { complete: boolean }) {
                 "Add a bit about you, what you’re looking for, and what you’re working on — then your profile shows on the Founders page for others to find.",
               )}
             </p>
-            {/* NOT migrated to <LinkButton variant="inverse">. Batch 0 recorded
-                decision D4 as "the two gold-on-navy CTAs converge onto
-                inverse", and inverse is bg-white — so adopting the primitive
-                here repaints the most prominent CTA in the app from gold to
-                white. That is a visible design change, not an adoption, and it
-                is not on this batch's approved exception list. Left as-is
-                pending the founder's look at the two banners (this one and
-                profile/[id]/IncomingInterestBanner). */}
-            <Link
+            {/* variant="accent" IS this face — D4's "converge onto inverse"
+                was withdrawn precisely because inverse is bg-white and would
+                have repainted this CTA. `px-5 py-2.5` is the off-scale padding
+                between sm and md that Button.tsx documents keeping at the call
+                site. Measured ref-vs-primitive at 1536x674 in both locales,
+                resting and hovered: identical. */}
+            <LinkButton
               href="/settings"
-              className="px-5 py-2.5 bg-gold hover:bg-gold-soft text-navy font-medium text-sm tracking-wide transition-colors inline-flex items-center gap-2 rounded-full"
+              variant="accent"
+              className="px-5 py-2.5"
             >
               {tr("Complete profile")} <ArrowRight className="w-4 h-4" />
-            </Link>
+            </LinkButton>
           </div>
         </div>
       </Card>

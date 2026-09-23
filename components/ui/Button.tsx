@@ -56,6 +56,8 @@ export type ButtonVariant =
   | "ghost"
   | "danger"
   | "inverse"
+  | "accent"
+  | "outline"
   | "danger-outline";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
@@ -65,25 +67,59 @@ export type ButtonSize = "xs" | "sm" | "md" | "lg";
 // honest way to say it, because a variant also swaps the TEXT and HOVER
 // colours, which a single appended `bg-*` does not.
 //
-// ── THE SIX VARIANTS, AND THE TWO THAT WERE DELIBERATELY NOT ADDED ─────────
+// ── THE EIGHT VARIANTS ─────────────────────────────────────────────────────
 //   primary         the navy CTA (~63 hand-rolled sites)
-//   secondary       hairline outline (41 sites). ALSO the home for the 3
-//                   `outline-navy` buttons — decision D5 merged them here
-//                   rather than adding a seventh variant for three call sites.
+//   secondary       hairline outline (41 sites)
 //   ghost           text-only actions
 //   danger          solid destructive (4 sites)
 //   inverse         white-on-navy CTA, for a button sitting ON a dark panel
-//                   (4 sites). Decision D4 merged the 2 gold-on-navy `accent`
-//                   buttons into this rather than keeping a gold variant: gold
-//                   is a SURFACE token, and the two faces were doing one job.
+//   accent          gold-on-navy CTA, also for a dark panel (2 sites)
+//   outline         navy outline that INVERTS on hover (3 sites)
 //   danger-outline  the quiet destructive (5 sites) — and the home for the 2
 //                   "secondary that turns red on hover" buttons (D5).
+//
+// ── D4 AND D5 WERE RE-DECIDED: THE PIXELS BEAT THE TIDIER TAXONOMY ─────────
+// Batch 0 recorded two convergences that this header used to state as fact:
+//   D4  "the 2 gold-on-navy CTAs converge onto `inverse`"
+//   D5  "the 3 `outline-navy` buttons converge onto `secondary`"
+// Neither survived contact with the call sites, and the sweep's own promise —
+// migrating a site is a pixel-for-pixel no-op, never a redesign — is the
+// senior rule. So both were reopened and the two variants above added instead.
+//
+//   D4 → `accent`. `inverse` is `bg-white`. Applying it to the two banners
+//   would have repainted the app's most prominent CTA (the "Complete profile"
+//   bar that sits on EVERY authenticated page, and "Accept & connect" at the
+//   top of an incoming-interest profile) from gold to white. The taxonomy
+//   argument was that gold is a SURFACE token — and it still is: `accent` uses
+//   gold as a BACKGROUND with `text-navy` on it, which is exactly what the
+//   token is for. What made the merge look reasonable was the shared job
+//   ("the CTA on a dark panel"), not a shared face. Two faces, two variants.
+//   `accent` is dark-panel-only: `bg-gold` with `text-navy` is legal anywhere,
+//   but the gold surface only reads as an accent against `bg-navy` — on cream
+//   it is nearly the page colour. Both live sites sit inside <Card tone="navy">.
+//
+//   D5 → `outline`. `secondary` is a `border-line` HAIRLINE whose hover moves
+//   the border to navy and leaves the fill alone. These three buttons are a
+//   `border-navy` outline that INVERTS on hover — fill goes navy, text goes
+//   white. Different border colour at rest AND a different hover gesture; the
+//   only thing they share with `secondary` is the word "outline".
+//
+// Both variants carry ONLY what their call sites had in common. Everything
+// that varied per site stays at the call site as a className override, the
+// documented pattern for the off-scale paddings above:
+//   accent  also sets `font-medium` — the variant owns it because BOTH sites
+//           had it, and a <button> otherwise inherits 400 through preflight's
+//           `font: inherit`.
+//   outline sets no weight: both of its sites render at 400.
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-navy hover:bg-navy-dark text-white",
   secondary: "bg-transparent border border-line hover:border-navy text-navy",
   ghost: "bg-transparent text-ink hover:text-navy",
   danger: "bg-danger-ink hover:bg-danger-ink-dark text-white",
   inverse: "bg-white text-navy hover:bg-cream",
+  accent: "bg-gold hover:bg-gold-soft text-navy font-medium",
+  outline:
+    "bg-transparent border border-navy text-navy hover:bg-navy hover:text-white",
   "danger-outline":
     "bg-transparent border border-danger-line text-danger-ink hover:bg-danger-surface",
 };

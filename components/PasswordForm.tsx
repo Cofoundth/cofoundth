@@ -6,6 +6,7 @@ import {
   type PasswordState,
 } from "@/app/(app)/settings/actions";
 import { useT } from "@/lib/i18n-client";
+import { Button } from "@/components/ui";
 
 const input =
   "w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy";
@@ -48,13 +49,19 @@ export function PasswordForm() {
         />
       </div>
       <div className="sm:col-span-2 flex items-center gap-4">
-        <button
+        {/* variant="outline" IS this face (see Button.tsx on D5); `px-5 py-2.5`
+            is the documented off-scale padding kept at the call site. The old
+            `disabled:opacity-50` is exactly what BASE applies, so nothing is
+            lost. Measured identical: 104.43x41.60, both locales, resting and
+            hovered. */}
+        <Button
           type="submit"
+          variant="outline"
+          className="px-5 py-2.5"
           disabled={pending}
-          className="px-5 py-2.5 border border-navy text-navy hover:bg-navy hover:text-white text-sm tracking-wide transition-colors disabled:opacity-50"
         >
           {pending ? tr("Saving…") : tr("Set password")}
-        </button>
+        </Button>
         {state?.ok && (
           <span className="text-sm text-green-700">
             {tr("Password updated.")}

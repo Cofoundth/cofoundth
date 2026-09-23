@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowRight,
@@ -690,21 +689,27 @@ export default async function ProfileDetailPage({
                   locale,
                 )}
               </p>
-              {/* One of the three "outline-navy" buttons (with orgs/[slug]:469
-                  and PasswordForm:54). Button.tsx's header records D5 as
-                  "outline-navy converges onto secondary", but secondary is a
-                  LINE hairline that does not fill on hover — a different face,
-                  and a visible change this batch is not authorised to make.
-                  Left hand-rolled; it matches no design-lint pattern. */}
-              <Link
+              {/* variant="outline" IS this face — D5's "converge onto
+                  secondary" was withdrawn because secondary is a LINE hairline
+                  that does not fill on hover. `rounded-xl` stays at the call
+                  site: LinkButton renders an <a>, so BASE's `rounded-full`
+                  applies, and this link has always been a 14px card corner, not
+                  a pill. That is a pre-existing deviation from the surface
+                  table (chip/badge/button -> rounded-full), preserved
+                  deliberately — changing it is a design decision, not a
+                  migration. Measured identical: 102.70x37.60 @ radius 14px,
+                  both locales, resting and hovered. */}
+              <LinkButton
                 href={profile.onboarded ? "/settings" : "/onboarding"}
-                className="inline-block px-4 py-2 border border-navy text-navy hover:bg-navy hover:text-white text-sm tracking-wide transition-colors rounded-xl"
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
               >
                 {t(
                   profile.onboarded ? "Edit profile" : "Complete profile",
                   locale,
                 )}
-              </Link>
+              </LinkButton>
             </Card>
           )}
 

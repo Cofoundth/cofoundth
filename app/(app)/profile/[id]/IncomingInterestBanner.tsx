@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { Check, Heart } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { expressInterestAction, type InterestState } from "./actions";
 
 // Full-width, high-contrast banner at the top of a profile when this founder
@@ -50,18 +50,26 @@ export function IncomingInterestBanner({
         </div>
         <form action={formAction} className="shrink-0">
           <input type="hidden" name="toId" value={toId} />
-          {/* NOT migrated to <Button variant="inverse">: see the same note in
-              components/IncompleteProfileBanner — batch 0's D4 makes inverse
-              bg-white, so adopting it here turns this gold CTA white. Visible
-              change, founder decision, out of this batch's scope. */}
-          <button
+          {/* variant="accent" + size="lg" IS `px-8 py-4` + the gold face; see
+              Button.tsx on why D4's "converge onto inverse" was withdrawn.
+              `text-base` because this button set NO font-size and so inherited
+              the 16px body — size lg would otherwise drop it to 14px. Measured:
+              16px text on a 24px line either way, box 215.19x56.00 to the pixel
+              in both locales, resting and hovered.
+              ONE deliberate delta: the hand-rolled face used
+              `disabled:opacity-60`; the primitive applies `disabled:opacity-50`
+              to every button by design (see the header — three opacities in the
+              wild converged to one). Visible only during the in-flight submit. */}
+          <Button
             type="submit"
+            variant="accent"
+            size="lg"
+            className="text-base"
             disabled={isPending}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gold hover:bg-gold-soft disabled:opacity-60 text-navy font-medium tracking-wide transition-colors"
           >
             {isPending ? tr("Connecting…") : tr("Accept & connect")}
             {!isPending && <Check className="w-5 h-5" strokeWidth={2.5} />}
-          </button>
+          </Button>
         </form>
       </div>
       {state?.error && (
