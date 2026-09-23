@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isBlockedEitherWay } from "@/lib/blocking";
+import { EDIT_WINDOW_MS, UNSEND_WINDOW_MS } from "./windows";
 
 export type ConvMessage = {
   id: string;
@@ -10,6 +11,8 @@ export type ConvMessage = {
   content: string;
   read_at: string | null;
   created_at: string;
+  edited_at: string | null;
+  unsent_at: string | null;
 };
 
 // Server-side message fetch for the live-poll in <MessageThread>. Runs as the
@@ -47,7 +50,7 @@ export async function fetchMessagesAction(
 
   const { data, error } = await supabase
     .from("messages")
-    .select("id, sender_id, content, read_at, created_at")
+    .select("id, sender_id, content, read_at, created_at, edited_at, unsent_at")
     .eq("match_id", matchId)
     .order("created_at", { ascending: true });
   if (error) {
@@ -206,4 +209,179 @@ export async function markConversationRead(matchId: string) {
   // shared layout on client-side navigation — a page-scoped revalidate
   // leaves the badge showing a count the user has already cleared.
   revalidatePath("/", "layout");
+}
+
+// ---------------------------------------------------------------------------
+// Edit + unsend.
+//
+// Both mirror sendMessageAction: same (prev, FormData) => SendMessageState
+// signature, so a bubble's inline form can drive them with useActionState
+// exactly the way the composer does, and both revalidate the thread AND
+// /matches (the conversation list shows a last-message preview, which an edit
+// rewrites and an unsend replaces with a tombstone).
+//
+// Every check below is REDONE here even though migration 0074's trigger
+// enforces the same rules in Postgres. The trigger is the wall; this is the
+// part that can say why in a sentence a founder can read. The order matters —
+// ownership, then window, then the thing itself — so the error a client gets
+// never distinguishes "someone else's message" from "a message that does not
+// exist".
+// ---------------------------------------------------------------------------
+
+// Shared preamble: who is calling, is this their own message, and is the
+// conversation open. Returns the row on success so the caller can check its
+// clock without a second round-trip.
+async function loadOwnMessage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  messageId: string,
+  userId: string,
+): Promise<
+  | { error: string }
+  | {
+      row: {
+        id: string;
+        match_id: string;
+        sender_id: string;
+        content: string;
+        created_at: string;
+        unsent_at: string | null;
+      };
+    }
+> {
+  const { data: row } = await supabase
+    .from("messages")
+    .select("id, match_id, sender_id, content, created_at, unsent_at")
+    .eq("id", messageId)
+    .maybeSingle();
+  // RLS already scopes this select to conversations the caller is in, so a
+  // miss is either "no such message" or "not yours to see" — one answer for
+  // both, deliberately.
+  if (!row) return { error: "Message not found." };
+  if ((row.sender_id as string) !== userId)
+    return { error: "You can only change your own messages." };
+
+  const { data: match } = await supabase
+    .from("matches")
+    .select("id, profile_a_id, profile_b_id")
+    .eq("id", row.match_id as string)
+    .or(`profile_a_id.eq.${userId},profile_b_id.eq.${userId}`)
+    .maybeSingle();
+  if (!match) return { error: "Conversation not found." };
+
+  const otherId =
+    (match.profile_a_id as string) === userId
+      ? (match.profile_b_id as string)
+      : (match.profile_a_id as string);
+  if (await isBlockedEitherWay(userId, otherId)) {
+    return { error: "This conversation isn’t available." };
+  }
+
+  return {
+    row: {
+      id: row.id as string,
+      match_id: row.match_id as string,
+      sender_id: row.sender_id as string,
+      content: row.content as string,
+      created_at: row.created_at as string,
+      unsent_at: (row.unsent_at as string | null) ?? null,
+    },
+  };
+}
+
+export async function editMessageAction(
+  _prev: SendMessageState,
+  formData: FormData,
+): Promise<SendMessageState> {
+  const messageId = String(formData.get("messageId") ?? "");
+  const content = String(formData.get("content") ?? "").trim();
+
+  if (!messageId) return { error: "Missing message." };
+  if (!content) return { error: "Message can't be empty." };
+  // Same ceiling as the composer — an edit is still a message.
+  if (content.length > 4000)
+    return { error: "Message is too long (max 4000 chars)." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const loaded = await loadOwnMessage(supabase, messageId, user.id);
+  if ("error" in loaded) return loaded;
+  const { row } = loaded;
+
+  if (row.unsent_at) return { error: "This message was unsent." };
+
+  // The clock is the SERVER's and the row's, never the client's — the form
+  // carries no timestamp precisely so there is nothing to forge.
+  if (Date.now() - new Date(row.created_at).getTime() > EDIT_WINDOW_MS) {
+    return { error: "The 15-minute window to edit this message has passed." };
+  }
+
+  // Nothing changed: opened the editor, decided the wording was fine, pressed
+  // Save. The DB refuses that update on purpose — 0074's guard raises
+  // "edited_at only moves together with content", because stamping the marker
+  // over unchanged words is a lie — and every update error collapses into one
+  // opaque string below, so the founder would get a failure for an operation
+  // that did nothing wrong, and would get it again on every retry. A no-op is
+  // a successful no-op: close the editor, stamp nothing, write nothing.
+  if (content === row.content) return null;
+
+  const { error } = await supabase
+    .from("messages")
+    .update({ content, edited_at: new Date().toISOString() })
+    .eq("id", messageId);
+
+  if (error) {
+    console.error("[editMessage] update failed", error);
+    return { error: "Couldn't save your edit. Try again." };
+  }
+
+  revalidatePath(`/messages/${row.match_id}`);
+  revalidatePath("/matches");
+  return null;
+}
+
+export async function unsendMessageAction(
+  _prev: SendMessageState,
+  formData: FormData,
+): Promise<SendMessageState> {
+  const messageId = String(formData.get("messageId") ?? "");
+  if (!messageId) return { error: "Missing message." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const loaded = await loadOwnMessage(supabase, messageId, user.id);
+  if ("error" in loaded) return loaded;
+  const { row } = loaded;
+
+  // Already a tombstone: nothing to do, and saying so is friendlier than an
+  // error for the one case this happens — two tabs, or a double tap.
+  if (row.unsent_at) return null;
+
+  if (Date.now() - new Date(row.created_at).getTime() > UNSEND_WINDOW_MS) {
+    return { error: "The 24-hour window to unsend this message has passed." };
+  }
+
+  // content is emptied, not blanked in the UI: after this the words are gone
+  // from the row, from every API reply, and from the other founder's next
+  // poll. The row survives so the conversation keeps its shape.
+  const { error } = await supabase
+    .from("messages")
+    .update({ content: "", unsent_at: new Date().toISOString() })
+    .eq("id", messageId);
+
+  if (error) {
+    console.error("[unsendMessage] update failed", error);
+    return { error: "Couldn't unsend this message. Try again." };
+  }
+
+  revalidatePath(`/messages/${row.match_id}`);
+  revalidatePath("/matches");
+  return null;
 }

@@ -190,6 +190,9 @@ export default async function ConnectionsPage({
   );
 
   // ---- Last message + unread per match ----------------------------------
+  // Declared here, not down with the other labels: the loop below reads it.
+  const unsentLabel = await tServer("Message unsent");
+
   const messagesByMatch = new Map<
     string,
     { last_content: string | null; last_at: string | null; unread: number }
@@ -198,16 +201,30 @@ export default async function ConnectionsPage({
     const matchIds = matches.map((m) => m.id as string);
     const { data: allMessages } = await supabase
       .from("messages")
-      .select("match_id, content, sender_id, read_at, created_at")
+      .select("match_id, content, sender_id, read_at, created_at, unsent_at")
       .in("match_id", matchIds)
       .order("created_at", { ascending: false });
     for (const id of matchIds) {
       const msgs = (allMessages ?? []).filter((m) => m.match_id === id);
+      const last = msgs[0];
       messagesByMatch.set(id, {
-        last_content: (msgs[0]?.content as string) ?? null,
-        last_at: (msgs[0]?.created_at as string) ?? null,
-        unread: msgs.filter((m) => m.sender_id !== user.id && !m.read_at)
-          .length,
+        // An unsent message carries content = '' (migration 0074 empties the
+        // row, it does not hide it client-side), so the preview has to say
+        // what happened or the row would read as a blank conversation. Same
+        // tombstone copy as the bubble.
+        last_content: last
+          ? last.unsent_at
+            ? unsentLabel
+            : (last.content as string)
+          : null,
+        last_at: (last?.created_at as string) ?? null,
+        // An unsent message is not something to go and read: the row survives
+        // so the conversation keeps its shape, but there is nothing in it any
+        // more. Counting it leaves a badge that says "1 new" over a tombstone
+        // and clears only when you open a thread to find the words gone.
+        unread: msgs.filter(
+          (m) => m.sender_id !== user.id && !m.read_at && !m.unsent_at,
+        ).length,
       });
     }
   }

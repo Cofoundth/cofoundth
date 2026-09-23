@@ -65,11 +65,15 @@ export async function AppSidebar() {
       .select("id", { count: "exact", head: true })
       .eq("to_profile_id", user.id)
       .eq("status", "pending"),
+    // `unsent_at is null` for the same reason /matches filters it: an unsent
+    // message has no text left to read, so badging it is a ping for something
+    // that no longer exists.
     supabase
       .from("messages")
       .select("id", { count: "exact", head: true })
       .neq("sender_id", user.id)
-      .is("read_at", null),
+      .is("read_at", null)
+      .is("unsent_at", null),
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })

@@ -71,7 +71,7 @@ export default async function MessagePage({ params }: Props) {
 
   const { data: messages } = await supabase
     .from("messages")
-    .select("id, sender_id, content, read_at, created_at")
+    .select("id, sender_id, content, read_at, created_at, edited_at, unsent_at")
     .eq("match_id", matchId)
     .order("created_at", { ascending: true });
 
@@ -164,6 +164,8 @@ export default async function MessagePage({ params }: Props) {
                   content: m.content as string,
                   read_at: (m.read_at as string | null) ?? null,
                   created_at: m.created_at as string,
+                  edited_at: (m.edited_at as string | null) ?? null,
+                  unsent_at: (m.unsent_at as string | null) ?? null,
                 }))}
                 emptyState={
                   <div className="text-center py-12">
