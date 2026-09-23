@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, MapPin, Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { FEATURES } from "@/lib/features";
@@ -217,19 +217,6 @@ export default async function DashboardPage() {
     m.getLocale(),
   )) as "en" | "th";
 
-  // Identity-card derived labels (i_am / intent are string[])
-  const rolesLabel = ((profile?.i_am as string[] | null) ?? [])
-    .map((r) => t(ROLE_LABELS[r] ?? r, locale))
-    .filter(Boolean)
-    .join(" · ");
-  const intentsLabel = ((profile?.intent as string[] | null) ?? [])
-    .map((i) => t(INTENT_LABELS[i] ?? i, locale))
-    .filter(Boolean)
-    .join(" · ");
-  const identityLine = [rolesLabel, intentsLabel]
-    .filter(Boolean)
-    .join(" · ");
-
   return (
     <Section>
       {/* The page had NO <h1> at all. That was invisible while section labels
@@ -247,24 +234,14 @@ export default async function DashboardPage() {
           url={profile?.photo_url as string | null}
           size="lg"
         />
+        {/* Name only. The role/intent/location line under it repeated three
+            things the viewer typed themselves, on the one page where they
+            already know them — and if the profile is thin,
+            IncompleteProfileBanner above already says so. */}
         <div className="min-w-0">
           <h1 className="text-d2 truncate">
             {(await tServer("Welcome, {name}")).replace("{name}", firstName)}
           </h1>
-          {(identityLine || profile?.location) && (
-            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted">
-              {identityLine && <span>{identityLine}</span>}
-              {profile?.location && (
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin
-                    className="w-3.5 h-3.5 text-gold-ink"
-                    strokeWidth={1.5}
-                  />
-                  {provinceLabel(profile.location as string, locale)}
-                </span>
-              )}
-            </p>
-          )}
         </div>
       </div>
 
