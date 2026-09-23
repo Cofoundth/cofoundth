@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState, Section } from "@/components/ui";
+import { Card, EmptyState, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -184,7 +184,7 @@ export default async function AdminDealsPage() {
               <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Partnership deals")}
               </h2>
-              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+              <Card padding="none" className="divide-y divide-line overflow-hidden">
                 {dealsView.map((d) => (
                   <div key={d.id} className="p-5">
                     <div className="flex items-start justify-between gap-4">
@@ -226,7 +226,7 @@ export default async function AdminDealsPage() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </Card>
             </section>
           )}
 
@@ -235,7 +235,7 @@ export default async function AdminDealsPage() {
               <h2 className="text-lg font-bold tracking-normal mb-5">
                 {await tServer("Funding deals")}
               </h2>
-              <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+              <Card padding="none" className="divide-y divide-line overflow-hidden">
                 {fundingView.map((f) => (
                   <div key={f.id} className="p-5">
                     <div className="flex items-start justify-between gap-4">
@@ -270,7 +270,7 @@ export default async function AdminDealsPage() {
                     )}
                   </div>
                 ))}
-              </div>
+              </Card>
             </section>
           )}
         </div>

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { ArrowRight } from "lucide-react";
 import { resetPasswordAction, type ResetState } from "@/app/(auth)/actions";
+import { Button } from "@/components/ui";
 
 const INITIAL: ResetState = { step: "email" };
 
@@ -67,14 +68,10 @@ export function ForgotPasswordForm() {
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full px-8 py-4 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
-        >
+        <Button type="submit" size="lg" fullWidth disabled={isPending}>
           {isPending ? "Resetting…" : "Reset password"}
           {!isPending && <ArrowRight className="w-4 h-4" />}
-        </button>
+        </Button>
       </form>
     );
   }
@@ -105,14 +102,10 @@ export function ForgotPasswordForm() {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full px-8 py-4 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
-      >
+      <Button type="submit" size="lg" fullWidth disabled={isPending}>
         {isPending ? "Sending…" : "Send reset code"}
         {!isPending && <ArrowRight className="w-4 h-4" />}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Plus, Edit3, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import { Button, Card, EmptyState, LinkButton, Section } from "@/components/ui";
 import { adminListAll } from "@/lib/insights";
 import { togglePublishAction, deleteInsightAction } from "./actions";
 
@@ -39,12 +38,9 @@ export default async function AdminInsightsPage() {
             </span>
           </div>
         </div>
-        <Link
-          href="/admin/insights/new"
-          className="inline-flex items-center gap-2 px-5 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
-        >
+        <LinkButton href="/admin/insights/new" className="px-5 py-3">
           <Plus className="w-4 h-4" /> New insight
-        </Link>
+        </LinkButton>
       </div>
 
       {bySlug.size === 0 ? (
@@ -66,7 +62,7 @@ export default async function AdminInsightsPage() {
       ) : (
         <div className="space-y-4">
           {Array.from(bySlug.entries()).map(([slug, rows]) => (
-            <div key={slug} className="bg-white rounded-3xl shadow-xs overflow-hidden">
+            <Card key={slug} padding="none" className="overflow-hidden">
               <div className="px-5 py-3 border-b border-line bg-cream">
                 <div className="text-xs uppercase tracking-[0.2em] text-ink-muted">
                   {slug}
@@ -109,34 +105,34 @@ export default async function AdminInsightsPage() {
                           r.status,
                         )}
                       >
-                        <button
-                          type="submit"
-                          className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy transition-colors rounded-full"
-                        >
+                        <Button type="submit" variant="secondary" size="xs">
                           {r.status === "published" ? "Unpublish" : "Publish"}
-                        </button>
+                        </Button>
                       </form>
-                      <Link
+                      <LinkButton
                         href={`/admin/insights/${r.id}/edit`}
-                        className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy transition-colors inline-flex items-center gap-1 rounded-full"
+                        variant="secondary"
+                        size="xs"
+                        className="gap-1"
                       >
                         <Edit3 className="w-3 h-3" /> Edit
-                      </Link>
+                      </LinkButton>
                       <form
                         action={deleteInsightAction.bind(null, r.id, r.slug)}
                       >
-                        <button
+                        <Button
                           type="submit"
-                          className="text-xs px-3 py-1.5 border border-danger-line text-danger-ink hover:bg-danger-surface transition-colors rounded-full"
+                          variant="danger-outline"
+                          size="xs"
                         >
                           Delete
-                        </button>
+                        </Button>
                       </form>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

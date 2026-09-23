@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { ArrowRight } from "lucide-react";
 import { signInAction, type SignInState } from "@/app/(auth)/actions";
+import { Button } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 const INITIAL: SignInState = null;
@@ -66,14 +67,10 @@ export function LoginForm() {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full px-8 py-4 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
-      >
+      <Button type="submit" size="lg" fullWidth disabled={isPending}>
         {isPending ? tr("Signing in…") : tr("Sign in")}
         {!isPending && <ArrowRight className="w-4 h-4" />}
-      </button>
+      </Button>
     </form>
   );
 }

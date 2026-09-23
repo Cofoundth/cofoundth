@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
+import { Button, LinkButton } from "@/components/ui";
 import type { Insight } from "@/lib/insights";
 
 type ActionResult = { error: string } | undefined;
@@ -82,19 +82,19 @@ export function InsightForm({ initial, action, submitLabel }: Props) {
       )}
 
       <div className="flex items-center gap-3 pt-4 border-t border-line">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide"
-        >
+        <Button type="submit" disabled={isPending}>
           {isPending ? "Saving…" : submitLabel}
-        </button>
-        <Link
+        </Button>
+        {/* rounded-xl kept verbatim: this Cancel shipped at 14px while the
+            identical Cancel in MeetupForm shipped as a pill. Unifying them is a
+            design call, not a no-op migration. */}
+        <LinkButton
           href="/admin/insights"
-          className="px-6 py-3 border border-line hover:border-navy text-ink hover:text-navy text-sm tracking-wide rounded-xl"
+          variant="secondary"
+          className="rounded-xl"
         >
           Cancel
-        </Link>
+        </LinkButton>
       </div>
     </form>
   );

@@ -6,7 +6,7 @@ import { isAdminUser } from "@/lib/admin";
 import { adminGetById } from "@/lib/insights";
 import { InsightForm } from "../../InsightForm";
 import { updateInsightAction } from "../../actions";
-import { Section } from "@/components/ui";
+import { LinkButton, Section } from "@/components/ui";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -40,14 +40,15 @@ export default async function EditInsightPage({ params }: Props) {
           </p>
         </div>
         {insight.status === "published" && (
-          <Link
+          <LinkButton
             href={`/insights/${insight.slug}`}
-            className="text-xs px-3 py-1.5 border border-line hover:border-navy text-ink hover:text-navy rounded-full"
+            variant="secondary"
+            size="xs"
             target="_blank"
             rel="noopener"
           >
             View live →
-          </Link>
+          </LinkButton>
         )}
       </div>
 

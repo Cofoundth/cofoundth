@@ -13,6 +13,7 @@ import { HELP_TOPICS } from "@/lib/help-topics";
 import { BUILDING_SINCE_LABELS } from "@/lib/matching";
 import { ProjectImagesField } from "@/components/ProjectImagesField";
 import { LONG_TEXT_MAX } from "@/lib/limits";
+import { Button, ToggleChip } from "@/components/ui";
 
 // ---- Option lists ---------------------------------------------------
 
@@ -321,11 +322,10 @@ export function OnboardingForm({ initial }: Props) {
                 {tr(stepMissing(step, data))}
               </span>
             )}
-            <button
-              type="button"
+            <Button
+              size="lg"
               onClick={next}
               disabled={!stepValid() || isPending}
-              className="px-8 py-4 bg-navy hover:bg-navy-dark disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2"
             >
               {step === STEPS.length - 1
                 ? isPending
@@ -333,7 +333,7 @@ export function OnboardingForm({ initial }: Props) {
                   : tr("Complete profile")
                 : tr("Continue")}
               {!isPending && <ArrowRight className="w-4 h-4" />}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -1067,9 +1067,9 @@ function StepPitch({
             .map((t) => {
               const selected = data.status_tags.includes(t.v);
               return (
-                <button
+                <ToggleChip
                   key={t.v}
-                  type="button"
+                  selected={selected}
                   onClick={() => {
                     set(
                       "status_tags",
@@ -1078,14 +1078,9 @@ function StepPitch({
                         : [...data.status_tags, t.v].slice(0, 5),
                     );
                   }}
-                  className={`px-3 py-1.5 text-sm tracking-wide border transition-colors ${
-                    selected
-                      ? "bg-navy border-navy text-white"
-                      : "bg-white border-line text-ink hover:border-navy"
-                  }`}
                 >
                   {tr(t.en)}
-                </button>
+                </ToggleChip>
               );
             })}
         </div>
@@ -1112,18 +1107,18 @@ function ChoiceButton({
   onClick: () => void;
   compact?: boolean;
 }) {
+  // `md` is px-4 py-2 and `lg` px-4 py-3 — the two paddings this button always
+  // had. The removable chips pass their ✕ as text rather than ToggleChip's
+  // `removable`, which renders a <span>: a second flex CHILD would pick up the
+  // 1.5 gap, where two adjacent text nodes stay one anonymous flex item.
   return (
-    <button
-      type="button"
+    <ToggleChip
+      selected={selected}
+      size={compact ? "md" : "lg"}
       onClick={onClick}
-      className={`${compact ? "px-4 py-2" : "px-4 py-3"} text-sm tracking-wide transition-colors border ${
-        selected
-          ? "bg-navy border-navy text-white"
-          : "bg-white border-line text-ink hover:border-navy"
-      }`}
     >
       {children}
-    </button>
+    </ToggleChip>
   );
 }
 

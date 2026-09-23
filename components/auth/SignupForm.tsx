@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { ArrowRight, Check, Eye, EyeOff, Mail, X } from "lucide-react";
 import { signupAction, type SignupState } from "@/app/(auth)/actions";
+import { Button } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 
 const INITIAL: SignupState = { step: "credentials" };
@@ -238,14 +239,15 @@ export function SignupForm() {
         </div>
       )}
 
-      <button
+      <Button
         type="submit"
+        size="lg"
+        fullWidth
         disabled={isPending || !allRulesPass || !passwordsMatch}
-        className="w-full px-8 py-4 bg-navy hover:bg-navy-dark disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-2"
       >
         {isPending ? tr("Creating account…") : tr("Continue")}
         {!isPending && <ArrowRight className="w-4 h-4" />}
-      </button>
+      </Button>
     </form>
   );
 }

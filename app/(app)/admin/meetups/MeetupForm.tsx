@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useState } from "react";
-import { Input, Textarea } from "@/components/ui";
+import { Button, Input, LinkButton, Textarea } from "@/components/ui";
 import { toBangkokInput, type Meetup } from "@/lib/meetups";
 
 type ActionResult = { error: string } | undefined;
@@ -132,19 +131,12 @@ export function MeetupForm({ initial, action, submitLabel }: Props) {
       )}
 
       <div className="flex items-center gap-3 pt-4 border-t border-line">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="px-6 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide"
-        >
+        <Button type="submit" disabled={isPending}>
           {isPending ? "Saving…" : submitLabel}
-        </button>
-        <Link
-          href="/admin/meetups"
-          className="px-6 py-3 border border-line rounded-full hover:border-navy text-ink hover:text-navy text-sm tracking-wide"
-        >
+        </Button>
+        <LinkButton href="/admin/meetups" variant="secondary">
           Cancel
-        </Link>
+        </LinkButton>
       </div>
     </form>
   );

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useT } from "@/lib/i18n-client";
-import { Button, EmptyState } from "@/components/ui";
+import { Button, EmptyState, ToggleChip, cardClasses } from "@/components/ui";
 import { Paginated } from "@/components/Paginated";
 import { UserRow, type AdminUser } from "./UserRow";
 
@@ -68,18 +68,15 @@ export function UsersAdmin({
         />
         <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
-            <button
+            <ToggleChip
               key={f.key}
-              type="button"
+              selected={filter === f.key}
+              size="xs-wide"
+              tracking={false}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 text-xs border transition-colors ${
-                filter === f.key
-                  ? "bg-navy border-navy text-white"
-                  : "bg-white border-line text-ink hover:border-navy"
-              }`}
             >
               {f.label}
-            </button>
+            </ToggleChip>
           ))}
         </div>
       </div>
@@ -109,7 +106,10 @@ export function UsersAdmin({
         <Paginated
           key={`${filter}:${query}`}
           pageSize={20}
-          className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden"
+          className={cardClasses({
+            padding: "none",
+            className: "divide-y divide-line overflow-hidden",
+          })}
         >
           {filtered.map((u) => (
             <UserRow key={u.id} user={u} selfId={selfId} />

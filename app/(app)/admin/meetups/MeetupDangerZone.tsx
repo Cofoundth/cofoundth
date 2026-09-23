@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Ban, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui";
 import { cancelMeetupAction, deleteMeetupAction } from "./actions";
 
 // Destructive admin controls, kept off the main form so a stray Enter can't fire
@@ -46,23 +47,25 @@ export function MeetupDangerZone({
       </div>
       <div className="flex flex-wrap gap-3">
         {status !== "cancelled" && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onCancel}
             disabled={isPending}
-            className="px-4 py-2 border border-line hover:border-danger-line text-ink hover:text-danger-ink disabled:opacity-50 text-sm tracking-wide inline-flex items-center gap-2"
+            className="gap-2 hover:border-danger-line hover:text-danger-ink"
           >
             <Ban className="w-4 h-4" /> Cancel meetup
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
+        <Button
+          variant="danger-outline"
+          size="sm"
           onClick={onDelete}
           disabled={isPending}
-          className="px-4 py-2 border border-danger-line text-danger-ink hover:bg-danger-surface disabled:opacity-50 text-sm tracking-wide inline-flex items-center gap-2"
+          className="gap-2"
         >
           <Trash2 className="w-4 h-4" /> Delete meetup
-        </button>
+        </Button>
       </div>
       {error && <p className="mt-3 text-xs text-danger-ink">{error}</p>}
     </div>

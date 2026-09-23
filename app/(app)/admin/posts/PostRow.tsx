@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { adminSetPostHidden, adminDeletePost } from "@/lib/admin-actions";
+import { Button } from "@/components/ui";
 
 export type AdminPost = {
   id: string;
@@ -14,8 +15,9 @@ export type AdminPost = {
   createdAt: string;
 };
 
-const btn =
-  "px-2 py-1 text-[11px] border border-line text-ink hover:border-navy disabled:opacity-50 transition-colors";
+// See UserRow: px-2 py-1 / 11px is off both scales, so the pixels ride along
+// as a className override and cn() merges them over the size.
+const DENSE = "px-2 py-1 text-[11px]";
 
 export function PostRow({ post }: { post: AdminPost }) {
   const [pending, start] = useTransition();
@@ -46,38 +48,46 @@ export function PostRow({ post }: { post: AdminPost }) {
           </Link>
         </div>
         <div className="flex flex-wrap gap-1.5 justify-end shrink-0">
-          <button
+          <Button
+            variant="secondary"
+            size="xs"
+            className={DENSE}
             disabled={pending}
             onClick={() => run(() => adminSetPostHidden(post.id, !post.hidden))}
-            className={btn}
           >
             {post.hidden ? "Unhide" : "Hide"}
-          </button>
+          </Button>
           {confirmDelete ? (
             <>
-              <button
+              <Button
+                variant="danger"
+                size="xs"
+                className={DENSE}
                 disabled={pending}
                 onClick={() => run(() => adminDeletePost(post.id))}
-                className="px-2 py-1 text-[11px] bg-danger-ink hover:bg-danger-ink-dark text-white disabled:opacity-50"
               >
                 Confirm
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="xs"
+                className={DENSE}
                 disabled={pending}
                 onClick={() => setConfirmDelete(false)}
-                className={btn}
               >
                 Cancel
-              </button>
+              </Button>
             </>
           ) : (
-            <button
+            <Button
+              variant="danger-outline"
+              size="xs"
+              className={DENSE}
               disabled={pending}
               onClick={() => setConfirmDelete(true)}
-              className="px-2 py-1 text-[11px] border border-danger-line text-danger-ink hover:bg-danger-surface disabled:opacity-50 rounded-full"
             >
               Delete
-            </button>
+            </Button>
           )}
         </div>
       </div>

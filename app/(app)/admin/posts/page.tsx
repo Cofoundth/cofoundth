@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState, Section } from "@/components/ui";
+import { EmptyState, Section, cardClasses } from "@/components/ui";
 import { Paginated } from "@/components/Paginated";
 import { PostRow, type AdminPost } from "./PostRow";
 
@@ -76,7 +76,10 @@ export default async function AdminPostsPage() {
       ) : (
         <Paginated
           pageSize={20}
-          className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden"
+          className={cardClasses({
+            padding: "none",
+            className: "divide-y divide-line overflow-hidden",
+          })}
         >
           {posts.map((p) => (
             <PostRow key={p.id} post={p} />

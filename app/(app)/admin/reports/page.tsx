@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState, Section } from "@/components/ui";
+import { Card, EmptyState, Section } from "@/components/ui";
 import { Paginated } from "@/components/Paginated";
 import { ReportActions } from "./ReportActions";
 import { tServer, getLocale } from "@/lib/i18n-server";
@@ -87,11 +87,11 @@ export default async function AdminReportsPage() {
       </div>
 
       {error?.message?.includes("reports") ? (
-        <div className="bg-white p-6 text-sm rounded-3xl shadow-xs">
+        <Card className="text-sm">
           Reports table not ready. Apply{" "}
           <code>supabase/migrations/0002_community_forum.sql</code> in
           Supabase SQL Editor.
-        </div>
+        </Card>
       ) : !reports?.length ? (
         // KIND A — and the good kind of empty: an empty moderation queue is the
         // desired state, so it keeps its existing copy and gets no CTA.
@@ -103,10 +103,7 @@ export default async function AdminReportsPage() {
       ) : (
         <Paginated pageSize={15} className="space-y-3">
           {reports.map((r) => (
-            <div
-              key={r.id as string}
-              className="bg-white p-5 rounded-3xl shadow-xs"
-            >
+            <Card key={r.id as string} padding="sm">
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div className="flex items-center gap-3">
                   <span className="text-xs uppercase tracking-[0.2em] text-gold-ink border border-line px-2 py-0.5 rounded-full">
@@ -167,7 +164,7 @@ export default async function AdminReportsPage() {
                   canRemove={r.target_kind !== "profile"}
                 />
               )}
-            </div>
+            </Card>
           ))}
         </Paginated>
       )}

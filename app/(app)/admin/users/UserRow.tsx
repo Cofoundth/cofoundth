@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Avatar } from "@/components/Avatar";
+import { Button } from "@/components/ui";
 import {
   adminSetUserSuspended,
   adminSetUserVerified,
@@ -23,8 +24,11 @@ export type AdminUser = {
   isBot: boolean;
 };
 
-const btn =
-  "px-2 py-1 text-[11px] border border-line text-ink hover:border-navy disabled:opacity-50 transition-colors";
+// px-2 py-1 / 11px is off both scales (the smallest Button size is
+// px-3 py-1.5 / text-xs); per the sweep's rule the exact pixels stay as a
+// className and cn() merges them over the size. Neither button sits in a
+// <form>, so Button's implicit type="button" changes nothing.
+const DENSE = "px-2 py-1 text-[11px]";
 
 function Badge({ tone, children }: { tone: "gold" | "red" | "muted"; children: React.ReactNode }) {
   const cls =
@@ -73,52 +77,64 @@ export function UserRow({ user, selfId }: { user: AdminUser; selfId: string }) {
         <span className="text-xs text-ink-muted shrink-0">You</span>
       ) : (
         <div className="flex flex-wrap gap-1.5 sm:justify-end shrink-0">
-          <button
+          <Button
+            variant="secondary"
+            size="xs"
+            className={DENSE}
             disabled={pending}
             onClick={() => run(() => adminSetUserSuspended(user.id, !user.suspended))}
-            className={btn}
           >
             {user.suspended ? "Unhide" : "Hide"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="xs"
+            className={DENSE}
             disabled={pending}
             onClick={() => run(() => adminSetUserVerified(user.id, !user.verified))}
-            className={btn}
           >
             {user.verified ? "Unverify" : "Verify"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="xs"
+            className={DENSE}
             disabled={pending}
             onClick={() => run(() => adminSetUserAdmin(user.id, !user.isAdmin))}
-            className={btn}
           >
             {user.isAdmin ? "Remove admin" : "Make admin"}
-          </button>
+          </Button>
           {confirmDelete ? (
             <>
-              <button
+              <Button
+                variant="danger"
+                size="xs"
+                className={DENSE}
                 disabled={pending}
                 onClick={() => run(() => adminDeleteUser(user.id))}
-                className="px-2 py-1 text-[11px] bg-danger-ink hover:bg-danger-ink-dark text-white disabled:opacity-50"
               >
                 Confirm delete
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="xs"
+                className={DENSE}
                 disabled={pending}
                 onClick={() => setConfirmDelete(false)}
-                className={btn}
               >
                 Cancel
-              </button>
+              </Button>
             </>
           ) : (
-            <button
+            <Button
+              variant="danger-outline"
+              size="xs"
+              className={DENSE}
               disabled={pending}
               onClick={() => setConfirmDelete(true)}
-              className="px-2 py-1 text-[11px] border border-danger-line text-danger-ink hover:bg-danger-surface disabled:opacity-50 rounded-full"
             >
               Delete
-            </button>
+            </Button>
           )}
         </div>
       )}

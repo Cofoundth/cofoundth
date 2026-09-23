@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import { Button, LinkButton } from "@/components/ui";
 
 export default function GlobalError({
   error,
@@ -25,18 +25,14 @@ export default function GlobalError({
           An unexpected error occurred. Try again, or head back home.
         </p>
         <div className="flex gap-3 justify-center">
-          <button
-            onClick={reset}
-            className="px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors"
-          >
-            Try again
-          </button>
-          <Link
-            href="/"
-            className="px-6 py-3 border border-line hover:border-navy text-ink text-sm tracking-wide transition-colors rounded-xl"
-          >
+          <Button onClick={reset}>Try again</Button>
+          {/* rounded-xl, not the primitive's pill: at HEAD this link rendered
+              at 14px next to a pilled sibling (@layer base rounds <button>, not
+              the <a> a Link renders). Preserved so the migration stays a pixel
+              no-op; unifying the pair is a design call, not a sweep. */}
+          <LinkButton variant="secondary" href="/" className="rounded-xl">
             Back to home
-          </Link>
+          </LinkButton>
         </div>
         {error.digest && (
           <p className="text-xs text-ink-muted mt-8 font-mono">

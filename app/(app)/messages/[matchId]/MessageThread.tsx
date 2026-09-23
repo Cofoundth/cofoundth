@@ -11,6 +11,7 @@ import {
 } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { LinkedText } from "@/components/LinkedText";
+import { Card } from "@/components/ui";
 import { useLocale, useT } from "@/lib/i18n-client";
 import {
   editMessageAction,
@@ -644,14 +645,15 @@ function UnsendDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 px-4 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div
+      <Card
+        padding="responsive"
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-3xl bg-white p-6 text-left shadow-xs focus:outline-none lg:p-8"
+        className="w-full max-w-md text-left focus:outline-none"
       >
         <h2 id={titleId} className="text-d1">
           {tr("Unsend this message?")}
@@ -685,7 +687,7 @@ function UnsendDialog({
             {isPending ? tr("Unsending…") : tr("Unsend")}
           </button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

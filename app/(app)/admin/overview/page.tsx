@@ -5,7 +5,7 @@ import { isAdminUser } from "@/lib/admin";
 import { AdminTabs } from "@/components/AdminTabs";
 import { TrendTabs } from "@/components/TrendTabs";
 import { msAgoISO } from "@/lib/time";
-import { Section } from "@/components/ui";
+import { Card, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -120,7 +120,7 @@ export default async function AdminOverviewPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((c) => (
-          <div key={c.label} className="bg-white p-5 rounded-3xl shadow-xs">
+          <Card key={c.label} padding="sm">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-1">
               {c.label}
             </div>
@@ -128,11 +128,11 @@ export default async function AdminOverviewPage() {
               <span className="font-serif text-d2 text-navy">{c.total}</span>
               <span className="text-xs text-gold-ink">+{c.week} this week</span>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
-      <div className="bg-white p-5 mt-4 rounded-3xl shadow-xs">
+      <Card padding="sm" className="mt-4">
         <div className="text-xs uppercase tracking-[0.2em] text-gold-ink mb-4">
           Daily activity · last {DAYS} days
         </div>
@@ -144,7 +144,7 @@ export default async function AdminOverviewPage() {
             color: c.color,
           }))}
         />
-      </div>
+      </Card>
       <p className="text-[11px] text-ink-muted mt-2">
         It&rsquo;ll fill in as activity grows.
       </p>

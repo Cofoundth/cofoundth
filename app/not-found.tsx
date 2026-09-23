@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/ui";
 
 export default function NotFound() {
   return (
@@ -11,12 +11,7 @@ export default function NotFound() {
         <p className="text-ink mb-8 leading-relaxed">
           The page you&rsquo;re looking for doesn&rsquo;t exist or has moved.
         </p>
-        <Link
-          href="/"
-          className="inline-block px-6 py-3 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide transition-colors rounded-full"
-        >
-          Back to home
-        </Link>
+        <LinkButton href="/">Back to home</LinkButton>
       </div>
     </div>
   );

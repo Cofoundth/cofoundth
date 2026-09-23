@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState, Section } from "@/components/ui";
+import { Card, EmptyState, Section } from "@/components/ui";
 import { Avatar } from "@/components/Avatar";
 import { VerifyToggle } from "./VerifyToggle";
 
@@ -105,7 +105,7 @@ function VerificationGroup({
       {profiles.length === 0 ? (
         <EmptyState dense padding="lg" description={emptyMessage} />
       ) : (
-        <div className="bg-white divide-y divide-line rounded-3xl shadow-xs overflow-hidden">
+        <Card padding="none" className="divide-y divide-line overflow-hidden">
           {profiles.map((p) => (
             <div
               key={p.id as string}
@@ -162,7 +162,7 @@ function VerificationGroup({
               />
             </div>
           ))}
-        </div>
+        </Card>
       )}
     </section>
   );

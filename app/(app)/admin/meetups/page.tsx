@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import { Card, EmptyState, LinkButton, Section } from "@/components/ui";
 import { meetupWhenParts, type Meetup } from "@/lib/meetups";
 import { isPast } from "@/lib/time";
 
@@ -58,12 +58,9 @@ export default async function AdminMeetupsPage() {
 
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-d2 mb-2">Meetups</h1>
-        <Link
-          href="/admin/meetups/new"
-          className="px-5 py-2.5 bg-navy hover:bg-navy-dark text-white text-sm tracking-wide inline-flex items-center gap-2"
-        >
+        <LinkButton href="/admin/meetups/new" className="px-5 py-2.5">
           <Plus className="w-4 h-4" /> New meetup
-        </Link>
+        </LinkButton>
       </div>
 
       {meetups.length === 0 ? (
@@ -82,7 +79,7 @@ export default async function AdminMeetupsPage() {
           }
         />
       ) : (
-        <div className="rounded-3xl shadow-xs overflow-hidden divide-y divide-line bg-white">
+        <Card padding="none" className="overflow-hidden divide-y divide-line">
           {meetups.map((m) => {
             const when = meetupWhenParts(m.starts_at);
             const past = isPast(m.starts_at);
@@ -120,7 +117,7 @@ export default async function AdminMeetupsPage() {
               </Link>
             );
           })}
-        </div>
+        </Card>
       )}
     </Section>
   );
