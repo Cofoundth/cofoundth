@@ -12,7 +12,8 @@ import { Avatar } from "@/components/Avatar";
 import { MessageComposer } from "./MessageComposer";
 import { MessageThread } from "./MessageThread";
 import { ConversationActions } from "./ConversationActions";
-import { ConversationLayout, NextStepsToggle } from "./ConversationLayout";
+import { ConversationLayout } from "./ConversationLayout";
+import { CardChip, CardPill } from "@/components/ui/CardParts";
 import { NextStepsPanel } from "./NextStepsPanel";
 import { ReadOnMount } from "./ReadOnMount";
 
@@ -90,85 +91,88 @@ export default async function MessagePage({ params }: Props) {
         <>
           <ReadOnMount matchId={matchId} />
           <header className="border-b border-line bg-white px-6 py-4">
-            <Link
-              href="/matches"
-              className="text-xs text-ink-muted hover:text-navy mb-3 inline-flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-3 h-3" /> {t("All matches", locale)}
-            </Link>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* The surface is full-bleed; the ROW inside it is capped so the
+                header, the thread and the composer share one left edge. */}
+            <div className="mx-auto w-full max-w-[1120px]">
               <Link
-                href={`/profile/${otherId}`}
-                className="flex items-center gap-4 group min-w-0"
+                href="/matches"
+                className="text-xs text-ink-muted hover:text-navy mb-3 inline-flex items-center gap-1.5"
               >
-                <Avatar
-                  name={other?.full_name as string}
-                  url={other?.photo_url as string | null}
-                  size="md"
-                />
-                <div className="min-w-0">
-                  <div className="font-serif text-xl text-navy group-hover:text-gold-ink truncate">
-                    {otherName}
-                  </div>
-                  <div className="text-xs text-ink-muted truncate">
-                    {((other?.i_am as string[] | null) ?? []).length > 0 &&
-                      ((other?.i_am as string[] | null) ?? [])
-                        .map((r) => t(ROLE_LABELS[r], locale))
-                        .join(" · ")}
-                    {((other?.intent as string[] | null) ?? []).length > 0 && (
-                      <>
-                        {" "}
-                        &middot;{" "}
-                        <span className="text-gold-ink">
-                          {((other?.intent as string[] | null) ?? [])
-                            .map((x) => t(INTENT_LABELS[x], locale))
-                            .join(" · ")}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
+                <ArrowLeft className="w-3 h-3" /> {t("All matches", locale)}
               </Link>
-              {/* The panel toggle sits at the right end of the header, against
-                  the edge the panel is attached to. */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <Link
+                  href={`/profile/${otherId}`}
+                  className="flex items-center gap-4 group min-w-0"
+                >
+                  <Avatar
+                    name={other?.full_name as string}
+                    url={other?.photo_url as string | null}
+                    size="md"
+                  />
+                  <div className="min-w-0">
+                    <div className="font-serif text-xl text-navy group-hover:text-gold-ink truncate">
+                      {otherName}
+                    </div>
+                    {/* Chips, not a dot-separated run: this is the same
+                        who-are-they row the directory cards show, so it uses
+                        the same vocabulary — CardChip per role, one CardPill
+                        for the intent. */}
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      {((other?.intent as string[] | null) ?? [])
+                        .map((x) => t(INTENT_LABELS[x], locale))
+                        .filter(Boolean)
+                        .slice(0, 1)
+                        .map((label) => (
+                          <CardPill key={label}>{label}</CardPill>
+                        ))}
+                      {((other?.i_am as string[] | null) ?? [])
+                        .map((r) => t(ROLE_LABELS[r], locale))
+                        .filter(Boolean)
+                        .map((label) => (
+                          <CardChip key={label}>{label}</CardChip>
+                        ))}
+                    </div>
+                  </div>
+                </Link>
                 <ConversationActions
                   matchId={matchId}
                   myName={myName}
                   otherName={otherName}
                   otherEmail={(otherContact?.email as string | null) ?? null}
                 />
-                <NextStepsToggle />
               </div>
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto bg-cream px-6 py-8 space-y-4">
-            <MessageThread
-              matchId={matchId}
-              currentUserId={user.id}
-              initialMessages={(messages ?? []).map((m) => ({
-                id: m.id as string,
-                sender_id: m.sender_id as string,
-                content: m.content as string,
-                read_at: (m.read_at as string | null) ?? null,
-                created_at: m.created_at as string,
-              }))}
-              emptyState={
-                <div className="text-center py-12">
-                  <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
-                    {t("Mutual interest unlocked", locale)}
+          <div className="flex-1 overflow-y-auto bg-cream px-6 py-8">
+            <div className="mx-auto w-full max-w-[1120px] space-y-4">
+              <MessageThread
+                matchId={matchId}
+                currentUserId={user.id}
+                initialMessages={(messages ?? []).map((m) => ({
+                  id: m.id as string,
+                  sender_id: m.sender_id as string,
+                  content: m.content as string,
+                  read_at: (m.read_at as string | null) ?? null,
+                  created_at: m.created_at as string,
+                }))}
+                emptyState={
+                  <div className="text-center py-12">
+                    <div className="text-xs uppercase tracking-[0.25em] text-gold-ink mb-3">
+                      {t("Mutual interest unlocked", locale)}
+                    </div>
+                    <p className="text-ink leading-relaxed max-w-md mx-auto">
+                      {t(
+                        "You both expressed interest. This is the start of your conversation — be specific, be considered.",
+                        locale,
+                      )}
+                    </p>
+                    <SuggestedOpeners locale={locale} />
                   </div>
-                  <p className="text-ink leading-relaxed max-w-md mx-auto">
-                    {t(
-                      "You both expressed interest. This is the start of your conversation — be specific, be considered.",
-                      locale,
-                    )}
-                  </p>
-                  <SuggestedOpeners locale={locale} />
-                </div>
-              }
-            />
+                }
+              />
+            </div>
           </div>
 
           <MessageComposer matchId={matchId} />

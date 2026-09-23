@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useSyncExternalStore,
-  type ReactNode,
-} from "react";
+import { useCallback, useSyncExternalStore, type ReactNode } from "react";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
 
@@ -71,10 +65,6 @@ function setCollapsed(next: boolean): void {
   for (const l of listeners) l();
 }
 
-type CollapseState = { collapsed: boolean; toggle: () => void };
-
-const CollapseContext = createContext<CollapseState | null>(null);
-
 export function ConversationLayout({
   conversation,
   aside,
@@ -82,70 +72,74 @@ export function ConversationLayout({
   conversation: ReactNode;
   aside: ReactNode;
 }) {
+  const tr = useT();
   const collapsed = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
 
   const toggle = useCallback(() => {
     setCollapsed(!snapshot());
   }, []);
+  const label = collapsed ? tr("Show quick replies") : tr("Hide quick replies");
+  const Icon = collapsed ? PanelRightOpen : PanelRightClose;
 
   return (
-    <CollapseContext.Provider value={{ collapsed, toggle }}>
+    <>
       {/* 100dvh, not 100vh: on mobile Safari/Chrome `vh` is the *largest*
           viewport, so with the URL bar showing, the last 60-100px of this
           column — the composer — sat underneath the browser chrome and was
           unreachable. `dvh` tracks the visible viewport and keeps the composer
           on screen. */}
-      <div className="max-w-[1120px] mx-auto h-[calc(100dvh-4rem)] lg:h-dvh grid xl:grid-cols-12">
+      {/* FULL-BLEED, deliberately. Chat is exempt from the two page widths
+          (CLAUDE.md: "Reading/article, chat — exempt"), and capping the whole
+          view at 1120 left the white header, the cream thread and the panel
+          floating as an island with cream gutters either side. The SURFACES
+          now fill the content area; the CONTENT inside them is capped at 1120
+          (header row, thread, composer) so line lengths are unchanged. */}
+      <div className="relative h-[calc(100dvh-4rem)] lg:h-dvh flex">
         <div
-          className={`flex flex-col h-full min-h-0 border-line ${
-            collapsed ? "xl:col-span-12" : "xl:col-span-8 xl:border-r"
+          className={`flex flex-1 min-w-0 flex-col h-full min-h-0 border-line ${
+            collapsed ? "" : "xl:border-r"
           }`}
         >
           {conversation}
         </div>
 
-        {/* Desktop only, in both states: below xl the grid is one column and
-            the panel has never shown, so the toggle is hidden there too. The
-            column's border is `xl:border-r` for the same reason — a rule with
-            nothing to its right is just a stray line. */}
+        {/* Desktop only, in both states: below xl the panel has never shown,
+            so the toggle is hidden there too. The column's border is
+            `xl:border-r` for the same reason — a rule with nothing to its
+            right is just a stray line. A FIXED 360px beats a fraction: on a
+            wide monitor a 4/12 panel would grow to 480px of quick replies
+            while the conversation is what deserves the room. No radius now
+            that it runs to the edge of the viewport. */}
         <aside
           id={PANEL_ID}
           className={
             collapsed
               ? "hidden"
-              : "hidden xl:flex xl:col-span-4 flex-col bg-white overflow-y-auto p-6 rounded-xl"
+              : "hidden xl:flex xl:w-[360px] shrink-0 flex-col bg-white overflow-y-auto p-6"
           }
         >
           {aside}
         </aside>
+
+        {/* ON THE SEAM, not in the header: an unlabelled icon in a row of
+            action buttons says nothing about WHAT it acts on. Straddling the
+            divider it points at the panel it opens — the handle every editor
+            puts there. The 12px overlap lands inside the panel's p-6 padding,
+            so it never sits on content. */}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={!collapsed}
+          aria-controls={PANEL_ID}
+          aria-label={label}
+          title={label}
+          className={`hidden xl:grid absolute top-1/2 z-20 h-8 w-8 -translate-y-1/2 place-items-center rounded-full border border-line bg-white text-ink-muted shadow-xs transition-colors hover:border-navy hover:text-navy ${
+            collapsed ? "right-3" : "right-[360px] translate-x-1/2"
+          }`}
+        >
+          <Icon className="w-4 h-4" strokeWidth={1.5} />
+        </button>
       </div>
-    </CollapseContext.Provider>
-  );
-}
-
-// Lives in the conversation header next to ConversationActions — the right
-// end of the conversation column, i.e. the edge the panel is attached to, so
-// the control sits where the thing it controls does.
-export function NextStepsToggle() {
-  const tr = useT();
-  const ctx = useContext(CollapseContext);
-  if (!ctx) return null;
-
-  const label = ctx.collapsed
-    ? tr("Show quick replies")
-    : tr("Hide quick replies");
-  const Icon = ctx.collapsed ? PanelRightOpen : PanelRightClose;
-
-  return (
-    <button
-      type="button"
-      onClick={ctx.toggle}
-      aria-expanded={!ctx.collapsed}
-      aria-controls={PANEL_ID}
-      className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 border border-line bg-white hover:border-navy text-xs text-ink tracking-wide transition-colors rounded-full"
-    >
-      <Icon className="w-3.5 h-3.5" strokeWidth={1.5} />
-      {label}
-    </button>
+    </>
   );
 }

@@ -103,44 +103,48 @@ export function MessageComposer({ matchId }: { matchId: string }) {
       className="border-t border-line bg-white p-4 rounded-xl"
     >
       <input type="hidden" name="matchId" value={matchId} />
-      <div className="flex gap-3 items-end">
-        <textarea
-          ref={textareaRef}
-          name="content"
-          rows={MIN_ROWS}
-          maxLength={4000}
-          required
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={tr("Write a message…")}
-          className="flex-1 px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
-          onKeyDown={(e) => {
-            // Enter sends; Shift+Enter inserts a newline.
-            // Don't submit if the user is composing IME (Thai, etc.) text.
-            if (
-              e.key === "Enter" &&
-              !e.shiftKey &&
-              !e.nativeEvent.isComposing
-            ) {
-              e.preventDefault();
-              formRef.current?.requestSubmit();
-            }
-          }}
-        />
-        <button
-          type="submit"
-          disabled={isPending || draft.trim().length === 0}
-          className="px-5 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2 shrink-0"
-        >
-          <Send className="w-4 h-4" />
-          {isPending ? tr("Sending…") : tr("Send")}
-        </button>
-      </div>
-      {state?.error && (
-        <div className="mt-2 text-xs text-danger-ink">{state.error}</div>
-      )}
-      <div className="text-xs text-ink-muted mt-2">
-        {tr("Enter to send · Shift+Enter for new line")}
+      {/* Capped to match the thread above: the form's surface is full-bleed,
+          the box lines up with the messages. */}
+      <div className="mx-auto w-full max-w-[1120px]">
+        <div className="flex gap-3 items-end">
+          <textarea
+            ref={textareaRef}
+            name="content"
+            rows={MIN_ROWS}
+            maxLength={4000}
+            required
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={tr("Write a message…")}
+            className="flex-1 px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
+            onKeyDown={(e) => {
+              // Enter sends; Shift+Enter inserts a newline.
+              // Don't submit if the user is composing IME (Thai, etc.) text.
+              if (
+                e.key === "Enter" &&
+                !e.shiftKey &&
+                !e.nativeEvent.isComposing
+              ) {
+                e.preventDefault();
+                formRef.current?.requestSubmit();
+              }
+            }}
+          />
+          <button
+            type="submit"
+            disabled={isPending || draft.trim().length === 0}
+            className="px-5 py-3 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white text-sm tracking-wide transition-colors inline-flex items-center gap-2 shrink-0"
+          >
+            <Send className="w-4 h-4" />
+            {isPending ? tr("Sending…") : tr("Send")}
+          </button>
+        </div>
+        {state?.error && (
+          <div className="mt-2 text-xs text-danger-ink">{state.error}</div>
+        )}
+        <div className="text-xs text-ink-muted mt-2">
+          {tr("Enter to send · Shift+Enter for new line")}
+        </div>
       </div>
     </form>
   );
