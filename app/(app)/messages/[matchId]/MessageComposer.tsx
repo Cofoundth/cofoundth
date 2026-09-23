@@ -18,7 +18,14 @@ const INITIAL: SendMessageState = null;
 // a fixed-height column (h-dvh) and the composer's height comes out of the
 // thread's: at the shortest screen we support this leaves the thread ~47% of
 // the column, still comfortably scrollable.
-const MIN_ROWS = 3;
+//
+// 2 at rest, not 3: a textarea fills from the top, so a three-line empty box
+// strands the caret with a gap under it. The box being big enough is the
+// GROWTH's job (and the full-bleed column's — it is 1028px wide now), not the
+// resting height's. The Send button stays `items-end` for the same reason: it
+// belongs beside the line you are typing, and centring it would leave it
+// floating mid-box once a message runs long.
+const MIN_ROWS = 2;
 const MAX_ROWS = 8;
 
 export const QUICK_REPLY_EVENT = "cofoundee:quick-reply";
