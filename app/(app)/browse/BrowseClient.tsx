@@ -1319,7 +1319,21 @@ function ProfileCard({
                   would only eat into a label that can wrap in Thai, and
                   text-center centres each wrapped line the way the old
                   `text-center` block did (justify-center alone centres the
-                  block, not its lines). */}
+                  block, not its lines).
+
+                  ONE DISCLOSED VERTICAL CHANGE, kept deliberately. At 5c563c9
+                  this was a bare <a> with no display utility, so the flex
+                  parent blockified it to `display:block` and its single line
+                  sat at the TOP of the stretched pill, under py-2. LinkButton's
+                  BASE adds `inline-flex items-center`, which centres it.
+                  Measured on /browse: identical (text top 9.6px) while both
+                  buttons are one line, and +10px (9.6 -> 19.6) the moment the
+                  sibling "Express Interest" wraps to two lines and the row
+                  stretches. Kept rather than reverted because the OLD
+                  rendering is the wrong one — top-aligned text in a pill that
+                  has stretched to match its neighbour looks broken, and both
+                  halves of the row now centre consistently. Same call, same
+                  reason, as the company card in companies/CompaniesClient. */}
               <LinkButton
                 href={fullProfileHref}
                 size="sm"
