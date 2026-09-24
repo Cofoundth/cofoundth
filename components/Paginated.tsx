@@ -31,7 +31,7 @@ export function Paginated({
             size="xs"
             disabled={p === 0}
             onClick={() => setPage(p - 1)}
-            className="tracking-wide"
+            className="text-sm tracking-wide"
           >
             ← Prev
           </Button>
@@ -43,7 +43,7 @@ export function Paginated({
             size="xs"
             disabled={p >= pages - 1}
             onClick={() => setPage(p + 1)}
-            className="tracking-wide"
+            className="text-sm tracking-wide"
           >
             Next →
           </Button>

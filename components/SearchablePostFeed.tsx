@@ -205,7 +205,7 @@ export function SearchablePostFeed({
             size="sm"
             onClick={() => void loadMore()}
             disabled={loadingMore}
-            className="px-5 bg-white"
+            className="px-5 bg-white rounded-xl"
           >
             {loadingMore ? tr("Loading…") : tr("Load more")}
           </Button>

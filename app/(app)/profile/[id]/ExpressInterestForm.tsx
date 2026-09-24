@@ -170,12 +170,17 @@ export function ExpressInterestForm({
         </div>
       )}
 
+      {/* rounded-xl is NOT redundant with the @layer base pill: a call-site
+          utility sits in the `utilities` layer, which outranks `base`. This
+          Cancel shipped with an explicit rounded-xl (14px) at 5c563c9 while its
+          submit sibling had none and pilled — the asymmetry is ORIGINAL, and
+          re-pilling Cancel to "match" would be a redesign, not a migration. */}
       <div className="flex gap-3">
         <Button
           variant="secondary"
           onClick={() => setOpen(false)}
           disabled={isPending}
-          className="flex-1"
+          className="flex-1 rounded-xl"
         >
           {tr("Cancel")}
         </Button>

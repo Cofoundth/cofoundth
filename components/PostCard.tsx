@@ -357,7 +357,7 @@ export function PostCard({
                 type="submit"
                 size="sm"
                 disabled={submitting || draft.trim().length === 0}
-                className="shrink-0"
+                className="shrink-0 px-3"
               >
                 <Send className="w-3.5 h-3.5" />
               </Button>

@@ -57,11 +57,13 @@ export function ReportButton({
           size="xs"
           onClick={() => setOpen(false)}
           disabled={pending}
+          className="px-2 py-1"
         >
           {tr("Cancel")}
         </Button>
         <Button
           size="xs"
+          className="px-2 py-1"
           disabled={pending || reason.trim().length < 5}
           onClick={() =>
             start(async () => {

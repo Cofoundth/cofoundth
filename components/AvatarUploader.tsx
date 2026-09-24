@@ -126,7 +126,7 @@ export function AvatarUploader({ initialUrl, name }: Props) {
           size="sm"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="gap-2"
+          className="gap-2 bg-white rounded-xl"
         >
           <Camera className="w-4 h-4" />
           {url ? tr("Change photo") : tr("Add photo")}

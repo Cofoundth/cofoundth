@@ -667,7 +667,15 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
 
       {/* Save bar */}
       <div className="sticky bottom-0 -mx-6 lg:-mx-10 px-6 lg:px-10 py-4 bg-cream/95 backdrop-blur border-t border-line flex items-center gap-4">
-        <Button onClick={handleSave} disabled={isPending} className="py-2.5">
+        {/* py-2.5 + hover:bg-navy/90 are both re-passed overrides: the button
+            shipped off-scale (px-6 py-2.5, between sm and md) and its hover
+            went LIGHTER — navy at 90% over the cream save bar is rgb(49,47,44),
+            where the primary variant's hover:bg-navy-dark is rgb(13,12,10). */}
+        <Button
+          onClick={handleSave}
+          disabled={isPending}
+          className="py-2.5 hover:bg-navy/90"
+        >
           {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           {tr("Save changes")}
         </Button>

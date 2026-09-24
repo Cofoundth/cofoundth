@@ -62,15 +62,17 @@ export function ReportForm({ targetId }: { targetId: string }) {
         <div className="text-xs text-danger-ink">{state.error}</div>
       )}
       {/* size="xs" is px-3/text-xs already; only py comes up from 1.5 to the
-          2 these two shipped with. Cancel goes rounded-xl -> pill, a listed
-          exception for this file. */}
+          2 these two shipped with. Cancel keeps its explicit rounded-xl (14px):
+          it is a `utilities`-layer class and so beats the @layer base pill —
+          dropping it was a real 14px -> 17px corner change, not a no-op. The
+          submit sibling never had one and pills, at 5c563c9 as now. */}
       <div className="flex gap-2">
         <Button
           variant="secondary"
           size="xs"
           onClick={() => setOpen(false)}
           disabled={isPending}
-          className="flex-1 py-2"
+          className="flex-1 py-2 rounded-xl"
         >
           {tr("Cancel")}
         </Button>

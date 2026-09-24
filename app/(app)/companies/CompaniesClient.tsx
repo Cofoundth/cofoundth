@@ -525,9 +525,37 @@ function CompanyCard({
       </div>
 
       {/* FOOTER — the /browse card's two-button row: act, or read more.
-          `px-0` is load-bearing, not tidiness: the buttons are `flex-1` in a
-          ~148px half-column, where the sm tier's px-4 would take 32px off the
-          text box and re-wrap "Send partnership request" onto a third line. */}
+
+          `px-0` is load-bearing, not tidiness — RE-MEASURED 2026-09-24, and the
+          conclusion holds but the stated width did not. The buttons are
+          `flex-1`, so the half-column runs 123px (2-up at sm) to 148px (3-up at
+          1440), and the sm tier's px-4 takes 32px off the text box. The old
+          note said that re-wraps "Send partnership request" onto a third line
+          "in a ~148px half-column": at 148px it in fact stays 2 lines. The
+          third line appears at <= ~130px — i.e. the 3-up grid at a 1280
+          viewport (half-column 128.5px), an ordinary laptop. At that width
+          px-4 also costs the DEFAULT locale a line: Thai
+          "ส่งคำขอความร่วมมือ" goes 1 -> 2 lines and the footer 38 -> 56px.
+          So: keep px-0.
+
+          DELIBERATE VISUAL CHANGE from 5c563c9 — disclosed, not a no-op.
+          Before the sweep the second slot was a bare inline <a>; the flex
+          parent blockified it to `display:block`, so when the primary wrapped,
+          the stretched pill laid its one line from the TOP. LinkButton's BASE
+          adds `inline-flex items-center`, which centres it. Measured in a 336px
+          card, EN, company viewer: label top 10.4px -> 19.6px inside a 56px
+          pill (pill box 148.8x56, footer height 72px and every colour
+          unchanged). Thai is unaffected at every breakpoint — the Thai primary
+          never wraps, so both halves are the same height and the stretch is a
+          no-op.
+
+          Kept rather than reverted with `items-start`, for two reasons. Text
+          jammed against the top of a stadium pill is a CSS accident, not a
+          design — the sibling <button> centres its own content by UA rule,
+          which is exactly why nobody ever saw the mismatch. And /browse's
+          "Full Profile" is the same recipe from the same bare <a>, and already
+          migrated to the centred form in this sweep; pinning `items-start`
+          here would restore the pixels by splitting the two grids apart. */}
       <div className="pt-4 flex gap-2">
         {canRequest && (
           <Button size="sm" onClick={onRequest} className="flex-1 px-0">
