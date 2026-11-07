@@ -151,7 +151,12 @@ export async function createPostAction(
       (PRODUCT_CATEGORIES as readonly string[]).includes(t),
     );
     if (!slugs.length)
-      return { error: "Pick a category: app, game, tool, ai, web, or other." };
+      // NOT a key that lists the slugs. The English string IS the dictionary
+      // key (lib/i18n.ts), so enumerating them meant the key changed shape
+      // every time the taxonomy did and silently stopped matching its Thai.
+      // The composer shows the options as chips; the message only has to
+      // say one is required.
+      return { error: "Pick a category." };
     if (slugs.length > 1) return { error: "Pick just one category." };
   }
 

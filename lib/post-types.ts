@@ -87,12 +87,34 @@ export function postImages(p: {
 // for this?", not "is a migration scary?". Do not read the paragraph above as
 // a reason to pack more things into `tags`.
 
+// ONE AXIS: WHAT THE THING IS FOR.
+//
+// The first version of this list mixed three axes — form (`app`, `web`),
+// genre (`game`), function (`tool`) and technology (`ai`) — which reads fine
+// until someone has to USE it. A founder who built a finance web app had to
+// choose between `app`, `web` and `tool` with no right answer, and a
+// vocabulary that cannot be answered confidently at posting time produces
+// noise at browsing time. Subject is the axis a maker can answer without
+// thinking and a visitor actually browses by.
+//
+// `ai` is the one deliberate impurity: it is a technology, not a subject, so
+// an AI finance app overlaps. Kept anyway because in practice people look
+// for it by name. Every real taxonomy has one of these (the App Store has
+// "Utilities"); one is tolerable, four was the problem.
+//
+// CHANGING THIS LIST ORPHANS EXISTING PRODUCTS. The slug is stored in
+// forum_posts.tags, so a renamed slug silently drops its products into
+// "other". This was free to change while zero real products carried a
+// category; it will not be next time. Migrate the tags if it changes again.
 export const PRODUCT_CATEGORIES = [
-  "app",
   "game",
-  "tool",
+  "finance",
+  "learning",
+  "health",
+  "lifestyle",
+  "productivity",
+  "developer",
   "ai",
-  "web",
   "other",
 ] as const;
 
@@ -108,11 +130,14 @@ export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 // copies drifting would not look like a typo. It would silently drop one
 // surface's chip to English while the other stayed Thai.
 export const CATEGORY_LABEL: Record<ProductCategory, string> = {
-  app: "App",
   game: "Game",
-  tool: "Tool",
+  finance: "Finance",
+  learning: "Learning",
+  health: "Health",
+  lifestyle: "Lifestyle",
+  productivity: "Productivity",
+  developer: "Developer tools",
   ai: "AI",
-  web: "Web",
   other: "Other",
 };
 

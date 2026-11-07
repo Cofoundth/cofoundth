@@ -85,7 +85,10 @@
 // next/image would just add a frame of delay to an image we know is wanted.
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import type { FocusEvent, KeyboardEvent, PointerEvent } from "react";
+// No PointerEvent type any more: hover arrives from CardHoverScope by context,
+// because this element sits under the card's stretched link and never received
+// a pointer event of its own. See ./card-hover.
+import type { FocusEvent, KeyboardEvent } from "react";
 import Image from "next/image";
 import { useT } from "@/lib/i18n-client";
 import { cn } from "@/components/ui";

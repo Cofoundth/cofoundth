@@ -1555,7 +1555,7 @@
   "Enter a valid meeting link (https://…).": "ใส่ลิงก์ห้องประชุมให้ถูกต้อง (ขึ้นต้นด้วย https://)",
   "Could not create the meetup. Try again.": "สร้าง meetup ไม่สำเร็จ ลองอีกครั้ง",
   "Could not upload the cover image.": "อัปโหลดรูปหน้าปกไม่สำเร็จ",
-  "Pick a category.": "เลือกหมวดหมู่ก่อน",
+  "Pick a category.": "เลือกหมวดด้วยนะ",
   "Pick a format.": "เลือกรูปแบบการเจอกันก่อน",
   "Description is too long (5000 max).": "รายละเอียดยาวเกินไป (ไม่เกิน 5,000 ตัวอักษร)",
   "End time is invalid.": "เวลาจบไม่ถูกต้อง",
@@ -1668,12 +1668,16 @@
   "Filter by category": "กรองตามหมวด",
   "Name your product.": "ตั้งชื่อโปรดักต์ด้วยนะ",
   "Add a link so people can try it.": "ใส่ลิงก์ด้วย เพื่อให้คนกดไปลองได้",
-  "Pick a category: app, game, tool, ai, web, or other.": "เลือกหมวดด้วย: app, game, tool, ai, web หรือ other",
   "Pick just one category.": "เลือกหมวดเดียวพอ",
   "Up to 5 images per product.": "ใส่รูปได้สูงสุด 5 รูปต่อโปรดักต์",
   "Couldn't upload all the images. Nothing was posted — try again.": "อัปโหลดรูปไม่ครบ ยังไม่ได้โพสต์ให้ ลองใหม่อีกทีนะ",
   "Couldn't upload the image. Try again.": "อัปโหลดรูปไม่สำเร็จ ลองใหม่อีกทีนะ",
   "{name} isn't a JPG, PNG, WebP, or GIF.": "{name} ไม่ใช่ไฟล์ JPG, PNG, WebP หรือ GIF",
   "Screenshots can add up to {n}MB in total — remove one, or pick a smaller shot.": "สกรีนช็อตรวมกันได้ไม่เกิน {n}MB เอาออกรูปนึง หรือเลือกรูปที่เล็กกว่านี้",
-  "Preparing images…": "กำลังเตรียมรูป…"
+  "Preparing images…": "กำลังเตรียมรูป…",
+  "Learning": "เรียนรู้",
+  "Health": "สุขภาพ",
+  "Lifestyle": "ไลฟ์สไตล์",
+  "Productivity": "ทำงาน",
+  "Developer tools": "สำหรับเดฟ"
 }

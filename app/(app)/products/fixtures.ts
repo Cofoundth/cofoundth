@@ -70,7 +70,7 @@
 // page you opened to look at them. Do NOT "fix" that by widening webUrl() for
 // every row.
 
-import type { PostItem } from "@/lib/post-types";
+import type { PostItem, ProductCategory } from "@/lib/post-types";
 
 /** Prefix on every fixture id — the card uses it to stamp a TEST badge. */
 export const FIXTURE_PREFIX = "fixture-";
@@ -207,7 +207,10 @@ function shotsOf(shade: Shade, layouts: readonly Layout[]): string[] {
 const SAMPLES: {
   name: string;
   blurb: string;
-  category: string;
+  // TYPED, not `string`: when the taxonomy last changed, every fixture
+  // silently kept a dead slug and fell into "other" with tsc perfectly
+  // happy. Now a renamed slug is a compile error.
+  category: ProductCategory;
   host: string;
   author: string;
   /** null = a product with no screenshots at all. */
@@ -220,7 +223,7 @@ const SAMPLES: {
     name: "ร้านนี้มีที่จอด",
     blurb:
       "แอปหาที่จอดรถแถวลาดพร้าว บอกว่าตึกไหนจอดฟรีกี่ชั่วโมง ทำเพราะขับวนหาที่จอดทุกวันจนทน",
-    category: "app",
+    category: "lifestyle",
     host: "https://apps.apple.com/th/app/example-parking/id000000000",
     author: "ณัฐพล ว.",
     shots: {
@@ -245,7 +248,7 @@ const SAMPLES: {
     name: "สลิปไหน",
     blurb:
       "ลากสลิปโอนเงินลงไป แล้วมันแยกให้เลยว่าใครโอนมาเท่าไหร่ ใช้กับวงแชร์กับกลุ่มทริปได้",
-    category: "tool",
+    category: "finance",
     host: "https://slipnai.example.com",
     author: "Somchai T.",
     // ONE image, in the legacy column. See the note on SAMPLES.
@@ -271,7 +274,7 @@ const SAMPLES: {
     name: "Mango Deploy",
     blurb:
       "deploy เว็บขึ้น server ตัวเองด้วยคำสั่งเดียว ทำไว้ใช้เอง แล้วเพื่อนขอใช้ด้วยเลยเปิดให้ลอง",
-    category: "web",
+    category: "developer",
     host: "https://mangodeploy.example.com",
     author: "Ice P.",
     shots: {
@@ -282,7 +285,7 @@ const SAMPLES: {
   {
     name: "เด็กหลังห้อง",
     blurb: "พอดแคสต์คุยกับคนทำของในไทย อัปทุกวันอาทิตย์ ตอนนี้ 12 ตอนแล้ว",
-    category: "other",
+    category: "learning",
     host: "https://open.spotify.com/show/example",
     author: "Bank R.",
     // ZERO, and a plausible zero: a podcast has nothing to screenshot. The
