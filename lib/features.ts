@@ -16,12 +16,15 @@
 // original position. That is the whole reason this is one imported module
 // rather than a boolean repeated in four files: the copies cannot drift.
 //
-// `meetupsNew` is the odd one out: it is a MARKER, not a surface. The other two
-// decide whether a nav item exists at all; this one only decorates an item that
-// is already there with a "New" chip for the soft launch. Nothing is hidden when
-// it is false — the Meetups link renders either way. Set it false once Meetups
-// has stopped being news (a few weeks after launch); a permanent "New" badge is
-// just noise that teaches people to ignore the chip.
+// `meetupsNew` and `productsNew` are the odd ones out: they are MARKERS, not
+// surfaces. `companies` and `funding` decide whether a nav item exists at all;
+// these two only decorate an item that is already there with a "New" chip for
+// the soft launch. Nothing is hidden when either is false — the Meetups and
+// Products links render either way. (Said as two names rather than "the other
+// two": with four flags in the object that phrase no longer points anywhere.)
+// Set each false once that surface has stopped being news (a few weeks after
+// launch); a permanent "New" badge is just noise that teaches people to ignore
+// the chip.
 //
 // Typed as `boolean` rather than inferred as literal `false`/`true` so both
 // branches of every call site keep type-checking whichever way a flag points.
@@ -29,6 +32,7 @@ export const FEATURES: {
   companies: boolean;
   funding: boolean;
   meetupsNew: boolean;
+  productsNew: boolean;
 } = {
   /** /orgs — the multi-user company directory, B2B connect/chat/deals. */
   companies: false,
@@ -36,4 +40,6 @@ export const FEATURES: {
   funding: false,
   /** "New" chip on the Meetups nav item — a launch marker, not a surface. */
   meetupsNew: true,
+  /** "New" chip on the Products nav item — a launch marker, not a surface. */
+  productsNew: true,
 };

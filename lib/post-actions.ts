@@ -7,6 +7,7 @@ import { isAdminUser } from "@/lib/admin";
 import { isInvestorAccount } from "@/lib/account";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
+import { PRODUCT_CATEGORIES } from "@/lib/post-types";
 import type { PostComment, PostItem } from "@/lib/post-types";
 
 export type PostFormState = { error?: string } | null;
@@ -16,6 +17,9 @@ const KINDS = ["post", "milestone", "show_and_tell"];
 function revalidateFeeds(postId?: string) {
   revalidatePath("/dashboard");
   revalidatePath("/community");
+  // A show_and_tell post is also a row in the /products grid, so posting,
+  // deleting or moderating one has to drop that page's cache too.
+  revalidatePath("/products");
   if (postId) revalidatePath(`/community/${postId}`);
 }
 
@@ -90,6 +94,22 @@ export async function createPostAction(
 
   const parsed = parseTags(tagsRaw);
   if (!Array.isArray(parsed)) return parsed;
+
+  // A product (kind 'show_and_tell') is the one post that has to be
+  // actionable, because the /products grid exists to send someone to the real
+  // thing. So it needs a name, a link, and exactly one category — the
+  // category stored as an ordinary tag (lib/post-types.ts). 'post' and
+  // 'milestone' keep the looser rules above, deliberately untouched.
+  if (kind === "show_and_tell") {
+    if (!title) return { error: "Name your product." };
+    if (!linkUrl) return { error: "Add a link so people can try it." };
+    const slugs = parsed.filter((t) =>
+      (PRODUCT_CATEGORIES as readonly string[]).includes(t),
+    );
+    if (!slugs.length)
+      return { error: "Pick a category: app, game, tool, ai, web, or other." };
+    if (slugs.length > 1) return { error: "Pick just one category." };
+  }
 
   const supabase = await createClient();
   const {

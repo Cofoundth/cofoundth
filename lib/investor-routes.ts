@@ -72,6 +72,7 @@ export function isAppShellRoute(pathname: string): boolean {
     "/companies",
     "/funding",
     "/meetups",
+    "/products",
     "/investor",
     "/profile",
     "/settings",

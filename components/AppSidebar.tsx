@@ -142,6 +142,10 @@ export async function AppSidebar() {
   // decision. That copy is gone; public pages render this rail too.)
   // Investors have no Dashboard, so "below Dashboard" has nothing to mean for
   // them; their order is untouched.
+  //
+  // Products sits directly under Meetups: both are "go and look at what the
+  // community made", and the two launch markers then read as one group rather
+  // than two chips scattered down the rail.
   const isInvestor = profile?.account_type === "investor";
   // Directly after Community in BOTH arrays, and only once something is
   // published. Kept well apart from "Profile insights" (/activity) — different
@@ -166,6 +170,14 @@ export async function AppSidebar() {
           // Equally new to investors — only the ORDER above is founder-specific.
           ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
         },
+        // No Products for investors — a decided posture now, not a half-wired
+        // one. /products is in isAppShellRoute and NOT in
+        // isInvestorReadableRoute (lib/investor-routes.ts), so proxy.ts bounces
+        // an investor to /funding on soft navigation as well as a hard load.
+        // (An earlier note here claimed the middleware already did that; it did
+        // not — the route was in neither list, so the investor branch never
+        // ran.) To open it up later, add "/products" to isInvestorReadableRoute
+        // AND add the nav item here, in one change.
         { href: "/orgs", label: await tServer("Companies") },
       ]
     : [
@@ -175,6 +187,13 @@ export async function AppSidebar() {
           label: await tServer("Meetups"),
           // Launch marker, not a surface gate: the item renders either way.
           ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
+        },
+        {
+          href: "/products",
+          label: await tServer("Products"),
+          // Same marker, same reasoning as Meetups above: a doorway to a
+          // brand-new surface, not a gate. /products renders either way.
+          ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
         },
         { href: "/community", label: await tServer("Community") },
         ...insightsItem,
