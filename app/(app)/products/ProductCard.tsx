@@ -29,6 +29,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { isFixture } from "./fixtures";
 import { ExternalLink, Globe } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { Card, CardChip, buttonClasses } from "@/components/ui";
@@ -125,6 +126,17 @@ export function ProductCard({
             footer. */}
         <div className="flex min-w-0 items-center gap-2">
           <CardChip>{labels.category}</CardChip>
+          {/* DEV ONLY and deliberately ugly. productFixtures() returns [] in a
+              production build, so this never renders there — but while it DOES
+              render, an unlabelled sample is worse than no sample: it is a
+              product that cannot be clicked, cannot be liked, and whose maker
+              does not exist. Untranslated on purpose; it is a developer note,
+              not product copy. */}
+          {isFixture(post.id) && (
+            <span className="rounded-full bg-danger-surface px-2 py-0.5 text-[11px] uppercase tracking-[0.15em] text-danger-ink">
+              Test
+            </span>
+          )}
           <span className="truncate text-xs text-ink-muted">
             {timeAgo(post.created_at, locale)}
           </span>

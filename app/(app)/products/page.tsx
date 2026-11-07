@@ -31,9 +31,11 @@ import { EmptyState, LinkButton, Section } from "@/components/ui";
 import {
   PRODUCT_CATEGORIES,
   type ProductCategory,
+  type ProductCounts,
 } from "@/lib/post-types";
 import { getProductsPage } from "@/lib/posts";
 import { CATEGORY_LABEL, productBucketOf } from "./categories";
+import { productFixtures } from "./fixtures";
 import { ProductFilters } from "./ProductFilters";
 import { ProductCard } from "./ProductCard";
 
@@ -70,11 +72,32 @@ export default async function ProductsPage({
 
   // One wait for both: the grid is the selected category, the counts are every
   // category (the chips need all six regardless of which one is on).
-  const { items: shown, counts } = await getProductsPage(supabase, {
+  const { items: real, counts: realCounts } = await getProductsPage(supabase, {
     category: selected,
     userId: user.id,
     excludeAuthorIds: blocked,
   });
+
+  // DEV ONLY — productFixtures() returns [] in a production build, so this
+  // whole block collapses to `shown = real` there. See ./fixtures.ts for why
+  // the samples are a module rather than rows with a `test` column.
+  //
+  // They are merged AFTER the query, which means they obey the category filter
+  // and the chip tallies here instead of inside Postgres. A fixture that did
+  // not count toward its own chip would make the page lie about itself twice:
+  // the chip would read 0 next to a visible card, and "{n} products" would
+  // disagree with what is on screen.
+  const fixtures = productFixtures();
+  const fixturesHere = selected
+    ? fixtures.filter((f) => productBucketOf(f.tags) === selected)
+    : fixtures;
+
+  const shown = [...real, ...fixturesHere];
+  const counts: ProductCounts = { ...realCounts };
+  for (const f of fixtures) {
+    counts[productBucketOf(f.tags)] += 1;
+    counts.all += 1;
+  }
 
   const [
     tTitle,
