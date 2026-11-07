@@ -2,96 +2,82 @@
 
 // /products — the category filter row.
 //
-// ── THE CATEGORY LIVES IN THE URL, NOT IN STATE ───────────────────────────
-// `selected` is a PROP, read by the server page out of `searchParams`. This
-// component holds no copy of it. That is the whole design:
+// ── MULTI-SELECT, OR SEMANTICS ────────────────────────────────────────────
+// Chips toggle independently and a product shows if it is in ANY selected
+// category. "games or apps" is a thing a reader wants and a single select
+// could not express; that is the whole reason this changed.
 //
-//   · /products?category=game is a link someone can paste into the forum, which
-//     is how a shelf actually gets traffic;
-//   · the back button steps back through the filters the user tried;
-//   · the filtered grid is rendered on the server, so the first paint is the
-//     filtered set — no flash of everything.
+// "All" is NOT a seventh category. It is the empty set — selected when nothing
+// is, and clicking it clears. Modelling it as a category would mean deciding
+// what "All + Game" means, and there is no good answer.
 //
-// A `useState` here would have been three lines shorter and would have broken
-// all three.
+// ── THE SELECTION LIVES IN A CONTEXT, NOT IN THE URL ──────────────────────
+// It used to be a PROP read from `searchParams` on the server, with every chip
+// a `router.push`. That bought three things and this keeps two of them:
 //
-// The chips are <button>s (ToggleChip), so navigation goes through the router.
-// `scroll: false` keeps the viewport where it is: the chips sit above the grid,
-// and jumping to the top after every chip is a regression you only notice on a
-// phone.
+//   · /products?category=game,app is still a link someone can paste — the
+//     provider mirrors the Set into the address with `replaceState`, and the
+//     SERVER still reads it, so a shared link's first paint is already the
+//     filtered grid. KEPT.
+//   · the filtered grid is still server-rendered on a cold load. KEPT.
+//   · the back button stepped through the filters tried. LOST, deliberately:
+//     see the note on the effect in ./filter-context.tsx.
+//
+// What goes away is a server round trip per chip, which at this scale was
+// latency for nothing — the client already holds every product on the shelf.
+// There is no `useTransition`, no `aria-busy` and no pending dimming any more
+// because there is nothing to wait for.
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { useT } from "@/lib/i18n-client";
 import { ToggleChip } from "@/components/ui";
-import {
-  PRODUCT_CATEGORIES,
-  type ProductCategory,
-  type ProductCounts,
-} from "@/lib/post-types";
+import { PRODUCT_CATEGORIES } from "@/lib/post-types";
 import { CATEGORY_LABEL } from "./categories";
+import { useProductFilter } from "./filter-context";
 
-export function ProductFilters({
-  selected,
-  counts,
-}: {
-  /** null = no filter, i.e. the "All" chip. */
-  selected: ProductCategory | null;
-  /** Per-category tallies from getProductsPage — already block-filtered. */
-  counts: ProductCounts;
-}) {
+export function ProductFilters() {
   const tr = useT();
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-
-  function go(next: ProductCategory | null) {
-    if (next === selected) return;
-    startTransition(() => {
-      router.push(next ? `/products?category=${next}` : "/products", {
-        scroll: false,
-      });
-    });
-  }
+  const { selected, counts, toggle, clear } = useProductFilter();
+  const none = selected.size === 0;
 
   // An EMPTY category is not offered. At launch five of the six are empty, and
   // a row of chips reading 0 looks like a broken page rather than a young one —
   // every one of them is a click that lands on an empty state.
   //
-  // The exception is load-bearing: the SELECTED chip stays even at 0, because
-  // it is the only thing on screen saying which filter is on. Arriving at
+  // The exception is load-bearing: a SELECTED chip stays even at 0, because it
+  // is the only thing on screen saying which filter is on. Arriving at
   // /products?category=game from a shared link, after the last game was
   // deleted, must not render a row where nothing is selected.
+  //
+  // `counts` is over the WHOLE shelf, never the filtered view — otherwise
+  // turning on "Game" would delete every other chip and strand the reader.
   const visible = PRODUCT_CATEGORIES.filter(
-    (c) => counts[c] > 0 || c === selected,
+    (c) => counts[c] > 0 || selected.has(c),
   );
 
   // Same reasoning one level up: with nothing on the shelf at all, the row
   // collapses to a lone "All 0" chip — a control whose only destination is the
   // page you are on. The empty state says it better.
-  if (counts.all === 0 && selected === null) return null;
+  if (counts.all === 0 && none) return null;
 
   return (
     <div
       role="group"
       aria-label={tr("Filter by category")}
-      aria-busy={pending}
-      className={`mb-8 flex flex-wrap gap-2 transition-opacity ${
-        pending ? "opacity-60" : ""
-      }`}
+      className="mb-8 flex flex-wrap gap-2"
     >
       <ToggleChip
-        selected={selected === null}
-        onClick={() => go(null)}
+        selected={none}
+        onClick={clear}
         aria-label={`${tr("All")}, ${counts.all}`}
       >
         {tr("All")}
-        <Tally n={counts.all} selected={selected === null} />
+        <Tally n={counts.all} selected={none} />
       </ToggleChip>
       {visible.map((c) => (
         <ToggleChip
           key={c}
-          selected={selected === c}
-          onClick={() => go(c)}
+          selected={selected.has(c)}
+          onClick={() => toggle(c)}
           // EXPLICIT, rather than trusting name-from-contents. The label and
           // the tally are two flex children, and whether the accessibility
           // name algorithm puts a space between them depends on how the engine
@@ -103,7 +89,7 @@ export function ProductFilters({
           aria-label={`${tr(CATEGORY_LABEL[c])}, ${counts[c]}`}
         >
           {tr(CATEGORY_LABEL[c])}
-          <Tally n={counts[c]} selected={selected === c} />
+          <Tally n={counts[c]} selected={selected.has(c)} />
         </ToggleChip>
       ))}
     </div>

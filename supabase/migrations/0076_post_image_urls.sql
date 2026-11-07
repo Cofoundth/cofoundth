@@ -1,0 +1,47 @@
+-- ============================================================================
+-- Several screenshots per product, instead of one cover.
+--
+-- /products is a shelf of what the community made, and a shelf of text cards
+-- reads dead — the format is screenshots, and a card that previews the others
+-- on hover needs more than one image to preview.
+--
+-- WHY THIS IS A MIGRATION, when the last two decisions on this surface were
+-- deliberately not. The product CATEGORY rides inside the existing `tags`
+-- text[]; the sample products are a dev-only module rather than rows. Both of
+-- those had somewhere to live. A second image does not: `image_url` is a
+-- single nullable `text`, and `tags` is the only array on the table (verified
+-- against the live schema). Overloading `tags` with URLs, or inventing
+-- `image_url_2`, would be the fake version of this column. So: a column.
+--
+-- `image_url` STAYS. It is the legacy single cover, it is never dropped and
+-- never backfilled, and there are real rows using it. Every reader goes
+-- through postImages() in lib/post-types.ts, which returns `image_urls` when
+-- it has entries and falls back to `[image_url]` when it does not — which is
+-- what keeps the old rows rendering exactly as they do today. createPostAction
+-- also keeps writing the FIRST image to `image_url`, so anything still reading
+-- the legacy column on its own (the community feed card, the /p/[id] OG image)
+-- keeps showing a cover.
+--
+-- NOT NULL DEFAULT '{}' rather than nullable, for the same reason `tags` is:
+-- lib/posts.ts leans on `tags` being NOT NULL for the `&&` in the "other"
+-- category filter to keep uncategorised rows reachable, and an empty array is
+-- the honest value for "no screenshots". A nullable array would make every
+-- consumer spell the null case a second time, right next to a helper that
+-- exists to spell it once.
+--
+-- Additive and non-destructive: no rewrite (PG11+ stores an added NOT NULL
+-- default in the catalog), no backfill, no policy change, nothing dropped.
+-- No grant needed either: forum_posts holds table-wide grants, not the
+-- column-by-column grants `profiles` has — `kind`, `image_url`, `link_url`
+-- (0034) and `hidden` (0043) were all added with no follow-up grant and are
+-- read by `authenticated` today, which is the trap 0061 documents.
+--
+-- SHIPS WITH the code that selects it: lib/posts.ts adds `image_urls` to
+-- POST_COLS, which the community feed and search use too. That select has a
+-- one-shot downgrade if the column is missing, so the order of the two deploys
+-- cannot blank the feed — but the fallback is a seatbelt, not a plan. Apply
+-- this, then delete the fallback.
+-- ============================================================================
+
+alter table public.forum_posts
+  add column if not exists image_urls text[] not null default '{}';

@@ -12,10 +12,74 @@ import { PRODUCT_CATEGORIES, productCategoryOf } from "./post-types";
 
 type DB = Awaited<ReturnType<typeof createClient>>;
 
-const POST_COLS =
+const BASE_POST_COLS =
   "id, author_id, title, content, kind, link_url, image_url, tags, created_at";
 
+// `image_urls` arrives in migration 0076. This list is NOT products-only — the
+// community feed, the dashboard and search all select it — so the column and
+// this line have to land together, and the fallback below is what makes the
+// order of the two deploys not matter.
+const POST_COLS = `${BASE_POST_COLS}, image_urls`;
+
 type PostRow = Record<string, unknown>;
+
+// ---- 0076 seatbelt: DELETE THIS once 0076 is applied everywhere -----------
+// PostgREST rejects the WHOLE request when the select list names a column that
+// does not exist, and every query in this file drops its error on the floor
+// (`const { data } = await q`). So code-before-migration does not show an
+// error — it shows an EMPTY community feed, empty dashboard, empty search, and
+// logs nothing. That is not hypothetical: 0061 is a migration that exists
+// because the same shape of mistake rendered "You're the first one here" over
+// a directory of 23 real profiles.
+//
+// So: ask for `image_urls`, and if the column is not there yet, say so in the
+// log and re-run the same query without it once. The downgrade expires so a
+// warm server picks the column up on its own after the migration lands,
+// instead of serving legacy covers until it happens to recycle.
+const DOWNGRADE_MS = 60_000;
+let downgradedUntil = 0;
+
+function postCols(): string {
+  return Date.now() < downgradedUntil ? BASE_POST_COLS : POST_COLS;
+}
+
+type QueryError = { code?: string | null; message?: string | null } | null;
+type PostQuery = PromiseLike<{ data: unknown; error: QueryError }>;
+
+// 42703 is Postgres "undefined_column", which PostgREST passes through. The
+// message check is belt-and-braces for a PostgREST version that re-codes it.
+function isMissingImageUrls(error: QueryError): boolean {
+  if (!error) return false;
+  return error.code === "42703" || !!error.message?.includes("image_urls");
+}
+
+function noteMissingImageUrls(error: QueryError) {
+  if (Date.now() >= downgradedUntil)
+    console.error(
+      "[posts] forum_posts.image_urls is missing — apply migration 0076. Serving legacy covers meanwhile.",
+      error?.message,
+    );
+  downgradedUntil = Date.now() + DOWNGRADE_MS;
+}
+
+// Run a post query, retrying once without `image_urls` if that is what broke.
+// `build` has to be a builder and not a query, because a retry is a new request.
+async function selectPosts(build: (cols: string) => PostQuery): Promise<PostRow[]> {
+  const { data, error } = await build(postCols());
+  if (!error) return (data ?? []) as PostRow[];
+  if (!isMissingImageUrls(error)) {
+    console.error("[posts] query failed", error.message);
+    return [];
+  }
+  noteMissingImageUrls(error);
+  const retry = await build(BASE_POST_COLS);
+  if (retry.error) {
+    console.error("[posts] query failed", retry.error.message);
+    return [];
+  }
+  return (retry.data ?? []) as PostRow[];
+}
+// ---- end seatbelt ---------------------------------------------------------
 
 // Hidden/suspended authors shouldn't surface in the public feed or search —
 // hiding a user must hide their posts too. Returns the (small) set of
@@ -77,6 +141,10 @@ async function shapePosts(
       kind: ((p.kind as string) ?? "post") as PostKind,
       link_url: (p.link_url as string | null) ?? null,
       image_url: (p.image_url as string | null) ?? null,
+      // NOT NULL DEFAULT '{}' in 0076, so the coalesce is for the one case it
+      // cannot cover: a row from the seatbelt's downgraded select, which has
+      // no such key at all. postImages() then falls back to image_url.
+      image_urls: ((p.image_urls as string[] | null) ?? []) as string[],
       tags: ((p.tags as string[] | null) ?? []) as string[],
       created_at: p.created_at as string,
       author: a
@@ -123,24 +191,27 @@ export async function getFeedPosts(
       : new Set(excludeAuthorIds ?? []);
   const fetchLimit = limit + Math.min(excluded.size, MAX_OVERFETCH);
 
-  let q = supabase
-    .from("forum_posts")
-    .select(POST_COLS)
-    .eq("hidden", false)
-    .order("created_at", { ascending: false })
-    .limit(fetchLimit);
-  // Cursor pagination: fetch the page strictly older than `before`. The
-  // cursor is a created_at, and the filter below only ever REMOVES rows, so
-  // over-fetching cannot make a later page skip anything.
-  if (before) q = q.lt("created_at", before);
   const hiddenAuthors = await suspendedAuthorIds(supabase);
-  if (hiddenAuthors.length)
-    q = q.not("author_id", "in", `(${hiddenAuthors.join(",")})`);
 
-  const { data: posts } = await q;
+  const posts = await selectPosts((cols) => {
+    let q = supabase
+      .from("forum_posts")
+      .select(cols)
+      .eq("hidden", false)
+      .order("created_at", { ascending: false })
+      .limit(fetchLimit);
+    // Cursor pagination: fetch the page strictly older than `before`. The
+    // cursor is a created_at, and the filter below only ever REMOVES rows, so
+    // over-fetching cannot make a later page skip anything.
+    if (before) q = q.lt("created_at", before);
+    if (hiddenAuthors.length)
+      q = q.not("author_id", "in", `(${hiddenAuthors.join(",")})`);
+    return q;
+  });
+
   const rows = excluded.size
-    ? (posts ?? []).filter((p) => !excluded.has(p.author_id as string))
-    : (posts ?? []);
+    ? posts.filter((p) => !excluded.has(p.author_id as string))
+    : posts;
   return shapePosts(supabase, rows.slice(0, limit), userId);
 }
 
@@ -164,10 +235,10 @@ export async function searchPosts(
   const authorIds = (namedAuthors ?? []).map((a) => a.id as string);
 
   const hiddenAuthors = await suspendedAuthorIds(supabase);
-  const base = () => {
+  const base = (cols: string) => {
     let b = supabase
       .from("forum_posts")
-      .select(POST_COLS)
+      .select(cols)
       .eq("hidden", false)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -176,18 +247,28 @@ export async function searchPosts(
     return b;
   };
 
-  const [byContent, byTitle, byTag, byAuthor] = await Promise.all([
-    base().ilike("content", like),
-    base().ilike("title", like),
-    base().contains("tags", [q.toLowerCase()]),
-    authorIds.length
-      ? base().in("author_id", authorIds)
-      : Promise.resolve({ data: [] as PostRow[] }),
-  ]);
+  // Four queries, so the seatbelt retries the GROUP rather than each one: a
+  // missing column fails all four identically, and one re-run is cheaper (and
+  // easier to read) than four independent retries racing to set the flag.
+  const fanOut = (cols: string) =>
+    Promise.all([
+      base(cols).ilike("content", like),
+      base(cols).ilike("title", like),
+      base(cols).contains("tags", [q.toLowerCase()]),
+      authorIds.length
+        ? base(cols).in("author_id", authorIds)
+        : Promise.resolve({ data: [] as PostRow[], error: null }),
+    ]);
+
+  let sets = await fanOut(postCols());
+  if (sets.some((s) => isMissingImageUrls(s.error))) {
+    noteMissingImageUrls(sets.find((s) => s.error)?.error ?? null);
+    sets = await fanOut(BASE_POST_COLS);
+  }
 
   // Merge unique by id, keep newest first.
   const seen = new Map<string, PostRow>();
-  for (const set of [byContent, byTitle, byTag, byAuthor]) {
+  for (const set of sets) {
     for (const p of (set.data ?? []) as PostRow[]) {
       if (!seen.has(p.id as string)) seen.set(p.id as string, p);
     }
@@ -273,16 +354,12 @@ async function fetchProductRows(
   excluded: Set<string>,
   hiddenAuthors: string[],
 ): Promise<PostRow[]> {
-  const { data } = await productsQuery(
-    supabase,
-    POST_COLS,
-    category,
-    hiddenAuthors,
-  )
-    .order("created_at", { ascending: false })
-    .limit(limit + Math.min(excluded.size, MAX_OVERFETCH));
+  const rows = await selectPosts((cols) =>
+    productsQuery(supabase, cols, category, hiddenAuthors)
+      .order("created_at", { ascending: false })
+      .limit(limit + Math.min(excluded.size, MAX_OVERFETCH)),
+  );
 
-  const rows = (data ?? []) as PostRow[];
   return (excluded.size
     ? rows.filter((p) => !excluded.has(p.author_id as string))
     : rows

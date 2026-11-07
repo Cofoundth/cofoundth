@@ -16,7 +16,14 @@ export type PostItem = {
   content: string;
   kind: PostKind;
   link_url: string | null;
+  /** Legacy single cover. Still written (the first image) and still read by
+   *  anything that predates `image_urls`. Never read it directly in new code —
+   *  go through postImages(). */
   image_url: string | null;
+  /** Every image on the post, oldest-first. ALWAYS an array, never null: the
+   *  column is NOT NULL DEFAULT '{}' (0076) and shapePosts coalesces anyway,
+   *  so a consumer never has to spell the empty case twice. */
+  image_urls: string[];
   tags: string[];
   created_at: string;
   author: PostAuthor | null;
@@ -34,6 +41,35 @@ export type PostComment = {
   isOwn: boolean;
 };
 
+// ---- Images ---------------------------------------------------------------
+// A post has had a cover image since 0034 (`image_url`, one nullable text). A
+// product needs SCREENSHOTS — several, so a card can preview the others on
+// hover — which is why 0076 adds `image_urls text[] not null default '{}'`.
+//
+// `image_url` is not going anywhere: real rows use it, nothing backfills it,
+// and createPostAction keeps writing the first image to it. The two columns
+// stay consistent because NOBODY reads either one directly — every consumer
+// calls postImages(). That is the whole mechanism keeping a 2026-05 post with
+// one cover and a product with five screenshots rendering through the same
+// code path.
+
+/** Per product. The composer caps the picker here and createPostAction
+ *  re-checks, because a cap enforced only in the UI is not a cap. */
+export const MAX_PRODUCT_IMAGES = 5;
+
+/** Every image on a post, in order, as an array — `[]` when it has none.
+ *  Takes the two raw columns rather than a PostItem so it also works on a row
+ *  straight out of a hand-written `.select()` (the /community/[id] and
+ *  /p/[id] pages have their own column lists and do not go through
+ *  shapePosts). */
+export function postImages(p: {
+  image_url: string | null;
+  image_urls?: string[] | null;
+}): string[] {
+  if (p.image_urls?.length) return p.image_urls;
+  return p.image_url ? [p.image_url] : [];
+}
+
 // ---- Products -------------------------------------------------------------
 // A "product" is not a new table. It is a `show_and_tell` post that carries a
 // link_url, and its CATEGORY rides in the `tags` text[] that already exists,
@@ -44,6 +80,12 @@ export type PostComment = {
 // that may be thrown away. If /products proves itself, the column earns
 // itself then — and the only thing that has to change is this file plus the
 // two queries in lib/posts.ts.
+//
+// That reasoning is about the CATEGORY, and it still holds. It is not a ban on
+// migrations: 0076 adds `image_urls` because a second image had nowhere to
+// live, and the test it passed is the one above — "is there an existing place
+// for this?", not "is a migration scary?". Do not read the paragraph above as
+// a reason to pack more things into `tags`.
 
 export const PRODUCT_CATEGORIES = [
   "app",

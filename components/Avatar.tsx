@@ -1,6 +1,14 @@
-type Size = "sm" | "md" | "lg" | "xl";
+type Size = "xs" | "sm" | "md" | "lg" | "xl";
 
 const SIZE_CLASSES: Record<Size, string> = {
+  // 24px, to sit INLINE in a metadata row next to a chip and a date rather
+  // than on a line of its own — /products' card is the first caller. 12px
+  // initials, not 11: the glyphs can be Thai (getInitials takes the first
+  // letter of a name, so "ณัฐพล ว." gives "ณว"), and 12px is the floor
+  // CLAUDE.md sets for anything translatable. The fixed `w-6 h-6` box is what
+  // makes this safe at all — the decorative-glyph exception is for glyphs
+  // sized by a box, never by a line-height.
+  xs: "w-6 h-6 text-xs",
   sm: "w-9 h-9 text-sm",
   md: "w-12 h-12 text-base",
   lg: "w-14 h-14 text-lg",

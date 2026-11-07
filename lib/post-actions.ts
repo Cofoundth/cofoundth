@@ -7,7 +7,7 @@ import { isAdminUser } from "@/lib/admin";
 import { isInvestorAccount } from "@/lib/account";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
-import { PRODUCT_CATEGORIES } from "@/lib/post-types";
+import { MAX_PRODUCT_IMAGES, PRODUCT_CATEGORIES } from "@/lib/post-types";
 import type { PostComment, PostItem } from "@/lib/post-types";
 
 export type PostFormState = { error?: string } | null;
@@ -51,15 +51,27 @@ const IMG_EXT: Record<string, string> = {
 };
 const MAX_IMG_BYTES = 5 * 1024 * 1024;
 
+// The two per-file rules, pulled out of uploadPostImage so a batch can check
+// every file BEFORE uploading any of them. Same checks, same order, same
+// strings — uploadPostImage still runs them itself, so it stays safe to call
+// on its own and the single-image path behaves exactly as it did.
+function imageFileError(file: File): string | null {
+  if (!IMG_EXT[file.type]) return "Please upload a JPG, PNG, WebP, or GIF.";
+  if (file.size > MAX_IMG_BYTES) return "Max image size is 5MB.";
+  return null;
+}
+
 async function uploadPostImage(
   userId: string,
   file: File,
-): Promise<{ url?: string; error?: string }> {
-  const ext = IMG_EXT[file.type];
-  if (!ext) return { error: "Please upload a JPG, PNG, WebP, or GIF." };
-  if (file.size > MAX_IMG_BYTES) return { error: "Max image size is 5MB." };
+): Promise<{ url?: string; path?: string; error?: string }> {
+  const bad = imageFileError(file);
+  if (bad) return { error: bad };
   const admin = createAdminClient();
-  const path = `${userId}/post-${Date.now()}.${ext}`;
+  // Date.now() alone is not unique when five screenshots upload in PARALLEL:
+  // same millisecond + same extension = the same key, and `upsert: false`
+  // turns that into a failed upload of a perfectly good file. Hence the suffix.
+  const path = `${userId}/post-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${IMG_EXT[file.type]}`;
   const bytes = Buffer.from(await file.arrayBuffer());
   const { error } = await admin.storage
     .from("post-images")
@@ -70,8 +82,40 @@ async function uploadPostImage(
     });
   if (error) return { error: error.message };
   return {
+    path,
     url: admin.storage.from("post-images").getPublicUrl(path).data.publicUrl,
   };
+}
+
+// Best-effort: drop objects that uploaded before a sibling failed. Without it
+// a member who retries three times leaves two orphan sets in the bucket that
+// no row references and nothing will ever clean up.
+async function removePostImages(uploads: { path?: string }[]) {
+  const paths = uploads
+    .map((u) => u.path)
+    .filter((p): p is string => typeof p === "string");
+  if (!paths.length) return;
+  const { error } = await createAdminClient()
+    .storage.from("post-images")
+    .remove(paths);
+  if (error) console.error("[post.create] orphaned images", paths, error.message);
+}
+
+// What the composer sent, as a list. A product carries SCREENSHOTS — repeated
+// `images` entries, several per post. 'post' and 'milestone' send the single
+// `image` field they always have, which is also the fallback for a composer
+// that only ever sends one: one field name going missing must not silently
+// drop a member's image.
+function pickedImages(formData: FormData, kind: string): File[] {
+  const files =
+    kind === "show_and_tell"
+      ? formData
+          .getAll("images")
+          .filter((e): e is File => e instanceof File && e.size > 0)
+      : [];
+  if (files.length) return files;
+  const one = formData.get("image");
+  return one instanceof File && one.size > 0 ? [one] : [];
 }
 
 export async function createPostAction(
@@ -119,13 +163,39 @@ export async function createPostAction(
   if (await isInvestorAccount(supabase, user.id))
     return { error: "Only founders can post in the community." };
 
-  let imageUrl: string | null = null;
-  const imageFile = formData.get("image");
-  if (imageFile instanceof File && imageFile.size > 0) {
-    const up = await uploadPostImage(user.id, imageFile);
-    if (up.error) return { error: up.error };
-    imageUrl = up.url ?? null;
+  const files = pickedImages(formData, kind);
+  if (files.length > MAX_PRODUCT_IMAGES)
+    return { error: `Up to ${MAX_PRODUCT_IMAGES} images per product.` };
+
+  // Validate ALL of them before uploading ANY. A 6MB fourth file must not
+  // leave three objects in the bucket and no post — and this way a size or
+  // type rejection still reads as the same plain sentence it always did.
+  for (const file of files) {
+    const bad = imageFileError(file);
+    if (bad) return { error: bad };
   }
+
+  const uploads = await Promise.all(
+    files.map((file) => uploadPostImage(user.id, file)),
+  );
+  const failed = uploads.findIndex((u) => !u.url);
+  if (failed >= 0) {
+    console.error(
+      `[post.create] image ${failed + 1} of ${uploads.length} failed:`,
+      uploads[failed].error,
+    );
+    await removePostImages(uploads);
+    // One file: the storage error itself, exactly as before. Several: say that
+    // NOTHING was posted, because the alternative is a product quietly going
+    // up with two of its five screenshots and the member never knowing which.
+    return uploads.length === 1
+      ? { error: uploads[0].error ?? "Couldn't upload the image. Try again." }
+      : {
+          error:
+            "Couldn't upload all the images. Nothing was posted — try again.",
+        };
+  }
+  const imageUrls = uploads.map((u) => u.url as string);
 
   const { error } = await supabase.from("forum_posts").insert({
     author_id: user.id,
@@ -133,7 +203,17 @@ export async function createPostAction(
     title: title || null,
     kind,
     link_url: linkUrl || null,
-    image_url: imageUrl,
+    // The first image ALSO goes in the legacy single column, so everything
+    // that still reads `image_url` on its own keeps a cover: the community
+    // feed card, the /p/[id] OG image, /community/[id].
+    image_url: imageUrls[0] ?? null,
+    // Only a product writes the array, and only when it has images. Keeping
+    // the key off every other insert is what makes 'post' and 'milestone'
+    // byte-identical to before — and keeps a plain post with a photo working
+    // even on a database where 0076 has not been applied yet.
+    ...(kind === "show_and_tell" && imageUrls.length
+      ? { image_urls: imageUrls }
+      : {}),
     tags: parsed,
   });
 

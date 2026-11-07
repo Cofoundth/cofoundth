@@ -11,6 +11,7 @@ import {
   Trash2,
   Trophy,
 } from "lucide-react";
+import { postImages } from "@/lib/post-types";
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { TagText } from "@/components/TagText";
@@ -152,6 +153,12 @@ export function PostCard({
     });
   }
 
+
+  // Via postImages(), not post.image_url: a product can carry several
+  // screenshots now, and the feed shows the FIRST as its cover. Reading the
+  // legacy column directly here was the one place that broke the invariant
+  // the whole image_url/image_urls compatibility design rests on.
+  const cover = postImages(post)[0] ?? null;
   return (
     // Decision D6, 2026-09: KIND_META used to carry a `bg` tint
     // (bg-gold-soft for a milestone, bg-cream for show-and-tell) appended
@@ -226,7 +233,7 @@ export function PostCard({
               <TagText text={post.content} />
             </p>
 
-            {post.image_url && (
+            {cover && (
               // Fixed-ratio box reserves space so the card doesn't jump when the
               // image lazy-loads (CLS). Cropped preview here; full image on the
               // post page.
@@ -236,7 +243,7 @@ export function PostCard({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={post.image_url}
+                  src={cover}
                   alt=""
                   loading="lazy"
                   className="w-full h-full object-cover"

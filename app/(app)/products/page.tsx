@@ -17,46 +17,62 @@
 // PRODUCT_CATEGORIES, where the next person to touch it will actually read it.
 //
 // ── THE CATEGORY IS IN THE URL ────────────────────────────────────────────
-// `?category=game` is read HERE, on the server, so the first paint is already
-// the filtered grid and /products?category=game is a shareable link. See the
-// header of ProductFilters.tsx for why that mattered enough to rule out state.
+// `?category=game,app` is read HERE, on the server, so the first paint of a
+// shared link is already the filtered grid. It is the only thing the server
+// does with the filter: the chips themselves are client-side (one Set, no
+// round trip) and mirror the Set back into the address with `replaceState`.
+// The reasoning, the OR semantics and the scale at which this stops being the
+// right design all live in ./filter-context.tsx.
 
-import { PackageOpen, Rocket, SearchX } from "lucide-react";
+import { Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { getBlockedIds } from "@/lib/blocking";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
-import {
-  PRODUCT_CATEGORIES,
-  type ProductCategory,
-  type ProductCounts,
-} from "@/lib/post-types";
+import { LinkButton, Section } from "@/components/ui";
+import { type ProductCategory } from "@/lib/post-types";
 import { getProductsPage } from "@/lib/posts";
 import { CATEGORY_LABEL, productBucketOf } from "./categories";
 import { productFixtures } from "./fixtures";
 import { ProductFilters } from "./ProductFilters";
+import { ProductGrid } from "./ProductGrid";
 import { ProductCard } from "./ProductCard";
+import { ProductCount, ProductFilterProvider } from "./filter-context";
+// parseCategoryParam lives in ./categories (no "use client"): the SERVER
+// renders the first, already-filtered paint, so it must read the URL with
+// the same function the client does — and a server file cannot import from
+// a client module.
+import { parseCategoryParam } from "./categories";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * How much of the shelf one request fetches, and therefore how much the
+ * client-side filter can see.
+ *
+ * 200, not the query's default 30, because the chips now tally what was
+ * FETCHED — anything the server did not send is invisible to every filter and
+ * to every count. The full argument, including the point at which this design
+ * has to be replaced rather than tuned, is in ./filter-context.tsx. In short:
+ * exact while the shelf is <= 200 products; today it holds zero real ones.
+ */
+const PRODUCT_SHELF_LIMIT = 200;
 
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string | string[] }>;
 }) {
   // Next 16: searchParams is a Promise.
   const { category: raw } = await searchParams;
 
-  // An unknown ?category= is treated as no filter rather than as an error. The
-  // value is in a URL anyone can edit or mistype, and a 404 for a typo on a
-  // browse page would be theatre.
-  const selected: ProductCategory | null = (
-    PRODUCT_CATEGORIES as readonly string[]
-  ).includes(raw ?? "")
-    ? (raw as ProductCategory)
-    : null;
+  // Unknown or malformed slugs are DROPPED, not treated as a filter matching
+  // nothing — the value is in a URL anyone can edit or mistype, and answering
+  // a typo with an empty grid would be theatre. One parser, shared with the
+  // client, so the server's first paint and the client's state cannot read the
+  // same URL differently.
+  const initialCategories = parseCategoryParam(raw);
 
   const user = await requireUser();
   const supabase = await createClient();
@@ -70,34 +86,34 @@ export default async function ProductsPage({
   // that shows two products is the kind of small lie that costs trust.
   const blocked = await getBlockedIds(user.id);
 
-  // One wait for both: the grid is the selected category, the counts are every
-  // category (the chips need all six regardless of which one is on).
-  const { items: real, counts: realCounts } = await getProductsPage(supabase, {
-    category: selected,
+  // NO `category` — the whole shelf, filtered in the browser. The `counts` the
+  // query also returns are deliberately IGNORED: they are tallied over a
+  // separate 1000-row scan, so past the fetch limit they would describe rows
+  // the client does not have and a chip would promise cards it cannot show.
+  // The tallies are recomputed below from exactly what is on this page.
+  //
+  // ⚠️ That makes TWO things in lib/posts.ts dead weight for this page: the
+  // `category` parameter (no other caller) and the count query it still runs
+  // on every load. Both should go; neither is touched here because lib/ is
+  // owned by another change in flight. The knowledge inside the `category`
+  // branch — what "other" means, and why it was a negation rather than a tag
+  // match — is preserved in ./filter-context.tsx so deleting it loses nothing.
+  const { items: real } = await getProductsPage(supabase, {
     userId: user.id,
     excludeAuthorIds: blocked,
+    limit: PRODUCT_SHELF_LIMIT,
   });
 
   // DEV ONLY — productFixtures() returns [] in a production build, so this
   // whole block collapses to `shown = real` there. See ./fixtures.ts for why
   // the samples are a module rather than rows with a `test` column.
   //
-  // They are merged AFTER the query, which means they obey the category filter
-  // and the chip tallies here instead of inside Postgres. A fixture that did
-  // not count toward its own chip would make the page lie about itself twice:
-  // the chip would read 0 next to a visible card, and "{n} products" would
-  // disagree with what is on screen.
-  const fixtures = productFixtures();
-  const fixturesHere = selected
-    ? fixtures.filter((f) => productBucketOf(f.tags) === selected)
-    : fixtures;
-
-  const shown = [...real, ...fixturesHere];
-  const counts: ProductCounts = { ...realCounts };
-  for (const f of fixtures) {
-    counts[productBucketOf(f.tags)] += 1;
-    counts.all += 1;
-  }
+  // They are merged AFTER the query, so they go through the same client-side
+  // bucketing as a real row and land in the chips and the count like one. A
+  // fixture that did not count toward its own chip would make the page lie
+  // about itself twice: the chip would read 0 next to a visible card, and "{n}
+  // products" would disagree with what is on screen.
+  const shown = [...real, ...productFixtures()];
 
   const [
     tTitle,
@@ -111,7 +127,6 @@ export default async function ProductsPage({
     tNoneHereTitle,
     tNoneHereBody,
     tSeeEverything,
-    tCta,
     tCtaAria,
     tNoLink,
     tAnonymous,
@@ -135,17 +150,10 @@ export default async function ProductsPage({
     tServer("Nothing in this category yet"),
     tServer("Try another category — or be the first to put something here."),
     tServer("See everything"),
-    tServer("Try it"),
     tServer("Try {name} on {host}"),
     tServer("No link yet"),
     tServer("A founder"),
   ]);
-
-  // The tally beside the title counts what is ON SCREEN, not the shelf: with a
-  // category selected the two differ, and the number next to a filtered grid
-  // has to be the grid's.
-  const n = shown.length;
-  const countLabel = (n === 1 ? tOne : tMany).replace("{n}", String(n));
 
   // `t(…, locale)` rather than six more awaited `tServer()` calls: tServer IS
   // this plus a cached getLocale(), and the locale is already in hand. The
@@ -154,14 +162,45 @@ export default async function ProductsPage({
   const categoryLabel = (c: ProductCategory) => t(CATEGORY_LABEL[c], locale);
 
   const cardLabels = {
-    cta: tCta,
+    // No `cta`: the per-card "Try it" button is gone and the whole card is the
+    // link now, so "Try {name} on {host}" is the card link's accessible name
+    // rather than a button's. See ./ProductCard.tsx.
     ctaAria: tCtaAria,
     noLink: tNoLink,
     anonymous: tAnonymous,
   };
 
+  // ONE array, read by three client components: the provider tallies the
+  // chips off it, the grid filters it, and the header count comes from the
+  // provider. Built here so the CARD stays server markup — `card` is a
+  // rendered <ProductCard>, passed down as a prop, which is what keeps the
+  // shelf from becoming a client tree (see ProductCard's header).
+  //
+  // `productBucketOf`, never `productCategoryOf`: an older show_and_tell has
+  // no category tag, and a null must never reach a label lookup or a chip.
+  const shelf = shown.map((p) => {
+    const bucket = productBucketOf(p.tags);
+    return {
+      id: p.id,
+      bucket,
+      card: (
+        <ProductCard
+          key={p.id}
+          post={p}
+          locale={locale}
+          labels={{ ...cardLabels, category: categoryLabel(bucket) }}
+        />
+      ),
+    };
+  });
+
   return (
     <Section>
+      {/* The provider wraps the HEADER as well as the chips and the grid,
+          because the "{n} products" tally inside the <h1> has to track the
+          filter too. Everything inside stays server-rendered except the three
+          client islands that read the Set. */}
+      <ProductFilterProvider items={shelf} initial={initialCategories}>
       {/* PAGE HEADER — text-d2 flat. No `lg:text-d3`: that ladder jump is for
           marketing pages, and it is what used to make app surfaces read as
           landing pages. */}
@@ -170,15 +209,18 @@ export default async function ProductsPage({
           <div className="max-w-[640px]">
             <h1 className="text-d2 flex flex-wrap items-baseline gap-2.5">
               <span>{tTitle}</span>
-              <span className="text-sm font-normal tracking-normal text-ink-muted">
-                {countLabel}
-              </span>
+              <ProductCount one={tOne} many={tMany} />
             </h1>
             <p className="mt-2 leading-relaxed text-ink-muted">{tIntro}</p>
           </div>
           {/* Supply side. The shelf is only worth visiting if makers keep
               adding to it, and the composer is on /community — there is no
-              second place to post from, by design. */}
+              second place to post from, by design.
+
+              There is no pause control beside it: the cards' screenshots only
+              move while a pointer is inside one, and WCAG 2.2.2 asks for a
+              mechanism for content that moves AUTOMATICALLY. Hover-driven
+              motion stops when you stop hovering, which is the mechanism. */}
           <LinkButton href="/community" variant="secondary" size="sm">
             <Rocket className="h-4 w-4" strokeWidth={1.5} />
             {tAddYours}
@@ -186,63 +228,20 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      <ProductFilters selected={selected} counts={counts} />
+      <ProductFilters />
 
-      {shown.length === 0 ? (
-        // TWO DIFFERENT MESSAGES, because they ask for two different things.
-        // `counts.all` is what separates them: an empty shelf needs a maker, an
-        // empty category needs the reader to look elsewhere. Showing "try
-        // another category" on a shelf that has nothing at all would send
-        // someone hunting through six empty chips.
-        counts.all === 0 ? (
-          <EmptyState
-            icon={PackageOpen}
-            title={tEmptyTitle}
-            description={tEmptyBody}
-            action={
-              <LinkButton href="/community" size="sm">
-                {tEmptyCta}
-              </LinkButton>
-            }
-          />
-        ) : (
-          <EmptyState
-            icon={SearchX}
-            title={tNoneHereTitle}
-            description={tNoneHereBody}
-            action={
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <LinkButton href="/products" size="sm" variant="secondary">
-                  {tSeeEverything}
-                </LinkButton>
-                <LinkButton href="/community" size="sm">
-                  {tEmptyCta}
-                </LinkButton>
-              </div>
-            }
-          />
-        )
-      ) : (
-        // `xl:grid-cols-3`, not lg. The sidebar costs 256px, so at lg a 3-up
-        // app grid gives 219px columns — NARROWER than the 2-up at the same
-        // viewport.
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {shown.map((p) => (
-            <ProductCard
-              key={p.id}
-              post={p}
-              locale={locale}
-              labels={{
-                ...cardLabels,
-                // productBucketOf, never productCategoryOf: an older
-                // show_and_tell has no category tag, and a null must never
-                // reach a label lookup.
-                category: categoryLabel(productBucketOf(p.tags)),
-              }}
-            />
-          ))}
-        </div>
-      )}
+      <ProductGrid
+        items={shelf}
+        labels={{
+          emptyTitle: tEmptyTitle,
+          emptyBody: tEmptyBody,
+          postCta: tEmptyCta,
+          noneHereTitle: tNoneHereTitle,
+          noneHereBody: tNoneHereBody,
+          seeEverything: tSeeEverything,
+        }}
+      />
+      </ProductFilterProvider>
     </Section>
   );
 }
