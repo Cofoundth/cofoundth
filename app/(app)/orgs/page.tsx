@@ -1,7 +1,8 @@
 import { Building2, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canWriteOrgs } from "@/lib/roles";
 import { tServer } from "@/lib/i18n-server";
 import { OrgCard, OrgLogo, type OrgCardOrg } from "@/components/OrgCard";
 import {
@@ -31,7 +32,11 @@ export default async function OrgsPage({
   const supabase = await createClient();
   const myEmail = (user.email ?? "").toLowerCase();
   // Investors browse companies for deal flow — they don't create or join one.
-  const isInvestor = await isInvestorAccount(supabase, user.id);
+  // /orgs is on the explorer BLOCK list, so the proxy and the (app) layout are
+  // what keep them off this page. This read is the defence in depth: derive the
+  // founder affordances from the CAPABILITY, so a gate miss degrades to
+  // read-only rather than to a working Create-company button.
+  const mayWrite = canWriteOrgs(await getAccountRole(supabase, user.id));
 
   const [{ data: inviteRows }, { data: memberRows }, { data: allOrgs }] =
     await Promise.all([
@@ -84,8 +89,9 @@ export default async function OrgsPage({
   const tabFunding = await tServer("Want funding");
   // TWO different empties, and they need opposite answers:
   //   directory.length === 0      nothing is listed at all → invite them to
-  //                               list the first one (or, for an investor who
-  //                               cannot, point at the founder directory).
+  //                               list the first one (or, for anyone who cannot
+  //                               list one — investor, explorer — point at the
+  //                               founder directory instead).
   //   filteredDirectory empty     the TAB filtered everything out → the data
   //                               exists, so offer the way back to "All".
   //                               Never "create the first one" here.
@@ -93,14 +99,16 @@ export default async function OrgsPage({
   // `directory` excludes the viewer's OWN companies, so "be the first to list
   // one" is only true for someone who has none — a founder who created the
   // only company on the platform must not be told to create it again.
-  const canListFirst = !isInvestor && myOrgs.length === 0;
+  const canListFirst = mayWrite && myOrgs.length === 0;
   const createCompanyLabel = await tServer("Create company");
   const emptyDirectoryTitle = await tServer("No companies yet");
   let emptyDirectoryBodyEn: string;
   if (canListFirst) {
     emptyDirectoryBodyEn =
       "Be the first to list one. Add your company and other founders will see what you're building.";
-  } else if (isInvestor) {
+  } else if (!mayWrite) {
+    // Investor or explorer: cannot list a company, so "be the first" is a dead
+    // end and "yours is the only one" is false — they have none.
     emptyDirectoryBodyEn =
       "Companies list themselves here as they join. The founder directory is where to see who's building right now.";
   } else {
@@ -138,7 +146,7 @@ export default async function OrgsPage({
             {await tServer(directory.length === 1 ? "company" : "companies")}
           </span>
         </div>
-        {!isInvestor && (
+        {mayWrite && (
           // px-5 py-2.5 is the documented off-scale pad (between sm and md) —
           // kept as an override so the migration is a pixel no-op. `hidden
           // sm:inline-flex` replaces the primitive's base `inline-flex`.
@@ -153,7 +161,7 @@ export default async function OrgsPage({
       </div>
 
       {/* Pending invites */}
-      {!isInvestor && invites.length > 0 && (
+      {mayWrite && invites.length > 0 && (
         <section className="mb-14">
           <SectionHeading title={await tServer("Invitations")} />
           <div className="space-y-3">
@@ -182,7 +190,7 @@ export default async function OrgsPage({
       )}
 
       {/* Your companies (founders only) */}
-      {!isInvestor && (
+      {mayWrite && (
         <section className="mb-14">
           <SectionHeading title={await tServer("Your companies")} />
         {myOrgs.length === 0 ? (
@@ -241,7 +249,7 @@ export default async function OrgsPage({
                   </LinkButton>
                 ) : (
                   <LinkButton
-                    href={isInvestor ? "/founders" : "/browse"}
+                    href={mayWrite ? "/browse" : "/founders"}
                     size="sm"
                     variant="secondary"
                   >

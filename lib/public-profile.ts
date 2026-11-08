@@ -15,8 +15,13 @@
 //    founder by `slug`, so the raw UUID never reaches the browser.
 // 4. `pitch` is fetched but NEVER returned whole. It leaves this file only as
 //    `excerpt` — truncated to EXCERPT_MAX characters (see toExcerpt).
-// 5. Investors are invisible: their presence on the platform is confidential,
-//    so every query pins account_type = 'founder'.
+// 5. ONLY 'founder' rows are ever public — every query here pins
+//    account_type = 'founder'. That one pin now does two jobs, and both are
+//    load-bearing: an INVESTOR's presence on the platform is confidential, and
+//    an EXPLORER is simply not a directory entry (they are here to try what
+//    the community builds, not to be found). Read it as the directory
+//    ALLOWLIST, not as an investor-specific privacy rule — relaxing it to
+//    "not an investor" would publish every explorer.
 //
 // Anything a logged-out page wants to show MUST be added to PublicProfile here
 // (and reviewed) rather than queried at the call site — that is the whole point
@@ -91,7 +96,8 @@ function toPublicProfile(row: ProfileRow): PublicProfile {
 //   profile_complete  — half-finished profiles are not a directory entry
 //   suspended = false — moderated accounts disappear from public surfaces
 //   is_bot is not true
-//   account_type = 'founder' — investors are confidential, never public
+//   account_type = 'founder' — the directory allowlist: investor presence is
+//                      confidential, and an explorer is not a directory entry
 //   slug is not null  — public routes address founders by slug only
 function publicQuery() {
   return createAdminClient()
@@ -135,7 +141,11 @@ export async function listPublicFounders(limit = 48): Promise<PublicProfile[]> {
   return ((data ?? []) as ProfileRow[]).map(toPublicProfile);
 }
 
-// One founder by slug, or null when they are not publicly visible.
+// One founder by slug, or null when they are not publicly visible — which
+// includes any explorer or investor slug, and any founder who has not finished
+// a profile. Returning null is correct and sufficient: the public route turns
+// it into notFound() and its generateMetadata already answers noindex, so an
+// explorer with no pitch and no onboarding is a clean 404, never a crash.
 // Wrapped in React cache() because the profile preview route calls this twice
 // per request — once in generateMetadata, once in the page — and both should
 // share a single round trip (same idiom as getLocale in lib/i18n-server.ts).

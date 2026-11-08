@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canPostThread } from "@/lib/roles";
 
 export type PostState = { error?: string } | null;
 
@@ -42,8 +43,21 @@ export async function createPostAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
-  if (await isInvestorAccount(supabase, user.id))
+
+  // The SECOND top-level-post path (the /community/new full page; the other is
+  // lib/post-actions.ts createPostAction). Same predicate on purpose — these
+  // two write the same table and have drifted before. Blocking the ROUTE is
+  // not enough: a server action is invocable without ever rendering its page.
+  const role = await getAccountRole(supabase, user.id);
+  if (!canPostThread(role)) {
+    // An explorer reads and comments here; only starting a thread is shut.
+    if (role === "explorer")
+      return {
+        error:
+          "Explorer accounts read and comment here — they don’t start threads.",
+      };
     return { error: "Only founders can post in the community." };
+  }
 
   const { data, error } = await supabase
     .from("forum_posts")

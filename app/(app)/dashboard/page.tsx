@@ -77,6 +77,9 @@ export default async function DashboardPage() {
       )
       .eq("profile_complete", true)
       .eq("suspended", false)
+      // Founders only, in the ranked pool AND in founderCount: the census says
+      // "N founders", so an explorer or an investor in it would be a wrong
+      // number as well as a wrong suggestion.
       .eq("account_type", "founder")
       .not("is_bot", "is", true)
       .neq("id", user.id)

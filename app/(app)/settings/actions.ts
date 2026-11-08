@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hardDeleteUser } from "@/lib/delete-user";
+import { getAccountRole } from "@/lib/account";
+import { roleHome } from "@/lib/roles";
 import { canonicalProvince } from "@/lib/provinces";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { ACTIVITIES } from "@/lib/activities";
@@ -103,6 +105,35 @@ export async function updateProfileAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated. Please sign in again." };
+
+  // This is the FOUNDER profile editor, and it is the twin of
+  // app/onboarding/actions.ts — same fields, same refusal, same reason. It
+  // writes i_am / intent / looking_for / pitch / type / capabilities and, at
+  // the bottom of the update, `onboarded: true`, which trips 0046's
+  // set_profile_complete trigger. On a gated role's row that is not a cosmetic
+  // mismatch: it makes them indistinguishable from a founder to every query
+  // that does not pin account_type (app/(marketing)/page.tsx's "joined this
+  // week" count, and the two B2B gates that only check
+  // `type === "company" && onboarded`), and for an explorer it manufactures the
+  // half-finished founder profile the role exists to avoid.
+  //
+  // Written as `roleHome(role) !== null` — "this role is gated" — not as
+  // `role === "explorer"`, so a role added later is refused by default instead
+  // of inheriting the founder editor. Investor is refused too, and that is not
+  // collateral: an investor's profile lives in investor_profiles (/investor),
+  // their row is pinned out of the founder directory, and they had exactly the
+  // same hole.
+  //
+  // THE ROUTE IS NOT THE BOUNDARY, and here that is by design rather than an
+  // oversight: /settings is on BOTH gated roles' allowlists (lib/roles.ts),
+  // because the Account tab holds their email, password and account deletion.
+  // So app/(app)/settings/page.tsx hides the editor and this action refuses the
+  // submit. Neither alone is enough — a server action is invocable without ever
+  // rendering its page.
+  const role = await getAccountRole(supabase, user.id);
+  if (roleHome(role) !== null) {
+    return { error: "This account doesn’t have a founder profile to edit." };
+  }
 
   // ---- Personal
   const first_name = String(formData.get("first_name") ?? "")
@@ -325,6 +356,73 @@ export async function updateProfileAction(
   // rail keeps showing the old value until a full page load.
   revalidatePath("/", "layout");
   revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+// The identity-only editor, and the exact complement of the refusal above.
+//
+// A gated role has no founder profile — but it DOES have a name, and that name
+// is public: lib/roles.ts lets an explorer comment and RSVP, so they render as
+// a comment author and on a meetup guest list. Without this they would be stuck
+// forever with whatever signup or the OAuth provider handed them, which is a
+// real bug and not a consequence anybody chose. (/settings even tells them so:
+// "In the community you show up as a commenter and a meetup guest.")
+//
+// A SEPARATE ACTION, not a branch inside updateProfileAction, on purpose. That
+// one writes 30 columns including `onboarded: true`; teaching it a reduced
+// field set would mean one function whose column list depends on the caller's
+// role, and the next person to add a field there would have to notice. This
+// writes three columns and can never write a thirty-first.
+//
+// The gate is the MIRROR of updateProfileAction's: that one refuses a gated
+// role, this one refuses an ungated one. A founder editing their name goes
+// through the full editor, so there is exactly one writer per role and no
+// second path to `full_name` for anybody.
+export async function updateIdentityAction(
+  _prev: EditProfileState,
+  formData: FormData,
+): Promise<EditProfileState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated. Please sign in again." };
+
+  const role = await getAccountRole(supabase, user.id);
+  if (roleHome(role) === null) {
+    return { error: "Use the profile editor to change your name." };
+  }
+
+  // Same caps as updateProfileAction (40 per part, 80 combined) so the two
+  // writers cannot disagree about what a storable name is.
+  const first_name = String(formData.get("first_name") ?? "")
+    .trim()
+    .slice(0, 40);
+  const last_name = String(formData.get("last_name") ?? "")
+    .trim()
+    .slice(0, 40);
+  const full_name = `${first_name} ${last_name}`.trim();
+
+  if (!first_name) return { error: "First name is required." };
+  if (full_name.length > 80)
+    return { error: "Name is too long (80 characters max)." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name,
+      first_name: first_name || null,
+      last_name: last_name || null,
+    })
+    .eq("id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/settings");
+  // The rail shows the name and lives in a layout, which Next does not
+  // re-render on client-side navigation — same reason updateProfileAction
+  // scopes this one "layout".
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 

@@ -1,13 +1,16 @@
-// Host a meetup — founder-facing. Investors never reach this page (middleware
-// excludes /meetups/new via lib/investor-routes.ts, same as /community/new),
-// and hostMeetupAction re-checks server-side; the layout guard here is the
-// belt to that suspenders.
+// Host a meetup — founder-facing, and ONLY founder-facing. Neither of the
+// other two roles reaches this page in normal use (middleware excludes
+// /meetups/new for both, via the per-role allowlists in lib/roles.ts, same as
+// /community/new), and hostMeetupAction re-checks server-side; the guard below
+// is the belt to that suspenders, because the middleware does not see a
+// server action and a route gate is not a write boundary.
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { tServer } from "@/lib/i18n-server";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canHostMeetup } from "@/lib/roles";
 import { Card, Section } from "@/components/ui";
 import { HostMeetupWizard } from "../HostMeetupWizard";
 
@@ -16,7 +19,10 @@ export const dynamic = "force-dynamic";
 export default async function NewMeetupPage() {
   const user = await requireUser();
   const supabase = await createClient();
-  if (await isInvestorAccount(supabase, user.id)) redirect("/meetups");
+  // Founder only: an explorer may RSVP to a meetup but not open one, so they
+  // are bounced here exactly like an investor.
+  if (!canHostMeetup(await getAccountRole(supabase, user.id)))
+    redirect("/meetups");
 
   return (
     <Section width="narrow">

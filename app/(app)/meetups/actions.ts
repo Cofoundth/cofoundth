@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canHostMeetup, canRsvpMeetup } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
@@ -66,10 +67,16 @@ export async function rsvpAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
-  // Investors read the founder community but do not act in it — the same rule
-  // the forum composer follows. Routing already hides the button; this is the
-  // boundary that actually holds.
-  if (await isInvestorAccount(supabase, user.id)) {
+  // Founders AND EXPLORERS may RSVP; investors may not. Turning up to try what
+  // the community built is exactly the behaviour the explorer role exists for,
+  // so this is a DECISION, not the old "not an investor" accident — do not
+  // narrow it to founders. Routing hides the button; this is what holds.
+  //
+  // What RSVP no longer implies: this file used to treat a 'going' row as
+  // shorthand for "a trusted founder". It is not any more. Inviting people
+  // (inviteFoundersAction) and enumerating the founder pool to do it
+  // (searchFoundersAction) carry their OWN founder checks for that reason.
+  if (!canRsvpMeetup(await getAccountRole(supabase, user.id))) {
     return { error: "Not authenticated." };
   }
 
@@ -242,6 +249,11 @@ export type MeetupActionResult = { error?: string; ok?: boolean };
 
 // Host answers one request. Service role, because the row being promoted
 // belongs to the REQUESTER and they may not update it themselves.
+//
+// No role check here, and that is sound rather than lucky: the only caller
+// that passes is `created_by`, and hostMeetupAction refuses every non-founder,
+// so a non-founder can never be the host of a meetup. It is an inference from
+// another gate, so if hosting ever widens, re-read this line.
 export async function respondRequestAction(
   meetupId: string,
   userId: string,
@@ -363,8 +375,12 @@ export async function inviteFoundersAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
-  if (await isInvestorAccount(supabase, user.id)) {
-    return { error: "Not authenticated." };
+  // FOUNDER ONLY — and the 'going' requirement further down is no longer the
+  // role boundary. An explorer may RSVP, so "is going" no longer implies "is a
+  // founder": without this line an explorer could RSVP any public meetup and
+  // then mass-invite twenty founders into it.
+  if (!canHostMeetup(await getAccountRole(supabase, user.id))) {
+    return { error: "Only founder accounts can invite people to a meetup." };
   }
 
   const ids = [...new Set(inviteeIds)].filter((id) => id && id !== user.id);
@@ -469,7 +485,10 @@ export async function respondInviteAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
-  if (await isInvestorAccount(supabase, user.id)) {
+  // Accepting an invite IS an RSVP for ladder purposes — it is the one path
+  // that writes a 'going' row without the host acting — so it takes the same
+  // predicate as rsvpAction: founders and explorers yes, investors no.
+  if (!canRsvpMeetup(await getAccountRole(supabase, user.id))) {
     return { error: "Not authenticated." };
   }
 
@@ -575,8 +594,16 @@ export async function searchFoundersAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
-  // Only someone who could actually SEND the invite may enumerate the pool —
-  // which on a private meetup is the host alone, matching inviteFoundersAction.
+  // Only someone who could actually SEND the invite may enumerate the pool.
+  // That now takes TWO conditions, because the RSVP row stopped implying the
+  // role: the caller must be a FOUNDER (an explorer can hold a 'going' row but
+  // cannot invite, so without this they could type into the typeahead and read
+  // out the founder directory they are blocked from at /browse), and on a
+  // private meetup they must be the host — matching inviteFoundersAction.
+  if (!canHostMeetup(await getAccountRole(supabase, user.id))) {
+    return { error: "Only founder accounts can invite people to a meetup." };
+  }
+
   const [{ data: mine }, { data: meetup }] = await Promise.all([
     supabase
       .from("meetup_rsvps")
@@ -613,6 +640,13 @@ export async function searchFoundersAction(
         .select("id, slug, full_name, photo_url")
         .eq("profile_complete", true)
         .eq("suspended", false)
+        // FOUNDERS ONLY are invitable, and that is a decision rather than a
+        // leftover. An explorer may RSVP for themselves (that is the point of
+        // the role) but is not in the founder directory this typeahead reads,
+        // and profile_complete is false for them by construction, so they
+        // could never appear here anyway — widening the pin alone would not
+        // make them invitable. If being invitable is ever wanted, BOTH filters
+        // have to move, and the copy ("invite founders") with them.
         .eq("account_type", "founder")
         .not("is_bot", "is", true)
         .neq("id", user.id)
@@ -645,10 +679,11 @@ export async function searchFoundersAction(
 
 // ── Founder-facing hosting ─────────────────────────────────────────────────
 // The admin keeps its own actions in app/(app)/admin/meetups/actions.ts; this
-// differs where the audience does: any FOUNDER may host (investors read
-// meetups but never write into the founder community — same line rsvpAction
-// draws above), there is no status field (a hosted meetup publishes
-// immediately; drafts are an editorial tool and members aren't editors), and
+// differs where the audience does: any FOUNDER may host — and only a founder:
+// investors are read-only here, and an explorer may RSVP and attend but not
+// originate (lib/roles.ts canHostMeetup) — there is no status field (a hosted
+// meetup publishes immediately; drafts are an editorial tool and members
+// aren't editors), and
 // the host RSVPs to their own meetup on create — a host who isn't going is a
 // data bug, and Onfound's own cards count the host in "going".
 //
@@ -689,10 +724,17 @@ export async function hostMeetupAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sign in to host a meetup." };
-  // Investors read the meetup calendar but do not write into the founder
-  // community — the same boundary /community/new enforces.
-  if (await isInvestorAccount(supabase, user.id)) {
-    return { error: "Investor accounts can't host meetups." };
+  // FOUNDER ONLY. Investors and explorers both read the calendar; an explorer
+  // may also RSVP and attend, but hosting is origination — the same line
+  // /community/new draws between commenting and starting a thread.
+  const role = await getAccountRole(supabase, user.id);
+  if (!canHostMeetup(role)) {
+    return {
+      error:
+        role === "explorer"
+          ? "Explorer accounts can join meetups, not host them."
+          : "Investor accounts can't host meetups.",
+    };
   }
 
   const title = String(formData.get("title") ?? "").trim();
@@ -871,8 +913,16 @@ export async function reportMeetupAction(
 }
 
 // Post into a meetup's attendee chat. RLS is the gate — the insert policy
-// requires the caller's own RSVP row — so this runs on the user's client and
-// a non-attendee (or investor, who can never RSVP) is refused by Postgres.
+// requires the caller's own RSVP row — so this runs on the user's client and a
+// non-attendee is refused by Postgres.
+//
+// WHO THAT NOW INCLUDES, stated rather than inherited: an INVESTOR still can
+// never post here, because they can never hold an RSVP row (rsvpAction refuses
+// them). An EXPLORER can, because they can RSVP — and that is the intended
+// answer, not a leak: the attendee room is where someone who came to try
+// things says what they thought, the same participation grant as commenting.
+// RLS cannot see account_type, so reversing that answer needs an explicit role
+// check HERE; do not re-derive it from the presence of an RSVP row.
 export async function postMeetupMessageAction(
   meetupId: string,
   content: string,

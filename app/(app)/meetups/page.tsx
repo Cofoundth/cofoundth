@@ -7,7 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { type Meetup } from "@/lib/meetups";
 import { nowISO } from "@/lib/time";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canHostMeetup, canRsvpMeetup } from "@/lib/roles";
 import { getBlockedIds } from "@/lib/blocking";
 import { Section } from "@/components/ui";
 import type { MyRsvp, InviteStatus } from "./actions";
@@ -59,7 +60,7 @@ export default async function MeetupsPage({
   // in", which is what the reference product does and the only reading under
   // which a private meetup can actually fill. Upcoming keeps cancelled rows
   // visible so people who RSVP'd learn it's off; past shows published only.
-  const [{ data: upcomingRaw }, { data: pastRaw }, investor, blocked] =
+  const [{ data: upcomingRaw }, { data: pastRaw }, role, blocked] =
     await Promise.all([
       supabase
         .from("meetups")
@@ -73,9 +74,20 @@ export default async function MeetupsPage({
         .eq("status", "published")
         .order("starts_at", { ascending: false })
         .limit(10),
-      isInvestorAccount(supabase, user.id),
+      getAccountRole(supabase, user.id),
       getBlockedIds(user.id),
     ]);
+
+  // TWO capabilities, passed down as two props. An explorer may RSVP and may
+  // NOT host, so a single boolean cannot drive both the "Create a meetup"
+  // affordances and the RSVP door — whichever way it was set, one of the two
+  // was wrong for an explorer. MeetupsClient and MeetupJoinControls now take
+  // canRsvp + canHost and never derive one from the other.
+  //
+  // `initialCreate` is gated on hosting as well: /meetups?create=1 must not
+  // auto-open a wizard whose submit hostMeetupAction refuses.
+  const canRsvp = canRsvpMeetup(role);
+  const canHost = canHostMeetup(role);
 
   // A blocked host takes their meetup with them, the same way /meetups/[slug]
   // 404s one. This matters more now that private meetups are listed: the card
@@ -169,6 +181,10 @@ export default async function MeetupsPage({
       ...past.map((m) => m.created_by),
     ]),
   ];
+  // Id-pinned and DELIBERATELY not role-pinned. An explorer may RSVP, so they
+  // appear in these face piles as an attendee — that is the point of the role,
+  // not a leak. Adding `.eq("account_type", "founder")` here (the filter the
+  // DIRECTORY queries need) would silently drop real attendees from the cards.
   const { data: faceRows } = faceIds.length
     ? await supabase
         .from("profiles")
@@ -231,8 +247,9 @@ export default async function MeetupsPage({
           .map(toItem)}
         past={past.map(toItem)}
         nearby={nearbyIds.map((id) => faces.get(id)).filter(Boolean) as MiniProfile[]}
-        investor={investor}
-        initialCreate={create === "1" && !investor}
+        canRsvp={canRsvp}
+        canHost={canHost}
+        initialCreate={create === "1" && canHost}
       />
     </Section>
   );

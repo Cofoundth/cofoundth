@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canComment, canPostProduct, canPostThread } from "@/lib/roles";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import { MAX_PRODUCT_BLURB, MAX_PRODUCT_NAME, MAX_PRODUCT_IMAGES, PRODUCT_CATEGORIES } from "@/lib/post-types";
@@ -173,8 +174,30 @@ export async function createPostAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
-  if (await isInvestorAccount(supabase, user.id))
+
+  // THE write gate for this table, and it guards two different ladder cells
+  // through one insert: a thread (kind 'post' / 'milestone') and a PRODUCT
+  // (kind 'show_and_tell', which IS the /products row — the shelf has no
+  // composer of its own). Both are founder-only, and they are checked through
+  // their own predicates so the two cannot drift apart later.
+  //
+  // Resolved from the ROLE, not from "is not an investor": an explorer answers
+  // false to that negation and would inherit the whole founder ladder. An
+  // explorer CAN comment (createPostCommentAction below) — that is the role,
+  // not an oversight — so the refusal has to say which door is shut.
+  const role = await getAccountRole(supabase, user.id);
+  const mayWrite =
+    kind === "show_and_tell" ? canPostProduct(role) : canPostThread(role);
+  if (!mayWrite) {
+    if (role === "explorer")
+      return {
+        error:
+          kind === "show_and_tell"
+            ? "The shelf is for members who build. Switch to building to post a product."
+            : "Explorer accounts read and comment here — they don’t start threads.",
+      };
     return { error: "Only founders can post in the community." };
+  }
 
   const files = pickedImages(formData, kind);
   if (files.length > MAX_PRODUCT_IMAGES)
@@ -279,6 +302,11 @@ export async function deletePostAction(id: string) {
   revalidateFeeds(id);
 }
 
+// NO role gate, and that is the ladder, not an omission: EVERY role may like
+// (lib/roles.ts canLike is true for all three). The self-scoped deletes above
+// and below, and reportContentAction, are open to every role for the same
+// reason — they act only on the caller's own row, or on the moderation queue
+// that everyone can reach. Do not "add the missing check".
 export async function togglePostLikeAction(postId: string) {
   const supabase = await createClient();
   const {
@@ -322,8 +350,15 @@ export async function createPostCommentAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
-  if (await isInvestorAccount(supabase, user.id))
-    return { error: "Only founders can comment in the community." };
+
+  // AN EXPLORER IS DELIBERATELY ALLOWED THROUGH HERE, and is deliberately
+  // refused at createPostAction above. Feedback is the entire value the
+  // explorer role brings, so commenting is the one write it has. Anyone
+  // "tidying" these two gates onto the same predicate is deleting the reason
+  // the role exists, not closing a hole. Investors stay read-only.
+  const role = await getAccountRole(supabase, user.id);
+  if (!canComment(role))
+    return { error: "Investor accounts don’t comment in the community." };
 
   // A blocked pair can't talk here either. The post itself already 404s for
   // this viewer (/community/[id]), so this closes the direct-action path that

@@ -5,6 +5,20 @@ import { createClient } from "@/lib/supabase/server";
 import { isBlockedEitherWay } from "@/lib/blocking";
 import { EDIT_WINDOW_MS, UNSEND_WINDOW_MS } from "./windows";
 
+// NO account_type check in this module, by design and by DEPENDENCY — worth
+// stating, because "there is no role gate here" otherwise reads as an omission.
+//
+// Every action below trusts membership of a `matches` row, and that is a sound
+// proxy for "founder" only because of ONE line in a different file:
+// app/(app)/profile/[id]/actions.ts expressInterestAction, which refuses any
+// non-founder on either side. A match row can only be minted by the DB trigger
+// that fires when two interests reciprocate, so if that gate holds, no explorer
+// or investor can ever be a party to a match and this whole surface is
+// unreachable for them.
+//
+// The proxy is implicit and cross-file: if expressInterest ever widens, every
+// action here needs its own founder check.
+
 export type ConvMessage = {
   id: string;
   sender_id: string;

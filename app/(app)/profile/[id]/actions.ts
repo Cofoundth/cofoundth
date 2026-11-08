@@ -10,6 +10,7 @@ import {
 } from "@/lib/email";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { isBlockedEitherWay } from "@/lib/blocking";
+import { canExpressInterest, parseAccountRole } from "@/lib/roles";
 
 export type InterestState = { error?: string; ok?: boolean } | null;
 export type ReportState = { error?: string; ok?: boolean } | null;
@@ -164,6 +165,44 @@ export async function expressInterestAction(
 
   if (user.id === toId) {
     return { error: "You can’t express interest in your own profile." };
+  }
+
+  // CO-FOUNDER INTEREST IS FOUNDER-TO-FOUNDER, AND THIS IS THE ONLY DOOR.
+  // There was no role check here at all, on either side, and RLS does not
+  // help: interests_insert_self only asserts from_profile_id = auth.uid().
+  // That matters more than it looks, because a reciprocal interest trips a DB
+  // trigger that mints a `matches` row — and match membership is the ONLY
+  // thing every action under /messages checks. So this one gate is what keeps
+  // non-founders out of DMs, and app/(app)/messages/** needs no role check of
+  // its own precisely because of it. Do not remove without gating those too.
+  //
+  // BOTH sides are tested. An explorer is out of the matching POOL already
+  // (every directory query pins account_type = 'founder'), but they were not
+  // out of the matching MECHANISM: a founder can open an explorer's profile
+  // from a comment byline, and reciprocating would have minted a match with
+  // someone who is bounced out of /messages. The investor half of this was
+  // live in production too — /profile/[id] is investor-readable.
+  //
+  // Same deliberately uninformative wording as the blocking branch below: the
+  // caller learns nothing about the other account's type.
+  const { data: roleRows } = await supabase
+    .from("profiles")
+    .select("id, account_type")
+    .in("id", [user.id, toId]);
+  const roleOf = (id: string) =>
+    parseAccountRole(
+      (roleRows ?? []).find((r) => r.id === id)?.account_type,
+    );
+  if (!canExpressInterest(roleOf(user.id))) {
+    return { error: "This member isn’t available." };
+  }
+  // The TARGET must be a founder as well — not merely "allowed to express
+  // interest", which is the same set today but answers a different question.
+  if (
+    (roleRows ?? []).length !== 2 ||
+    roleOf(toId) !== "founder"
+  ) {
+    return { error: "This member isn’t available." };
   }
 
   // Blocked in either direction = the pair can't open new interest. The

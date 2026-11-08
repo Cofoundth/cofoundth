@@ -25,15 +25,13 @@
 
 import { PackageOpen, SearchX } from "lucide-react";
 import type { ProductCategory } from "@/lib/post-types";
-import { Button, EmptyState, LinkButton } from "@/components/ui";
+import { Button, EmptyState } from "@/components/ui";
 import { useProductFilter } from "./filter-context";
 
 export type ProductGridLabels = {
   /** Shown when the whole shelf is empty — nobody has posted a product. */
   emptyTitle: string;
   emptyBody: string;
-  /** "Post in the community" — the CTA on both empty states. */
-  postCta: string;
   /** Shown when the shelf has products but the filter excludes them all. */
   noneHereTitle: string;
   noneHereBody: string;
@@ -44,6 +42,7 @@ export type ProductGridLabels = {
 export function ProductGrid({
   items,
   labels,
+  supplyCta,
 }: {
   items: readonly {
     id: string;
@@ -51,6 +50,15 @@ export function ProductGrid({
     card: React.ReactNode;
   }[];
   labels: ProductGridLabels;
+  /**
+   * The "put something on the shelf" CTA, built by the SERVER page and passed
+   * down whole — it is not a label, because it is not always a link: a FOUNDER
+   * gets a link to the composer, an EXPLORER gets a form that promotes them to
+   * a founder first (see ./SwitchToBuilding.tsx). Passing the element rather
+   * than a label + href keeps the role lookup on the server and keeps this file
+   * from having to know the ladder.
+   */
+  supplyCta: React.ReactNode;
 }) {
   const { matches, clear } = useProductFilter();
   const shown = items.filter((i) => matches(i.bucket));
@@ -66,11 +74,7 @@ export function ProductGrid({
         icon={PackageOpen}
         title={labels.emptyTitle}
         description={labels.emptyBody}
-        action={
-          <LinkButton href="/community" size="sm">
-            {labels.postCta}
-          </LinkButton>
-        }
+        action={supplyCta}
       />
     ) : (
       <EmptyState
@@ -87,9 +91,7 @@ export function ProductGrid({
             <Button size="sm" variant="secondary" onClick={clear}>
               {labels.seeEverything}
             </Button>
-            <LinkButton href="/community" size="sm">
-              {labels.postCta}
-            </LinkButton>
+            {supplyCta}
           </div>
         }
       />

@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { FEATURES } from "@/lib/features";
+import { parseAccountRole, DEFAULT_ROLE, EXPLORER_HOME } from "@/lib/roles";
 
 // Resolve the origin of the CURRENT request, so confirmation / password-reset
 // links (and any OAuth redirectTo built server-side) land back on whatever host
@@ -49,16 +51,37 @@ export async function signupAction(
     .toLowerCase();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
-  // Registration persona. Only 'investor' is honored; anything else (incl.
-  // tampering) falls back to 'founder'. NOTE: 'admin' is never selectable here.
+  // Registration persona, validated against the ONE allowlist in lib/roles.ts
+  // rather than a literal. The old `=== "investor" ? ... : "founder"` ternary
+  // could not express a third value at all: a form posting
+  // account_type=explorer silently created a founder, in the same way
+  // handle_new_user's own binary did.
+  //
+  // 'investor' is refused while FEATURES.investorSignup is false. It falls back
+  // to the default role rather than erroring because the picker cannot offer
+  // the option at all — only a hand-crafted POST reaches this line, and
+  // parseAccountRole's documented posture for anything it will not honour is
+  // the unrestricted default. NOTE: 'admin' is never an account_type.
+  const requestedRole = parseAccountRole(formData.get("account_type"));
   const accountType =
-    String(formData.get("account_type") ?? "") === "investor"
-      ? "investor"
-      : "founder";
-  // account_type is the binding role for this account — chosen here at signup,
-  // not changeable later (one account = one role). /onboarding then shows only
-  // that role's form.
-  const next = "/onboarding";
+    requestedRole === "investor" && !FEATURES.investorSignup
+      ? DEFAULT_ROLE
+      : requestedRole;
+  // account_type is the binding role for this account — chosen here at signup.
+  // It is NOT changeable in-app, with exactly ONE exception: the one-way
+  // explorer -> founder upgrade, which exists because it is the funnel (try
+  // what people built, get inspired, build something). founder -> explorer,
+  // anything -> investor and investor -> anything are all refused. Do not read
+  // that single edge as permission to add a general role switcher.
+  //
+  // Where to land afterwards follows the role. /onboarding is right for a
+  // founder AND for an investor — both have a form there, and
+  // OnboardingRoleSwitch picks between them. The EXPLORER is the one that
+  // skips onboarding by definition, so sending them there would be a dead end:
+  // the page and the action both refuse them. Written as an explicit explorer
+  // case rather than `roleHome(accountType) ?? "/onboarding"`, which would have
+  // quietly routed a new investor to /funding and skipped their form.
+  const next = accountType === "explorer" ? EXPLORER_HOME : "/onboarding";
 
   if (!firstName || !email || !password) {
     return { step: "credentials", error: "All fields are required." };
@@ -114,7 +137,12 @@ export async function signupAction(
 
   // If email confirmation is OFF in Supabase, signUp returns a session
   // immediately — skip the check-email step.
-  if (data.session) redirect("/dashboard");
+  //
+  // Lands on `next`, not /dashboard. /dashboard was never where a brand-new
+  // account belonged (the app layout immediately redirected a founder on to
+  // /onboarding, so this was a wasted hop), and for an explorer it is a route
+  // they cannot read — they would be bounced twice before seeing anything.
+  if (data.session) redirect(next);
 
   return { step: "check_email", email };
 }

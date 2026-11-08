@@ -2,25 +2,39 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { AccountRole } from "@/lib/roles";
 
 type Props = {
   label?: string;
   next?: string;
+  /**
+   * The picked role, carried through OAuth — see the long note on the same prop
+   * in GoogleSignInButton.
+   *
+   * This button is commented out at both call sites (the provider is not
+   * enabled in Supabase yet), and it takes the prop anyway ON PURPOSE: the role
+   * carry is the bug that was live here before, and an OAuth button that
+   * silently drops the role is exactly how it comes back the day LinkedIn is
+   * switched on. The two buttons stay identical in what they forward.
+   */
+  role?: AccountRole;
 };
 
 export function LinkedInSignInButton({
   label = "Continue with LinkedIn",
   next = "/dashboard",
+  role,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleClick() {
     setIsLoading(true);
     const supabase = createClient();
+    const roleParam = role ? `&role=${encodeURIComponent(role)}` : "";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "linkedin_oidc",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${roleParam}`,
         scopes: "openid profile email",
       },
     });

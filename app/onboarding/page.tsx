@@ -5,6 +5,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BrandMark, Wordmark } from "@/components/Brand";
 import { signOutAction } from "../(auth)/actions";
 import { OnboardingRoleSwitch } from "./OnboardingRoleSwitch";
+import { parseAccountRole, roleHome } from "@/lib/roles";
 import type { InvestorInitial } from "@/app/(app)/investor/InvestorOnboardingForm";
 
 export default async function OnboardingPage() {
@@ -22,6 +23,25 @@ export default async function OnboardingPage() {
     .eq("id", user.id)
     .single();
 
+  // /onboarding is OUTSIDE the (app) group and is not an isAppShellRoute
+  // prefix, so neither the middleware nor app/(app)/layout.tsx gates it — this
+  // page and saveOnboardingAction are the only places the refusal can live.
+  //
+  // Explorers skip onboarding entirely; that is the point of the role. They
+  // have no founder profile to fill in, and the wizard below writes i_am /
+  // looking_for / pitch and sets `onboarded`, which would make them look like a
+  // founder to every unpinned query.
+  //
+  // Investor is named explicitly because it is the ONE gated role that does
+  // onboard here (the investor form lives on this page), so it must fall
+  // through. Anything else that is gated lands in the redirect rather than
+  // silently inheriting the founder wizard, which is what the
+  // `account_type === "investor" ? "investor" : "founder"` ternary this
+  // replaces did with every value it did not recognise.
+  const role = parseAccountRole(profile?.account_type);
+  const home = roleHome(role);
+  if (home !== null && role !== "investor") redirect(home);
+
   const { data: inv } = await supabase
     .from("investor_profiles")
     .select(
@@ -29,9 +49,6 @@ export default async function OnboardingPage() {
     )
     .eq("user_id", user.id)
     .maybeSingle();
-
-  const initialRole: "founder" | "investor" =
-    profile?.account_type === "investor" ? "investor" : "founder";
 
   const founderInitial = profile
     ? {
@@ -93,7 +110,7 @@ export default async function OnboardingPage() {
       </header>
 
       <OnboardingRoleSwitch
-        initialRole={initialRole}
+        initialRole={role}
         founderInitial={founderInitial}
         investorInitial={(inv as InvestorInitial | null) ?? undefined}
         userId={user.id}

@@ -16,6 +16,12 @@ import { MobileMenu } from "@/components/MobileMenu";
 import { OrgSwitcher } from "@/components/OrgSwitcher";
 import { getUserOrgs, getActiveOrgId } from "@/lib/active-org";
 import { SidebarNav } from "@/components/SidebarNav";
+import {
+  parseAccountRole,
+  roleHome,
+  canRoleRead,
+  isAppShellRoute,
+} from "@/lib/roles";
 
 // App chrome, Onfound-style: a persistent left rail on desktop, a slim top bar
 // on mobile. Mounted through components/AppShell.tsx on EVERY signed-in page,
@@ -32,10 +38,26 @@ export async function AppSidebar() {
     .select("full_name, photo_url, slug, is_admin, account_type")
     .eq("id", user.id)
     .single();
+  const role = parseAccountRole(profile?.account_type);
+
+  // Where the brand mark goes. /dashboard is founder-only, so for a gated role
+  // the logo — the most-clicked thing in any chrome — pointed at a route the
+  // middleware bounces. roleHome() is null for founder, which is the old value.
+  const homeHref = roleHome(role) ?? "/dashboard";
+
   // Founders land on the My Profile hub (identity, stats, account door) —
   // the public view is one row inside it. Investors keep their own home.
-  const myProfileHref =
-    profile?.account_type === "investor" ? "/investor" : "/profile";
+  //
+  // EXPLORERS KEEP /profile, deliberately, rather than losing this row. The
+  // alternative was no link at all, and that strands them: there is no Settings
+  // item in any nav array, so this avatar is the ONLY door from the chrome to
+  // their own account. /profile is also allowlisted for the role (lib/roles.ts)
+  // precisely so a page-level redirect gets a chance to run before the gate
+  // fires — the rail's job is only to not point somewhere the gate refuses.
+  // What that page SHOWS an explorer (it must not be the founder hub with
+  // founder stats and a public-profile link that cannot exist for them) is
+  // app/(app)/profile/page.tsx's business, not the rail's.
+  const myProfileHref = role === "investor" ? "/investor" : "/profile";
 
   // "Acting as" company switcher — only meaningful when in >1 company, and it
   // is company chrome, so it hides for the meetups soft launch along with the
@@ -53,6 +75,14 @@ export async function AppSidebar() {
       ? await getActiveOrgId(supabase, user.id)
       : null;
 
+  // The Connections badge is founder chrome, and so are its two reads — the
+  // same posture as FEATURES.companies gating getUserOrgs above rather than
+  // just hiding the switcher. Neither gated role can ever make these counts
+  // non-zero: express-interest is founder-only (lib/roles.ts canExpressInterest)
+  // and a `matches` row is the only door into /messages, so an explorer or an
+  // investor has nothing to be badged about. Skipping them removes two
+  // round-trips from EVERY app page render for those accounts.
+  const hasConnections = role === "founder";
   const [
     { count: receivedPending },
     { count: unreadMessages },
@@ -60,20 +90,24 @@ export async function AppSidebar() {
     { data: notifRows },
     { count: publishedInsights },
   ] = await Promise.all([
-    supabase
-      .from("interests")
-      .select("id", { count: "exact", head: true })
-      .eq("to_profile_id", user.id)
-      .eq("status", "pending"),
+    hasConnections
+      ? supabase
+          .from("interests")
+          .select("id", { count: "exact", head: true })
+          .eq("to_profile_id", user.id)
+          .eq("status", "pending")
+      : Promise.resolve({ count: 0 }),
     // `unsent_at is null` for the same reason /matches filters it: an unsent
     // message has no text left to read, so badging it is a ping for something
     // that no longer exists.
-    supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .neq("sender_id", user.id)
-      .is("read_at", null)
-      .is("unsent_at", null),
+    hasConnections
+      ? supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .neq("sender_id", user.id)
+          .is("read_at", null)
+          .is("unsent_at", null)
+      : Promise.resolve({ count: 0 }),
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
@@ -146,8 +180,22 @@ export async function AppSidebar() {
   // Products sits directly under Meetups: both are "go and look at what the
   // community made", and the two launch markers then read as one group rather
   // than two chips scattered down the rail.
-  const isInvestor = profile?.account_type === "investor";
-  // Directly after Community in BOTH arrays, and only once something is
+  //
+  // THREE arrays, one per role — picked below, not derived from each other. An
+  // explorer is not "the founder rail minus some items": their rail LEADS with
+  // Products, because that is their home, and it carries no Dashboard,
+  // Founders, Connections, Companies, Funding or Profile insights at all. Every
+  // one of those is a route the gate bounces to /products, and a rail of mostly
+  // dead links reads as a broken product rather than a gated one.
+  //
+  // NAV AND THE ROUTE ALLOWLIST ARE ONE CHANGE, ALWAYS. The Products note in
+  // the investor array below is the cautionary tale: a comment here once
+  // asserted the middleware covered a route when the route was in neither
+  // list, so the role branch never ran on it. A claim about the gate written
+  // in a comment is not a gate. The dev-only assertion after these arrays
+  // turns that particular claim into something that checks itself.
+
+  // Directly after Community in ALL THREE arrays, and only once something is
   // published. Kept well apart from "Profile insights" (/activity) — different
   // things, and the Thai labels differ too (บทความ vs อินไซต์).
   const insightsItem =
@@ -159,7 +207,7 @@ export async function AppSidebar() {
     label: string;
     badge?: number;
     tag?: string;
-  }[] = isInvestor
+  }[] = role === "investor"
     ? [
         { href: "/funding", label: await tServer("Funding") },
         { href: "/community", label: await tServer("Community") },
@@ -171,48 +219,98 @@ export async function AppSidebar() {
           ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
         },
         // No Products for investors — a decided posture now, not a half-wired
-        // one. /products is in isAppShellRoute and NOT in
-        // isInvestorReadableRoute (lib/investor-routes.ts), so proxy.ts bounces
-        // an investor to /funding on soft navigation as well as a hard load.
-        // (An earlier note here claimed the middleware already did that; it did
-        // not — the route was in neither list, so the investor branch never
-        // ran.) To open it up later, add "/products" to isInvestorReadableRoute
-        // AND add the nav item here, in one change.
+        // one. /products is in isAppShellRoute and NOT in the investor
+        // allowlist (ROLE_ACCESS.investor in lib/roles.ts — the route rules
+        // moved there when the explorer role landed; lib/investor-routes.ts is
+        // a deprecated shim over it), so proxy.ts bounces an investor to
+        // /funding on soft navigation as well as a hard load. (An earlier note
+        // here claimed the middleware already did that; it did not — the route
+        // was in neither list, so the investor branch never ran.) To open it up
+        // later, add "/products" to that allowlist AND add the nav item here,
+        // in one change.
         { href: "/orgs", label: await tServer("Companies") },
       ]
-    : [
-        { href: "/dashboard", label: await tServer("Dashboard") },
-        {
-          href: "/meetups",
-          label: await tServer("Meetups"),
-          // Launch marker, not a surface gate: the item renders either way.
-          ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
-        },
-        {
-          href: "/products",
-          label: await tServer("Products"),
-          // Same marker, same reasoning as Meetups above: a doorway to a
-          // brand-new surface, not a gate. /products renders either way.
-          ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
-        },
-        { href: "/community", label: await tServer("Community") },
-        ...insightsItem,
-        { href: "/browse", label: await tServer("Founders") },
-        {
-          href: "/matches",
-          label: await tServer("Connections"),
-          badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
-        },
-        // Hidden for the meetups soft launch, kept in place so flipping the
-        // flag puts them back exactly here. Investors keep theirs above.
-        ...(FEATURES.companies
-          ? [{ href: "/orgs", label: await tServer("Companies") }]
-          : []),
-        ...(FEATURES.funding
-          ? [{ href: "/funding", label: await tServer("Funding") }]
-          : []),
-        { href: "/activity", label: await tServer("Profile insights") },
-      ];
+    : role === "explorer"
+      ? [
+          // Products LEADS: it is EXPLORER_HOME, so it is both the first thing
+          // they want and the place the gate returns them to.
+          //
+          // No "New" chip on it, unlike the founder rail. The chip points at a
+          // brand-new surface worth a detour; for an explorer this is the page
+          // they land on every single visit, and a permanent badge on your own
+          // home is the noise that teaches people to ignore the chip. Meetups
+          // keeps its marker — that one IS news to them.
+          { href: "/products", label: await tServer("Products") },
+          { href: "/community", label: await tServer("Community") },
+          ...insightsItem,
+          {
+            href: "/meetups",
+            label: await tServer("Meetups"),
+            ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
+          },
+          // Nothing below this line. An explorer may comment and may RSVP
+          // (lib/roles.ts), and both of those happen on the four surfaces
+          // above — there is no fifth place for them to go. In particular: no
+          // Connections badge, because they cannot receive an interest or a
+          // DM, which is why the two reads for it are skipped above.
+        ]
+      : [
+          { href: "/dashboard", label: await tServer("Dashboard") },
+          {
+            href: "/meetups",
+            label: await tServer("Meetups"),
+            // Launch marker, not a surface gate: the item renders either way.
+            ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
+          },
+          {
+            href: "/products",
+            label: await tServer("Products"),
+            // Same marker, same reasoning as Meetups above: a doorway to a
+            // brand-new surface, not a gate. /products renders either way.
+            ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
+          },
+          { href: "/community", label: await tServer("Community") },
+          ...insightsItem,
+          { href: "/browse", label: await tServer("Founders") },
+          {
+            href: "/matches",
+            label: await tServer("Connections"),
+            badge: (receivedPending ?? 0) + (unreadMessages ?? 0),
+          },
+          // Hidden for the meetups soft launch, kept in place so flipping the
+          // flag puts them back exactly here. Investors keep theirs above.
+          ...(FEATURES.companies
+            ? [{ href: "/orgs", label: await tServer("Companies") }]
+            : []),
+          ...(FEATURES.funding
+            ? [{ href: "/funding", label: await tServer("Funding") }]
+            : []),
+          { href: "/activity", label: await tServer("Profile insights") },
+        ];
+
+  // Every item in a gated role's rail must be a route that role may READ, or
+  // the link is a redirect to somewhere else dressed up as navigation. This is
+  // the one check that would have caught the Products/investor bug the comment
+  // in that array describes, so it is here rather than in a reviewer's head.
+  //
+  // Dev-only and non-fatal: a wrong nav item is a usability bug, not a reason
+  // to 500 every signed-in page in production. Checked BEFORE the Admin push
+  // and only for app-shell routes, because two legitimate items are outside
+  // this question: /insights is a MARKETING route the gate never evaluates, and
+  // Admin is a GRANTED flag independent of account_type (an admin on a gated
+  // role is a pre-existing posture to settle in the route allowlist, not here).
+  if (process.env.NODE_ENV !== "production") {
+    for (const item of navItems) {
+      if (isAppShellRoute(item.href) && !canRoleRead(role, item.href)) {
+        console.error(
+          `[AppSidebar] "${item.href}" is in the ${role} rail but canRoleRead ` +
+            `refuses it — the gate will bounce it to ${roleHome(role)}. Nav and ` +
+            `the allowlist in lib/roles.ts are ONE change.`,
+        );
+      }
+    }
+  }
+
   if (
     isAdmin({
       email: user.email,
@@ -233,7 +331,8 @@ export async function AppSidebar() {
             matches the mobile top bar. The rail's FOOTER is account territory:
             language, avatar, sign out. */}
         <div className="px-5 h-16 flex items-center justify-between gap-2 shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
+          {/* The role's own home, not /dashboard — see homeHref above. */}
+          <Link href={homeHref} className="flex items-center gap-2.5">
             <BrandMark size="sm" />
             <Wordmark className="text-base" />
           </Link>
@@ -298,7 +397,7 @@ export async function AppSidebar() {
                 </form>
               }
             />
-            <Link href="/dashboard" className="flex items-center gap-2.5">
+            <Link href={homeHref} className="flex items-center gap-2.5">
               <BrandMark size="sm" />
               <Wordmark className="text-base hidden sm:inline" />
             </Link>

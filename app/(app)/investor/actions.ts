@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isInvestorAccount } from "@/lib/account";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 
 export type InvestorFormState = { error?: string } | null;
@@ -37,6 +38,26 @@ export async function saveInvestorProfileAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+
+  // THE ONE PLACE isInvestorAccount IS THE RIGHT PREDICATE, USED POSITIVELY.
+  // Everywhere else in the app the question is "may this role write X", which
+  // is a can* predicate from lib/roles.ts; here the subject genuinely IS the
+  // investor role, because this writes an investor_profiles row.
+  //
+  // Without it, authentication was the only check: ANY account could upsert its
+  // own investor_profiles row and — worse — hit the `onboarded: true` write
+  // below. That flag is the one app/onboarding/actions.ts and
+  // app/(app)/settings/actions.ts refuse a gated role precisely because it
+  // trips 0046's set_profile_complete trigger and makes a row look like a
+  // founder to every query that does not pin account_type. This was a second,
+  // independent door to it.
+  //
+  // Deliberately NOT behind FEATURES.investorSignup: that flag hides the signup
+  // OPTION, and the real investor accounts in production must keep editing
+  // their own profile while it is false.
+  if (!(await isInvestorAccount(supabase, user.id))) {
+    return { error: "Only investor accounts can do this." };
+  }
 
   const investorType = String(formData.get("investor_type") ?? "").trim();
   const firmName = String(formData.get("firm_name") ?? "").trim();

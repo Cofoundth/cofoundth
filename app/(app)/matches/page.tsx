@@ -368,6 +368,9 @@ export default async function ConnectionsPage({
         )
         .eq("profile_complete", true)
         .eq("suspended", false)
+        // The matching POOL is founders only — explorers and investors are not
+        // candidates, and the gate in app/(app)/profile/[id]/actions.ts keeps
+        // them out of the matching MECHANISM too. Do not widen this pin.
         .eq("account_type", "founder")
         .not("is_bot", "is", true)
         .neq("id", user.id)

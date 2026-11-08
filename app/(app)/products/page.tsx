@@ -27,6 +27,7 @@
 import { Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import { getAccountRole } from "@/lib/account";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { getBlockedIds } from "@/lib/blocking";
@@ -39,6 +40,7 @@ import { ProductFilters } from "./ProductFilters";
 import { ProductGrid } from "./ProductGrid";
 import { ProductCard } from "./ProductCard";
 import { ProductCount, ProductFilterProvider } from "./filter-context";
+import { SwitchToBuilding } from "./SwitchToBuilding";
 // parseCategoryParam lives in ./categories (no "use client"): the SERVER
 // renders the first, already-filtered paint, so it must read the URL with
 // the same function the client does — and a server file cannot import from
@@ -86,6 +88,13 @@ export default async function ProductsPage({
   // that shows two products is the kind of small lie that costs trust.
   const blocked = await getBlockedIds(user.id);
 
+  // WHO IS LOOKING AT THE SHELF, because the supply-side CTA below is a
+  // different control for an explorer. /products is EXPLORER_HOME, so this is
+  // not an edge case — it is the role this page was added for. (An investor
+  // cannot read this route at all; the gate bounces them to /funding, so the
+  // only two roles that reach here are founder and explorer.)
+  const role = await getAccountRole(supabase, user.id);
+
   // NO `category` — the whole shelf, filtered in the browser. The `counts` the
   // query also returns are deliberately IGNORED: they are tallied over a
   // separate 1000-row scan, so past the fetch limit they would describe rows
@@ -121,6 +130,8 @@ export default async function ProductsPage({
     tOne,
     tMany,
     tAddYours,
+    tSwitchToBuilding,
+    tStartBuilding,
     tEmptyTitle,
     tEmptyBody,
     tEmptyCta,
@@ -138,6 +149,8 @@ export default async function ProductsPage({
     tServer("{n} product"),
     tServer("{n} products"),
     tServer("Add yours"),
+    tServer("Switch to building"),
+    tServer("Start building"),
     tServer("Nothing on the shelf yet"),
     tServer(
       "Built something? Post it in the community as a Show & tell, drop the link in, and it lands here.",
@@ -160,6 +173,32 @@ export default async function ProductsPage({
   // CATEGORY_LABEL values are the English source strings, i.e. the dictionary
   // keys (lib/i18n.ts), so they must not reach the DOM untranslated.
   const categoryLabel = (c: ProductCategory) => t(CATEGORY_LABEL[c], locale);
+
+  // THE SUPPLY SIDE, per role. A founder gets the link to the composer; an
+  // EXPLORER gets the one control that promotes them to a founder, because
+  // /community has no composer for them and createPostAction refuses the
+  // submit — see ./SwitchToBuilding.tsx for why a link into a refusal is worse
+  // than no link. Two instances because the header and the empty state are
+  // different buttons (secondary beside the title, primary inside the empty
+  // state); each form owns its own pending/error state, which is correct — a
+  // failure belongs next to the button that was pressed.
+  const headerCta =
+    role === "explorer" ? (
+      <SwitchToBuilding label={tSwitchToBuilding} variant="secondary" />
+    ) : (
+      <LinkButton href="/community" variant="secondary" size="sm">
+        <Rocket className="h-4 w-4" strokeWidth={1.5} />
+        {tAddYours}
+      </LinkButton>
+    );
+  const emptyStateCta =
+    role === "explorer" ? (
+      <SwitchToBuilding label={tStartBuilding} variant="primary" />
+    ) : (
+      <LinkButton href="/community" size="sm">
+        {tEmptyCta}
+      </LinkButton>
+    );
 
   const cardLabels = {
     // No `cta`: the per-card "Try it" button is gone and the whole card is the
@@ -221,10 +260,7 @@ export default async function ProductsPage({
               move while a pointer is inside one, and WCAG 2.2.2 asks for a
               mechanism for content that moves AUTOMATICALLY. Hover-driven
               motion stops when you stop hovering, which is the mechanism. */}
-          <LinkButton href="/community" variant="secondary" size="sm">
-            <Rocket className="h-4 w-4" strokeWidth={1.5} />
-            {tAddYours}
-          </LinkButton>
+          {headerCta}
         </div>
       </div>
 
@@ -235,11 +271,11 @@ export default async function ProductsPage({
         labels={{
           emptyTitle: tEmptyTitle,
           emptyBody: tEmptyBody,
-          postCta: tEmptyCta,
           noneHereTitle: tNoneHereTitle,
           noneHereBody: tNoneHereBody,
           seeEverything: tSeeEverything,
         }}
+        supplyCta={emptyStateCta}
       />
       </ProductFilterProvider>
     </Section>

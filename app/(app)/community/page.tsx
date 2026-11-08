@@ -13,7 +13,8 @@ import {
   SectionHeading,
 } from "@/components/ui";
 import { getFeedPosts } from "@/lib/posts";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canComment, canPostThread } from "@/lib/roles";
 import { getBlockedIds } from "@/lib/blocking";
 import { timeAgo, nowISO, msAheadISO, DAY_MS } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
@@ -47,8 +48,9 @@ export default async function CommunityPage({
 
   // ---- "What's happening" — the reference app's activity ticker -----------
   // Auto-generated events beside the feed: who joined lately (the public
-  // directory's own row filters, so bots and investors never surface) and how
-  // many meetups are coming up this week. Social proof that writes itself.
+  // directory's own row filters — only 'founder' rows are a directory entry, so
+  // bot/seed rows, investors and explorers never surface here) and how many
+  // meetups are coming up this week. Social proof that writes itself.
   const weekAhead = msAheadISO(7 * DAY_MS);
   const [{ data: recentJoinsRaw }, { count: weekMeetups }] =
     await Promise.all([
@@ -75,24 +77,41 @@ export default async function CommunityPage({
     .filter((p) => !blocked.has(p.id as string))
     .slice(0, 5);
 
-  // Investors read the founder community but don't post or comment in it.
-  const canWrite = !!user && !(await isInvestorAccount(supabase, user.id));
+  // TWO flags, not one. The old single `canWrite` meant "may post AND may
+  // comment", which only worked while every non-founder was refused both. An
+  // explorer sits between the tiers: no thread, but yes comments — so the
+  // composer has to disappear while the comment box on every card stays.
+  const role = user ? await getAccountRole(supabase, user.id) : null;
+  const mayPost = !!role && canPostThread(role);
+  const mayComment = !!role && canComment(role);
 
-  // KIND A — nothing exists yet, and the two readers need opposite endings.
-  // A founder has the composer directly above, so the copy hands them three
-  // easy openings and no button. An investor CANNOT post here (writes are
-  // refused server-side, and /community/new bounces), so "be the first" would
-  // be a dead end — send them to the one surface that is genuinely full today,
-  // the public founder directory.
+  // KIND A — nothing exists yet, and the three readers need different endings.
+  // A founder has the composer directly above, so the copy hands them easy
+  // openings and no button. An explorer cannot start a thread, so "be the
+  // first" is a dead end for them too — but the shelf IS full, and it is their
+  // home, so point them there. An investor goes to the founder directory, the
+  // one surface that is genuinely full for them.
   const emptyTitle = await tServer("No posts yet");
-  const emptyBody = canWrite
-    ? await tServer(
-        "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
-      )
-    : await tServer(
-        "Founders post updates, questions, and launches here. Meet the ones already on Cofoundee while the feed fills up.",
-      );
-  const browseFoundersLabel = await tServer("Browse founders");
+  let emptyBody: string;
+  if (mayPost) {
+    emptyBody = await tServer(
+      "Be the first to start a conversation. Share what you’re building, ask for feedback, or just say hi.",
+    );
+  } else if (role === "explorer") {
+    emptyBody = await tServer(
+      "Founders post updates, questions, and launches here — and you can reply to any of them. The shelf is already full, so start there.",
+    );
+  } else {
+    emptyBody = await tServer(
+      "Founders post updates, questions, and launches here. Meet the ones already on Cofoundee while the feed fills up.",
+    );
+  }
+  // Where the empty state sends someone who cannot post: the shelf for an
+  // explorer, the founder directory for everyone else who is read-only.
+  const emptyHref = role === "explorer" ? "/products" : "/founders";
+  const emptyCta = await tServer(
+    role === "explorer" ? "Try what the community built" : "Browse founders",
+  );
   // Resolved before the JSX: .map() is not an async context.
   const tTicker = await tServer("What's happening");
   const tJoined = await tServer("{name} joined Cofoundee");
@@ -125,17 +144,17 @@ export default async function CommunityPage({
         locale={locale}
         canLoadMore={feed.length >= 50}
         initialQuery={q ?? ""}
-        canComment={canWrite}
-        composer={canWrite ? <PostComposer /> : null}
+        canComment={mayComment}
+        composer={mayPost ? <PostComposer /> : null}
         emptyState={
           <EmptyState
             icon={MessageCircle}
             title={emptyTitle}
             description={emptyBody}
             action={
-              canWrite ? undefined : (
-                <LinkButton href="/founders" size="sm">
-                  {browseFoundersLabel}
+              mayPost ? undefined : (
+                <LinkButton href={emptyHref} size="sm">
+                  {emptyCta}
                 </LinkButton>
               )
             }

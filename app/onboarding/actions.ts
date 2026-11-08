@@ -6,11 +6,18 @@ import { canonicalProvince } from "@/lib/provinces";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
+import { parseAccountRole, roleHome } from "@/lib/roles";
 
 export type OnboardingState = { error?: string } | null;
 
-// Role (account_type) is chosen ONCE at signup and is not changeable in-app —
-// one account = one role. There is intentionally no "switch role" action here.
+// Role (account_type) is chosen ONCE at signup and is not changeable in-app,
+// with ONE narrow exception: upgradeToFounderAction in
+// app/actions/account-role.ts promotes an EXPLORER to a founder and then sends
+// them here. That edge exists because it is the funnel — someone tries what the
+// community builds, gets inspired, and becomes a maker — and it is strictly
+// one-way. founder -> explorer, anything -> investor and investor -> anything
+// are all refused there, so this is not a general "switch role" action and
+// there is still intentionally none in this file.
 
 const ROLE_VALUES = [
   "technical",
@@ -49,14 +56,30 @@ export async function saveOnboardingAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated. Please sign in again." };
 
-  // This is the founder onboarding. If the account is an investor (they belong
-  // in /investor), don't let a crafted submit write founder fields to it.
+  // This is the FOUNDER onboarding. Any other role belongs somewhere else, and
+  // a crafted submit must not write founder fields onto their row — i_am /
+  // looking_for / pitch plus `onboarded: true` below, which also trips 0046's
+  // set_profile_complete trigger and would make them indistinguishable from a
+  // founder to every query that does not pin account_type.
+  //
+  // The route is not the boundary: a server action is invocable without ever
+  // rendering app/onboarding/page.tsx, and /onboarding is outside the (app)
+  // group so neither the middleware nor the app layout gates it.
   const { data: prof } = await supabase
     .from("profiles")
     .select("account_type")
     .eq("id", user.id)
     .maybeSingle();
-  if (prof?.account_type === "investor") redirect("/investor");
+  const role = parseAccountRole(prof?.account_type);
+  // Investor keeps the destination this action has always used — /investor,
+  // where their own onboarding form lives — and NOT roleHome("investor"), which
+  // is /funding.
+  if (role === "investor") redirect("/investor");
+  // Every other gated role goes to its own home: explorer -> /products. Written
+  // against the home rather than against a list of role names, so a role added
+  // later is refused here by default instead of inheriting the founder wizard.
+  const home = roleHome(role);
+  if (home !== null) redirect(home);
 
   // Per-item / array caps to prevent malicious clients from writing megabytes
   // into a profile row.

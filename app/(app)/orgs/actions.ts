@@ -7,7 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid, slugify } from "@/lib/slug";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { getActiveOrgId } from "@/lib/active-org";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canWriteOrgs } from "@/lib/roles";
 import { INDUSTRIES } from "@/lib/industries";
 
 export type OrgFormState = { error?: string } | null;
@@ -48,6 +49,29 @@ async function uniqueOrgSlug(
   }
   // Extremely unlikely fallback: suffix with a slice of a fresh uuid.
   return `${base}-${crypto.randomUUID().slice(0, 6)}`.slice(0, 50);
+}
+
+// ------------------------------------------------------------------
+// ONE RULE FOR THIS WHOLE MODULE: every org write is FOUNDER ONLY.
+//
+// Org standing (owner / admin / member) and the ROLE of the account holding it
+// are two different questions, and RLS only ever answered the first. Most
+// actions here were gated on membership alone — which was safe only while the
+// two doors INTO org_members (createOrgAction and respondInviteAction) refused
+// every non-founder, and one of them did not refuse anybody. So the role is
+// checked at both doors AND at each write: a non-founder who somehow holds a
+// membership row still cannot act with it.
+//
+// The one exception, marked at its call site: LEAVING an org. Withdrawing is
+// not a B2B write, and refusing it would trap an account inside a company it
+// may not act for.
+// ------------------------------------------------------------------
+
+async function orgWriteAllowed(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<boolean> {
+  return canWriteOrgs(await getAccountRole(supabase, userId));
 }
 
 // ------------------------------------------------------------------
@@ -130,8 +154,9 @@ export async function createOrgAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
-  if (await isInvestorAccount(supabase, user.id))
-    return { error: "Investor accounts can't create a company." };
+  // DOOR ONE into org_members. Founder only — see the module rule above.
+  if (!(await orgWriteAllowed(supabase, user.id)))
+    return { error: "Only founder accounts can create a company." };
 
   const admin = createAdminClient();
   const slug = await uniqueOrgSlug(admin, name);
@@ -202,6 +227,9 @@ export async function inviteMemberAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  // RLS (org_invites_insert_admins) enforces org STANDING, not account role.
+  if (!(await orgWriteAllowed(supabase, user.id)))
+    return { error: "Only founder accounts can invite teammates." };
 
   // RLS (org_invites_insert_admins) enforces caller is owner/admin; we pass
   // invited_by = caller to satisfy the WITH CHECK. Upsert so re-inviting the
@@ -238,6 +266,13 @@ export async function respondInviteAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  // DOOR TWO into org_members, and the one that had no role check at all: the
+  // membership row below is written with the SERVICE ROLE, and that single row
+  // is the key to every other write in this file. Refusing here keeps a
+  // non-founder out of org_members entirely, which is strictly better than
+  // gating each downstream action — so both are done.
+  if (!(await orgWriteAllowed(supabase, user.id)))
+    return { error: "Only founder accounts can join a company." };
   const myEmail = (user.email ?? "").toLowerCase();
 
   // Read the invite (RLS lets the invitee see their own by email).
@@ -289,6 +324,10 @@ export async function updateMemberRoleAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  // Promoting and demoting founders — including handing yourself 'owner' — is
+  // the sharpest write in this file. RLS checks admin standing only.
+  if (!(await orgWriteAllowed(supabase, user.id)))
+    return { error: "Only founder accounts can manage a company." };
 
   // RLS (org_members_update_admins) enforces caller is owner/admin.
   const { error } = await supabase
@@ -313,6 +352,13 @@ export async function removeMemberAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+
+  // THE ONE EXEMPTION in this module: leaving is allowed to any role, because
+  // withdrawing from a company is not a B2B write and refusing it would trap an
+  // account inside an org it cannot act for. Removing SOMEONE ELSE is an org
+  // write and takes the founder check.
+  if (userId !== user.id && !(await orgWriteAllowed(supabase, user.id)))
+    return { error: "Only founder accounts can manage a company." };
 
   // RLS (org_members_delete_admin_or_self): owner/admin removes anyone; a
   // member can remove themself.
@@ -353,6 +399,8 @@ export async function requestConnectionAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  if (!(await orgWriteAllowed(supabase, user.id)))
+    return { error: "Only founder accounts can connect companies." };
 
   const myOrg = await viewerPrimaryOrg(supabase, user.id);
   if (!myOrg) return { error: "Create a company first to connect." };
@@ -411,6 +459,8 @@ export async function respondConnectionAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  if (!(await orgWriteAllowed(supabase, user.id)))
+    return { error: "Only founder accounts can connect companies." };
 
   const admin = createAdminClient();
   const { data: conn } = await admin
@@ -452,6 +502,8 @@ export async function revokeInviteAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+  if (!(await orgWriteAllowed(supabase, user.id)))
+    return { error: "Only founder accounts can manage a company." };
 
   // RLS (org_invites_update_admin_or_invitee) lets the org's admins update it.
   const { error } = await supabase

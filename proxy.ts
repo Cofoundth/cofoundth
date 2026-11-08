@@ -1,10 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import {
-  isInvestorReadableRoute,
+  ACCOUNT_ROLES,
+  canRoleRead,
   isAppShellRoute,
-  INVESTOR_HOME,
-} from "@/lib/investor-routes";
+  parseAccountRole,
+  roleHome,
+  type AccountRole,
+} from "@/lib/roles";
 
 // Ship the CSP in report-only mode first to verify the policy + nonce
 // propagation against real prod without risking a blank app, then flip to
@@ -43,6 +46,23 @@ function buildCsp(nonce: string): string {
     .join("; ");
 }
 
+// A pre-filter for the role gate below, and ROLE-INDEPENDENT on purpose: if
+// EVERY role may read the path then no role can be bounced off it, so the
+// account_type lookup cannot change the outcome and is skipped. Computed from
+// the allowlists themselves (two pure string predicates, no I/O), so it cannot
+// drift away from them.
+//
+// It replaces `!isInvestorReadableRoute(path)`, which was ONE role's allowlist
+// used as the filter for every role. That worked only while "investor" was the
+// only gated role. The two gated allowlists disagree in BOTH directions —
+// /products is the explorer's home and is investor-blocked, /funding and /orgs
+// are investor-readable and explorer-blocked — so keeping it would have skipped
+// the lookup on exactly the paths the explorer gate is needed for, and an
+// explorer would have walked into /funding, /investor and /orgs unchecked.
+function everyRoleMayRead(path: string): boolean {
+  return ACCOUNT_ROLES.every((role) => canRoleRead(role, path));
+}
+
 export async function proxy(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
   const csp = buildCsp(nonce);
@@ -65,7 +85,73 @@ export async function proxy(request: NextRequest) {
     const session = await updateSession(request, requestHeaders);
     response = session.response;
 
-    // ---- Investor route access -------------------------------------------
+    const path = request.nextUrl.pathname;
+
+    // One builder for every bounce out of this middleware, so the two
+    // properties such a redirect MUST carry cannot be forgotten by a third
+    // caller: the refreshed auth cookies, and the CSP header.
+    const bounce = (to: string) => {
+      const url = request.nextUrl.clone();
+      url.pathname = to;
+      url.search = "";
+      const redirect = NextResponse.redirect(url);
+      // Carry the refreshed auth cookies onto the redirect, or the bounce
+      // silently signs the user out.
+      response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
+      // Set the CSP on the redirect too, exactly as the pass-through response
+      // at the bottom of this function does.
+      redirect.headers.set(
+        CSP_REPORT_ONLY
+          ? "content-security-policy-report-only"
+          : "content-security-policy",
+        csp,
+      );
+      return redirect;
+    };
+
+    // The one place this middleware learns who it is talking to: a lookup by
+    // primary key, on a request that has already called auth.getUser(). Both
+    // callers below are gated on session.user first, so marketing, auth and
+    // asset requests pay nothing for it.
+    const readRole = async (userId: string): Promise<AccountRole> => {
+      const { data } = await session.supabase
+        .from("profiles")
+        .select("account_type")
+        .eq("id", userId)
+        .maybeSingle();
+      return parseAccountRole(data?.account_type);
+    };
+
+    // ---- Signed-in visitors don't need the pitch -------------------------
+    // "/" is the logged-out landing. Someone who is already a member asking for
+    // it wants the app, so send them to their OWN home. Anonymous requests fall
+    // straight through — the check is gated on session.user, so the landing page
+    // keeps exactly the rendering path it has today for the people it is written
+    // for.
+    //
+    // This resolves the role HERE instead of sending everyone to /dashboard and
+    // letting the gate below forward whoever may not read it. The note that used
+    // to sit here argued the opposite — "one hop for the few beats one query for
+    // everyone" — on the premise that the only gated role was a handful of
+    // investor accounts. The pivot to very-early-stage makers breaks that
+    // premise: explorers are the growth target, not the exception, and /products
+    // is their home, so under the old arithmetic most new members would pay a
+    // 307 through a founder-only page to reach the one surface they can read, on
+    // the most-shared URL of the site. It also showed up in analytics as
+    // explorers "visiting the dashboard", which misleads whoever reads the
+    // funnel.
+    //
+    // And it is NOT "one query for everyone": this branch is already gated on
+    // session.user, so anonymous landing traffic — overwhelmingly the majority,
+    // and the thing that note was protecting — still pays nothing. Founders
+    // (home === null) keep going to /dashboard; those who have not onboarded are
+    // then sent to /onboarding by app/(app)/layout.tsx, which only redirects
+    // onward to /login when there is no user, so the chain terminates either way.
+    if (session.user && path === "/") {
+      return bounce(roleHome(await readRole(session.user.id)) ?? "/dashboard");
+    }
+
+    // ---- Role route access -----------------------------------------------
     // This is the REAL gate, and it has to live here. app/(app)/layout.tsx also
     // checks, but Next does not re-render a shared layout on a client-side
     // navigation, so that redirect only fires on a full page load — an investor
@@ -74,65 +160,18 @@ export async function proxy(request: NextRequest) {
     // RSC fetches a soft navigation makes, so it is the only layer that sees
     // every navigation.
     //
-    // The account_type lookup is skipped entirely unless the path is inside the
-    // (app) shell AND someone is signed in, so marketing, auth and asset
-    // requests pay nothing for it.
-    const path = request.nextUrl.pathname;
-
-    // ---- Signed-in visitors don't need the pitch -------------------------
-    // "/" is the logged-out landing. Someone who is already a member asking for
-    // it wants the app, so send them there. Anonymous requests fall straight
-    // through — the check is gated on session.user, so the landing page keeps
-    // exactly the rendering path it has today for the people it is written for.
+    // Role-generic: lib/roles.ts owns each role's allowlist and each role's
+    // home, and a null home means the role is ungated (founder). Adding a role
+    // does not come back here.
     //
-    // Everyone goes to /dashboard, investors included. That costs them one
-    // extra hop: the follow-up request re-enters this middleware, where the
-    // gate below already owns the account_type lookup and forwards them to
-    // INVESTOR_HOME. Naming /funding here directly would mean a SECOND profiles
-    // query on a path that is overwhelmingly anonymous traffic — one hop for
-    // the few beats one query for everyone. Founders who have not onboarded are
-    // handled the same way: app/(app)/layout.tsx sends them to /onboarding,
-    // which only redirects onward to /login when there is no user, so the chain
-    // terminates either way.
-    if (session.user && path === "/") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
-      url.search = "";
-      const redirect = NextResponse.redirect(url);
-      // Carry the refreshed auth cookies onto the redirect, or the bounce
-      // silently signs the user out.
-      response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
-      redirect.headers.set(
-        CSP_REPORT_ONLY
-          ? "content-security-policy-report-only"
-          : "content-security-policy",
-        csp,
-      );
-      return redirect;
-    }
-
-    if (session.user && isAppShellRoute(path) && !isInvestorReadableRoute(path)) {
-      const { data: profile } = await session.supabase
-        .from("profiles")
-        .select("account_type")
-        .eq("id", session.user.id)
-        .maybeSingle();
-      if (profile?.account_type === "investor") {
-        const url = request.nextUrl.clone();
-        url.pathname = INVESTOR_HOME;
-        url.search = "";
-        const redirect = NextResponse.redirect(url);
-        // Carry the refreshed auth cookies onto the redirect, or the bounce
-        // silently signs the user out.
-        response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
-        redirect.headers.set(
-          CSP_REPORT_ONLY
-            ? "content-security-policy-report-only"
-            : "content-security-policy",
-          csp,
-        );
-        return redirect;
-      }
+    // The account_type lookup is skipped entirely unless someone is signed in,
+    // the path is inside the (app) shell, AND some role could actually be
+    // bounced off it — see everyRoleMayRead above for why that last test must
+    // not be one role's allowlist.
+    if (session.user && isAppShellRoute(path) && !everyRoleMayRead(path)) {
+      const role = await readRole(session.user.id);
+      const home = roleHome(role);
+      if (home !== null && !canRoleRead(role, path)) return bounce(home);
     }
   }
 

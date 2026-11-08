@@ -44,9 +44,12 @@ export default async function BrowsePage({
     .select(PROFILE_COLUMNS)
     .eq("profile_complete", true)
     .eq("suspended", false)
-    // Same row filters as lib/public-profile.ts: investors are confidential
-    // (an investor who completes their profile must NOT surface here), and
-    // bot/seed rows are excluded from every directory, not just the public one.
+    // Same row filters as lib/public-profile.ts, and the founder pin is the
+    // DIRECTORY ALLOWLIST rather than an is-not-investor test: an investor's
+    // presence is confidential, and an explorer is not a directory entry at
+    // all (they came to try what the community builds, not to be matched).
+    // Bot/seed rows are excluded from every directory, not just the public one.
+    // Widening this to "not an investor" would publish every explorer here.
     .eq("account_type", "founder")
     .not("is_bot", "is", true)
     .neq("id", user.id);

@@ -8,7 +8,8 @@ import {
   Trophy,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canComment } from "@/lib/roles";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import { Avatar } from "@/components/Avatar";
 import { Card, EmptyState, SectionHeading } from "@/components/ui";
@@ -66,8 +67,12 @@ export default async function PostPage({ params }: Props) {
   // block is RLS-invisible to this client.
   const blocked = user ? await getBlockedIds(user.id) : new Set<string>();
 
-  // Investors read the founder community but don't comment in it.
-  const canWrite = !!user && !(await isInvestorAccount(supabase, user.id));
+  // Commenting — founders AND explorers. This page is the one surface where
+  // an explorer writes, so the flag here is canComment and nothing else:
+  // /community (the feed) separately computes a canPostThread for its
+  // composer, and the two must NOT be collapsed back into one "canWrite".
+  const mayComment =
+    !!user && canComment(await getAccountRole(supabase, user.id));
 
   const { data: author } = await supabase
     .from("profiles")
@@ -291,15 +296,15 @@ export default async function PostPage({ params }: Props) {
           </Card>
         ) : (
           // KIND A — no replies yet. The composer renders directly below for
-          // anyone who may write, so the copy names two easy openings instead
-          // of repeating a button. Investors can read this thread but cannot
-          // comment in it, so they get the plain statement of fact.
+          // anyone who may comment (founders and explorers), so the copy names
+          // two easy openings instead of repeating a button. Investors can read
+          // this thread but not comment, so they get the statement of fact.
           <EmptyState
             padding="lg"
             dense
             className="mb-6"
             description={
-              canWrite
+              mayComment
                 ? await tServer(
                     "No comments yet. Ask a question or add what you know.",
                   )
@@ -308,7 +313,7 @@ export default async function PostPage({ params }: Props) {
           />
         )}
 
-        {canWrite && <CommentComposer postId={post.id as string} />}
+        {mayComment && <CommentComposer postId={post.id as string} />}
       </section>
     </div>
   );

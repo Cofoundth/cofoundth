@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canComment } from "@/lib/roles";
 
 export type CommentState = { error?: string } | null;
 
 // --- Likes ----------------------------------------------------------
 
+// NO role gate, deliberately: every role may like (lib/roles.ts canLike). The
+// self-scoped delete at the bottom of this file is open for the same reason.
 export async function toggleLikeAction(postId: string) {
   const supabase = await createClient();
   const {
@@ -55,8 +58,14 @@ export async function createCommentAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
-  if (await isInvestorAccount(supabase, user.id))
-    return { error: "Only founders can comment in the community." };
+
+  // AN EXPLORER IS DELIBERATELY ALLOWED HERE. This is the thread-detail twin of
+  // lib/post-actions.ts createPostCommentAction, and commenting is the explorer
+  // role's whole point — narrowing it to founders would remove a feature, not
+  // close a hole. Only investors are read-only in the community.
+  const role = await getAccountRole(supabase, user.id);
+  if (!canComment(role))
+    return { error: "Investor accounts don’t comment in the community." };
 
   const { error } = await supabase
     .from("forum_comments")

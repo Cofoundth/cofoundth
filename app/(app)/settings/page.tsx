@@ -14,9 +14,11 @@ import { AvatarUploader } from "@/components/AvatarUploader";
 import { PasswordForm } from "@/components/PasswordForm";
 import { Avatar } from "@/components/Avatar";
 import { EditProfileFormClient } from "./EditProfileFormClient";
+import { IdentityForm } from "./IdentityForm";
 import { DeleteAccountForm } from "./DeleteAccountForm";
 import { UnblockButton } from "./UnblockButton";
 import { signOutAction } from "@/app/(auth)/actions";
+import { parseAccountRole, roleHome } from "@/lib/roles";
 import { tServer } from "@/lib/i18n-server";
 import { Button, Card, Section, SectionHeading, Tabs } from "@/components/ui";
 
@@ -44,7 +46,7 @@ export default async function SettingsPage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, slug, full_name, first_name, last_name, age, location, linkedin_url, instagram_url, facebook_url, x_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, activities, help_with, needs_help_with, building_since, onboarded",
+      "id, slug, account_type, full_name, first_name, last_name, age, location, linkedin_url, instagram_url, facebook_url, x_url, photo_url, type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, activities, help_with, needs_help_with, building_since, onboarded",
     )
     .eq("id", user.id)
     .single();
@@ -107,6 +109,21 @@ export default async function SettingsPage({
     skills: arr(profile.skills),
   };
 
+  // A GATED ROLE HAS NO FOUNDER PROFILE TO EDIT.
+  //
+  // /settings is on both gated roles' allowlists in lib/roles.ts, and on
+  // purpose — the Account tab is where their email, password and account
+  // deletion live. What is NOT theirs is the Profile tab's founder editor:
+  // it writes i_am / looking_for / pitch / type and `onboarded: true`, which
+  // publishes the row as a founder to every unpinned query. updateProfileAction
+  // refuses that submit; this hides the form so nobody fills in two screens of
+  // fields to be told no. Both layers are needed — see the comment there.
+  //
+  // `roleHome(role) !== null` is "this role is gated", the same test the
+  // onboarding refusal uses, so role four is covered without a third disjunct.
+  const role = parseAccountRole(profile.account_type);
+  const gated = roleHome(role) !== null;
+
   const t = {
     title: await tServer("Settings"),
     view: await tServer("View profile"),
@@ -114,6 +131,12 @@ export default async function SettingsPage({
     photo: await tServer("Profile photo"),
     tabProfile: await tServer("Profile"),
     tabAccount: await tServer("Account"),
+    noFounderProfile: await tServer(
+      "This account doesn’t have a founder profile to fill in.",
+    ),
+    explorerVisibility: await tServer(
+      "Your account. In the community you show up as a commenter and a meetup guest.",
+    ),
   };
 
   const row =
@@ -157,7 +180,30 @@ export default async function SettingsPage({
             />
           </div>
 
-          <EditProfileFormClient initial={initial} />
+          {gated ? (
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <p className="text-sm text-ink-muted leading-relaxed">
+                  {t.noFounderProfile}
+                </p>
+                {role === "explorer" && (
+                  <p className="text-sm text-ink-muted leading-relaxed">
+                    {t.explorerVisibility}
+                  </p>
+                )}
+              </div>
+              {/* The name IS editable even without a founder profile — it is
+                  public the moment they comment or RSVP. updateIdentityAction
+                  writes those three columns and nothing else; see the comment
+                  on it for why it is a separate action and not a branch. */}
+              <IdentityForm
+                firstName={initial.first_name}
+                lastName={initial.last_name}
+              />
+            </div>
+          ) : (
+            <EditProfileFormClient initial={initial} />
+          )}
         </>
       ) : (
         <div className="space-y-14">

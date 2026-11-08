@@ -15,7 +15,8 @@ import { createClient } from "@/lib/supabase/server";
 import { COFOUNDEE_CALENDLY_URL } from "@/lib/calendly";
 import { requireUser } from "@/lib/auth";
 import { getActiveOrgId } from "@/lib/active-org";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canWriteOrgs } from "@/lib/roles";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import { STAGE_LABELS } from "@/lib/matching";
@@ -142,7 +143,12 @@ export default async function OrgPage({ params }: Props) {
   // + connection state with this org — not whichever they joined first.
   const myOrgId = await getActiveOrgId(supabase, user.id);
   // Investors view companies for research — no B2B connect/propose actions.
-  const isInvestor = await isInvestorAccount(supabase, user.id);
+  // The B2B affordances below (connect / propose / chat) are founder-only
+  // writes, so they hang off the capability rather than off "is not an
+  // investor" — an explorer answers false to that negation and would otherwise
+  // be handed every button. The actions in ../actions.ts refuse them anyway;
+  // this keeps the page from offering what the server will reject.
+  const mayWrite = canWriteOrgs(await getAccountRole(supabase, user.id));
 
   let connState: ConnState = "none";
   let connectionId: string | null = null;
@@ -260,7 +266,7 @@ export default async function OrgPage({ params }: Props) {
   // No bar for `no_org` / `pending_sent`: neither offers an action, the aside
   // only reports status.
   let mobileCta: { href: string; children: ReactNode } | null = null;
-  if (!isInvestor && connState !== "self") {
+  if (mayWrite && connState !== "self") {
     if (connState === "connected") {
       mobileCta = {
         href: `/orgs/${org.slug as string}/chat`,
@@ -445,7 +451,7 @@ export default async function OrgPage({ params }: Props) {
 
         {/* ---- Sidebar — connect + deals + team ---- */}
         <aside className="xl:col-span-4 space-y-5">
-          {connState !== "self" && !isInvestor && (
+          {connState !== "self" && mayWrite && (
             <Card id="connect" className="scroll-mt-6">
               <SectionHeading title={await tServer("Connect")} />
               <ConnectActions

@@ -81,16 +81,30 @@ const LABEL = "text-xs uppercase tracking-[0.15em] text-ink-muted";
 // draws its sub-panels inside the very same modal.
 const PANEL = "rounded-3xl border border-line bg-white p-5";
 
+// TWO CAPABILITIES, TWO PROPS. This used to take a single `investor` boolean
+// that drove both the RSVP door and the invite panel, which was fine only while
+// "not an investor" meant "a founder". An EXPLORER may RSVP and may NOT host
+// (lib/roles.ts), so one boolean cannot answer both questions: with it set from
+// RSVP standing, an explorer got the host's invite panel and refused submits;
+// set from hosting, they lost the RSVP button that is the whole reason they are
+// on the page. Pass both; never derive one from the other.
 export function MeetupJoinControls({
   meetupId,
-  investor,
+  canRsvp,
+  canHost,
   closed,
   state,
   onChange,
   ctaFullWidth,
 }: {
   meetupId: string;
-  investor: boolean;
+  /** May take a seat: RSVP, request one, or accept an invite. canRsvpMeetup. */
+  canRsvp: boolean;
+  /**
+   * Has host standing: hands out invites and answers requests at the door.
+   * canHostMeetup — NOT "is the host of this meetup", which is state.isHost.
+   */
+  canHost: boolean;
   /** Past or cancelled — the door is shut. Contact the host still works. */
   closed?: boolean;
   state: MeetupViewerState;
@@ -224,12 +238,17 @@ export function MeetupJoinControls({
     });
   }
 
-  const canAct = !investor && !closed;
+  const canAct = canRsvp && !closed;
   // On a PRIVATE meetup an invite is not a suggestion, it is a key: accepting
   // one grants the seat outright. So only the host hands them out there —
   // inviteFoundersAction and 0073's RLS policy draw the same line.
+  //
+  // `canHost`, not `canRsvp`: an explorer who is going to a public meetup must
+  // NOT get this panel. inviteFoundersAction and searchFoundersAction both
+  // refuse them server-side, so leaving it visible would render a typeahead
+  // over the founder directory that errors on every keystroke.
   const canInvite =
-    !investor && !closed && (state.isHost || (mine === "going" && !isPrivate));
+    canHost && !closed && (state.isHost || (mine === "going" && !isPrivate));
 
   return (
     <div className="space-y-4">
@@ -326,7 +345,7 @@ export function MeetupJoinControls({
       )}
 
       {/* ── Host: who is waiting ────────────────────────────────────────── */}
-      {state.isHost && !investor && !closed && requesters.length > 0 && (
+      {state.isHost && canHost && !closed && requesters.length > 0 && (
         <div className={PANEL}>
           <div className={`${LABEL} mb-3`}>
             {tr("Requests")} · {requesters.length}

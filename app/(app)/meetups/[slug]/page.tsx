@@ -34,7 +34,8 @@ import {
   type JoinPerson,
 } from "../MeetupJoinControls";
 import type { InviteStatus, MyRsvp } from "../actions";
-import { isInvestorAccount } from "@/lib/account";
+import { getAccountRole } from "@/lib/account";
+import { canHostMeetup, canRsvpMeetup } from "@/lib/roles";
 import { getBlockedIds } from "@/lib/blocking";
 
 export const dynamic = "force-dynamic";
@@ -81,19 +82,23 @@ export default async function MeetupDetailPage({ params }: Props) {
   const [
     { data: attendeesRaw },
     admin,
-    investor,
+    role,
     { data: host },
     blocked,
     { data: inviteRow },
     { data: matchRows },
   ] = await Promise.all([
+    // The roster embeds the profile with NO role pin, deliberately: an explorer
+    // can RSVP, and an attendee who came to try things must show up in the
+    // room. Do not add a founder filter here — that pin belongs to the
+    // directory queries (/browse, lib/public-profile.ts), not to this one.
     supabase
       .from("meetup_rsvps")
       .select("user_id, status, profile:profiles(id, full_name, photo_url, slug)")
       .eq("meetup_id", m.id)
       .order("created_at", { ascending: true }),
     isAdminUser(supabase, user),
-    isInvestorAccount(supabase, user.id),
+    getAccountRole(supabase, user.id),
     supabase
       .from("profiles")
       .select("id, full_name, photo_url, slug")
@@ -115,6 +120,13 @@ export default async function MeetupDetailPage({ params }: Props) {
   // A blocked host takes the whole meetup with them — there is no version of
   // this page that doesn't put the two of you in the same room.
   if (blocked.has(m.created_by)) notFound();
+
+  // TWO capabilities, two props — the door and the invite panel are different
+  // questions. An explorer may RSVP and attend but may NOT host or invite, so
+  // MeetupJoinControls takes both rather than one `investor` boolean it would
+  // have to answer both questions with.
+  const canRsvp = canRsvpMeetup(role);
+  const canHost = canHostMeetup(role);
 
   const allRows = (attendeesRaw ?? []) as unknown as AttendeeRow[];
   // SEATS only. Since 0072 a meetup_rsvps row is either a seat ('going') or a
@@ -374,7 +386,8 @@ export default async function MeetupDetailPage({ params }: Props) {
       <div className="mb-12 space-y-4">
         <MeetupJoinControls
           meetupId={m.id}
-          investor={investor}
+          canRsvp={canRsvp}
+          canHost={canHost}
           closed={cancelled || past}
           state={{
             isHost,
@@ -417,14 +430,14 @@ export default async function MeetupDetailPage({ params }: Props) {
         {count === 0 ? (
           // KIND A — no attendees yet. "Be the first" is only honest when the
           // reader can actually RSVP: a past or cancelled meetup can't be
-          // joined, and investors have RSVP refused server-side.
+          // joined, and read-only accounts have RSVP refused server-side.
           <EmptyState
             dense
             padding="lg"
             description={
               past || cancelled
                 ? tNobodyClosed
-                : investor
+                : !canRsvp
                   ? tNobodyReadOnly
                   : tNobody
             }

@@ -11,10 +11,12 @@ import {
   ChevronRight,
   Eye,
   Pencil,
+  Rocket,
   Settings as SettingsIcon,
   UserRound,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { parseAccountRole } from "@/lib/roles";
 import { requireUser } from "@/lib/auth";
 import { getBlockedIds } from "@/lib/blocking";
 import { t } from "@/lib/i18n";
@@ -40,7 +42,90 @@ export default async function MyProfilePage() {
     .eq("id", user.id)
     .single();
   if (!profile) redirect("/onboarding");
-  if (profile.account_type === "investor") redirect("/investor");
+  const role = parseAccountRole(profile.account_type);
+  if (role === "investor") redirect("/investor");
+
+  // AN EXPLORER LANDS HERE TOO — /profile is on their route allowlist — and
+  // everything below this block was written for exactly one reader. They have
+  // no founder profile and never will: no stage, no pitch, no directory entry,
+  // and no public page at all (lib/public-profile.ts pins account_type =
+  // 'founder', so /profile/<their slug> is a clean 404). Hosted meetups,
+  // profile views, connections and saved founders are all structurally zero.
+  //
+  // So the founder half is DROPPED rather than rendered empty, and the four
+  // stat queries below are never run for them. The identity row is written out
+  // again here instead of shared: it is a different card — no StageEmblem, and
+  // the way out goes to the shelf rather than to a public profile that does not
+  // exist. Keeping them apart is what stops a founder-only number reappearing
+  // on this surface the next time the hub grows a row.
+  if (role === "explorer") {
+    const explorerRow =
+      "flex items-center justify-between gap-3 p-4 text-sm text-ink hover:bg-cream transition-colors";
+    return (
+      <Section width="narrow">
+        <div className="mb-8">
+          <h1 className="text-d2 mb-2">{await tServer("My Profile")}</h1>
+          <p className="text-sm text-ink-muted">
+            {await tServer(
+              "Your account. In the community you show up as a commenter and a meetup guest.",
+            )}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <Card className="flex items-center gap-4">
+            <Avatar
+              name={profile.full_name as string}
+              url={profile.photo_url as string | null}
+              size="lg"
+            />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl">
+                <span className="truncate">
+                  {(profile.full_name as string) ?? "—"}
+                </span>
+              </h2>
+              {profile.location ? (
+                <div className="text-xs text-ink-muted mt-1">
+                  {provinceLabel(profile.location as string, locale)}
+                </div>
+              ) : null}
+            </div>
+            <Link
+              href="/settings"
+              className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm text-ink border border-line hover:border-navy transition-colors rounded-full"
+            >
+              <Pencil className="w-3.5 h-3.5" strokeWidth={1.5} />
+              {await tServer("Edit")}
+            </Link>
+          </Card>
+
+          <Card padding="none" className="divide-y divide-line overflow-hidden">
+            <Link href="/settings?tab=account" className={explorerRow}>
+              <span className="inline-flex items-center gap-2 min-w-0">
+                <SettingsIcon
+                  className="w-4 h-4 text-gold-ink shrink-0"
+                  strokeWidth={1.5}
+                />
+                {await tServer("Account settings")}
+              </span>
+              <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
+            </Link>
+            <Link href="/products" className={explorerRow}>
+              <span className="inline-flex items-center gap-2 min-w-0">
+                <Rocket
+                  className="w-4 h-4 text-gold-ink shrink-0"
+                  strokeWidth={1.5}
+                />
+                {await tServer("Try what the community built")}
+              </span>
+              <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
+            </Link>
+          </Card>
+        </div>
+      </Section>
+    );
+  }
 
   const publicHref = `/profile/${profile.slug ?? profile.id}`;
   const since = msAgoISO(30 * DAY_MS);

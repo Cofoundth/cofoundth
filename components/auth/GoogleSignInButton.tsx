@@ -2,25 +2,49 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { AccountRole } from "@/lib/roles";
 
 type GoogleSignInButtonProps = {
   label?: string;
   next?: string;
+  /**
+   * The role the visitor picked in the signup form, carried through OAuth.
+   *
+   * WHY THIS PROP EXISTS: the provider round trip loses everything that is not
+   * in `redirectTo`. Without it, handle_new_user sees no account_type in
+   * raw_user_meta_data and defaults to founder — so picking a role and then
+   * clicking Google silently made you a founder, permanently. With an explorer
+   * role that is fatal rather than annoying: this button is the most prominent
+   * control on the signup page, so the role would be unreachable for every
+   * OAuth signup.
+   *
+   * Omitted on /login, where there is no role to pick — an existing account
+   * already has one, and the callback only applies `?role=` to a profile whose
+   * role_chosen is still false.
+   *
+   * Tampering is irrelevant (the role is self-selected anyway), but the value
+   * is still validated server-side in app/auth/callback/route.ts, which is also
+   * what refuses 'investor' while FEATURES.investorSignup is false. This button
+   * is only the carrier; it does not decide.
+   */
+  role?: AccountRole;
 };
 
 export function GoogleSignInButton({
   label = "Continue with Google",
   next = "/dashboard",
+  role,
 }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleClick() {
     setIsLoading(true);
     const supabase = createClient();
+    const roleParam = role ? `&role=${encodeURIComponent(role)}` : "";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${roleParam}`,
       },
     });
     if (error) {

@@ -114,19 +114,29 @@ function MiniFace({ p, size = 24 }: { p: MiniProfile; size?: number }) {
   );
 }
 
+// TWO CAPABILITIES, TWO PROPS — the same note as on MeetupJoinControls. The
+// single `investor` boolean these replace drove the three "Create a meetup"
+// affordances AND (down through MeetupDialog) the RSVP door, which only held
+// together while the one gated role could do neither. An EXPLORER may RSVP and
+// may NOT host, so each affordance below asks the question that applies to it:
+// the create buttons read `canHost`, the door reads `canRsvp`.
 export function MeetupsClient({
   thisMonth,
   later,
   past,
   nearby,
-  investor,
+  canRsvp,
+  canHost,
   initialCreate,
 }: {
   thisMonth: MeetupItemData[];
   later: MeetupItemData[];
   past: MeetupItemData[];
   nearby: MiniProfile[];
-  investor: boolean;
+  /** May take a seat at a meetup. canRsvpMeetup. */
+  canRsvp: boolean;
+  /** May host one, and therefore may invite to one. canHostMeetup. */
+  canHost: boolean;
   initialCreate: boolean;
 }) {
   const tr = useT();
@@ -231,7 +241,7 @@ export function MeetupsClient({
           {/* `py-1.5 tracking-normal` holds this button's exact pixels:
               size="sm" is px-4 py-2 + tracking-wide, and both overrides now
               win because cn() merges. */}
-          {!investor && (
+          {canHost && (
             <Button
               size="sm"
               onClick={() => setCreateOpen(true)}
@@ -257,18 +267,28 @@ export function MeetupsClient({
         <EmptyState
           icon={Calendar}
           title={tr("No meetups on the calendar")}
-          description={tr(
-            "Want to meet founders in person? Host the first one — every member will see it.",
-          )}
+          // The description follows the BUTTON, not the other way round. The
+          // founder copy is a call to host, and with canHost false there is no
+          // host button under it — so an explorer was being told to do the one
+          // thing this page refuses them. Same split as the action below.
+          description={
+            canHost
+              ? tr(
+                  "Want to meet founders in person? Host the first one — every member will see it.",
+                )
+              : tr(
+                  "Nothing scheduled yet. When a founder hosts one, it shows up here and you can grab a seat.",
+                )
+          }
           action={
-            investor ? undefined : (
+            canHost ? (
               <Button
                 onClick={() => setCreateOpen(true)}
                 className="tracking-normal"
               >
                 {tr("Host the first meetup")}
               </Button>
-            )
+            ) : undefined
           }
         />
       ) : (
@@ -280,7 +300,7 @@ export function MeetupsClient({
               </h2>
               <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
                 {thisMonth.map((m) => card(m, { strip: true }))}
-                {!investor && (
+                {canHost && (
                   <button
                     type="button"
                     onClick={() => setCreateOpen(true)}
@@ -329,7 +349,8 @@ export function MeetupsClient({
       {selected && (
         <MeetupDialog
           m={withOver(selected)}
-          investor={investor}
+          canRsvp={canRsvp}
+          canHost={canHost}
           onClose={() => setSelectedId(null)}
           onRsvp={(id, next) => setOver((o) => ({ ...o, [id]: next }))}
         />
@@ -543,12 +564,14 @@ function MeetupCard({
 
 function MeetupDialog({
   m,
-  investor,
+  canRsvp,
+  canHost,
   onClose,
   onRsvp,
 }: {
   m: MeetupItemData;
-  investor: boolean;
+  canRsvp: boolean;
+  canHost: boolean;
   onClose: () => void;
   onRsvp: (id: string, next: { mine: MyRsvp; count: number }) => void;
 }) {
@@ -738,7 +761,8 @@ function MeetupDialog({
         <div className="mt-5">
           <MeetupJoinControls
             meetupId={m.id}
-            investor={investor}
+            canRsvp={canRsvp}
+            canHost={canHost}
             closed={cancelled || isPast}
             state={{
               isHost: m.isHost,

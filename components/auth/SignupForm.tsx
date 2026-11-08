@@ -4,7 +4,9 @@ import { useActionState, useState } from "react";
 import { ArrowRight, Check, Eye, EyeOff, Mail, X } from "lucide-react";
 import { signupAction, type SignupState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui";
+import { FEATURES } from "@/lib/features";
 import { useT } from "@/lib/i18n-client";
+import type { AccountRole } from "@/lib/roles";
 
 const INITIAL: SignupState = { step: "credentials" };
 
@@ -17,13 +19,44 @@ const passwordRules = (pw: string) => ({
 });
 
 // Registration persona. Admin is NOT here — it's a granted privilege, never
-// self-selected. Investor is captured now; its full experience ships later.
+// self-selected.
+//
+// The copy describes what you came to DO, not what you ARE: the pivot is one
+// level earlier than "startup", so the person we want has no company to name
+// themselves after yet — "Founder / Company" asked them to claim a title they
+// haven't earned. An explorer is here to TRY what the community builds, which
+// is the demand side of /products.
+//
+// Investor stays in the list and is filtered out by FEATURES.investorSignup
+// (false today). It is NOT deleted: there are real investor accounts in
+// production, and flipping that flag has to put this option back exactly here
+// rather than require someone to reconstruct it. See lib/features.ts.
 const ACCOUNT_TYPES = [
-  { value: "founder", en: "Founder / Company", hint: "Build & find partners" },
+  {
+    value: "founder",
+    en: "I'm building something",
+    hint: "Show it, find your first users",
+  },
+  {
+    value: "explorer",
+    en: "I want to try new things",
+    hint: "Try what the community builds",
+  },
   { value: "investor", en: "Investor", hint: "Back startups · early access" },
-] as const;
+] as const satisfies readonly { value: AccountRole; en: string; hint: string }[];
 
-export function SignupForm() {
+export function SignupForm({
+  accountType,
+  onAccountTypeChange,
+}: {
+  // The picked role is OWNED BY THE PAGE, not by this form. The OAuth buttons
+  // are siblings of this component and have to send the same value — that is
+  // the whole bug being fixed here (the role used to live in this component's
+  // own useState and never left it, so every Google signup was born a
+  // founder). app/(auth)/signup/page.tsx holds it; see the note there.
+  accountType: AccountRole;
+  onAccountTypeChange: (value: AccountRole) => void;
+}) {
   const tr = useT();
   const [state, formAction, isPending] = useActionState<SignupState, FormData>(
     signupAction,
@@ -33,8 +66,9 @@ export function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [accountType, setAccountType] = useState<"founder" | "investor">(
-    "founder",
+
+  const options = ACCOUNT_TYPES.filter(
+    (opt) => opt.value !== "investor" || FEATURES.investorSignup,
   );
 
   if (state.step === "check_email") {
@@ -76,15 +110,26 @@ export function SignupForm() {
           {tr("I'm joining as")}
         </label>
         <div className="grid grid-cols-2 gap-3">
-          {ACCOUNT_TYPES.map((opt) => (
+          {options.map((opt, i) => (
             <button
               key={opt.value}
               type="button"
-              onClick={() => setAccountType(opt.value)}
+              onClick={() => onAccountTypeChange(opt.value)}
               aria-pressed={accountType === opt.value}
               // two-line selection cards, not pills — the base rule would give
               // these ~32px end-caps
+              //
+              // Two options fill the 2-col grid exactly. A THIRD (flip
+              // FEATURES.investorSignup back on) would otherwise leave a
+              // half-width orphan on row 2, which reads as a layout bug rather
+              // than a choice — so an odd last card spans the row. With an even
+              // count it contributes no class, so today's two cards render
+              // exactly as before.
               className={`text-left p-3 rounded-xl border transition-colors ${
+                i === options.length - 1 && options.length % 2 === 1
+                  ? "col-span-2"
+                  : ""
+              } ${
                 accountType === opt.value
                   ? "bg-cream border-navy"
                   : "bg-white border-line hover:border-navy"
@@ -95,9 +140,15 @@ export function SignupForm() {
             </button>
           ))}
         </div>
+        {/* The old copy ("This can't be changed later — founders and investors
+            use separate accounts") was false on both halves once the explorer
+            role shipped: explorer -> founder is a deliberate one-way upgrade,
+            because it is the funnel — try things, get inspired, build
+            something. It still is not a general role switcher, so this says
+            which way the door opens and nothing more. */}
         <p className="text-xs text-ink-muted mt-2">
           {tr(
-            "This can’t be changed later — founders and investors use separate accounts.",
+            "Not sure? Start by trying things — you can switch to building later.",
           )}
         </p>
       </div>
