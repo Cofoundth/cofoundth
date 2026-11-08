@@ -26,6 +26,22 @@
 // launch); a permanent "New" badge is just noise that teaches people to ignore
 // the chip.
 //
+// `investorSignup` is a third kind again: not a surface and not a marker, but a
+// DOORWAY ONTO A ROLE. False removes the "Investor" option from the signup
+// picker (components/auth/SignupForm.tsx) and makes the signup action and the
+// OAuth callback refuse that value — and that is ALL it does. There are real
+// investor accounts in production, created over months, and they keep working
+// exactly as before: the 'investor' value stays in the account_type CHECK,
+// /investor and /funding stay live, INVESTOR_HOME still points at /funding, and
+// every investor route and write gate in lib/roles.ts is untouched. Hiding the
+// way IN is not the same as removing the role — read the paragraph above about
+// 404ing a route someone already has a notification for, and note that these
+// members cannot re-signup to recover anything.
+//
+// Flip it true if investor self-signup is wanted again; nothing else has to
+// move. The pivot to very-early-stage makers is why it is false — the picker
+// now offers founder and explorer, and an investor is onboarded by hand.
+//
 // Typed as `boolean` rather than inferred as literal `false`/`true` so both
 // branches of every call site keep type-checking whichever way a flag points.
 export const FEATURES: {
@@ -33,6 +49,7 @@ export const FEATURES: {
   funding: boolean;
   meetupsNew: boolean;
   productsNew: boolean;
+  investorSignup: boolean;
 } = {
   /** /orgs — the multi-user company directory, B2B connect/chat/deals. */
   companies: false,
@@ -42,4 +59,6 @@ export const FEATURES: {
   meetupsNew: true,
   /** "New" chip on the Products nav item — a launch marker, not a surface. */
   productsNew: true,
+  /** The "Investor" option in the signup picker. Existing accounts unaffected. */
+  investorSignup: false,
 };
