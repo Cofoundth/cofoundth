@@ -18,6 +18,8 @@ import {
 } from "@/lib/post-actions";
 import {
   CATEGORY_LABEL,
+  MAX_PRODUCT_BLURB,
+  MAX_PRODUCT_NAME,
   MAX_PRODUCT_IMAGES,
   PRODUCT_CATEGORIES,
   type ProductCategory,
@@ -118,6 +120,7 @@ export function PostComposer() {
   const formRef = useRef<HTMLFormElement>(null);
   const [kind, setKind] = useState<Kind>("post");
   const [content, setContent] = useState("");
+  const [name, setName] = useState("");
   const [showTitle, setShowTitle] = useState(false);
   const [showLink, setShowLink] = useState(false);
   const [showTags, setShowTags] = useState(false);
@@ -202,6 +205,9 @@ export function PostComposer() {
     if (!isPending && !state?.error && formRef.current) {
       formRef.current.reset();
       setContent("");
+      // Controlled now (it carries a character counter), so form.reset() does
+      // not clear it — the last product's name would survive into the next post.
+      setName("");
       setKind("post");
       setShowTitle(false);
       setShowLink(false);
@@ -377,7 +383,11 @@ export function PostComposer() {
     formAction(formData);
   }
 
-  const remaining = 5000 - content.length;
+  // A product's description is capped far tighter than a post's: its card is
+  // the only place it is ever read (see MAX_PRODUCT_BLURB). Switching kind
+  // re-derives the limit, so the counter and the maxLength below cannot drift.
+  const bodyLimit = isProduct ? MAX_PRODUCT_BLURB : 5000;
+  const remaining = bodyLimit - content.length;
   const tooLong = remaining < 0;
   const shotsFull = shots.length >= MAX_PRODUCT_IMAGES;
 
@@ -472,9 +482,15 @@ export function PostComposer() {
           name="title"
           type="text"
           required
-          maxLength={200}
+          maxLength={MAX_PRODUCT_NAME}
           fieldSize="sm"
           label={tr("Product name")}
+          // Measured: two lines of the card title hold 49 Latin / 74 Thai at
+          // the narrowest card. Over the cap it clamps with an ellipsis rather
+          // than breaking anything.
+          hint={`${name.length}/${MAX_PRODUCT_NAME}`}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="bg-cream rounded-xl"
           containerClassName="mb-3"
         />
@@ -493,9 +509,10 @@ export function PostComposer() {
       <textarea
         name="content"
         rows={3}
-        // Must match the 5000 the counter above enforces — the old 5200 let the
-        // browser accept 200 chars the submit button had already disabled.
-        maxLength={5000}
+        // Must match the counter above — an attribute looser than the counter
+        // lets the browser accept characters the submit button has already
+        // disabled itself over.
+        maxLength={bodyLimit}
         required
         value={content}
         onChange={(e) => setContent(e.target.value)}

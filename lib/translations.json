@@ -1679,5 +1679,7 @@
   "Health": "สุขภาพ",
   "Lifestyle": "ไลฟ์สไตล์",
   "Productivity": "ทำงาน",
-  "Developer tools": "สำหรับเดฟ"
+  "Developer tools": "สำหรับเดฟ",
+  "Keep the product name short.": "ชื่อโปรดักต์สั้นๆ พอนะ",
+  "Keep the description short — the card shows two lines.": "เขียนสั้นๆ พอ การ์ดโชว์แค่ 2 บรรทัด"
 }

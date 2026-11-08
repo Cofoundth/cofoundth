@@ -7,7 +7,7 @@ import { isAdminUser } from "@/lib/admin";
 import { isInvestorAccount } from "@/lib/account";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
-import { MAX_PRODUCT_IMAGES, PRODUCT_CATEGORIES } from "@/lib/post-types";
+import { MAX_PRODUCT_BLURB, MAX_PRODUCT_NAME, MAX_PRODUCT_IMAGES, PRODUCT_CATEGORIES } from "@/lib/post-types";
 import type { PostComment, PostItem } from "@/lib/post-types";
 
 export type PostFormState = { error?: string } | null;
@@ -132,6 +132,14 @@ export async function createPostAction(
   if (content.length > 5000)
     return { error: "Keep it under 5000 characters." };
   if (title.length > 200) return { error: "Title must be 200 chars or less." };
+  // Tighter for a product, because its card is the only place either string is
+  // ever read. 'post' and 'milestone' keep the generous limits above.
+  if (kind === "show_and_tell") {
+    if (title.length > MAX_PRODUCT_NAME)
+      return { error: "Keep the product name short." };
+    if (content.length > MAX_PRODUCT_BLURB)
+      return { error: "Keep the description short — the card shows two lines." };
+  }
   if (!KINDS.includes(kind)) return { error: "Bad kind." };
   if (linkUrl && !/^https?:\/\/.+/.test(linkUrl))
     return { error: "Link must start with http:// or https://" };

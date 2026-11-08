@@ -57,6 +57,26 @@ export type PostComment = {
  *  re-checks, because a cap enforced only in the UI is not a cap. */
 export const MAX_PRODUCT_IMAGES = 5;
 
+// NOT a layout guard — the card already clamps (title line-clamp-2, blurb
+// line-clamp-2, author truncate), so nothing can overflow and every card
+// measures the same height regardless of what is typed.
+//
+// These exist because THE CARD IS THE ONLY SURFACE. A product links straight
+// out to the real thing; there is no detail page, so text past the clamp is
+// written by a maker and then read by nobody, ever. The composer was inviting
+// 5000 characters and showing about 82.
+//
+// Measured in the running app at 279px — the narrowest a card gets, 3-up at
+// 1280 — for how much fits in the two lines that are actually shown:
+//     name         49 Latin / 74 Thai
+//     description  82 Latin / 84 Thai
+// The caps sit above the Latin worst case on purpose: going over clamps with
+// an ellipsis, which is a soft, legible failure, whereas a cap tight enough to
+// never clamp would reject reasonable Thai. Re-measure if the card width or
+// the clamp count changes.
+export const MAX_PRODUCT_NAME = 60;
+export const MAX_PRODUCT_BLURB = 160;
+
 /** Every image on a post, in order, as an array — `[]` when it has none.
  *  Takes the two raw columns rather than a PostItem so it also works on a row
  *  straight out of a hand-written `.select()` (the /community/[id] and
