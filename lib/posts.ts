@@ -17,69 +17,34 @@ const BASE_POST_COLS =
 
 // `image_urls` arrives in migration 0076. This list is NOT products-only — the
 // community feed, the dashboard and search all select it — so the column and
-// this line have to land together, and the fallback below is what makes the
-// order of the two deploys not matter.
+// this line landed together in the same change; 0076 is applied.
 const POST_COLS = `${BASE_POST_COLS}, image_urls`;
 
 type PostRow = Record<string, unknown>;
 
-// ---- 0076 seatbelt: DELETE THIS once 0076 is applied everywhere -----------
-// PostgREST rejects the WHOLE request when the select list names a column that
-// does not exist, and every query in this file drops its error on the floor
-// (`const { data } = await q`). So code-before-migration does not show an
-// error — it shows an EMPTY community feed, empty dashboard, empty search, and
-// logs nothing. That is not hypothetical: 0061 is a migration that exists
-// because the same shape of mistake rendered "You're the first one here" over
-// a directory of 23 real profiles.
+// 0076 is applied, so `image_urls` is simply selected now. The downgrade that
+// used to live here — retry without the column if PostgREST returned 42703 —
+// is gone with it.
 //
-// So: ask for `image_urls`, and if the column is not there yet, say so in the
-// log and re-run the same query without it once. The downgrade expires so a
-// warm server picks the column up on its own after the migration lands,
-// instead of serving legacy covers until it happens to recycle.
-const DOWNGRADE_MS = 60_000;
-let downgradedUntil = 0;
-
-function postCols(): string {
-  return Date.now() < downgradedUntil ? BASE_POST_COLS : POST_COLS;
-}
-
+// WHAT IS KEPT, AND WHY IT IS NOT LEFTOVER SCAFFOLDING: selectPosts() LOGS a
+// failed query. Every query in this file used to be `const { data } = await q`,
+// which drops the error on the floor, so a broken select did not surface as an
+// error — it surfaced as an EMPTY community feed, empty dashboard, empty
+// search, and silence in the logs. That is not hypothetical: migration 0061
+// exists because the same shape of mistake rendered "You're the first one
+// here" over a directory of 23 real profiles. The seatbelt incidentally fixed
+// that; deleting it wholesale would have put it back.
 type QueryError = { code?: string | null; message?: string | null } | null;
 type PostQuery = PromiseLike<{ data: unknown; error: QueryError }>;
 
-// 42703 is Postgres "undefined_column", which PostgREST passes through. The
-// message check is belt-and-braces for a PostgREST version that re-codes it.
-function isMissingImageUrls(error: QueryError): boolean {
-  if (!error) return false;
-  return error.code === "42703" || !!error.message?.includes("image_urls");
-}
-
-function noteMissingImageUrls(error: QueryError) {
-  if (Date.now() >= downgradedUntil)
-    console.error(
-      "[posts] forum_posts.image_urls is missing — apply migration 0076. Serving legacy covers meanwhile.",
-      error?.message,
-    );
-  downgradedUntil = Date.now() + DOWNGRADE_MS;
-}
-
-// Run a post query, retrying once without `image_urls` if that is what broke.
-// `build` has to be a builder and not a query, because a retry is a new request.
 async function selectPosts(build: (cols: string) => PostQuery): Promise<PostRow[]> {
-  const { data, error } = await build(postCols());
-  if (!error) return (data ?? []) as PostRow[];
-  if (!isMissingImageUrls(error)) {
+  const { data, error } = await build(POST_COLS);
+  if (error) {
     console.error("[posts] query failed", error.message);
     return [];
   }
-  noteMissingImageUrls(error);
-  const retry = await build(BASE_POST_COLS);
-  if (retry.error) {
-    console.error("[posts] query failed", retry.error.message);
-    return [];
-  }
-  return (retry.data ?? []) as PostRow[];
+  return (data ?? []) as PostRow[];
 }
-// ---- end seatbelt ---------------------------------------------------------
 
 // Hidden/suspended authors shouldn't surface in the public feed or search —
 // hiding a user must hide their posts too. Returns the (small) set of
@@ -260,10 +225,12 @@ export async function searchPosts(
         : Promise.resolve({ data: [] as PostRow[], error: null }),
     ]);
 
-  let sets = await fanOut(postCols());
-  if (sets.some((s) => isMissingImageUrls(s.error))) {
-    noteMissingImageUrls(sets.find((s) => s.error)?.error ?? null);
-    sets = await fanOut(BASE_POST_COLS);
+  const sets = await fanOut(POST_COLS);
+  // Same reasoning as selectPosts: a failed branch of the fan-out used to
+  // vanish into an empty result set. Search quietly returning nothing is
+  // indistinguishable from "no matches", which is the worst way to fail.
+  for (const set of sets) {
+    if (set.error) console.error("[posts] search branch failed", set.error.message);
   }
 
   // Merge unique by id, keep newest first.
