@@ -35,9 +35,9 @@
 // The SAME component as the deck card (components/ProductGallery.tsx), so the
 // arrows, the one-second autoplay on touch, the pause while pressed and the
 // reduced-motion stop all behave the same in both places. One image at a time
-// needs one box for all of them, so the box is the card's 3:2 — and `contain`,
-// not the card's `cover`: on the product's own page nothing the maker uploaded
-// is cropped. What that costs, said plainly: a tall phone screenshot is
+// needs one box for all of them, so here the box is a 3:2 (the deck card's
+// fills its stage instead, `shape="fill"`), and `contain`, as on the deck: on
+// the product's own page nothing the maker uploaded is cropped. What that costs, said plainly: a tall phone screenshot is
 // letterboxed (on cream in one column, on white beside the words), narrower
 // than it was uploaded. The page used to stack
 // every image at its own shape for that reason; a gallery cannot.

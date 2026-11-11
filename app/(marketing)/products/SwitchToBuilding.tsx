@@ -52,7 +52,17 @@ export function SwitchToBuilding({
     <form action={formAction}>
       {/* type="submit" is load-bearing: components/ui/Button.tsx defaults to
           type="button", so without it this form silently stops submitting. */}
-      <Button type="submit" variant={variant} size="sm" disabled={pending}>
+      {/* whitespace-nowrap: in the deck's top line this sits in a grid column
+          that the category chips can squeeze, and a pill must not wrap into a
+          multi-line capsule. Only the button: the error line below still
+          wraps. */}
+      <Button
+        type="submit"
+        variant={variant}
+        size="sm"
+        disabled={pending}
+        className="whitespace-nowrap"
+      >
         <Rocket className="h-4 w-4" strokeWidth={1.5} />
         {label}
       </Button>

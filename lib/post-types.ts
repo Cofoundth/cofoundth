@@ -132,27 +132,32 @@ export const POST_IMAGE_TYPES = [
  *  (lib/post-actions.ts) and the screenshot picker's read the same number. */
 export const MAX_POST_IMAGE_BYTES = 5 * 1024 * 1024;
 
-// NOT a layout guard — the deck card clamps the description (line-clamp-4) and
-// does not show the name at all, so nothing can overflow and every card
-// measures the same height regardless of what is typed.
+// NOT a layout guard — the deck card clamps the description and does not show
+// the name at all, so nothing can overflow, and the card's size comes from the
+// screen (app/(marketing)/products/ProductDeck.tsx, CARD_BODY), never from what
+// is typed.
 //
 // These exist because THE DECK CARD IS WHERE A PRODUCT IS READ. A product links
 // straight out to the real thing, so text past the clamp is written by a maker
 // and then read by almost nobody (only /p/<id> shows all of it). The composer
 // was inviting 5000 characters and showing about 82.
 //
-// THE DESCRIPTION is the card's main text: four lines at 16/24. Measured in the
-// running app (2026-11-10) for how much fits in those four lines:
-//     320px phone, 230px of text     117 Latin / 131 Thai
-//     375px phone, 286px of text     154 Latin / 165 Thai
-//     the 360px deck, 318px of text  172 Latin / 182 Thai
+// THE DESCRIPTION is the card's main text. Since 2026-11-11 the card fills the
+// screen and has two shapes:
+//     a phone      three lines at 16/24 in a 160px band under the pictures;
+//                  text ~246px wide at 320, ~301px at 375 — ESTIMATED from the
+//                  2026-11-10 four-line measurements (117 Latin / 131 Thai in
+//                  230px, 154 / 165 in 286px) to fit ~94 / 105 at 320 and
+//                  ~121 / 130 at 375. Not re-measured.
+//     wide screen  up to ten lines at 20/28 in a side panel 256-352px wide,
+//                  which holds 160 characters of either script whole.
+// So 160 is a recorded DECISION, not a fit: the whole description shows on a
+// laptop, and a phone clamps it with an ellipsis — a soft, legible failure —
+// whereas a cap tight enough to never clamp on a phone would reject reasonable
+// Thai. Re-measure if the card's shape, the type size or a clamp count changes.
 // THE NAME is not on the card face (CLAUDE.md, "Founder decision (2026-11-10)"):
 // it is the card link's accessible name, the deck's live-region announcement
 // and the title on /p/<id>, so 60 is a label-sized cap rather than a clamp fit.
-// The description cap sits above the narrowest phone's fit on purpose: going
-// over clamps with an ellipsis, which is a soft, legible failure, whereas a cap
-// tight enough to never clamp would reject reasonable Thai. Re-measure if the
-// card width, the type size or the clamp count changes.
 export const MAX_PRODUCT_NAME = 60;
 export const MAX_PRODUCT_BLURB = 160;
 

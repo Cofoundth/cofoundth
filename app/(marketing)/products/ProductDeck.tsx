@@ -249,16 +249,35 @@ const SPRING_MS = 200;
 const LINK_REL = "noopener noreferrer nofollow";
 
 /**
- * One height whatever is on the card, so a card change never moves the page: a
- * 3:2 image box, a fixed body, and the 20px the two cards behind peek. Read
- * against the deck's own width through @container, which is why every use sits
- * inside an element carrying that class. The 12rem is that 20px plus a 172px
- * body: 20px padding top and bottom, four 24px lines of description (16px at
- * the 1.5 Thai floor) and the 32px footer row, with ~3px to spare. More body
- * than that is a fifth line the clamp would never show. ./loading.tsx writes
- * the same calc out by hand.
+ * THE CARD IS AS BIG AS THE SCREEN ALLOWS (the owner's call, 2026-11-11): the
+ * page is one viewport tall (./ProductShelf.tsx) and the stage takes whatever
+ * the filter and the buttons leave, so the card's size comes from the screen,
+ * never from its content, and a card change never moves the page. Its pictures
+ * are letterboxed over a blurred copy of themselves (ProductGallery `backdrop`),
+ * because a box this size has no fixed shape to crop to.
+ *
+ * Its words keep a FIXED share: a 160px band under the pictures on a phone
+ * (20px padding top and bottom, three 24px lines of description at the 1.5
+ * Thai floor, the footer row pinned to the bottom), or a side panel on a wide
+ * screen (`deck-wide:`, app/globals.css), where the description and its rating
+ * sit together as one block in the panel's middle — pinned to the top and the
+ * bottom they left the tall panel empty between them. Left-aligned there too:
+ * a centred paragraph of Thai is ragged on both edges. ./loading.tsx draws the
+ * same two shapes.
  */
-const STAGE_HEIGHT = "[height:calc(66.6667cqw_+_12rem)]";
+const CARD_BODY =
+  "flex h-40 shrink-0 flex-col p-5 deck-wide:h-auto deck-wide:w-[clamp(16rem,30%,22rem)] deck-wide:justify-center deck-wide:p-6";
+
+/** A big card would need a long drag to commit, and would swing its corners a
+ *  long way at full tilt: both are measured against at most this width. */
+const COMMIT_BASIS_MAX_PX = 480;
+const TILT_REFERENCE_PX = 400;
+
+/** The most a card this wide leans: MAX_TILT_DEG for a phone-sized card, less
+ *  for a wide one. */
+function maxTiltFor(width: number): number {
+  return MAX_TILT_DEG * Math.min(1, TILT_REFERENCE_PX / Math.max(width, 1));
+}
 
 type Gesture = {
   pointerId: number;
@@ -269,7 +288,10 @@ type Gesture = {
   /** The x the drag is measured from, once locked. */
   originX: number;
   dx: number;
+  /** What the commit distance is a share of: the card's width, capped. */
   width: number;
+  /** maxTiltFor() the card. */
+  tilt: number;
   samples: { x: number; t: number }[];
   reducedMotion: boolean;
   listeners: AbortController;
@@ -383,7 +405,7 @@ export function ProductDeck({
   });
 
   return (
-    <div className="min-w-0">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <p aria-live="polite" className="sr-only">
         {matching.length > 0 ? announced : labels.noneHereTitle}
       </p>
@@ -401,14 +423,14 @@ export function ProductDeck({
           onTried={prompts.tried}
         />
       ) : (
-        <div className="@container mx-auto w-full max-w-[360px]">
+        <div className="relative min-h-0 flex-1">
           {/* The shelf has products and the filter excludes them all, so this
               asks the reader to widen it. The shelf being EMPTY is a different
               message that needs a maker instead, and ./ProductShelf.tsx renders
               that one: "try another category" on a shelf with nothing on it
               would send someone hunting through categories that are not
-              there. */}
-          <div className={STAGE_HEIGHT}>
+              there. In the stage's place, at the stage's size. */}
+          <div className="absolute inset-0 pb-5">
             <EmptyState
               icon={SearchX}
               title={labels.noneHereTitle}
@@ -619,7 +641,7 @@ function Stack({
     const [top, ...behind] = stackOf(stageRef.current);
     top.style.pointerEvents = "none";
     top.style.transition = `transform ${FLY_MS}ms cubic-bezier(0.2, 0.7, 0.3, 1), opacity ${FLY_MS}ms ease-in`;
-    top.style.transform = `translate3d(${sign * window.innerWidth}px, 0, 0) rotate(${sign * MAX_TILT_DEG}deg)`;
+    top.style.transform = `translate3d(${sign * window.innerWidth}px, 0, 0) rotate(${sign * maxTiltFor(top.offsetWidth)}deg)`;
     top.style.opacity = "0";
     behind.forEach((card, i) => {
       card.style.transition = `transform ${FLY_MS}ms ease-out`;
@@ -737,9 +759,7 @@ function Stack({
     const pull = Math.min(Math.abs(g.dx) / (g.width * COMMIT_RATIO), 1);
     // Full tilt at twice the commit distance, so it reads well before release.
     const lean = g.dx / (g.width * 2 * COMMIT_RATIO);
-    const tilt = g.reducedMotion
-      ? 0
-      : Math.max(-1, Math.min(lean, 1)) * MAX_TILT_DEG;
+    const tilt = g.reducedMotion ? 0 : Math.max(-1, Math.min(lean, 1)) * g.tilt;
     top.style.transform = `translate3d(${g.dx}px, 0, 0) rotate(${tilt}deg)`;
     writeHints(top, g.dx > 0 ? pull : 0, g.dx < 0 ? pull : 0);
     behind.forEach((card, i) =>
@@ -790,7 +810,8 @@ function Stack({
       lock: null,
       originX: event.clientX,
       dx: 0,
-      width: event.currentTarget.offsetWidth,
+      width: Math.min(event.currentTarget.offsetWidth, COMMIT_BASIS_MAX_PX),
+      tilt: maxTiltFor(event.currentTarget.offsetWidth),
       samples: [],
       reducedMotion: prefersReducedMotion(),
       listeners: new AbortController(),
@@ -906,11 +927,10 @@ function Stack({
       aria-label={labels.deckName}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      // @container so the stage can be as tall as an image box at THIS width
-      // needs.
-      className="@container relative mx-auto w-full max-w-[360px] rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy"
+      // Fills what the page leaves it: see CARD_BODY.
+      className="relative flex min-h-0 w-full flex-1 flex-col rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy"
     >
-      <div ref={stageRef} className={`relative ${STAGE_HEIGHT}`}>
+      <div ref={stageRef} className="relative min-h-0 flex-1">
         {products.slice(index, index + MOUNTED).map((product, depth) => (
           <Card
             key={product.id}
@@ -929,10 +949,13 @@ function Stack({
             // global :focus-visible outline draws 2px OUTSIDE the element).
             // The clip lives on the image box, the only thing that needs it.
             // `group/card` is what the gallery's arrows read hover from.
-            className="group/card absolute inset-x-0 top-0 bottom-5 flex origin-bottom cursor-grab touch-pan-y flex-col border border-line shadow-lg select-none active:cursor-grabbing [transform:translateY(calc(var(--depth)_*_10px))_scale(calc(1_-_var(--depth)_*_0.04))]"
+            // A column on a phone, a row on a wide screen (CARD_BODY).
+            className="group/card absolute inset-x-0 top-0 bottom-5 flex origin-bottom cursor-grab touch-pan-y flex-col border border-line shadow-lg select-none active:cursor-grabbing deck-wide:flex-row [transform:translateY(calc(var(--depth)_*_10px))_scale(calc(1_-_var(--depth)_*_0.04))]"
           >
             {/* Stretched, and a real link so a tap, a middle-click and
-                assistive tech all work before hydration. */}
+                assistive tech all work before hydration. It covers the
+                pictures, so it is also what says the pointer is over them
+                (`data-gallery-zone`, see components/ProductGallery.tsx). */}
             <a
               href={product.href}
               target="_blank"
@@ -940,18 +963,9 @@ function Stack({
               aria-label={product.tryAria}
               draggable={false}
               onClick={onTryLinkClick}
+              data-gallery-zone=""
               className="absolute inset-0 z-10 cursor-grab rounded-3xl active:cursor-grabbing"
-            >
-              {/* The image box's footprint, inside the link: the only way to
-                  know the pointer is over the pictures, because the link
-                  covers them (see components/ProductGallery.tsx). Same width
-                  as the box (both sit inside the card's border) and the same
-                  3:2, so the same height. */}
-              <span
-                data-gallery-zone=""
-                className="block aspect-[3/2] w-full"
-              />
-            </a>
+            />
 
             <span
               data-deck-hint="try"
@@ -968,29 +982,35 @@ function Stack({
               {labels.skip}
             </span>
 
-            <ProductGallery
-              images={product.images}
-              labels={labels}
-              inactive={depth > 0}
-              preload={depth === 1}
-              sizes="360px"
-              className="rounded-t-3xl"
-            />
+            <div className="relative min-h-0 min-w-0 flex-1">
+              <ProductGallery
+                images={product.images}
+                labels={labels}
+                inactive={depth > 0}
+                preload={depth === 1}
+                shape="fill"
+                fit="contain"
+                backdrop
+                sizes="(min-aspect-ratio: 4/3) 70vw, 100vw"
+                className="rounded-t-3xl deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
+              />
+            </div>
 
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col p-5">
-              {/* The card's main text now: body size, ink. No leading-tight:
-                  user-written, mostly Thai, so it keeps text-base's 1.5.
+            <div className={CARD_BODY}>
+              {/* The card's main text now: body size, ink, a step up in the
+                  wide card's side panel. No leading-tight: user-written,
+                  mostly Thai, so it keeps the size's own Thai-safe leading.
                   Clamped rather than truncated server-side, so the whole
                   description stays in the DOM for anyone who copies the
                   card's text; min-h-0 lets the clamp give way before the
                   footer is pushed off the card. */}
               {product.blurb && (
-                <p className="line-clamp-4 min-h-0 text-base whitespace-pre-wrap text-ink">
+                <p className="line-clamp-3 min-h-0 text-base whitespace-pre-wrap text-ink deck-wide:line-clamp-[10] deck-wide:text-xl">
                   {product.blurb}
                 </p>
               )}
 
-              <div className="mt-auto flex min-w-0 items-center pt-3">
+              <div className="mt-auto flex min-w-0 items-center pt-3 deck-wide:mt-0 deck-wide:pt-5">
                 {/* The product's page, in this tab: see "THE RATING-AND-
                     COMMENTS ROW" in the header. Not prefetched: each card
                     mounting would otherwise fetch its page, and a skip must
@@ -1019,9 +1039,10 @@ function Stack({
       </div>
 
       {/* WCAG 2.5.7: everything the drag does also has a control that is not a
-          drag. The end state keeps this row's height, so the page below it
-          does not jump when the deck runs out. */}
-      <div className="mt-3 flex gap-3">
+          drag. The end state keeps this row's height, so the deck does not
+          grow when it runs out. Phone-width at most, under a card of any
+          size. */}
+      <div className="mx-auto mt-3 flex w-full max-w-md gap-3">
         {current ? (
           <>
             <Button
@@ -1078,7 +1099,7 @@ function Stack({
       {/* Over the stage rather than in the flow, so it cannot push the buttons
           out of the first viewport. */}
       {blocked && (
-        <div className="absolute inset-x-3 top-3 z-10 rounded-xl border border-line bg-white p-3 text-sm shadow-lg">
+        <div className="absolute top-3 left-1/2 z-10 w-[min(28rem,calc(100%-1.5rem))] -translate-x-1/2 rounded-xl border border-line bg-white p-3 text-sm shadow-lg">
           <p className="text-ink-muted">{labels.blocked}</p>
           <a
             href={blocked.href}

@@ -25,9 +25,13 @@
 // except the one a shared ?category= link selected, so "ทั้งหมด" can clear it.
 //
 // ── WHERE IT SITS ─────────────────────────────────────────────────────────
-// ./ProductShelf.tsx renders this at the SECTION's width, above the deck's
-// 360px column: on a desktop the row has room for every chip on one line,
-// centred over the deck, and on a phone it wraps inside the page gutter.
+// ./ProductShelf.tsx renders this in the deck page's top line. From 640px it
+// is the middle `auto` column of a `1fr auto 1fr` grid, between the corners
+// (logged out: the mark, and the language with "Sign in"; signed in: the
+// supply CTA), and wraps there when that column is narrower than the chips'
+// one line. Below 640px the corners take the first row and the chips the whole
+// second, wrapping inside the page gutter. With no corners at all (an
+// investor) it is the line's only content.
 //
 // ── KEYBOARD ──────────────────────────────────────────────────────────────
 // A group named "Filter by category"; each chip is a ToggleChip (a <button>

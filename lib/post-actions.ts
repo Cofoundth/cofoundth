@@ -284,14 +284,14 @@ export async function createProductAction(
   const linkUrl = String(formData.get("link_url") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
 
-  // Tighter than a post: the deck card is where a description is read (four
-  // lines of it) and the name is a label, not prose — see MAX_PRODUCT_NAME.
+  // Tighter than a post: the deck card is where a description is read (and
+  // clamps it) and the name is a label, not prose — see MAX_PRODUCT_NAME.
   if (!title) return { error: "Name your product." };
   if (title.length > MAX_PRODUCT_NAME)
     return { error: "Keep the product name short." };
   if (!content) return { error: "Say what it is." };
   if (content.length > MAX_PRODUCT_BLURB)
-    return { error: "Keep the description short — the card shows four lines." };
+    return { error: "Keep the description short." };
   // A product is the one row that has to be actionable — the deck exists to
   // send someone to the real thing — so the link is required, and it has to
   // survive the same parse the shelf runs before it will show a card at all.

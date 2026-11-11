@@ -46,7 +46,9 @@ export async function MarketingFooter() {
   const tr = (en: string) => t(en, locale);
 
   return (
-    <footer className="bg-navy text-white">
+    // Not drawn on the product deck: see [data-marketing-chrome] in
+    // app/globals.css.
+    <footer data-marketing-chrome="" className="bg-navy text-white">
       <div className="max-w-[1120px] mx-auto px-6 lg:px-10 py-16">
         <div className="grid md:grid-cols-5 gap-10 mb-12">
           <div className="md:col-span-2">

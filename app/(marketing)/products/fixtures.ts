@@ -77,7 +77,7 @@
 //                       blobs.
 //
 // They are deliberately NOT realistic. A tinted ground, a chrome bar and a few
-// blocks reads as "an app" on a 360px card, which is all the deck shows, and
+// blocks reads as "an app" at any size the deck card is drawn, and
 // keeping each one well under a kilobyte keeps the module honest about its
 // weight. The per-product tint and layout are the point: a swipe has to look
 // like it changed something, and near-identical greys would hide that.
@@ -113,7 +113,8 @@ export function isFixture(id: string): boolean {
 
 // ---- The fake screenshot generator ----------------------------------------
 
-// 3:2, matching the card's `aspect-[3/2]` cover box, so nothing is cropped.
+// 3:2, the shape of a product page's gallery box. The deck card letterboxes any
+// shape (`contain` over a blurred backdrop), so nothing is cropped there either.
 const SHOT_W = 360;
 const SHOT_H = 240;
 
@@ -357,7 +358,8 @@ const SAMPLES: {
   {
     name: "ผจญภัยรถสองแถวลาดพร้าววังหิน ตามหาคิวสุดท้ายก่อนฝนจะตก",
     // Exactly MAX_PRODUCT_BLURB (160) characters: the longest description a
-    // card can be given, so the four-line clamp has something to do.
+    // card can be given, so the clamp (three lines on a phone) has something
+    // to do.
     blurb:
       "เกมผจญภัยบนรถสองแถว ต้องเลือกซอยให้ถูกก่อนฝนลง มีทั้งหมด 12 ด่าน เก็บเหรียญไว้ซื้อร่ม เล่นได้ทั้งบนมือถือและคอม ชื่อยาวหน่อยเพราะเรื่องมันยาวจริง ๆ ลองแล้วบอกนะ",
     category: "game",

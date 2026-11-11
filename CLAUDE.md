@@ -490,6 +490,7 @@ rule. Which of the two:
 | Single column — forms, editors, settings, onboarding, propose | `max-w-[640px]` |
 | Grid or main+aside — directories, feeds, profile and org detail | `max-w-[1120px]`, with the intro block `max-w-[640px]` inside it |
 | Reading/article, chat | exempt, per the two rules above |
+| The product deck (`/`, `/products`) | exempt: one screen tall, up to `max-w-[1440px]`, the card sized by the viewport (founder's call, 2026-11-11) |
 
 640 is not arbitrary for forms: it puts a full-width field at 560px and a
 two-column row at 272px each, and the insight editor's body textarea lands at
@@ -539,7 +540,10 @@ their marketing site is a different domain; ours is one domain, so a member gets
   element that only makes sense logged out takes `in-data-[shell=public]:hidden`.
 - **Marketing routes, logged out**: `MarketingNav` (logo / `LanguageSwitcher` / sign in /
   join) + `MarketingFooter`. There is no second nav array anymore — `AppHeader` was
-  deleted; do not bring it back.
+  deleted; do not bring it back. **Except the product deck**: its root carries
+  `data-deck-page`, and `globals.css` then hides both (`[data-marketing-chrome]`), so
+  the deck has the whole screen; the deck's own top line carries the mark, the
+  language and "Sign in" instead.
 - Adding an app route that investors may read means adding it to
   `isInvestorReadableRoute` in `lib/investor-routes.ts` — the ONE allowlist, read by
   `proxy.ts` (the real gate, the only layer that sees client-side navigation) and by

@@ -15,7 +15,7 @@ export function ForgotPasswordForm() {
 
   if (state.step === "verify") {
     return (
-      <form action={formAction} className="space-y-5">
+      <form action={formAction} className="space-y-5 short:space-y-4">
         <div className="text-sm text-ink leading-relaxed">
           We sent a 6-digit code to{" "}
           <span className="text-navy font-medium">{state.email}</span>.
@@ -77,7 +77,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-5 short:space-y-4">
       <div>
         <label
           htmlFor="email"

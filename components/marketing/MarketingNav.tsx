@@ -7,12 +7,14 @@ import { AuthReturnLink } from "./AuthReturnLink";
 
 // The logged-out bar only. A signed-in visitor never reaches this: the
 // marketing layout hands them the app shell (components/AppShell.tsx) instead.
+// Not drawn on the product deck ([data-marketing-chrome], app/globals.css),
+// which carries its own sign-in in its top line.
 export async function MarketingNav() {
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);
 
   return (
-    <nav className="bg-white border-b border-line">
+    <nav data-marketing-chrome="" className="bg-white border-b border-line">
       <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
           {/* shrink-0, not min-w-0: the only shrinkable item in this row, it

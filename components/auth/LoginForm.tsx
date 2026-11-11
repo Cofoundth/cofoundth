@@ -17,7 +17,7 @@ export function LoginForm({ next }: { next?: string }) {
   );
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-5 short:space-y-4">
       {/* Where to land after signing in. signInAction re-checks it with
           lib/safe-next.ts — a hidden field is as forgeable as the URL. */}
       {next && <input type="hidden" name="next" value={next} />}

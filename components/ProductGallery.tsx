@@ -36,10 +36,9 @@
 //     arrow never starts a swipe. Nothing else reads it.
 //   * the `group-has-[[data-gallery-zone]:hover]/card` reveal in ARROW: on the
 //     deck the card's link covers the images, so the image box under it is
-//     never :hover itself, and the link carries a `data-gallery-zone` box of
-//     the same footprint to say "the pointer is over the pictures". With no
-//     `group/card` ancestor (a product page) the plain `group-hover/gallery`
-//     reveal does the work.
+//     never :hover itself, and the link carries `data-gallery-zone` to say
+//     "the pointer is over the card". With no `group/card` ancestor (a product
+//     page) the plain `group-hover/gallery` reveal does the work.
 //
 // `inactive` is the deck's card BEHIND the top one: first image only, no
 // controls, no clock. A gallery only ever goes from inactive to active (the
@@ -81,6 +80,8 @@ export function ProductGallery({
   inactive = false,
   preload = false,
   fit = "cover",
+  shape = "3:2",
+  backdrop = false,
   sizes,
   altPrefix,
   className,
@@ -94,9 +95,17 @@ export function ProductGallery({
   /** Fetch the images past the first now: the deck's card next in line, so
    *  they come out of the cache once it is the top card. */
   preload?: boolean;
-  /** `cover` crops into the box (the deck card, one height for every card);
-   *  `contain` letterboxes (a product page, where nothing is cropped). */
+  /** `contain` letterboxes, so nothing is cropped: both callers use it (a
+   *  product page, and the deck card over its `backdrop`). `cover` crops into
+   *  the box: the default, which no caller uses today. */
   fit?: "cover" | "contain";
+  /** `3:2`: a 3:2 box at the width it is given (a product page). `fill`: the
+   *  box fills its positioned parent, whatever shape that is (the deck card,
+   *  which is as big as the screen allows). */
+  shape?: "3:2" | "fill";
+  /** Behind a `contain` picture, a blurred, cropped copy of it, so a
+   *  screenshot of any shape fills the box without being cut (the deck). */
+  backdrop?: boolean;
   sizes: string;
   /** Unset: the images are decorative (alt=""), because the deck card's link
    *  already names the product. Set: image i is "{altPrefix} {i + 1}", and the
@@ -255,7 +264,10 @@ export function ProductGallery({
   }, [active, images.length]);
 
   const box = cn(
-    "relative aspect-[3/2] w-full shrink-0 overflow-hidden bg-cream",
+    "overflow-hidden bg-cream",
+    shape === "fill"
+      ? "absolute inset-0"
+      : "relative aspect-[3/2] w-full shrink-0",
     className,
   );
 
@@ -279,6 +291,21 @@ export function ProductGallery({
 
   return (
     <div ref={boxRef} className={cn("group/gallery", box)}>
+      {/* The picture on screen again, cropped to the box and blurred, under
+          the letterboxed one. Same URL, so it costs no request. */}
+      {backdrop && (
+        <Image
+          src={images[shown]}
+          alt=""
+          aria-hidden
+          fill
+          unoptimized
+          loading="eager"
+          draggable={false}
+          sizes={sizes}
+          className="scale-110 object-cover opacity-60 blur-2xl"
+        />
+      )}
       {mounted.map((src, i) => (
         // `unoptimized` is NOT a shortcut — it is the only way next/image
         // renders these today. next.config.ts declares no `images` block, so

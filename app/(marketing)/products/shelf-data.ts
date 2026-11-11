@@ -37,7 +37,8 @@ const PRODUCT_SHELF_LIMIT = 200;
  * TEMPORARILY 1 (2026-11-11, the founder's call): / serves the deck as soon as
  * there is one real product (Cofoundee itself), instead of waiting for three.
  * The pitch landing is untouched and still serves / at zero products. Put this
- * back to 3 to restore the rule above.
+ * back to 3 to restore the rule above — and read ../(home)/loading.tsx's note
+ * on `data-deck-page` when you do.
  */
 export const FRONT_DOOR_MIN_PRODUCTS = 1;
 

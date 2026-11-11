@@ -7,7 +7,7 @@
 //
 // The fields are the product record as the deck reads it: a name (the card
 // link's accessible name and the title on its page), a description (the card's
-// four lines), one category, the link the card opens, and optional screenshots
+// main text), one category, the link the card opens, and optional screenshots
 // (the first is the cover). Saved as the same forum_posts row a Show & tell
 // always was — kind 'show_and_tell', the category as its one tag.
 
@@ -117,8 +117,9 @@ export function AddProductForm() {
         rows={4}
         maxLength={MAX_PRODUCT_BLURB}
         label={tr("Description")}
-        // The deck card shows four lines of it (MAX_PRODUCT_BLURB says how many
-        // characters that is), so the counter is the honest guide.
+        // The deck card clamps it (three lines on a phone; MAX_PRODUCT_BLURB
+        // says what that means in characters), so the counter is the honest
+        // guide.
         hint={
           <span className="text-xs text-ink-muted tabular-nums">
             {description.length}/{MAX_PRODUCT_BLURB}

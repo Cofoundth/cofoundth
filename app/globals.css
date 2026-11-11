@@ -41,6 +41,19 @@
   }
 }
 
+/* The product deck's card on a WIDE screen: a row (screenshots left, words in
+   a side panel) instead of a column, so the pictures get the width a landscape
+   screen has. Keyed to the viewport's SHAPE, not its width: the owner's laptop
+   at Windows display scaling is ~930px wide and landscape, and a column card
+   there was a wide, short strip. app/(marketing)/products/ProductDeck.tsx. */
+@custom-variant deck-wide (@media (width >= 40rem) and (min-aspect-ratio: 4/3));
+
+/* A SHORT screen (under 720px tall: most laptops once the browser's own chrome
+   is taken off). The auth pages must not scroll, and their budget has to hold
+   with an error message showing, which adds ~60-80px — so they tighten their
+   vertical rhythm here, and only here. app/(auth)/ and components/auth/. */
+@custom-variant short (@media (height < 45rem));
+
 @theme inline {
   /* ── Palette — Onfound's warm neutral system ──────────────────────────
      Values read off app.onfound.com's live CSS custom properties (their
@@ -341,6 +354,18 @@
   padding-top: 3.5rem;
   padding-bottom: 3.5rem;
 }
+/* ── The product deck is the whole screen ──────────────────────────────────
+   / (when it serves the shelf) and /products mark their root [data-deck-page],
+   and on those pages the logged-out header and footer are not drawn: the deck
+   gets the full height (the owner's call, 2026-11-11). The marketing layout
+   cannot decide this itself — a layout is not re-rendered on a soft
+   navigation, so it would keep whatever the first page needed. :has() follows
+   the page that is mounted, from the first paint and after every navigation.
+   A signed-in member keeps the app shell: that is their navigation. */
+body:has([data-deck-page]) [data-marketing-chrome] {
+  display: none;
+}
+
 @media (width >= 64rem) {
   [data-shell="public"] .lg\:text-d3 {
     font-size: 2.0625rem; /* --text-d2 (33px); literal, @theme inline does not guarantee the var */

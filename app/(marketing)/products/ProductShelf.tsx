@@ -94,13 +94,24 @@
 // this stops being the right design all live in ./filter-context.tsx.
 //
 // ── NO VISIBLE PAGE HEADER ────────────────────────────────────────────────
-// The deck IS the page, so nothing sits above it but the category filter: no
-// visible title, no product count, no intro paragraph. They cost a phone the
+// The deck IS the page, so nothing sits above it but its top line — the
+// category filter between the corners (see ONE SCREEN below): no visible
+// title, no product count, no intro paragraph. They cost a phone the
 // height the deck's buttons needed, and the cards say what the page is better
 // than a sentence about cards does. The title is still there for the readers
 // that need one — screen readers and crawlers — as the page's single <h1>,
 // visually hidden.
+//
+// ── ONE SCREEN, NO SITE HEADER OR FOOTER ──────────────────────────────────
+// The owner's call (2026-11-11): the deck uses the whole screen. The page is
+// exactly one viewport tall and marks itself [data-deck-page], which stops the
+// logged-out header and footer being drawn (app/globals.css). What a visitor
+// needed from that header comes with the page instead, in its top line: the
+// mark, the language and "Sign in" — without it, a member whose session has
+// lapsed has no way in from the front door. A signed-in reader keeps the app
+// shell, and the top line carries the supply CTA instead.
 
+import Link from "next/link";
 import { PackageOpen, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
@@ -109,7 +120,15 @@ import { getMyProductRatings } from "@/lib/product-ratings";
 import { ADD_PRODUCT_PATH, canComment, canRate } from "@/lib/roles";
 import { authHref } from "@/lib/auth-href";
 import { getLocale, tServer } from "@/lib/i18n-server";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import {
+  EmptyState,
+  LinkButton,
+  Section,
+  buttonClasses,
+} from "@/components/ui";
+import { BrandMark } from "@/components/Brand";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { AuthReturnLink } from "@/components/marketing/AuthReturnLink";
 import { productBucketOf } from "./categories";
 import { getShelfProducts } from "./shelf-data";
 import { ProductFilters } from "./ProductFilters";
@@ -209,7 +228,6 @@ export async function ProductShelf({
     tAddYours,
     tSwitchToBuilding,
     tStartBuilding,
-    tJoinToAddYours,
     tJoinCofoundee,
     tEmptyTitle,
     tEmptyBody,
@@ -231,12 +249,12 @@ export async function ProductShelf({
     tOpenBlocked,
     tPreviousImage,
     tNextImage,
+    tSignIn,
   ] = await Promise.all([
     tServer("Try what the community built"),
     tServer("Add yours"),
     tServer("Switch to building"),
     tServer("Start building"),
-    tServer("Join to add yours"),
     tServer("Join Cofoundee"),
     tServer("Nothing on the shelf yet"),
     tServer(
@@ -278,15 +296,20 @@ export async function ProductShelf({
     tServer("Open {name}"),
     tServer("Previous image"),
     tServer("Next image"),
+    tServer("Sign in"),
   ]);
 
   // THE SUPPLY SIDE, and the page is now read by FOUR audiences, so this is a
   // four-way switch on `role` with an explicit `null` arm. Written as one
   // function because the deck and the empty states are different buttons (a
-  // quiet secondary under the deck, a primary inside an empty state) and
-  // nothing else about them differs.
+  // quiet secondary in the top line's right corner, for signed-in readers
+  // only, and a primary inside an empty state) and nothing else about them
+  // differs. The quiet ones never wrap (whitespace-nowrap): the category chips
+  // share that line and can squeeze its corner columns.
   //
-  //   null (anonymous)  a plain LINK to signup, carrying ADD_PRODUCT_PATH as
+  //   null (anonymous)  the EMPTY state's only — a logged-out reader's top
+  //                     line carries "Sign in" instead. A plain LINK to
+  //                     signup, carrying ADD_PRODUCT_PATH as
   //                     `next`: a new founder goes through onboarding first
   //                     (signupAction wraps it, lib/auth-href.ts
   //                     throughOnboarding) and lands on the form; a new
@@ -319,13 +342,9 @@ export async function ProductShelf({
     const quiet = place === "deck";
     if (role === null)
       return (
-        <LinkButton
-          href={authHref("/signup", ADD_PRODUCT_PATH)}
-          variant={quiet ? "secondary" : "primary"}
-          size="sm"
-        >
+        <LinkButton href={authHref("/signup", ADD_PRODUCT_PATH)} size="sm">
           <Rocket className="h-4 w-4" strokeWidth={1.5} />
-          {quiet ? tJoinToAddYours : tJoinCofoundee}
+          {tJoinCofoundee}
         </LinkButton>
       );
     if (role === "explorer")
@@ -337,7 +356,12 @@ export async function ProductShelf({
       );
     if (role === "investor") return undefined;
     return quiet ? (
-      <LinkButton href={ADD_PRODUCT_PATH} variant="secondary" size="sm">
+      <LinkButton
+        href={ADD_PRODUCT_PATH}
+        variant="secondary"
+        size="sm"
+        className="whitespace-nowrap"
+      >
         <Rocket className="h-4 w-4" strokeWidth={1.5} />
         {tAddYours}
       </LinkButton>
@@ -347,7 +371,7 @@ export async function ProductShelf({
       </LinkButton>
     );
   };
-  const deckCta = supplyCta("deck");
+  const deckCta = user ? supplyCta("deck") : null;
   const emptyStateCta = supplyCta("empty");
 
   // The sentence above that CTA, split the same four ways because it has to
@@ -424,23 +448,75 @@ export async function ProductShelf({
   // while one is open.
   const pageTitle = <h1 className="sr-only">{tTitle}</h1>;
 
+  // THE TOP LINE'S CORNERS. Logged out they stand in for the site header the
+  // deck does not draw (see the top of this file): the mark home, the language,
+  // "Sign in". Signed in, the app shell already has all three, and the right
+  // corner is the supply CTA — the one thing that used to sit under the deck.
+  // A logged-out visitor gets no "Join to add yours" any more: joining is
+  // offered when they come back from trying a product (./DeckPrompts.tsx) and
+  // at the end of the deck.
+  const leftCorner =
+    user === null ? (
+      <Link
+        href="/"
+        aria-label="Cofoundee"
+        className="col-start-1 row-start-1 justify-self-start rounded-[10px]"
+      >
+        <BrandMark size="sm" />
+      </Link>
+    ) : null;
+  const rightCornerContent =
+    user === null ? (
+      <>
+        <LanguageSwitcher />
+        <AuthReturnLink
+          base="/login"
+          className={buttonClasses({
+            variant: "secondary",
+            size: "sm",
+            className: "whitespace-nowrap",
+          })}
+        >
+          {tSignIn}
+        </AuthReturnLink>
+      </>
+    ) : (
+      deckCta
+    );
+  // DRAWN TWICE, each copy at one size only (display:none takes the other out
+  // of the tab order and the accessibility tree), so focus follows what is on
+  // screen: on a phone the corners share the first line and the chips take the
+  // second, so the right corner comes BEFORE the chips in the DOM; from 640px
+  // the three sit on one line and it comes after them. Grid placement alone
+  // cannot do this — it moves boxes, never focus.
+  const rightCorner = (at: "phone" | "wide") =>
+    rightCornerContent ? (
+      <div
+        className={
+          at === "phone"
+            ? "col-start-2 row-start-1 flex items-center gap-3 justify-self-end text-center sm:hidden"
+            : "hidden items-center gap-3 justify-self-end text-center sm:col-start-3 sm:row-start-1 sm:flex"
+        }
+      >
+        {rightCornerContent}
+      </div>
+    ) : null;
+
   // THE SPACING IS THE PAGE'S OWN: rhythm={false}, then explicit padding. It is
   // the exemption CLAUDE.md gives chat and article pages (the Section
   // primitive's `rhythm={false}` "for chat/article pages"; chat views "take no
   // vertical rhythm"), and for the same reason: those pages own their vertical
   // space because their content is not a stack of titled sections, and neither
   // is this one. The section rhythm exists to separate a page title and its
-  // sections; this page has neither. What is left above the deck is one 34px
-  // line of chips, and 88px of marketing padding (or the app's 56) over a
-  // single line is the space the phone needs for the deck's Skip and Try
-  // buttons.
+  // sections; this page has neither — an empty shelf is one EmptyState under a
+  // visually hidden title, and 88px of marketing padding (or the app's 56)
+  // above a single panel would only push it down the screen.
   //
   // It also takes the page OUT of the [data-shell="public"] block in
   // app/globals.css, on purpose: that block down-converts `py-[88px]` to the
   // app's 56px for a signed-in member, and there is nothing here for it to
-  // match. Logged out and signed in, the filter sits the same 24px (32 at lg)
-  // under whatever chrome is above it. ./loading.tsx copies this string so the
-  // skeleton's deck lands where the real one does: change the two together.
+  // match. Only the EMPTY shelf uses it now: the deck is one screen tall and
+  // owns all of its spacing (below).
   const sectionClass = "pt-6 pb-12 lg:pt-8";
 
   if (products.length === 0) {
@@ -467,26 +543,51 @@ export async function ProductShelf({
     );
   }
 
-  // A card flying off must not widen the page. On the full-width wrapper rather
-  // than the deck, so it leaves the viewport instead of being cut off at the
-  // deck's edge; `clip` and not `hidden` because this must not become a scroll
-  // container.
+  // ONE VIEWPORT TALL, whatever chrome is around it: the whole screen logged
+  // out (no site header or footer, see the top of this file), the screen less
+  // the app shell's phone bar for a signed-in member below md — 65px, because
+  // the bar measures 64.8 (its 4rem row and a hairline border), and 4rem left
+  // the page one pixel too tall to fit. Never
+  // shorter than 34rem: on a landscape phone the page scrolls rather than
+  // squeezing the card to a sliver.
+  //
+  // A card flying off must not widen the page, and a tilting one must not make
+  // it scroll: both are clipped at this root, which is the viewport's edge.
+  // `clip` and not `hidden` because this must not become a scroll container.
+  //
+  // Up to 1440px wide, past the system's 1120: an exemption like the chat
+  // views' (CLAUDE.md, Layout), because the card is sized by the screen and on
+  // a big one 1120 left a third of it empty. ./loading.tsx copies these
+  // strings so the skeleton's deck lands where the real one does: change the
+  // two together.
   return (
-    <div className="overflow-x-clip">
-      <Section rhythm={false} className={sectionClass}>
-        {pageTitle}
-        <ProductFilterProvider items={products} initial={initialCategory}>
-          {/* The category chips, directly above the deck. At the SECTION's
-              width, outside the deck's column, so on a desktop every chip fits
-              one centred line; on a phone they wrap (./ProductFilters.tsx says
-              why they wrap instead of scrolling). It renders nothing when
-              there is nothing to choose between, and its margin goes with it. */}
-          <ProductFilters className="mb-3" />
-          {/* ONE COLUMN AT EVERY WIDTH, on the deck's own 360px: the deck with
-              its Skip and Try buttons, and the supply CTA. Everything here
-              stays server-rendered except the client islands that read the
-              selection. */}
-          <div className="mx-auto w-full max-w-[360px]">
+    <div
+      data-deck-page=""
+      className="flex h-dvh min-h-[34rem] flex-col overflow-clip in-data-[shell=public]:h-[calc(100dvh-4.0625rem)] md:in-data-[shell=public]:h-dvh"
+    >
+      {pageTitle}
+      <ProductFilterProvider items={products} initial={initialCategory}>
+        <div className="mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-5">
+          {/* THE TOP LINE: the corners (leftCorner, rightCorner) and the
+              category chips between them, on one line from 640px. On a phone
+              the corners take the first line and the chips the whole second,
+              where they wrap (./ProductFilters.tsx says why they wrap instead
+              of scrolling). The chips render nothing when there is nothing to
+              choose between, and their line goes with them. The right corner
+              is in the DOM twice, for the focus order: see rightCorner. */}
+          {leftCorner || rightCornerContent ? (
+            <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 sm:grid-cols-[1fr_auto_1fr]">
+              {leftCorner}
+              {rightCorner("phone")}
+              <ProductFilters className="col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1" />
+              {rightCorner("wide")}
+            </div>
+          ) : (
+            <ProductFilters />
+          )}
+          {/* The deck takes the rest. Everything here stays server-rendered
+              except the client islands that read the selection. */}
+          <div className="mt-3 flex min-h-0 flex-1 flex-col lg:mt-4">
             <ProductDeck
               products={products}
               route={route}
@@ -513,17 +614,9 @@ export async function ProductShelf({
               }}
               supplyCta={emptyStateCta}
             />
-            {/* Supply side, QUIET and under the deck: the deck is what the page
-                is for, and this is the one thing below it. The shelf is only
-                worth visiting if makers keep adding to it, and /products/new is
-                the one place to add from — quietly, not through the community
-                feed. `text-center` rather than flex, because the explorer's
-                control is a <form> whose error line should centre under its
-                button too. An investor gets nothing (see supplyCta). */}
-            {deckCta && <div className="mt-6 text-center">{deckCta}</div>}
           </div>
-        </ProductFilterProvider>
-      </Section>
+        </div>
+      </ProductFilterProvider>
     </div>
   );
 }
