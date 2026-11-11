@@ -33,8 +33,13 @@ const PRODUCT_SHELF_LIMIT = 200;
  * what the page actually SHOWS, so dev with fixtures takes the same arm a
  * production shelf of that size would, and the third real product flips / with
  * no deploy. app/sitemap.ts reads this too, against real rows only.
+ *
+ * TEMPORARILY 1 (2026-11-11, the founder's call): / serves the deck as soon as
+ * there is one real product (Cofoundee itself), instead of waiting for three.
+ * The pitch landing is untouched and still serves / at zero products. Put this
+ * back to 3 to restore the rule above.
  */
-export const FRONT_DOOR_MIN_PRODUCTS = 3;
+export const FRONT_DOOR_MIN_PRODUCTS = 1;
 
 /**
  * The shelf for this request, read once however many callers ask. Every row
