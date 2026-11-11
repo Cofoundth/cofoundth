@@ -112,6 +112,8 @@ type FormState = {
 
 type Props = {
   initial: Partial<FormState>;
+  /** Posted as `next`; saveOnboardingAction re-checks it and lands there. */
+  destination?: string;
 };
 
 const STEPS = [
@@ -123,7 +125,7 @@ const STEPS = [
 
 // ---- Component ------------------------------------------------------
 
-export function OnboardingForm({ initial }: Props) {
+export function OnboardingForm({ initial, destination }: Props) {
   const tr = useT();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormState>({
@@ -255,6 +257,7 @@ export function OnboardingForm({ initial }: Props) {
     fd.append("work_experience", data.work_experience);
     fd.append("education", data.education);
     data.skills.forEach((s) => fd.append("skills", s));
+    if (destination) fd.append("next", destination);
 
     startTransition(async () => {
       const result = await saveOnboardingAction(null, fd);

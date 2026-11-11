@@ -5,7 +5,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { FEATURES } from "@/lib/features";
-import { parseAccountRole, DEFAULT_ROLE, EXPLORER_HOME } from "@/lib/roles";
+import {
+  parseAccountRole,
+  owesOnboarding,
+  DEFAULT_ROLE,
+  EXPLORER_HOME,
+} from "@/lib/roles";
+import { throughOnboarding } from "@/lib/auth-href";
+import { safeNextPath } from "@/lib/safe-next";
 
 // Resolve the origin of the CURRENT request, so confirmation / password-reset
 // links (and any OAuth redirectTo built server-side) land back on whatever host
@@ -27,7 +34,8 @@ async function getRequestOrigin(): Promise<string> {
 // ------------------------------------------------------------------
 // SIGN UP — link-only flow.
 // User submits credentials → Supabase sends a confirmation LINK to email
-// → user clicks → /auth/callback exchanges code → user lands on /dashboard.
+// → user clicks → /auth/callback exchanges code → user lands on `next` below
+// (onboarding for a founder, the product or /products for an explorer).
 // No 6-digit OTP step. (See email template "Confirm signup" — uses
 // {{ .ConfirmationURL }}.)
 // ------------------------------------------------------------------
@@ -81,7 +89,24 @@ export async function signupAction(
   // the page and the action both refuse them. Written as an explicit explorer
   // case rather than `roleHome(accountType) ?? "/onboarding"`, which would have
   // quietly routed a new investor to /funding and skipped their form.
-  const next = accountType === "explorer" ? EXPLORER_HOME : "/onboarding";
+  //
+  // A sign-up from a product page posts that product as `next` (the signup
+  // page puts it in a hidden field). The explorer lands on it directly; a
+  // founder fills in onboarding first, and onboarding's finish follows the
+  // `next` it is handed. Checked by lib/safe-next.ts here, and again by each
+  // later reader, because each reader is a separate trust boundary. Nested
+  // inside /onboarding it is encoded once more, so its own query survives as
+  // one value. (An investor's form is on /onboarding too and ignores it.)
+  const requested = safeNextPath(formData.get("next"));
+  const next =
+    accountType === "explorer"
+      ? (requested ?? EXPLORER_HOME)
+      : requested
+        ? `/onboarding?next=${encodeURIComponent(requested)}`
+        : "/onboarding";
+  // The confirmation link. `next` is encoded whole so a destination that has
+  // its own query (/onboarding?next=…) arrives at the callback as ONE value.
+  const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
   if (!firstName || !email || !password) {
     return { step: "credentials", error: "All fields are required." };
@@ -109,9 +134,7 @@ export async function signupAction(
     const { error: resendError } = await supabase.auth.resend({
       type: "signup",
       email,
-      options: {
-        emailRedirectTo: `${origin}/auth/callback?next=${next}`,
-      },
+      options: { emailRedirectTo },
     });
     if (resendError) {
       return { step: "credentials", error: resendError.message };
@@ -129,7 +152,7 @@ export async function signupAction(
         last_name: lastName,
         account_type: accountType,
       },
-      emailRedirectTo: `${origin}/auth/callback?next=${next}`,
+      emailRedirectTo,
     },
   });
 
@@ -208,7 +231,10 @@ export async function signInAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
     // Friendlier messages for common cases
@@ -222,7 +248,27 @@ export async function signInAction(
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  // Back to where the sign-in started (LoginForm posts the page's `next`), if
+  // lib/safe-next.ts accepts it. /dashboard otherwise, as before; proxy.ts
+  // forwards a gated role from there to its own home.
+  //
+  // A founder who never finished onboarding goes through /onboarding first,
+  // with the destination riding along — the same rule as the OAuth callback,
+  // for the same reason: the deck's sign-in prompt sends them to /products,
+  // which app/(app)/layout.tsx's onboarding gate never sees. If the profile
+  // cannot be read the destination is followed as it is, as before.
+  const destination = safeNextPath(formData.get("next")) ?? "/dashboard";
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("account_type, onboarded")
+    .eq("id", data.user.id)
+    .maybeSingle();
+  redirect(
+    profile &&
+      owesOnboarding(parseAccountRole(profile.account_type), !!profile.onboarded)
+      ? throughOnboarding(destination)
+      : destination,
+  );
 }
 
 // ------------------------------------------------------------------

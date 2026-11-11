@@ -27,6 +27,7 @@ import { isAdminUser } from "@/lib/admin";
 import { SocialLinks } from "@/components/SocialIcons";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
+import { webUrl } from "@/lib/web-url";
 import { Avatar } from "@/components/Avatar";
 import { Card, LinkButton, StageEmblem, buttonClasses } from "@/components/ui";
 import { ExpressInterestForm } from "./ExpressInterestForm";
@@ -165,7 +166,24 @@ export default async function ProfileDetailPage({
   // `profile_views_unique_per_day` index (see migration 0010). The duplicate
   // insert is silently ignored, so repeat visits within the same day don't
   // bloat the table.
-  if (!isOwnProfile && user) {
+  //
+  // NOT for a suspended viewer. Every new row fires trg_notify_on_profile_view
+  // (migration 0028), which tells the viewed member "<name> viewed your
+  // profile" and lists them on /activity — so a view by an account hidden from
+  // everyone (the check above) would put it in front of the very member it is
+  // hidden from. That includes the three test accounts, which are suspended
+  // and browse the shared production database from a dev server. The viewer's
+  // row is read first and an unreadable one counts as suspended: a lost view
+  // is cheap, a leaked one is not.
+  const { data: viewer } =
+    !isOwnProfile && user
+      ? await supabase
+          .from("profiles")
+          .select("suspended")
+          .eq("id", user.id)
+          .maybeSingle()
+      : { data: null };
+  if (!isOwnProfile && user && viewer && viewer.suspended !== true) {
     // View tracking runs during Server Component *render*, where the
     // cookie-scoped client can't supply a PostgREST-valid token — auth.uid()
     // comes back NULL, so the RLS INSERT (auth.uid() = viewer_id) is rejected
@@ -183,11 +201,14 @@ export default async function ProfileDetailPage({
   }
 
   // Recent milestones / shipped posts from this profile — surfaces life
-  // and credibility on the profile page itself.
+  // and credibility on the profile page itself. A post an admin hid stays off
+  // it for everyone, the owner included, exactly as it stays off the feed: the
+  // list reads as what visitors see.
   const { data: recentMilestones } = await supabase
     .from("forum_posts")
     .select("id, content, kind, link_url, created_at")
     .eq("author_id", profile.id)
+    .eq("hidden", false)
     .in("kind", ["milestone", "show_and_tell"])
     .order("created_at", { ascending: false })
     .limit(4);
@@ -611,24 +632,21 @@ export default async function ProfileDetailPage({
                       <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">
                         {m.content as string}
                       </p>
-                      {m.link_url && (
-                        <a
-                          href={m.link_url as string}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all inline-block"
-                        >
-                          {(() => {
-                            try {
-                              return new URL(
-                                m.link_url as string,
-                              ).hostname.replace(/^www\./, "");
-                            } catch {
-                              return m.link_url as string;
-                            }
-                          })()}
-                        </a>
-                      )}
+                      {/* Through webUrl() (lib/web-url.ts): a `link_url`
+                          that is not http/https renders no link at all. */}
+                      {(() => {
+                        const link = webUrl(m.link_url as string | null);
+                        return link ? (
+                          <a
+                            href={link.toString()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all inline-block"
+                          >
+                            {link.hostname.replace(/^www\./, "")}
+                          </a>
+                        ) : null;
+                      })()}
                     </div>
                   );
                 })}

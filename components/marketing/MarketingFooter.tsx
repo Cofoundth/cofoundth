@@ -2,6 +2,11 @@ import Link from "next/link";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { Wordmark } from "@/components/Brand";
+import { AuthReturnLink } from "./AuthReturnLink";
+
+// The two auth links render through AuthReturnLink, which adds `?next=` on a
+// product page and on the deck; every other item is a plain link.
+const AUTH_HREFS = new Set(["/login", "/signup"]);
 
 const columns = [
   {
@@ -71,6 +76,13 @@ export async function MarketingFooter() {
                         >
                           {tr(item.label)}
                         </a>
+                      ) : AUTH_HREFS.has(item.href) ? (
+                        <AuthReturnLink
+                          base={item.href as "/login" | "/signup"}
+                          className="text-sm text-white/80 hover:text-white"
+                        >
+                          {tr(item.label)}
+                        </AuthReturnLink>
                       ) : (
                         <Link
                           href={item.href}

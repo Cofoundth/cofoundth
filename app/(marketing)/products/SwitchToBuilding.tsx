@@ -8,13 +8,17 @@
 // on every visit, and the shelf is the thing that makes someone want to put
 // their own work on it. That is the whole funnel the pivot is built around —
 // try what the community builds, get inspired, become a maker — so the control
-// belongs at the moment of inspiration, not buried in settings.
+// belongs at the moment of inspiration, not buried in settings. The Add product
+// page (/products/new) shows it too, to an explorer who arrived there.
 //
 // It REPLACES the "Add yours" link for an explorer rather than sitting beside
-// it. "Add yours" points at /community, where the composer does not render for
-// them (canPostThread / canPostProduct are both false) and createPostAction
-// refuses the submit: a link into a refusal is worse than no link, because it
-// reads as a bug rather than as a boundary.
+// it on the shelf. "Add yours" points at /products/new, whose form an explorer
+// cannot use (canPostProduct is false, and createProductAction refuses the
+// submit): a link to a page that then says "not you" is a detour, and this
+// control is the one thing that changes the answer.
+//
+// It ENDS on /products/new: upgradeToFounderAction sends them through founder
+// onboarding with that page as `next`, so the wizard's finish lands on the form.
 //
 // ── IT IS A FORM, NOT A LINK ──────────────────────────────────────────────
 // The upgrade is a server-side role transition, so it has to be a POST. One
@@ -52,9 +56,9 @@ export function SwitchToBuilding({
         <Rocket className="h-4 w-4" strokeWidth={1.5} />
         {label}
       </Button>
-      {/* On success the action redirects to /onboarding, so there is no success
-          state to render — only a refusal, which only a role the action does
-          not promote can produce. */}
+      {/* On success the action redirects to /onboarding (which ends on
+          /products/new), so there is no success state to render — only a
+          refusal, which only a role the action does not promote can produce. */}
       {state?.error && (
         <p className="mt-2 text-sm text-danger-ink">{state.error}</p>
       )}

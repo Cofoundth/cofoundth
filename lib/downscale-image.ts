@@ -9,7 +9,7 @@
 // (lib/post-types.ts, lib/post-actions.ts) through a Server Action whose body
 // limit is 6mb (next.config.ts). 25MB of accepted payload against a 6MB
 // ceiling. Worse, the framework rejects an oversized body BEFORE the action
-// function runs, so none of createPostAction's per-file validation and none of
+// function runs, so none of createProductAction's per-file validation and none of
 // its orphan cleanup ever execute — the maker gets "An unexpected response was
 // received from the server." and no idea which file to blame.
 //
@@ -20,17 +20,21 @@
 // the maker away to re-export files by hand. Getting makers to post at all is
 // the entire point of /products.
 //
-// So: shrink the bytes before they go on the wire. The composer enforces a
-// running TOTAL on top of this (see MAX_TOTAL_IMAGE_BYTES there) — this module
+// So: shrink the bytes before they go on the wire. The screenshot picker
+// (components/ScreenshotPicker.tsx) enforces a running TOTAL on top of this
+// (see MAX_TOTAL_IMAGE_BYTES there) — this module
 // makes that total easy to live inside, it does not enforce it.
 //
 // ── IT IS ALSO THE ONLY COMPRESSION THIS SURFACE GETS ─────────────────────
 // next.config.ts declares no `images` block, so the storage host is not in
 // `remotePatterns` and every <Image> on /products renders `unoptimized`
-// (ProductCard.tsx explains it at length). There is no resizing proxy and no
-// srcset: THE UPLOADED BYTES ARE THE BYTES EVERY VISITOR DOWNLOADS. A 4MB
-// screenshot uploaded once is 4MB downloaded by every reader of the grid,
-// forever. 1600px at q0.82 is the whole optimisation pipeline.
+// (the `unoptimized` note in components/ProductGallery.tsx, which loads every
+// image of the deck's top card and of the card next in line, and every image
+// on a product's page). There is no resizing proxy and no srcset: THE
+// UPLOADED BYTES ARE THE BYTES EVERY VISITOR
+// DOWNLOADS. A 4MB screenshot uploaded once is 4MB downloaded by every reader
+// who reaches that card, forever. 1600px at q0.82 is the whole optimisation
+// pipeline.
 //
 // ── FAIL SOFT, ALWAYS ─────────────────────────────────────────────────────
 // Every failure path returns the ORIGINAL File and lets the server's own
@@ -53,7 +57,7 @@ export const DOWNSCALE_QUALITY = 0.82;
 // GIF is deliberately absent even though the server accepts it: a canvas
 // re-encode keeps the first frame and silently throws the animation away. An
 // animated GIF therefore passes through untouched and counts its full size
-// against the composer's total — which is honest, and the right trade. The
+// against the picker's total — which is honest, and the right trade. The
 // alternative is a maker posting a demo GIF that has stopped moving.
 const DECODABLE = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -115,7 +119,7 @@ export type DownscaleResult = {
   /** False when `file` IS the input — nothing was re-encoded. */
   changed: boolean;
   /** Why it was left alone. Diagnostics for the console and for tests; never
-   *  shown to anyone. The maker's message comes from the composer. */
+   *  shown to anyone. The maker's message comes from the picker. */
   reason?: string;
 };
 
@@ -211,7 +215,7 @@ export async function downscaleImage(file: File): Promise<DownscaleResult> {
     // photo can re-encode LARGER at 1600px than it was at 4000px, and the
     // budget this exists to protect is measured in bytes on the wire, not in
     // pixels. The cost of that choice is honest: such a file stays large in
-    // dimensions and the grid decodes more than it needs to.
+    // dimensions and the browser decodes more than it needs to.
     if (blob.size >= file.size) {
       return { file, changed: false, reason: "re-encode was not smaller" };
     }

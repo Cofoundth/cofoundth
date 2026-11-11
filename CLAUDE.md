@@ -569,7 +569,7 @@ Onfound's measured 24px card is equally underivable from their own `--radius`.
   unbroken run used to widen the whole document inside the 3-up grid
 - Generous whitespace, white cards on warm sand
 - Verified badges neutral, not coloured
-- No swipes, no gamification, no urgency hacks (unchanged)
+- No swiping on people, no gamification, no urgency hacks. One founder-approved exception: the product deck (see Language Rules)
 
 ### Language Rules
 - Thai users naturally code-switch — keep English loanwords (`founder`, `co-founder`, `pitch`, `MVP`, `startup`) where they sound natural in Thai
@@ -579,7 +579,13 @@ Onfound's measured 24px card is equally underivable from their own `--radius`.
 - "Founder Directory" not "Discover"
 - "The Pitch" not "Bio"
 
-**No swipe interface ever.** Trust + commitment > velocity + dopamine.
+**No swipe interface on people, ever.** Trust + commitment > velocity + dopamine.
+
+**Founder-approved exception (2026-11-09): the product shelf is a Tinder-style deck, with no grid.** Left skips; right (and a tap on the card) opens the product itself in a new tab. When the visitor comes back from trying it, a signed-in member is asked in a modal to rate and comment; a visitor who is not signed in is offered sign-in, at most once per visit. The swipe itself stores, counts and shows nothing. It is a browse gesture over things, never a verdict on a person. Do not widen it to founders or companies without the founder saying so.
+
+**Founder decision (2026-11-10): products have star ratings.** 1–5 stars, given deliberately by a signed-in member on the product's page or in the review modal after trying it (never by the swipe itself), one per member per product, changeable, never on your own product. Each member's rating is private to them; only the average and the count are public, and the count always shows beside the average. Products only: never rate a person, a founder or a company. The deck card shows only the images, the description, the rating and the comment count.
+
+Products are added quietly on /products/new and are never announced in the community feed; announcing is the maker's choice, by writing a normal post.
 
 ---
 
@@ -721,7 +727,7 @@ user_google_tokens
 1. **Community-first** — features that help community grow > features that don't
 2. **Co-founder matching is built but NOT the headline.** Don't make it the main marketing message.
 3. **B2B (company profile type) is first-class**, not an afterthought
-4. **Design for trust** — no swipes, no gamification, no urgency hacks
+4. **Design for trust** — no swiping on people, no gamification, no urgency hacks (the product deck is the one swipe exception, see Language Rules)
 5. **Mutual interest required** before messaging unlocks (current pattern)
 6. **Free for all users** in Phase 0–1
 7. **Build for Thailand first** — Thai + English UI, PDPA compliant, Thai cultural register

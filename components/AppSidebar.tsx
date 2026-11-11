@@ -194,6 +194,13 @@ export async function AppSidebar() {
   // list, so the role branch never ran on it. A claim about the gate written
   // in a comment is not a gate. The dev-only assertion after these arrays
   // turns that particular claim into something that checks itself.
+  //
+  // /products is the other half of that lesson, from the opposite direction:
+  // it is PUBLIC now (app/(marketing)/products) and out of isAppShellRoute, so
+  // there is no allowlist entry left to keep in step and no gate behind the
+  // item in ANY of the three arrays. Its presence or absence in a rail is a
+  // curation choice from here on — which is exactly why the comment that used
+  // to describe it as a gate had to be rewritten rather than left standing.
 
   // Directly after Community in ALL THREE arrays, and only once something is
   // published. Kept well apart from "Profile insights" (/activity) — different
@@ -218,16 +225,31 @@ export async function AppSidebar() {
           // Equally new to investors — only the ORDER above is founder-specific.
           ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
         },
-        // No Products for investors — a decided posture now, not a half-wired
-        // one. /products is in isAppShellRoute and NOT in the investor
-        // allowlist (ROLE_ACCESS.investor in lib/roles.ts — the route rules
-        // moved there when the explorer role landed; lib/investor-routes.ts is
-        // a deprecated shim over it), so proxy.ts bounces an investor to
-        // /funding on soft navigation as well as a hard load. (An earlier note
-        // here claimed the middleware already did that; it did not — the route
-        // was in neither list, so the investor branch never ran.) To open it up
-        // later, add "/products" to that allowlist AND add the nav item here,
-        // in one change.
+        // Products IS in the investor rail, and that REVERSES the posture
+        // this slot used to record. The old note said investors had no
+        // Products item because /products was in isAppShellRoute and absent
+        // from ROLE_ACCESS.investor, so proxy.ts bounced them to /funding on
+        // soft navigation as well as a hard load. BOTH HALVES OF THAT ARE NOW
+        // FALSE: the shelf is a PUBLIC marketing route
+        // (app/(marketing)/products), it left isAppShellRoute, and the gate
+        // short-circuits before the role branch — an investor who types the
+        // URL or follows a shared link reads it exactly like an anonymous
+        // visitor would, and gets it inside their own rail
+        // via app/(marketing)/layout.tsx.
+        //
+        // So the only question left is NAV CURATION, not enforcement, and
+        // hiding a page from one role's rail while the whole internet can read
+        // it is not defensible: "what has this community actually built" is
+        // closer to an investor's job than anything else on this list. There
+        // is no supply-side CTA for them on the page — an investor cannot post
+        // a product (canPostProduct) and there is no investor -> founder
+        // transition to offer — so the shelf renders read-only for them, which
+        // is the investor posture everywhere else too.
+        //
+        // No "New" chip: the founder rail's marker points at a surface that is
+        // news to a maker. Next to Companies because both are "go and look at
+        // what else is here".
+        { href: "/products", label: await tServer("Products") },
         { href: "/orgs", label: await tServer("Companies") },
       ]
     : role === "explorer"
@@ -295,10 +317,12 @@ export async function AppSidebar() {
   //
   // Dev-only and non-fatal: a wrong nav item is a usability bug, not a reason
   // to 500 every signed-in page in production. Checked BEFORE the Admin push
-  // and only for app-shell routes, because two legitimate items are outside
-  // this question: /insights is a MARKETING route the gate never evaluates, and
-  // Admin is a GRANTED flag independent of account_type (an admin on a gated
-  // role is a pre-existing posture to settle in the route allowlist, not here).
+  // and only for app-shell routes, because THREE legitimate items are outside
+  // this question: /insights and /products are MARKETING routes the gate never
+  // evaluates (so no role can be bounced off either, and the isAppShellRoute
+  // guard below correctly goes quiet on them), and Admin is a GRANTED flag
+  // independent of account_type (an admin on a gated role is a pre-existing
+  // posture to settle in the route allowlist, not here).
   if (process.env.NODE_ENV !== "production") {
     for (const item of navItems) {
       if (isAppShellRoute(item.href) && !canRoleRead(role, item.href)) {

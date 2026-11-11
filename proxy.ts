@@ -8,6 +8,7 @@ import {
   roleHome,
   type AccountRole,
 } from "@/lib/roles";
+import { PARAM } from "@/app/(marketing)/products/categories";
 
 // Ship the CSP in report-only mode first to verify the policy + nonce
 // propagation against real prod without risking a blank app, then flip to
@@ -55,10 +56,18 @@ function buildCsp(nonce: string): string {
 // It replaces `!isInvestorReadableRoute(path)`, which was ONE role's allowlist
 // used as the filter for every role. That worked only while "investor" was the
 // only gated role. The two gated allowlists disagree in BOTH directions —
-// /products is the explorer's home and is investor-blocked, /funding and /orgs
-// are investor-readable and explorer-blocked — so keeping it would have skipped
-// the lookup on exactly the paths the explorer gate is needed for, and an
-// explorer would have walked into /funding, /investor and /orgs unchecked.
+// /funding, /investor and /orgs are investor-readable and explorer-blocked,
+// while /community and /meetups are readable by both on different terms — so
+// keeping it would have skipped the lookup on exactly the paths the explorer
+// gate is needed for, and an explorer would have walked into /funding,
+// /investor and /orgs unchecked.
+//
+// The sharpest example of that disagreement used to be /products, which was the
+// explorer's home AND investor-blocked. It is a PUBLIC marketing route now and
+// has left isAppShellRoute, so the gate below short-circuits on its FIRST
+// clause and this function is never asked about it. That is the point: an
+// investor reads the public shelf like anyone else, and no signed-in visitor
+// pays an account_type SELECT for a page whose answer can no longer change.
 function everyRoleMayRead(path: string): boolean {
   return ACCOUNT_ROLES.every((role) => canRoleRead(role, path));
 }
@@ -90,10 +99,10 @@ export async function proxy(request: NextRequest) {
     // One builder for every bounce out of this middleware, so the two
     // properties such a redirect MUST carry cannot be forgotten by a third
     // caller: the refreshed auth cookies, and the CSP header.
-    const bounce = (to: string) => {
+    const bounce = (to: string, search = "") => {
       const url = request.nextUrl.clone();
       url.pathname = to;
-      url.search = "";
+      url.search = search;
       const redirect = NextResponse.redirect(url);
       // Carry the refreshed auth cookies onto the redirect, or the bounce
       // silently signs the user out.
@@ -122,12 +131,12 @@ export async function proxy(request: NextRequest) {
       return parseAccountRole(data?.account_type);
     };
 
-    // ---- Signed-in visitors don't need the pitch -------------------------
-    // "/" is the logged-out landing. Someone who is already a member asking for
-    // it wants the app, so send them to their OWN home. Anonymous requests fall
-    // straight through — the check is gated on session.user, so the landing page
-    // keeps exactly the rendering path it has today for the people it is written
-    // for.
+    // ---- Signed-in visitors don't need the front door --------------------
+    // "/" is the logged-out front door, whichever arm it is on (the maker shelf,
+    // or the pitch until the shelf can carry it). Someone who is already a member
+    // asking for it wants the app, so send them to their OWN home. Anonymous
+    // requests fall straight through — the check is gated on session.user, so
+    // the people the page is written for pay nothing here.
     //
     // This resolves the role HERE instead of sending everyone to /dashboard and
     // letting the gate below forward whoever may not read it. The note that used
@@ -141,13 +150,26 @@ export async function proxy(request: NextRequest) {
     // explorers "visiting the dashboard", which misleads whoever reads the
     // funnel.
     //
+    // Still correct now that /products is PUBLIC and outside isAppShellRoute:
+    // roleHome() is a plain string lookup, so this bounce does not care whether
+    // the destination is gated — an explorer lands on the shelf and it is served
+    // by app/(marketing)/layout.tsx, which renders the same AppShell with their
+    // own rail. The gate below is what stopped evaluating /products, not this.
+    //
     // And it is NOT "one query for everyone": this branch is already gated on
     // session.user, so anonymous landing traffic — overwhelmingly the majority,
     // and the thing that note was protecting — still pays nothing. Founders
     // (home === null) keep going to /dashboard; those who have not onboarded are
     // then sent to /onboarding by app/(app)/layout.tsx, which only redirects
     // onward to /login when there is no user, so the chain terminates either way.
+    //
+    // THE ONE EXCEPTION: a shared /?category=game is a link to a filtered shelf,
+    // so a member follows it to the shelf, query intact, whatever their role. It
+    // is checked before readRole because the answer does not depend on the role.
     if (session.user && path === "/") {
+      if (request.nextUrl.searchParams.has(PARAM)) {
+        return bounce("/products", request.nextUrl.search);
+      }
       return bounce(roleHome(await readRole(session.user.id)) ?? "/dashboard");
     }
 

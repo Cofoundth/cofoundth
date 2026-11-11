@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
@@ -10,6 +10,8 @@ import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 // import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
 import { useT } from "@/lib/i18n-client";
 import type { AccountRole } from "@/lib/roles";
+import { authHref } from "@/lib/auth-href";
+import { safeNextPath } from "@/lib/safe-next";
 
 // THIS PAGE OWNS THE PICKED ROLE, and that is the only reason it is a client
 // component.
@@ -30,8 +32,19 @@ import type { AccountRole } from "@/lib/roles";
 // that the five strings here translate through useT() instead of tServer();
 // same table, same keys, and the locale already reaches the client through
 // <LocaleProvider> in app/layout.tsx.
-export default function SignupPage() {
+//
+// `?next=` is the product a sign-up started from (lib/auth-href.ts). A client
+// page reads it with use(searchParams). It is checked here so a refused value
+// travels no further, and checked AGAIN by everything that follows it —
+// signupAction, the OAuth callback, onboarding — since a hidden field and a
+// redirectTo are as forgeable as this URL.
+export default function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
   const tr = useT();
+  const next = safeNextPath(use(searchParams).next);
   const [accountType, setAccountType] = useState<AccountRole>("founder");
 
   return (
@@ -41,6 +54,7 @@ export default function SignupPage() {
       <SignupForm
         accountType={accountType}
         onAccountTypeChange={setAccountType}
+        next={next ?? undefined}
       />
 
       <div className="flex items-center gap-4 my-6">
@@ -52,13 +66,15 @@ export default function SignupPage() {
       </div>
 
       <div className="space-y-3">
-        {/* `next` is left at its default. The callback decides the destination
-            from the role it just applied, so a founder still lands on
-            /dashboard (and the app layout sends them into /onboarding, as
-            before) while an explorer goes straight to their home — no second
-            bounce through a route they cannot read. */}
-        <GoogleSignInButton role={accountType} />
-        {/* <LinkedInSignInButton role={accountType} /> */}
+        {/* `next` is the product or the deck when the sign-up started from
+            one, and the button's /dashboard default otherwise. Either way the
+            callback settles the destination from the role it just applied: an
+            explorer sent to /dashboard goes straight to their home instead,
+            and a founder who has not onboarded is sent to /onboarding with
+            the page they were heading for as its `next` (lib/auth-href.ts
+            throughOnboarding), so finishing it lands them there. */}
+        <GoogleSignInButton role={accountType} next={next ?? undefined} />
+        {/* <LinkedInSignInButton role={accountType} next={next ?? undefined} /> */}
       </div>
 
       <p className="mt-6 text-xs text-ink-muted leading-relaxed">
@@ -75,7 +91,10 @@ export default function SignupPage() {
 
       <div className="mt-8 pt-6 border-t border-line text-center text-sm text-ink-muted">
         {tr("Already on Cofoundee?")}{" "}
-        <Link href="/login" className="text-navy hover:text-gold-ink">
+        <Link
+          href={next ? authHref("/login", next) : "/login"}
+          className="text-navy hover:text-gold-ink"
+        >
           {tr("Sign in")}
         </Link>
       </div>

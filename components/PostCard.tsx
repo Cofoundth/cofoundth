@@ -12,6 +12,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { postImages } from "@/lib/post-types";
+import { webUrl } from "@/lib/web-url";
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { TagText } from "@/components/TagText";
@@ -55,6 +56,8 @@ const KIND_META: Record<
     en: "hit a milestone",
     tone: "text-gold-ink",
   },
+  // Required by the PostKind record, not reachable from the feed: lib/posts.ts
+  // keeps products (show_and_tell) out of it, because they are added quietly.
   show_and_tell: {
     icon: Rocket,
     en: "shipped",
@@ -154,11 +157,14 @@ export function PostCard({
   }
 
 
-  // Via postImages(), not post.image_url: a product can carry several
-  // screenshots now, and the feed shows the FIRST as its cover. Reading the
-  // legacy column directly here was the one place that broke the invariant
-  // the whole image_url/image_urls compatibility design rests on.
+  // Via postImages(), not post.image_url — the one supported way to read a
+  // post's images (lib/post-types.ts), and the feed shows the FIRST as its
+  // cover. Products, the rows that carry several, are no longer in the feed at
+  // all (lib/posts.ts excludes the kind: they are added quietly), but reading
+  // the legacy column directly here was the one place that broke the
+  // invariant the whole image_url/image_urls compatibility design rests on.
   const cover = postImages(post)[0] ?? null;
+  const link = webUrl(post.link_url);
   return (
     // Decision D6, 2026-09: KIND_META used to carry a `bg` tint
     // (bg-gold-soft for a milestone, bg-cream for show-and-tell) appended
@@ -251,24 +257,18 @@ export function PostCard({
               </Link>
             )}
 
-            {post.link_url && (
+            {/* Through webUrl() (lib/web-url.ts): `link_url` is member-
+                submitted and older than the http(s) check on write, so a row
+                that does not parse as http/https renders no link at all. */}
+            {link && (
               <a
-                href={post.link_url}
+                href={link.toString()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2 inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all"
               >
                 <ExternalLink className="w-3 h-3" />
-                {(() => {
-                  try {
-                    return new URL(post.link_url).hostname.replace(
-                      /^www\./,
-                      "",
-                    );
-                  } catch {
-                    return post.link_url;
-                  }
-                })()}
+                {link.hostname.replace(/^www\./, "")}
               </a>
             )}
 

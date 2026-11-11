@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n-client";
 
 const INITIAL: SignInState = null;
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const tr = useT();
   const [state, formAction, isPending] = useActionState<SignInState, FormData>(
     signInAction,
@@ -18,6 +18,9 @@ export function LoginForm() {
 
   return (
     <form action={formAction} className="space-y-5">
+      {/* Where to land after signing in. signInAction re-checks it with
+          lib/safe-next.ts — a hidden field is as forgeable as the URL. */}
+      {next && <input type="hidden" name="next" value={next} />}
       <div>
         <label
           htmlFor="email"

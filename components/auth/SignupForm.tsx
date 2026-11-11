@@ -48,6 +48,7 @@ const ACCOUNT_TYPES = [
 export function SignupForm({
   accountType,
   onAccountTypeChange,
+  next,
 }: {
   // The picked role is OWNED BY THE PAGE, not by this form. The OAuth buttons
   // are siblings of this component and have to send the same value — that is
@@ -56,6 +57,8 @@ export function SignupForm({
   // founder). app/(auth)/signup/page.tsx holds it; see the note there.
   accountType: AccountRole;
   onAccountTypeChange: (value: AccountRole) => void;
+  /** The page's `?next=`, already checked; signupAction checks it again. */
+  next?: string;
 }) {
   const tr = useT();
   const [state, formAction, isPending] = useActionState<SignupState, FormData>(
@@ -104,6 +107,7 @@ export function SignupForm({
   return (
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="account_type" value={accountType} />
+      {next && <input type="hidden" name="next" value={next} />}
 
       <div>
         <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">

@@ -1,14 +1,18 @@
 // Server-only: fetch + shape the merged post feed (forum_posts).
 // Used by the dashboard and /community so both render the identical feed.
+//
+// THE FEED IS POSTS AND MILESTONES. A product (kind 'show_and_tell') is added
+// quietly on /products/new and is never announced (CLAUDE.md, Language Rules),
+// so getFeedPosts — the /community feed, the /dashboard feed and the feed's
+// load-more — and searchPosts — the feed's search — all exclude the kind with
+// FEED_EXCLUDES_KIND. The shelf reader further down is the one place a product
+// is listed. A maker who wants their product seen in the feed writes a post.
 
 import { type createClient } from "@/lib/supabase/server";
-import type {
-  PostItem,
-  PostKind,
-  ProductCategory,
-  ProductCounts,
-} from "./post-types";
-import { PRODUCT_CATEGORIES, productCategoryOf } from "./post-types";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { UNRATED, type PostItem, type PostKind, type ProductItem } from "./post-types";
+import { getProductRatings } from "./product-ratings";
+import { devTestAuthorIds } from "./test-accounts";
 
 type DB = Awaited<ReturnType<typeof createClient>>;
 
@@ -63,6 +67,15 @@ async function shapePosts(
   supabase: DB,
   posts: PostRow[],
   userId?: string | null,
+  /**
+   * Authors already resolved by the caller. When present the `profiles` read
+   * below is SKIPPED, because for the public shelf that map doubles as the
+   * author GATE: a row whose author is missing from it has already been
+   * dropped (see publicProductAuthors). Resolving the author twice — once to
+   * decide whether the product may be published, once to render the name —
+   * is the drift this parameter exists to make impossible.
+   */
+  preResolvedAuthors?: Map<string, PostRow>,
 ): Promise<PostItem[]> {
   if (!posts.length) return [];
 
@@ -71,28 +84,52 @@ async function shapePosts(
     new Set(posts.map((p) => p.author_id as string)),
   );
 
-  const [{ data: authors }, { data: likes }, { data: comments }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, full_name, photo_url, slug")
-        .in("id", authorIds),
-      supabase.from("forum_likes").select("post_id, user_id").in("post_id", ids),
-      supabase.from("forum_comments").select("post_id").in("post_id", ids),
-    ]);
+  // `user_id` answers exactly ONE question — "did I like this?" — so it is not
+  // requested when there is nobody to ask it about. On the PUBLIC shelf that
+  // column is the identity of every member who liked every product on the
+  // page, pulled through the service role into the render of an anonymous page
+  // and then thrown away: `myLike` is false for every row when userId is null.
+  //
+  // TWO LITERAL SELECTS, not one interpolated `select(cols)`. The typed client
+  // parses the column list from the string LITERAL, so a variable there
+  // resolves to ParserError and every field access on the result fails to
+  // compile.
+  const likesQuery = userId
+    ? supabase.from("forum_likes").select("post_id, user_id").in("post_id", ids)
+    : supabase.from("forum_likes").select("post_id").in("post_id", ids);
 
-  const authorMap = new Map((authors ?? []).map((a) => [a.id as string, a]));
+  const [authorRes, likeRes, commentRes] = await Promise.all([
+    preResolvedAuthors
+      ? null
+      : supabase
+          .from("profiles")
+          .select("id, full_name, photo_url, slug")
+          .in("id", authorIds),
+    likesQuery,
+    supabase.from("forum_comments").select("post_id").in("post_id", ids),
+  ]);
+
+  const authorMap: Map<string, PostRow> =
+    preResolvedAuthors ??
+    new Map(
+      ((authorRes?.data ?? []) as unknown as PostRow[]).map((a) => [
+        a.id as string,
+        a,
+      ]),
+    );
 
   const likeCount = new Map<string, number>();
   const myLikes = new Set<string>();
-  (likes ?? []).forEach((l) => {
+  ((likeRes.data ?? []) as unknown as PostRow[]).forEach((l) => {
     const k = l.post_id as string;
     likeCount.set(k, (likeCount.get(k) ?? 0) + 1);
-    if (userId && l.user_id === userId) myLikes.add(k);
+    // `user_id` is absent from the row when it was not selected, which is
+    // exactly the case where `userId` is null and this short-circuits.
+    if (userId && (l.user_id as string) === userId) myLikes.add(k);
   });
 
   const commentCount = new Map<string, number>();
-  (comments ?? []).forEach((c) => {
+  ((commentRes.data ?? []) as unknown as PostRow[]).forEach((c) => {
     const k = c.post_id as string;
     commentCount.set(k, (commentCount.get(k) ?? 0) + 1);
   });
@@ -127,6 +164,10 @@ async function shapePosts(
     };
   });
 }
+
+/** The kind the feed and its search never list: a product. See the header.
+ *  `kind` is NOT NULL (0034), so `neq` drops nothing else. */
+const FEED_EXCLUDES_KIND = "show_and_tell";
 
 // How many extra rows an exclusion set is allowed to buy back. A blocked
 // author's posts are dropped AFTER the query, so the page has to over-fetch or
@@ -163,6 +204,7 @@ export async function getFeedPosts(
       .from("forum_posts")
       .select(cols)
       .eq("hidden", false)
+      .neq("kind", FEED_EXCLUDES_KIND)
       .order("created_at", { ascending: false })
       .limit(fetchLimit);
     // Cursor pagination: fetch the page strictly older than `before`. The
@@ -205,6 +247,7 @@ export async function searchPosts(
       .from("forum_posts")
       .select(cols)
       .eq("hidden", false)
+      .neq("kind", FEED_EXCLUDES_KIND)
       .order("created_at", { ascending: false })
       .limit(limit);
     if (hiddenAuthors.length)
@@ -249,37 +292,111 @@ export async function searchPosts(
   return shapePosts(supabase, merged, userId);
 }
 
-// ---- Products grid (/products) -------------------------------------------
-// A product is a `show_and_tell` post that has a link_url. The grid links OUT
-// — App Store, Play Store, a web app — and nothing here hosts, embeds or
-// proxies anyone's product, so a show_and_tell post with nothing to click is
-// not a product: it stays in the community feed and off this page.
-// Category lives in `tags` (see lib/post-types.ts for why it is a tag and not
-// a column) and is queried with `.overlaps("tags", [category])`.
+// ---- The PUBLIC maker shelf (/products) -----------------------------------
+//
+// A product is a `forum_posts` row with kind = 'show_and_tell' AND a
+// `link_url`. A product links OUT - App Store, Play Store, a web app: the deck
+// card opens it in a new tab, and so does its page's "Try it" - and nothing
+// here hosts, embeds or proxies anybody's product, so a show_and_tell post
+// with nothing to click is not a product: it is off the shelf, and (like every
+// show_and_tell) out of the feed too, so only its own page shows it. New ones
+// cannot be written that way: createProductAction requires the link. Category
+// lives in `tags` (lib/post-types.ts says why it is a tag and not a column)
+// and is bucketed in the BROWSER, not here.
+//
+// -- /products IS PUBLIC, AND THAT CHANGES THE DATA PATH COMPLETELY ---------
+// An anonymous visitor browses the shelf and opens someone's app straight from
+// a card; signing in is what you do once you want to rate one or say something
+// about it, which the deck offers when they come back from trying it.
+// Three consequences, all load-bearing:
+//
+// 1. RLS CANNOT SERVE THIS PAGE. forum_posts, forum_comments, forum_likes and
+//    profiles each have exactly ONE SELECT policy and it is `to authenticated`
+//    (read out of pg_policies against the live database, not assumed). `anon`
+//    has no read policy on any of them - but it DOES hold the table-level
+//    SELECT grant, so PostgREST does not refuse an anonymous read: it answers
+//    HTTP 200 with `[]` and `error: null`. Serving the shelf through the
+//    cookie-session client would therefore render "Nothing on the shelf yet"
+//    to every logged-out visitor and to Google, forever, with no error and not
+//    one log line. That is the whole reason this reads through
+//    createAdminClient() - the same posture app/(marketing)/p/[id] already
+//    uses, and why that page works logged out.
+//
+// 2. SERVICE ROLE BYPASSES RLS, SO EVERY FILTER IS APPLICATION CODE. They are
+//    all in this one block for that reason. A public query that forgets one
+//    leaks, and nothing downstream will tell you.
+//
+// 3. ONE READER FOR EVERY AUDIENCE. Anonymous visitor, founder, explorer and
+//    investor get the IDENTICAL row set out of this function; only `viewerId`
+//    (which drives isOwn / myLike) and the blocked-pair exclusion differ. The
+//    reader this replaced took the caller's client, so a signed-in member and
+//    a crawler would have been served by two different code paths - and the
+//    author gate below is exactly the kind of filter that lands on only one of
+//    them. Members lose nothing by bypassing RLS here: forum_posts' policy is
+//    `using (true)`, i.e. no row restriction at all for a member, so this path
+//    applies strictly MORE filtering than the one it replaced.
+//
+// -- THE ROW FILTERS, AND WHAT DROPPING EACH ONE COSTS ----------------------
+//   kind = 'show_and_tell'  an ordinary community post or a milestone must
+//                           never reach a public page by this route.
+//   hidden = false          `hidden` IS the entire moderation surface on
+//                           forum_posts (migration 0043). Without it an
+//                           admin-hidden product stays on a crawlable page.
+//                           Not theoretical: the one show_and_tell row in the
+//                           database today is the hidden one.
+//   link_url is not null    see the top of this block - nothing to try is not
+//                           a product.
+//
+// -- THE AUTHOR GATE -------------------------------------------------------
+//   suspended = false       a moderated account disappears from public
+//                           surfaces, and that has to take their products with
+//                           them.
+//   is_bot is not true      40 seeded bot profiles exist live and 3 of them are
+//                           NOT suspended, so a suspended-only filter cannot
+//                           see them. Every other public read in the app
+//                           already excludes bots (lib/public-profile.ts,
+//                           /browse, /community); the products path was the one
+//                           that did not.
+//   account_type='founder'  PINNED, and it is a DECISION rather than a copy of
+//                           the directory allowlist. canPostProduct
+//                           (lib/roles.ts) keeps explorers and investors off
+//                           the shelf - but it is a TypeScript check inside a
+//                           server action and RLS does NOT back it:
+//                           forum_posts_insert_self's with_check is only
+//                           `auth.uid() = author_id`, with no kind clause and
+//                           no role clause (read out of pg_policies). So any
+//                           signed-in member can POST a kind='show_and_tell'
+//                           row with a link_url straight through PostgREST and
+//                           publish to a crawlable page. A read-side pin is the
+//                           only enforcement the public surface has, and it
+//                           costs nothing today: the role transition is
+//                           one-way (explorer -> founder, see
+//                           app/actions/account-role.ts), so no existing
+//                           product can lose its author to it.
+//
+// DELIBERATELY NOT PINNED: `profile_complete`. lib/public-profile.ts pins it
+// because the /founders DIRECTORY is a listing of PEOPLE and a half-finished
+// profile is not an entry in one. Here the author is attribution for a row
+// that exists, and /p/<id> already publishes the same name and photo for any
+// post author. Dropping a finished product because its maker skipped a profile
+// field would punish exactly the behaviour this page is recruiting.
+//
+// DELIBERATELY NOT APPLIED TO AN ANONYMOUS VISITOR: the blocked-pair filter.
+// There is no blocked relationship for a visitor, so getBlockedIds is not
+// called with a null id - it is not called AT ALL. Called with one it would
+// build `blocker_id.eq.,blocked_id.eq.`, which PostgREST rejects; the result is
+// harmlessly empty but it logs an error on every public pageview and reads as
+// if blocking were being honoured when the query never ran.
 
-export type ProductQueryOpts = {
-  category?: ProductCategory | null;
-  limit?: number;
-  userId?: string | null;
-  /** Blocked pairs (lib/blocking) — the same JS-side filter the feed applies.
-   *  Without it a blocked author's app still shows up here. */
-  excludeAuthorIds?: Iterable<string>;
-};
-
-// Every category except "other" — see the `category === "other"` branch.
-const REAL_CATEGORY_SLUGS = PRODUCT_CATEGORIES.filter((c) => c !== "other");
-
-// How many rows the per-category tally scans. Counts are exact up to this
-// many products; past it the chips undercount. That is the honest trade for
-// keeping one page render off a full-table scan: PostgREST has no GROUP BY,
-// so the alternatives are six count queries per render or the real column
-// this surface is deliberately deferring.
-const COUNT_SCAN_LIMIT = 1000;
-
+/**
+ * Row-level filters for the shelf. `hiddenAuthors` is the id-list exclusion the
+ * authenticated feed uses; the public reader passes `[]` and gates authors with
+ * publicProductAuthors instead, which scales with the page rather than with the
+ * number of moderated accounts.
+ */
 function productsQuery<C extends string>(
   supabase: DB,
   cols: C,
-  category: ProductCategory | null | undefined,
   hiddenAuthors: string[],
 ) {
   let q = supabase
@@ -291,94 +408,142 @@ function productsQuery<C extends string>(
   if (hiddenAuthors.length)
     q = q.not("author_id", "in", `(${hiddenAuthors.join(",")})`);
 
-  if (category === "other") {
-    // "other" means "carries none of the five real slugs", NOT "tagged
-    // `other`". That is what keeps the pre-existing show_and_tell rows
-    // reachable: they have no category tag, so a literal `tags && '{other}'`
-    // would show them under "All" and under no chip at all.
-    // Safe because forum_posts.tags is NOT NULL (verified against the live
-    // table): `'{}' && '{app,…}'` is false, so negating it KEEPS the row —
-    // a nullable column would have been dropped by the negation instead.
-    q = q.not("tags", "ov", `{${REAL_CATEGORY_SLUGS.join(",")}}`);
-  } else if (category) {
-    q = q.overlaps("tags", [category]);
-  }
-
   // Applied LAST on purpose: the `(column, "is", null)` overload narrows the
   // row type, and narrowing inside a reassigned `let` makes tsc recurse
   // (TS2589, "type instantiation is excessively deep"). Order of filters on
-  // the wire is irrelevant — they all become query params.
+  // the wire is irrelevant - they all become query params.
   return q.not("link_url", "is", null);
 }
 
-// Newest first, blocked authors dropped in JS (same over-fetch cap as the
-// feed, for the same reason: the reverse direction of a block is RLS-
-// invisible and so cannot become a query clause).
-async function fetchProductRows(
-  supabase: DB,
-  category: ProductCategory | null | undefined,
-  limit: number,
-  excluded: Set<string>,
-  hiddenAuthors: string[],
-): Promise<PostRow[]> {
-  const rows = await selectPosts((cols) =>
-    productsQuery(supabase, cols, category, hiddenAuthors)
-      .order("created_at", { ascending: false })
-      .limit(limit + Math.min(excluded.size, MAX_OVERFETCH)),
-  );
+/**
+ * The author columns a public product card may read. A strict SUBSET of
+ * PUBLIC_PROFILE_COLUMNS (lib/public-profile.ts) - this module exposes nothing
+ * that module does not - plus `id`, which is the map key and must NOT reach the
+ * DOM: that module's rule 3 is that a public route addresses a founder by
+ * `slug`, so the raw UUID never goes to the browser.
+ */
+const PUBLIC_AUTHOR_COLS = "id, full_name, photo_url, slug";
 
-  return (excluded.size
-    ? rows.filter((p) => !excluded.has(p.author_id as string))
-    : rows
-  ).slice(0, limit);
-}
-
-// Bucket the tally. An uncategorised row counts as "other" — the same rows the
-// "other" chip's query returns, so the number on the chip matches what
-// clicking it shows. Keep the two in lockstep if either changes.
-// (A legacy row carrying two slugs is counted under the first and listed under
-// both chips. createPostAction makes that impossible for anything new.)
-function countProducts(rows: PostRow[], excluded: Set<string>): ProductCounts {
-  const counts = { all: 0 } as ProductCounts;
-  for (const c of PRODUCT_CATEGORIES) counts[c] = 0;
-
-  for (const r of rows) {
-    if (excluded.size && excluded.has(r.author_id as string)) continue;
-    const tags = ((r.tags as string[] | null) ?? []) as string[];
-    counts.all += 1;
-    counts[productCategoryOf(tags) ?? "other"] += 1;
+/**
+ * The authors whose products may be published, resolved as an ALLOWLIST: the
+ * returned map contains only ids positively confirmed visible, so a row whose
+ * author is absent gets dropped rather than published.
+ *
+ * `null` means the read FAILED, and the caller must return an empty shelf.
+ * That is the opposite of suspendedAuthorIds above, which fails OPEN and says
+ * so - on a member feed an unfiltered render is a cosmetic regression, while
+ * here it would publish a moderated account's product to anonymous traffic and
+ * to a crawler. A public page that renders nothing is recoverable in an hour;
+ * one that publishes a suspended member is not.
+ *
+ * Exported because app/sitemap.ts asks the SAME question about the SAME rows.
+ * Two filtered profiles queries that can drift is how a sitemap ends up
+ * advertising a URL the page itself refuses to serve.
+ */
+export async function publicProductAuthors(
+  authorIds: string[],
+): Promise<Map<string, PostRow> | null> {
+  if (!authorIds.length) return new Map();
+  const { data, error } = await createAdminClient()
+    .from("profiles")
+    .select(PUBLIC_AUTHOR_COLS)
+    .in("id", authorIds)
+    .eq("suspended", false)
+    .not("is_bot", "is", true)
+    .eq("account_type", "founder");
+  if (error) {
+    console.error("[posts] public author gate failed", error.message);
+    return null;
   }
-  return counts;
+  return new Map(
+    ((data ?? []) as unknown as PostRow[]).map((a) => [a.id as string, a]),
+  );
 }
 
-// The grid AND the chip counts in ONE wait: both queries go out together.
-// They cannot be a single request — PostgREST has no GROUP BY — and deriving
-// the grid from the tally's capped scan instead would silently drop older rows
-// out of a filtered category, which is worse than one parallel request.
-export async function getProductsPage(
-  supabase: DB,
-  { category, limit = 30, userId, excludeAuthorIds }: ProductQueryOpts,
-): Promise<{ items: PostItem[]; counts: ProductCounts }> {
+/**
+ * The shelf, for anybody. Newest first.
+ *
+ * `viewerId` is the signed-in viewer or null - it drives isOwn / myLike and
+ * nothing else, so the ROWS a crawler sees and the rows a member sees are the
+ * same rows. `excludeAuthorIds` should be passed ONLY when signed in (see the
+ * blocked-pair note above).
+ *
+ * Every row carries `rating`, the PUBLIC average + count (lib/product-ratings.ts,
+ * migration 0079). It is attached here and not in shapePosts because only
+ * products have one: the feed, the dashboard and search do not read it. It is
+ * identical for every audience - no viewer's own score is ever on these rows -
+ * and a failed ratings read makes every row UNRATED rather than failing the
+ * shelf.
+ */
+export async function getPublicProductsPage({
+  limit = 30,
+  viewerId = null,
+  excludeAuthorIds,
+}: {
+  limit?: number;
+  viewerId?: string | null;
+  excludeAuthorIds?: Iterable<string>;
+} = {}): Promise<ProductItem[]> {
+  // Both clients are constructed without a Database generic, so this is a cast
+  // across two structurally identical shapes rather than a widening.
+  const admin = createAdminClient() as unknown as DB;
+
   const excluded =
     excludeAuthorIds instanceof Set
       ? excludeAuthorIds
       : new Set(excludeAuthorIds ?? []);
-  const hiddenAuthors = await suspendedAuthorIds(supabase);
 
-  const [rows, tally] = await Promise.all([
-    fetchProductRows(supabase, category, limit, excluded, hiddenAuthors),
-    // No category filter: the chips need every category, not the current one.
-    // ORDER matters even though we only tally: past COUNT_SCAN_LIMIT products
-    // an unordered limit returns an ARBITRARY slice, so a category with real
-    // products could score 0 and ProductFilters would hide its chip entirely.
-    // Newest-first makes the cap "the most recent N", which is at least honest.
-    productsQuery(supabase, "author_id, tags", null, hiddenAuthors)
+  // Flat over-fetch, not `Math.min(excluded.size, ...)` as the feed uses: TWO
+  // JS-side filters drop rows here, not one. Blocked pairs cannot become a
+  // query clause (the reverse direction of a block is invisible even to the
+  // service role), and the author gate is deliberately resolved by the query
+  // that renders the author. If both together drop more than MAX_OVERFETCH
+  // rows the page comes back short, which is the honest trade for keeping the
+  // gate and the render in lockstep.
+  const rows = await selectPosts((cols) =>
+    productsQuery(admin, cols, [])
       .order("created_at", { ascending: false })
-      .limit(COUNT_SCAN_LIMIT),
-  ]);
+      .limit(limit + MAX_OVERFETCH),
+  );
 
-  return {
-    items: await shapePosts(supabase, rows, userId),
-    counts: countProducts((tally.data ?? []) as PostRow[], excluded),
-  };
+  const unblocked = excluded.size
+    ? rows.filter((p) => !excluded.has(p.author_id as string))
+    : rows;
+
+  const authorIds = Array.from(
+    new Set(unblocked.map((p) => p.author_id as string)),
+  );
+  const authors = await publicProductAuthors(authorIds);
+  if (!authors) return [];
+
+  // DEVELOPMENT ONLY (lib/test-accounts.ts): the suspended test accounts'
+  // products join the shelf, so the deck and its review modal can be tried
+  // against a real row. devTestAuthorIds() is the empty Set in a production
+  // build before it reads anything, so this adds nothing there. It sits HERE
+  // and not inside publicProductAuthors because app/sitemap.ts calls that one,
+  // and the sitemap must not widen. A failed read adds nobody.
+  const devTestIds = await devTestAuthorIds(
+    authorIds.filter((id) => !authors.has(id)),
+  );
+  if (devTestIds.size) {
+    const { data } = await admin
+      .from("profiles")
+      .select(PUBLIC_AUTHOR_COLS)
+      .in("id", [...devTestIds]);
+    for (const a of (data ?? []) as unknown as PostRow[]) {
+      authors.set(a.id as string, a);
+    }
+  }
+
+  const visible = unblocked
+    .filter((p) => authors.has(p.author_id as string))
+    .slice(0, limit);
+
+  // In parallel: the ratings read needs only the ids, which the gate above has
+  // already settled, so it never sees a row the shelf is about to drop.
+  const [shaped, ratings] = await Promise.all([
+    shapePosts(admin, visible, viewerId, authors),
+    getProductRatings(visible.map((p) => p.id as string)),
+  ]);
+  return shaped.map((p) => ({ ...p, rating: ratings.get(p.id) ?? UNRATED }));
 }

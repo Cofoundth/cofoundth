@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Link2, Rocket, Trophy } from "lucide-react";
+import { ArrowUpRight, Link2, Trophy } from "lucide-react";
 import { t, type Locale } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
@@ -8,16 +8,18 @@ export type HappeningItem = {
   id: string;
   authorName: string;
   content: string;
-  kind: string; // "milestone" | "show_and_tell"
+  // "milestone". The section shows milestones only: products are added
+  // quietly and never announced here (CLAUDE.md, Language Rules; the query
+  // and its author gate are in app/(marketing)/(home)/PitchLanding.tsx).
+  kind: string;
   imageUrl: string | null;
   linkUrl: string | null;
   createdAt: string; // ISO
 };
 
-// Same two kinds the public post page labels, same icons — keep them in sync.
+// The kind the public post page labels, same icon — keep them in sync.
 const KIND: Record<string, { Icon: typeof Trophy; label: string }> = {
   milestone: { Icon: Trophy, label: "Milestone" },
-  show_and_tell: { Icon: Rocket, label: "Show & tell" },
 };
 
 export function HappeningSection({

@@ -3,8 +3,11 @@
 // layout, sub-layout, and page each ask for the current user.
 
 import { cache } from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { authHref } from "@/lib/auth-href";
+import { safeNextPath } from "@/lib/safe-next";
 
 export const getUser = cache(async () => {
   const supabase = await createClient();
@@ -14,6 +17,21 @@ export const getUser = cache(async () => {
   return user;
 });
 
+// Where a signed-out request for an app page is sent: /login with the page as
+// `next`, so signing in brings them back to it (signInAction and the OAuth
+// callback follow it once lib/safe-next.ts accepts it). Only the pathname is
+// known — x-pathname, set by proxy.ts — so a query is dropped, as it is on the
+// onboarding bounce in app/(app)/layout.tsx. /dashboard is the sign-in's own
+// default, so it is left off the URL. The ONE spelling of this redirect: the
+// (app) layout, requireUser and the settings page all use it, because layout
+// and page render concurrently and whichever redirects first wins.
+export async function loginHref(): Promise<string> {
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  return pathname !== "/dashboard" && safeNextPath(pathname)
+    ? authHref("/login", pathname)
+    : "/login";
+}
+
 // Page-level auth guard. The (app) layout redirects logged-out users, but
 // layouts + pages render concurrently in the App Router — so a page that
 // dereferences `user.id` will still crash on a logged-out request before
@@ -22,7 +40,7 @@ export const getUser = cache(async () => {
 // the underlying getUser() call, so this adds no extra roundtrip.
 export async function requireUser() {
   const user = await getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(await loginHref());
   return user;
 }
 

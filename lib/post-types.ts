@@ -33,6 +33,62 @@ export type PostItem = {
   commentCount: number;
 };
 
+// ---- Ratings --------------------------------------------------------------
+// CLAUDE.md, "Founder decision (2026-11-10): products have star ratings".
+// 1-5 stars, one per member per product, given on the product's page or in the
+// deck's review modal after trying it, and never by the swipe itself. A member's own score is private to them; THIS shape is the only
+// public part, and the count always travels with the average.
+//
+// NOT a field on PostItem. Ratings exist only for products, so only the
+// product readers attach one (getPublicProductsPage in lib/posts.ts, and the
+// two product pages through lib/product-ratings.ts); the feed, the dashboard
+// and search never pay for, or carry, a number that means nothing on a post.
+
+export const MIN_RATING = 1;
+export const MAX_RATING = 5;
+
+/** A whole number of stars, MIN_RATING..MAX_RATING. The ONE check, shared by
+ *  the server action (which is invocable with any value at all) and the reads. */
+export function isRatingScore(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= MIN_RATING &&
+    value <= MAX_RATING
+  );
+}
+
+export type ProductRating = {
+  /** Already rounded to ONE decimal (see ratingFromTotals). Null exactly when
+   *  `count` is 0 — an unrated product has no average, not an average of 0. */
+  average: number | null;
+  count: number;
+};
+
+/** What every product is when nobody has rated it, or when the ratings read
+ *  failed: the product still renders, it just reads "No ratings yet". */
+export const UNRATED: ProductRating = { average: null, count: 0 };
+
+/** A product row as the shelf and the product pages carry it. */
+export type ProductItem = PostItem & { rating: ProductRating };
+
+/**
+ * The public rating from the two integers the database aggregates
+ * (product_rating_stats: SUM and COUNT, never AVG).
+ *
+ * The average is rounded to one decimal HERE, once, because one decimal is the
+ * only precision any surface shows. A float average rounded at each display
+ * site rounds by its binary representation, not its decimal value:
+ * `(4.25).toFixed(1)` is "4.3" but `(4.35).toFixed(1)` is also "4.3". From the
+ * integers, `sum * 10 / count` lands exactly on every .5 case, so Math.round
+ * is exact, and consumers only ever call `average.toFixed(1)` on a value that
+ * already has one decimal.
+ */
+export function ratingFromTotals(sum: number, count: number): ProductRating {
+  if (!(count > 0)) return UNRATED;
+  return { average: Math.round((sum * 10) / count) / 10, count };
+}
+
 export type PostComment = {
   id: string;
   content: string;
@@ -43,37 +99,60 @@ export type PostComment = {
 
 // ---- Images ---------------------------------------------------------------
 // A post has had a cover image since 0034 (`image_url`, one nullable text). A
-// product needs SCREENSHOTS — several, so a card can preview the others on
-// hover — which is why 0076 adds `image_urls text[] not null default '{}'`.
+// product needs SCREENSHOTS — several, so /p/<id> can show them all — which is
+// why 0076 adds `image_urls text[] not null default '{}'`.
 //
 // `image_url` is not going anywhere: real rows use it, nothing backfills it,
-// and createPostAction keeps writing the first image to it. The two columns
+// and both writers (createPostAction for a post's one cover, createProductAction
+// for a product's screenshots) keep writing the first image to it. The columns
 // stay consistent because NOBODY reads either one directly — every consumer
 // calls postImages(). That is the whole mechanism keeping a 2026-05 post with
 // one cover and a product with five screenshots rendering through the same
 // code path.
 
-/** Per product. The composer caps the picker here and createPostAction
+/** Per product. The Add product page's screenshot picker
+ *  (components/ScreenshotPicker.tsx) caps itself here and createProductAction
  *  re-checks, because a cap enforced only in the UI is not a cap. */
 export const MAX_PRODUCT_IMAGES = 5;
 
-// NOT a layout guard — the card already clamps (title line-clamp-2, blurb
-// line-clamp-2, author truncate), so nothing can overflow and every card
+/** The image types a post or product may carry. lib/post-actions.ts maps each
+ *  to its storage extension (IMG_EXT) and is the real gate; the pickers build
+ *  their `accept` attribute and their own early type check from this list, so
+ *  a picked .pdf is refused before it costs an upload. Here, beside
+ *  MAX_PRODUCT_IMAGES, because a "use server" module may export only async
+ *  functions — a constant cannot cross that boundary at all. */
+export const POST_IMAGE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+] as const;
+
+/** Per image, after the browser's downscale. The server's limit
+ *  (lib/post-actions.ts) and the screenshot picker's read the same number. */
+export const MAX_POST_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// NOT a layout guard — the deck card clamps the description (line-clamp-4) and
+// does not show the name at all, so nothing can overflow and every card
 // measures the same height regardless of what is typed.
 //
-// These exist because THE CARD IS THE ONLY SURFACE. A product links straight
-// out to the real thing; there is no detail page, so text past the clamp is
-// written by a maker and then read by nobody, ever. The composer was inviting
-// 5000 characters and showing about 82.
+// These exist because THE DECK CARD IS WHERE A PRODUCT IS READ. A product links
+// straight out to the real thing, so text past the clamp is written by a maker
+// and then read by almost nobody (only /p/<id> shows all of it). The composer
+// was inviting 5000 characters and showing about 82.
 //
-// Measured in the running app at 279px — the narrowest a card gets, 3-up at
-// 1280 — for how much fits in the two lines that are actually shown:
-//     name         49 Latin / 74 Thai
-//     description  82 Latin / 84 Thai
-// The caps sit above the Latin worst case on purpose: going over clamps with
-// an ellipsis, which is a soft, legible failure, whereas a cap tight enough to
-// never clamp would reject reasonable Thai. Re-measure if the card width or
-// the clamp count changes.
+// THE DESCRIPTION is the card's main text: four lines at 16/24. Measured in the
+// running app (2026-11-10) for how much fits in those four lines:
+//     320px phone, 230px of text     117 Latin / 131 Thai
+//     375px phone, 286px of text     154 Latin / 165 Thai
+//     the 360px deck, 318px of text  172 Latin / 182 Thai
+// THE NAME is not on the card face (CLAUDE.md, "Founder decision (2026-11-10)"):
+// it is the card link's accessible name, the deck's live-region announcement
+// and the title on /p/<id>, so 60 is a label-sized cap rather than a clamp fit.
+// The description cap sits above the narrowest phone's fit on purpose: going
+// over clamps with an ellipsis, which is a soft, legible failure, whereas a cap
+// tight enough to never clamp would reject reasonable Thai. Re-measure if the
+// card width, the type size or the clamp count changes.
 export const MAX_PRODUCT_NAME = 60;
 export const MAX_PRODUCT_BLURB = 160;
 
@@ -145,10 +224,11 @@ export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 // string") — callers run them through tr()/tServer(); nothing here translates.
 //
 // This lives beside the slugs rather than next to either consumer because it
-// had already been written TWICE — once for the /products chips, once for the
-// composer's category picker — and a label is a translation key, so the two
-// copies drifting would not look like a typo. It would silently drop one
-// surface's chip to English while the other stayed Thai.
+// had already been written TWICE — once for the /products category filter,
+// once for the category picker (then in the community composer, now on the Add
+// product page, app/(app)/products/new) — and a label is a translation key,
+// so the two copies drifting would not look like a typo. It would silently
+// drop one surface's label to English while the other stayed Thai.
 export const CATEGORY_LABEL: Record<ProductCategory, string> = {
   game: "Game",
   finance: "Finance",
@@ -161,14 +241,12 @@ export const CATEGORY_LABEL: Record<ProductCategory, string> = {
   other: "Other",
 };
 
-// Per-category tallies for the filter chips, plus `all` for the "All" chip.
-export type ProductCounts = { all: number } & Record<ProductCategory, number>;
-
 // The category a row is in: the FIRST tag that is a controlled slug, or null.
 // null is a real case, not a defect — show_and_tell posts predate this surface
 // and carry no category tag. They are deliberately NOT backfilled, and the UI
-// files them under "other" (lib/posts.ts matches that in the query, so the
-// "other" chip and the "other" count agree).
+// files them under "other" (productBucketOf in app/(marketing)/products/
+// categories.ts, the one function behind both whether the "other" chip is
+// offered and the cards it filters to).
 export function productCategoryOf(tags: string[]): ProductCategory | null {
   for (const tag of tags) {
     if ((PRODUCT_CATEGORIES as readonly string[]).includes(tag)) {

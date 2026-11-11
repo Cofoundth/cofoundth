@@ -2,12 +2,27 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { storeTokens } from "@/lib/google-calendar";
 import { FEATURES } from "@/lib/features";
-import { parseAccountRole, canRoleRead, roleHome } from "@/lib/roles";
+import {
+  parseAccountRole,
+  canRoleRead,
+  isAppShellRoute,
+  owesOnboarding,
+  roleHome,
+  type AccountRole,
+} from "@/lib/roles";
+import { throughOnboarding } from "@/lib/auth-href";
+import { safeNextPath } from "@/lib/safe-next";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  // Where to land: a sign-in or sign-up link from a product page or the deck
+  // carries `next=` (lib/auth-href.ts) — /p/<id>, or the deck's
+  // /products?…&review=<id> — through Google/LinkedIn's redirectTo and through
+  // the email-confirmation link, and arrives here. Attacker-controlled like
+  // any query value, so it is followed only if lib/safe-next.ts says it is a
+  // same-origin path; anything else lands where it always did.
+  const next = safeNextPath(searchParams.get("next")) ?? "/dashboard";
   // The role the visitor picked on the signup page, carried across the OAuth
   // round trip by GoogleSignInButton / LinkedInSignInButton. Absent on /login,
   // on the email-confirmation link (that path puts the role in
@@ -79,12 +94,38 @@ export async function GET(request: Request) {
   // the middleware to their own home — so without this they pay an extra
   // redirect through a founder-only route on the first screen they ever see,
   // and analytics records them as having "visited the dashboard".
+  //
+  // The test is the GATE'S OWN test (proxy.ts): bounce only from an (app)
+  // shell route this role may not read. It used to be `!canRoleRead` alone,
+  // which is right for /dashboard but wrong for every public page — the role
+  // allowlists list app routes, not /p/<id> — so an explorer signing in from a
+  // product page was sent to /products instead of back to the product they
+  // came from. canRoleRead takes a pathname, so the query is cut off first.
+  //
+  // A FOUNDER WHO HAS NOT ONBOARDED is sent through /onboarding, carrying the
+  // destination as its `next`. app/(app)/layout.tsx does that for every app
+  // route, but `next` is not always an app route: the deck's sign-in prompt
+  // sends /products?…&review=<id>, a marketing page with no gates, where a
+  // brand-new Google sign-up would otherwise land straight in the review
+  // modal and skip onboarding entirely. The email/password sign-up already
+  // arrives wrapped (signupAction), and throughOnboarding leaves that alone.
+  // `onboarded` is null when the profile could not be read; that sends no one
+  // through onboarding on a guess, and the app layout still gates app routes.
   const userId = data.session?.user?.id ?? data.user?.id ?? null;
   let destination = next;
   if (userId) {
-    const role = await applyPickedRole(supabase, userId, pickedRole);
+    const { role, onboarded } = await applyPickedRole(
+      supabase,
+      userId,
+      pickedRole,
+    );
     const home = roleHome(role);
-    if (home && !canRoleRead(role, destination)) destination = home;
+    const path = destination.split(/[?#]/, 1)[0];
+    if (home && isAppShellRoute(path) && !canRoleRead(role, path)) {
+      destination = home;
+    } else if (onboarded !== null && owesOnboarding(role, onboarded)) {
+      destination = throughOnboarding(destination);
+    }
   }
 
   return NextResponse.redirect(`${publicOrigin}${destination}`);
@@ -92,7 +133,10 @@ export async function GET(request: Request) {
 
 /**
  * Resolve this account's role, applying `?role=` if — and only if — the profile
- * has not recorded an explicit choice yet. Returns the role in force afterwards.
+ * has not recorded an explicit choice yet. Returns the role in force afterwards,
+ * and the profile's `onboarded` (null if the profile could not be read). The
+ * role write below never changes `onboarded`: it only matches a row whose
+ * `onboarded` is false.
  *
  * IDEMPOTENT BY DESIGN. `profiles.role_chosen` (migration 0077) is the latch:
  * handle_new_user sets it true when signup metadata carried a recognised
@@ -119,7 +163,7 @@ async function applyPickedRole(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   pickedRole: string | null,
-) {
+): Promise<{ role: AccountRole; onboarded: boolean | null }> {
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("account_type, role_chosen, onboarded")
@@ -127,19 +171,24 @@ async function applyPickedRole(
     .maybeSingle();
   if (error) {
     console.error("[auth/callback] role lookup failed", error);
-    return parseAccountRole(null);
+    return { role: parseAccountRole(null), onboarded: null };
   }
 
+  const onboarded = profile ? profile.onboarded === true : null;
   const current = parseAccountRole(profile?.account_type);
-  if (!pickedRole || profile?.role_chosen !== false) return current;
+  if (!pickedRole || profile?.role_chosen !== false) {
+    return { role: current, onboarded };
+  }
 
   const requested = parseAccountRole(pickedRole);
-  if (requested === "investor" && !FEATURES.investorSignup) return current;
+  if (requested === "investor" && !FEATURES.investorSignup) {
+    return { role: current, onboarded };
+  }
   if (requested === current) {
     // Nothing to change, but still close the latch so a later ?role= cannot
     // reopen the question.
     await closeLatch(supabase, userId);
-    return current;
+    return { role: current, onboarded };
   }
 
   // `onboarded` false as well as `role_chosen` false. The latch alone would let
@@ -163,9 +212,9 @@ async function applyPickedRole(
     .select("account_type");
   if (updateError) {
     console.error("[auth/callback] role apply failed", updateError);
-    return current;
+    return { role: current, onboarded };
   }
-  return updated?.length ? requested : current;
+  return { role: updated?.length ? requested : current, onboarded };
 }
 
 /** Mark the role as explicitly chosen without changing it. */

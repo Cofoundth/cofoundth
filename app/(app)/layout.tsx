@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { getUser } from "@/lib/auth";
+import { getUser, loginHref } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 import { canRoleRead, parseAccountRole, roleHome } from "@/lib/roles";
@@ -13,7 +13,8 @@ export default async function AppLayout({
 }) {
   const user = await getUser();
   if (!user) {
-    redirect("/login");
+    // With this page as `next`, so signing in comes back here (lib/auth.ts).
+    redirect(await loginHref());
   }
   const supabase = await createClient();
   const { data: profile } = await supabase
@@ -61,7 +62,23 @@ export default async function AppLayout({
     // surface the role exists for — and then handed them the founder wizard.
     // Writing this as `role !== "explorer" && !onboarded` would re-open exactly
     // that trap for the next role added.
-    redirect("/onboarding");
+    //
+    // The page they asked for rides along as `next`, so finishing onboarding
+    // lands them there instead of on /dashboard. The sign-ins themselves
+    // (signInAction, the OAuth callback, signupAction) already send a founder
+    // who owes onboarding through it with the FULL destination, query and all
+    // — they have to, because a destination like the deck's /products?… never
+    // reaches this layout. This catches whatever else arrives at an app route
+    // un-onboarded: a typed URL, an old bookmark, a session that predates
+    // this. Only the pathname is known (x-pathname, set by proxy.ts), so a
+    // query is dropped.
+    // /dashboard is the finish's own default, so it is left off the URL.
+    // onboarding re-checks the value with lib/safe-next.ts before using it.
+    redirect(
+      pathname && pathname !== "/dashboard"
+        ? `/onboarding?next=${encodeURIComponent(pathname)}`
+        : "/onboarding",
+    );
   }
 
   // Gates above, chrome below. The chrome is shared with signed-in marketing

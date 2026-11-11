@@ -1,3 +1,9 @@
+// The pitch landing: what / serves until the maker shelf has enough on it to
+// stand as the front door (FRONT_DOOR_MIN_PRODUCTS in
+// ../products/shelf-data.ts). Its own component, rather than inline in the
+// page, so the live-data reads below run ONLY on this arm — the shelf arm must
+// not pay for founders, milestones or counts it does not render.
+
 import { getLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 import {
@@ -5,6 +11,7 @@ import {
   countPublicFounders,
 } from "@/lib/public-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isPubliclyAttributable } from "@/lib/public-author";
 import { msAgoISO, DAY_MS } from "@/lib/time";
 import { HeroSection } from "@/components/marketing/landing/HeroSection";
 import { ForFoundersSection } from "@/components/marketing/landing/ForFoundersSection";
@@ -19,8 +26,6 @@ import { LandingCta } from "@/components/marketing/landing/LandingCta";
 import { DirectoryVisual } from "@/components/marketing/landing/visuals/DirectoryVisual";
 import { PartnershipVisual } from "@/components/marketing/landing/visuals/PartnershipVisual";
 import { IntroVisual } from "@/components/marketing/landing/visuals/IntroVisual";
-
-export const revalidate = 60; // refresh live numbers every minute
 
 // Section order follows onfound.com, measured off their live DOM at the
 // founder's direction:
@@ -59,7 +64,29 @@ const PILLARS = {
   },
 };
 
-export default async function LandingPage() {
+// "Happening now": the newest MILESTONES, and only milestones.
+//
+// It used to take `show_and_tell` too, which made adding a product an
+// announcement on the public front page. Products are added quietly
+// (CLAUDE.md, Language Rules): the deck and their own page show them, nothing
+// announces them. Milestones are still this section's whole content.
+//
+// AND ITS AUTHORS ARE GATED, as they never were. The section credits each item
+// to its author by name, to every anonymous visitor and to crawlers, and links
+// to /p/<id> — so it applies the same author test /p/<id> does
+// (lib/public-author.ts isPubliclyAttributable: not suspended, not a bot,
+// founder or explorer). Before this, any non-hidden milestone in the window
+// went on the front page whoever wrote it, a suspended account included.
+// FAILS CLOSED: a failed author read shows nothing. The development-only
+// test-account allowance (lib/test-accounts.ts) deliberately does NOT apply
+// here.
+const HAPPENING_SHOWN = 3;
+// Read before the author gate drops anyone, so a moderated author in the
+// window does not leave the section short. Same idea as /p/<id>'s
+// PREVIEW_FETCH.
+const HAPPENING_FETCH = 12;
+
+export async function PitchLanding() {
   const locale = await getLocale();
   const tr = (en: string) => t(en, locale);
 
@@ -80,10 +107,10 @@ export default async function LandingPage() {
       .from("forum_posts")
       .select("id, author_id, content, kind, image_url, link_url, created_at")
       .eq("hidden", false)
-      .in("kind", ["milestone", "show_and_tell"])
+      .eq("kind", "milestone")
       .gte("created_at", thirtyDaysAgo)
       .order("created_at", { ascending: false })
-      .limit(3),
+      .limit(HAPPENING_FETCH),
     // Same allowlist the directory uses, so the number on this page agrees
     // with the number of founders a visitor can actually open.
     countPublicFounders(),
@@ -95,32 +122,41 @@ export default async function LandingPage() {
       .gte("created_at", sevenDaysAgo),
   ]);
 
-  // Hydrate milestone authors
+  // The authors, and the gate: only an author isPubliclyAttributable() passes
+  // is in the map, so a milestone whose author is not in it is dropped. All
+  // three gate columns are selected — the predicate reads a missing
+  // `suspended` or `is_bot` as "not set" (see lib/public-author.ts).
   const milestoneAuthorIds = Array.from(
     new Set((recentMilestones ?? []).map((m) => m.author_id as string)),
   );
-  const { data: milestoneAuthors } = milestoneAuthorIds.length
-    ? await admin
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", milestoneAuthorIds)
-    : { data: [] };
+  const { data: milestoneAuthors, error: authorsError } =
+    milestoneAuthorIds.length
+      ? await admin
+          .from("profiles")
+          .select("id, full_name, suspended, is_bot, account_type")
+          .in("id", milestoneAuthorIds)
+      : { data: [], error: null };
   const milestoneAuthorMap = new Map(
-    (milestoneAuthors ?? []).map((a) => [a.id as string, a]),
+    (authorsError ? [] : (milestoneAuthors ?? []))
+      .filter(isPubliclyAttributable)
+      .map((a) => [a.id as string, a]),
   );
 
-  const happening: HappeningItem[] = (recentMilestones ?? []).map((m) => ({
-    id: m.id as string,
-    authorName:
-      (milestoneAuthorMap.get(m.author_id as string)?.full_name as
-        | string
-        | null) ?? "",
-    content: (m.content as string) ?? "",
-    kind: m.kind as string,
-    imageUrl: (m.image_url as string | null) ?? null,
-    linkUrl: (m.link_url as string | null) ?? null,
-    createdAt: m.created_at as string,
-  }));
+  const happening: HappeningItem[] = (recentMilestones ?? [])
+    .filter((m) => milestoneAuthorMap.has(m.author_id as string))
+    .slice(0, HAPPENING_SHOWN)
+    .map((m) => ({
+      id: m.id as string,
+      authorName:
+        (milestoneAuthorMap.get(m.author_id as string)?.full_name as
+          | string
+          | null) ?? "",
+      content: (m.content as string) ?? "",
+      kind: m.kind as string,
+      imageUrl: (m.image_url as string | null) ?? null,
+      linkUrl: (m.link_url as string | null) ?? null,
+      createdAt: m.created_at as string,
+    }));
 
   return (
     <>

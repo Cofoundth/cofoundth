@@ -7,6 +7,7 @@ import { LONG_TEXT_MAX } from "@/lib/limits";
 import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
 import { parseAccountRole, roleHome } from "@/lib/roles";
+import { safeNextPath } from "@/lib/safe-next";
 
 export type OnboardingState = { error?: string } | null;
 
@@ -271,5 +272,8 @@ export async function saveOnboardingAction(
 
   if (error) return { error: error.message };
 
-  redirect("/dashboard");
+  // Finish where they were heading — the product a sign-up started from — if
+  // lib/safe-next.ts accepts the posted `next`. The form field is as forgeable
+  // as the URL it came from, so it is checked here, not trusted from the page.
+  redirect(safeNextPath(formData.get("next")) ?? "/dashboard");
 }

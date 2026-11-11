@@ -6,6 +6,7 @@ import type { AccountRole } from "@/lib/roles";
 
 type Props = {
   label?: string;
+  /** Where to land after the round trip — see the same prop on GoogleSignInButton. */
   next?: string;
   /**
    * The picked role, carried through OAuth — see the long note on the same prop
@@ -15,7 +16,8 @@ type Props = {
    * enabled in Supabase yet), and it takes the prop anyway ON PURPOSE: the role
    * carry is the bug that was live here before, and an OAuth button that
    * silently drops the role is exactly how it comes back the day LinkedIn is
-   * switched on. The two buttons stay identical in what they forward.
+   * switched on. The two buttons stay identical in what they forward — `role`
+   * and `next` both, and the commented-out call sites pass both.
    */
   role?: AccountRole;
 };

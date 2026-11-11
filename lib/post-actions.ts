@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
@@ -8,19 +9,40 @@ import { getAccountRole } from "@/lib/account";
 import { canComment, canPostProduct, canPostThread } from "@/lib/roles";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
-import { MAX_PRODUCT_BLURB, MAX_PRODUCT_NAME, MAX_PRODUCT_IMAGES, PRODUCT_CATEGORIES } from "@/lib/post-types";
+import { webUrl } from "@/lib/web-url";
+import {
+  MAX_POST_IMAGE_BYTES,
+  MAX_PRODUCT_BLURB,
+  MAX_PRODUCT_NAME,
+  MAX_PRODUCT_IMAGES,
+  PRODUCT_CATEGORIES,
+} from "@/lib/post-types";
 import type { PostComment, PostItem } from "@/lib/post-types";
 
 export type PostFormState = { error?: string } | null;
 
-const KINDS = ["post", "milestone", "show_and_tell"];
+// What the COMMUNITY composer may write. A product (kind 'show_and_tell') is
+// not one of them: products are added quietly through createProductAction
+// below, from /products/new, and never announced in the feed (CLAUDE.md,
+// Language Rules). Refusing the kind here is what makes that the only door —
+// the composer no longer offers it, but a server action is invocable with any
+// FormData at all.
+const KINDS = ["post", "milestone"];
+
+/** The write-side link test every post and product has had. A product's link
+ *  must ALSO pass webUrl() (lib/web-url.ts), the parse every href built from
+ *  link_url goes through on read, so no product row can carry a link the
+ *  shelf would then silently drop. */
+const HTTP_LINK = /^https?:\/\/.+/;
 
 function revalidateFeeds(postId?: string) {
   revalidatePath("/dashboard");
   revalidatePath("/community");
-  // A show_and_tell post is also a row in the /products grid, so posting,
-  // deleting or moderating one has to drop that page's cache too.
+  // A show_and_tell post is also a row on the maker shelf, so deleting one
+  // (deletePostAction) or moderating one has to drop the cache of both URLs
+  // that can render the shelf.
   revalidatePath("/products");
+  revalidatePath("/");
   if (postId) revalidatePath(`/community/${postId}`);
 }
 
@@ -44,13 +66,15 @@ function parseTags(raw: string): string[] | { error: string } {
   return tags;
 }
 
+// Keyed by the same four types as POST_IMAGE_TYPES in lib/post-types.ts, which
+// the pickers build their `accept` and their early type check from.
 const IMG_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
   "image/gif": "gif",
 };
-const MAX_IMG_BYTES = 5 * 1024 * 1024;
+const MAX_IMG_BYTES = MAX_POST_IMAGE_BYTES;
 
 // The two per-file rules, pulled out of uploadPostImage so a batch can check
 // every file BEFORE uploading any of them. Same checks, same order, same
@@ -102,23 +126,64 @@ async function removePostImages(uploads: { path?: string }[]) {
   if (error) console.error("[post.create] orphaned images", paths, error.message);
 }
 
-// What the composer sent, as a list. A product carries SCREENSHOTS — repeated
-// `images` entries, several per post. 'post' and 'milestone' send the single
-// `image` field they always have, which is also the fallback for a composer
-// that only ever sends one: one field name going missing must not silently
-// drop a member's image.
-function pickedImages(formData: FormData, kind: string): File[] {
-  const files =
-    kind === "show_and_tell"
-      ? formData
-          .getAll("images")
-          .filter((e): e is File => e instanceof File && e.size > 0)
-      : [];
-  if (files.length) return files;
-  const one = formData.get("image");
-  return one instanceof File && one.size > 0 ? [one] : [];
+/** Every image in the form under `name`, as a list, empty entries dropped. */
+function filesIn(formData: FormData, name: string): File[] {
+  return formData
+    .getAll(name)
+    .filter((e): e is File => e instanceof File && e.size > 0);
 }
 
+/**
+ * Validate ALL of them, then upload all of them, or none. Shared by the two
+ * writers below: a post's one cover and a product's screenshots go through the
+ * same checks, the same bucket and the same orphan cleanup.
+ *
+ * Validating before uploading ANY is what keeps a 6MB fourth file from leaving
+ * three objects in the bucket and no row — and a size or type rejection still
+ * reads as the same plain sentence it always did. On success the caller owns
+ * the uploads: if its insert then fails it must removePostImages() them.
+ */
+async function uploadAll(
+  userId: string,
+  files: File[],
+  tag: string,
+): Promise<
+  | { uploads: { url?: string; path?: string }[]; error?: undefined }
+  | { error: string; uploads?: undefined }
+> {
+  for (const file of files) {
+    const bad = imageFileError(file);
+    if (bad) return { error: bad };
+  }
+
+  const uploads = await Promise.all(
+    files.map((file) => uploadPostImage(userId, file)),
+  );
+  const failed = uploads.findIndex((u) => !u.url);
+  if (failed >= 0) {
+    console.error(
+      `[${tag}] image ${failed + 1} of ${uploads.length} failed:`,
+      uploads[failed].error,
+    );
+    await removePostImages(uploads);
+    // One file: the storage error itself, exactly as before. Several: say that
+    // NOTHING was posted, because the alternative is a product quietly going
+    // up with two of its five screenshots and the member never knowing which.
+    return uploads.length === 1
+      ? { error: uploads[0].error ?? "Couldn't upload the image. Try again." }
+      : {
+          error:
+            "Couldn't upload all the images. Nothing was posted — try again.",
+        };
+  }
+  return { uploads };
+}
+
+/**
+ * A post or a milestone, from the community composer (components/
+ * PostComposer.tsx). NOT a product: kind 'show_and_tell' is refused below, and
+ * createProductAction is the only way one is written.
+ */
 export async function createPostAction(
   _prev: PostFormState,
   formData: FormData,
@@ -133,41 +198,12 @@ export async function createPostAction(
   if (content.length > 5000)
     return { error: "Keep it under 5000 characters." };
   if (title.length > 200) return { error: "Title must be 200 chars or less." };
-  // Tighter for a product, because its card is the only place either string is
-  // ever read. 'post' and 'milestone' keep the generous limits above.
-  if (kind === "show_and_tell") {
-    if (title.length > MAX_PRODUCT_NAME)
-      return { error: "Keep the product name short." };
-    if (content.length > MAX_PRODUCT_BLURB)
-      return { error: "Keep the description short — the card shows two lines." };
-  }
   if (!KINDS.includes(kind)) return { error: "Bad kind." };
-  if (linkUrl && !/^https?:\/\/.+/.test(linkUrl))
+  if (linkUrl && !HTTP_LINK.test(linkUrl))
     return { error: "Link must start with http:// or https://" };
 
   const parsed = parseTags(tagsRaw);
   if (!Array.isArray(parsed)) return parsed;
-
-  // A product (kind 'show_and_tell') is the one post that has to be
-  // actionable, because the /products grid exists to send someone to the real
-  // thing. So it needs a name, a link, and exactly one category — the
-  // category stored as an ordinary tag (lib/post-types.ts). 'post' and
-  // 'milestone' keep the looser rules above, deliberately untouched.
-  if (kind === "show_and_tell") {
-    if (!title) return { error: "Name your product." };
-    if (!linkUrl) return { error: "Add a link so people can try it." };
-    const slugs = parsed.filter((t) =>
-      (PRODUCT_CATEGORIES as readonly string[]).includes(t),
-    );
-    if (!slugs.length)
-      // NOT a key that lists the slugs. The English string IS the dictionary
-      // key (lib/i18n.ts), so enumerating them meant the key changed shape
-      // every time the taxonomy did and silently stopped matching its Thai.
-      // The composer shows the options as chips; the message only has to
-      // say one is required.
-      return { error: "Pick a category." };
-    if (slugs.length > 1) return { error: "Pick just one category." };
-  }
 
   const supabase = await createClient();
   const {
@@ -175,91 +211,164 @@ export async function createPostAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
-  // THE write gate for this table, and it guards two different ladder cells
-  // through one insert: a thread (kind 'post' / 'milestone') and a PRODUCT
-  // (kind 'show_and_tell', which IS the /products row — the shelf has no
-  // composer of its own). Both are founder-only, and they are checked through
-  // their own predicates so the two cannot drift apart later.
-  //
   // Resolved from the ROLE, not from "is not an investor": an explorer answers
   // false to that negation and would inherit the whole founder ladder. An
   // explorer CAN comment (createPostCommentAction below) — that is the role,
   // not an oversight — so the refusal has to say which door is shut.
   const role = await getAccountRole(supabase, user.id);
-  const mayWrite =
-    kind === "show_and_tell" ? canPostProduct(role) : canPostThread(role);
-  if (!mayWrite) {
+  if (!canPostThread(role)) {
     if (role === "explorer")
       return {
         error:
-          kind === "show_and_tell"
-            ? "The shelf is for members who build. Switch to building to post a product."
-            : "Explorer accounts read and comment here — they don’t start threads.",
+          "Explorer accounts read and comment here — they don’t start threads.",
       };
     return { error: "Only founders can post in the community." };
   }
 
-  const files = pickedImages(formData, kind);
-  if (files.length > MAX_PRODUCT_IMAGES)
-    return { error: `Up to ${MAX_PRODUCT_IMAGES} images per product.` };
+  // A post or a milestone carries one cover, sent as `image`.
+  const files = filesIn(formData, "image").slice(0, 1);
+  const uploaded = await uploadAll(user.id, files, "post.create");
+  if (uploaded.error !== undefined) return { error: uploaded.error };
+  const imageUrls = uploaded.uploads.map((u) => u.url as string);
 
-  // Validate ALL of them before uploading ANY. A 6MB fourth file must not
-  // leave three objects in the bucket and no post — and this way a size or
-  // type rejection still reads as the same plain sentence it always did.
-  for (const file of files) {
-    const bad = imageFileError(file);
-    if (bad) return { error: bad };
-  }
-
-  const uploads = await Promise.all(
-    files.map((file) => uploadPostImage(user.id, file)),
-  );
-  const failed = uploads.findIndex((u) => !u.url);
-  if (failed >= 0) {
-    console.error(
-      `[post.create] image ${failed + 1} of ${uploads.length} failed:`,
-      uploads[failed].error,
-    );
-    await removePostImages(uploads);
-    // One file: the storage error itself, exactly as before. Several: say that
-    // NOTHING was posted, because the alternative is a product quietly going
-    // up with two of its five screenshots and the member never knowing which.
-    return uploads.length === 1
-      ? { error: uploads[0].error ?? "Couldn't upload the image. Try again." }
-      : {
-          error:
-            "Couldn't upload all the images. Nothing was posted — try again.",
-        };
-  }
-  const imageUrls = uploads.map((u) => u.url as string);
-
+  // `image_urls` is deliberately NOT written: it is the products' column, and
+  // keeping the key off this insert is what keeps 'post' and 'milestone'
+  // byte-identical to what they always were.
   const { error } = await supabase.from("forum_posts").insert({
     author_id: user.id,
     content,
     title: title || null,
     kind,
     link_url: linkUrl || null,
-    // The first image ALSO goes in the legacy single column, so everything
-    // that still reads `image_url` on its own keeps a cover: the community
-    // feed card, the /p/[id] OG image, /community/[id].
     image_url: imageUrls[0] ?? null,
-    // Only a product writes the array, and only when it has images. Keeping
-    // the key off every other insert is what makes 'post' and 'milestone'
-    // byte-identical to before — and keeps a plain post with a photo working
-    // even on a database where 0076 has not been applied yet.
-    ...(kind === "show_and_tell" && imageUrls.length
-      ? { image_urls: imageUrls }
-      : {}),
     tags: parsed,
   });
 
   if (error) {
     console.error("[post.create]", error);
+    await removePostImages(uploaded.uploads);
     return { error: "Couldn't post. Try again." };
   }
 
   revalidateFeeds();
   return null;
+}
+
+/**
+ * A PRODUCT, from /products/new (app/(app)/products/new). The ONE writer of a
+ * kind='show_and_tell' row — the community composer cannot make one any more.
+ *
+ * QUIET BY DESIGN (CLAUDE.md, Language Rules): the row is the same forum_posts
+ * row a Show & tell always was, and it appears on the deck and on its own page,
+ * and nowhere it would be announced — the community feed, its search and the
+ * landing's "Happening now" all exclude the kind (lib/posts.ts,
+ * app/(marketing)/(home)/PitchLanding.tsx). A maker who wants to announce it
+ * writes a normal post.
+ *
+ * Every check the composer's product path had, in the same words, so the Thai
+ * that already exists for each one keeps rendering: the name and description
+ * caps, a required link that is http(s) by the old test AND by webUrl(), one
+ * category from PRODUCT_CATEGORIES, canPostProduct, at most MAX_PRODUCT_IMAGES
+ * screenshots, each one's type and size, and the all-or-nothing upload.
+ *
+ * On success it REDIRECTS to the product's member page with `?added=1`, which
+ * shows the maker a short confirmation and the way to the deck. It does not
+ * return, so the form never renders a stale success state.
+ */
+export async function createProductAction(
+  _prev: PostFormState,
+  formData: FormData,
+): Promise<PostFormState> {
+  const title = String(formData.get("title") ?? "").trim();
+  const content = String(formData.get("content") ?? "").trim();
+  const linkUrl = String(formData.get("link_url") ?? "").trim();
+  const category = String(formData.get("category") ?? "").trim();
+
+  // Tighter than a post: the deck card is where a description is read (four
+  // lines of it) and the name is a label, not prose — see MAX_PRODUCT_NAME.
+  if (!title) return { error: "Name your product." };
+  if (title.length > MAX_PRODUCT_NAME)
+    return { error: "Keep the product name short." };
+  if (!content) return { error: "Say what it is." };
+  if (content.length > MAX_PRODUCT_BLURB)
+    return { error: "Keep the description short — the card shows four lines." };
+  // A product is the one row that has to be actionable — the deck exists to
+  // send someone to the real thing — so the link is required, and it has to
+  // survive the same parse the shelf runs before it will show a card at all.
+  if (!linkUrl) return { error: "Add a link so people can try it." };
+  if (!HTTP_LINK.test(linkUrl) || !webUrl(linkUrl))
+    return { error: "Link must start with http:// or https://" };
+  // Stored as the row's ONE tag (lib/post-types.ts says why a tag and not a
+  // column). NOT a message that lists the slugs: the English string IS the
+  // dictionary key (lib/i18n.ts), so enumerating them would change the key
+  // every time the taxonomy did and silently drop its Thai.
+  if (!(PRODUCT_CATEGORIES as readonly string[]).includes(category))
+    return { error: "Pick a category." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  // The ladder's `product` cell (lib/roles.ts). The page refuses an explorer
+  // too, and proxy.ts bounces an investor off the route, but a server action is
+  // invocable without ever rendering its page, so the write checks for itself.
+  const role = await getAccountRole(supabase, user.id);
+  if (!canPostProduct(role)) {
+    if (role === "explorer")
+      return {
+        error:
+          "The shelf is for members who build. Switch to building to post a product.",
+      };
+    return { error: "Only founders can add products." };
+  }
+
+  const files = filesIn(formData, "images");
+  if (files.length > MAX_PRODUCT_IMAGES)
+    return { error: `Up to ${MAX_PRODUCT_IMAGES} images per product.` };
+  const uploaded = await uploadAll(user.id, files, "product.create");
+  if (uploaded.error !== undefined) return { error: uploaded.error };
+  const imageUrls = uploaded.uploads.map((u) => u.url as string);
+
+  const { data: row, error } = await supabase
+    .from("forum_posts")
+    .insert({
+      author_id: user.id,
+      content,
+      title,
+      kind: "show_and_tell",
+      link_url: linkUrl,
+      // The first screenshot ALSO goes in the legacy single column, so
+      // everything that still reads `image_url` on its own keeps a cover (the
+      // /p/[id] OG image among them). Every renderer goes through postImages().
+      image_url: imageUrls[0] ?? null,
+      // Only written when there are screenshots: a product without any keeps
+      // the column's own default, exactly as the composer's product path did.
+      ...(imageUrls.length ? { image_urls: imageUrls } : {}),
+      tags: [category],
+    })
+    .select("id")
+    .single();
+
+  if (error || !row) {
+    console.error("[product.create]", error);
+    await removePostImages(uploaded.uploads);
+    return { error: "Couldn't add your product. Try again." };
+  }
+
+  const id = row.id as string;
+  // The shelf (/products, and / once it serves the shelf) and the product's own
+  // two pages. NOT the feeds: the product is not in them.
+  revalidatePath("/products");
+  revalidatePath("/");
+  revalidatePath(`/p/${id}`);
+  revalidatePath(`/community/${id}`);
+
+  // OUTSIDE any try: redirect() throws to do its job. The member page, not
+  // /p/<id>: /p/<id> redirects a signed-in member there anyway, and rebuilds
+  // only the deck context on the way, which would drop `added`.
+  redirect(`/community/${encodeURIComponent(id)}?added=1`);
 }
 
 // Full-DB search (title / content / tags / author) — beyond the loaded page.

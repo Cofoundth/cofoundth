@@ -3,7 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { parseAccountRole } from "@/lib/roles";
+import { throughOnboarding } from "@/lib/auth-href";
+import { ADD_PRODUCT_PATH, parseAccountRole } from "@/lib/roles";
+
+// Where an upgrade ENDS: the Add product page, by way of founder onboarding.
+// Every caller is a "put something on the shelf" moment (the deck, the empty
+// shelf, /products/new itself), so the wizard's finish follows `next` back to
+// the form the explorer was reaching for instead of to /dashboard.
+// app/onboarding re-checks the value with lib/safe-next.ts before following it.
+const AFTER_UPGRADE = throughOnboarding(ADD_PRODUCT_PATH);
 
 // ---------------------------------------------------------------------------
 // The one allowed role transition: explorer -> founder
@@ -27,15 +35,18 @@ import { parseAccountRole } from "@/lib/roles";
 //
 // Lives in app/actions/ rather than beside a route because it is not one
 // route's action: the upgrade affordance belongs wherever an explorer realises
-// they are building something — the /products CTA today, plausibly the profile
-// hub or settings tomorrow. Same reason app/actions/locale.ts sits here.
+// they are building something — the /products CTAs and /products/new today,
+// plausibly the profile hub or settings tomorrow (and a caller that is not
+// about a product should then pass its own destination rather than inherit
+// AFTER_UPGRADE). Same reason app/actions/locale.ts sits here.
 // ---------------------------------------------------------------------------
 
 export type UpgradeToFounderState = { error?: string } | null;
 
 /**
  * Promote the CALLING user from explorer to founder, then send them into
- * founder onboarding. Nothing else about the row is touched.
+ * founder onboarding, which ends on /products/new. Nothing else about the row
+ * is touched.
  *
  * Shape matches the rest of the app's error-reporting actions
  * (saveOnboardingAction, updateProfileAction, deleteAccountAction): use it with
@@ -69,7 +80,7 @@ export async function upgradeToFounderAction(
   // way to arrive here is a double submit or a stale page — the first call
   // flipped the role and this one should land in the same place, not show a
   // failure for something that already succeeded.
-  if (role === "founder") redirect("/onboarding");
+  if (role === "founder") redirect(AFTER_UPGRADE);
 
   if (role !== "explorer") {
     return {
@@ -105,6 +116,7 @@ export async function upgradeToFounderAction(
   revalidatePath("/", "layout");
 
   // Straight into the founder wizard: they are now a founder with none of a
-  // founder's profile, and app/(app)/layout.tsx will send them here anyway.
-  redirect("/onboarding");
+  // founder's profile, and app/(app)/layout.tsx would send them there from
+  // /products/new anyway. Its finish then follows `next` to /products/new.
+  redirect(AFTER_UPGRADE);
 }

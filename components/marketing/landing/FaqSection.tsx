@@ -1,7 +1,7 @@
 import { t, type Locale } from "@/lib/i18n";
 
 // The first four pairs are carried over verbatim from the old single-column
-// <dl> on app/(marketing)/page.tsx so their existing Thai translations keep
+// <dl> on the landing page so their existing Thai translations keep
 // resolving. The last two are new — both describe shipped behaviour only.
 const FAQS: { q: string; a: string }[] = [
   {

@@ -6,9 +6,22 @@ import { BrandMark, Wordmark } from "@/components/Brand";
 import { signOutAction } from "../(auth)/actions";
 import { OnboardingRoleSwitch } from "./OnboardingRoleSwitch";
 import { parseAccountRole, roleHome } from "@/lib/roles";
+import { safeNextPath } from "@/lib/safe-next";
 import type { InvestorInitial } from "@/app/(app)/investor/InvestorOnboardingForm";
 
-export default async function OnboardingPage() {
+// `?next=` is where a new founder was heading when they were sent here — the
+// product or the deck a sign-up or sign-in started from (set by signupAction,
+// signInAction or the OAuth callback through lib/auth-href.ts
+// throughOnboarding, or by app/(app)/layout.tsx when it sends a
+// not-yet-onboarded founder here from an app route). It is checked here and
+// handed to the founder form, which posts it back; saveOnboardingAction checks
+// it again before following it.
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
+  const destination = safeNextPath((await searchParams).next);
   const supabase = await createClient();
   const {
     data: { user },
@@ -116,6 +129,7 @@ export default async function OnboardingPage() {
         userId={user.id}
         photoUrl={profile?.photo_url ?? null}
         userName={profile?.full_name ?? user.email ?? null}
+        destination={destination ?? undefined}
       />
     </>
   );

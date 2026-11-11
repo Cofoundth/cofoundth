@@ -1,5 +1,6 @@
-// Suspense fallback for the marketing shell. It mirrors the hero in
-// app/(marketing)/page.tsx block-for-block — same cream section + bottom rule,
+// Suspense fallback for the marketing shell, used by every marketing route
+// without its own (/, /products and /p/<id> each have one). It was drawn to mirror the
+// landing hero block-for-block — same cream section + bottom rule,
 // same max-w-[1120px] / px-6 lg:px-10 / py-[88px] frame, same 12-column split
 // (7 = eyebrow + wordmark + headline + paragraph + two CTAs, 5 = founders card
 // with its offset gold outline). The old three-bar skeleton bore no relation to

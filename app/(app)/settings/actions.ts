@@ -112,7 +112,7 @@ export async function updateProfileAction(
   // the bottom of the update, `onboarded: true`, which trips 0046's
   // set_profile_complete trigger. On a gated role's row that is not a cosmetic
   // mismatch: it makes them indistinguishable from a founder to every query
-  // that does not pin account_type (app/(marketing)/page.tsx's "joined this
+  // that does not pin account_type (app/(marketing)/(home)/PitchLanding.tsx's "joined this
   // week" count, and the two B2B gates that only check
   // `type === "company" && onboarded`), and for an explorer it manufactures the
   // half-finished founder profile the role exists to avoid.

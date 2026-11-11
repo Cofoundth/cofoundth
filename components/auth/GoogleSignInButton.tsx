@@ -6,6 +6,12 @@ import type { AccountRole } from "@/lib/roles";
 
 type GoogleSignInButtonProps = {
   label?: string;
+  /**
+   * Where to land after the round trip — the product a sign-in started from,
+   * when there is one. Carried in redirectTo like `role`, because the provider
+   * drops everything else. This button is only the carrier: the callback
+   * follows it only after lib/safe-next.ts accepts it.
+   */
   next?: string;
   /**
    * The role the visitor picked in the signup form, carried through OAuth.

@@ -1,4 +1,4 @@
-// Sample products for looking at the /products grid while the real shelf is
+// Sample products for looking at the /products deck while the real shelf is
 // empty. DEVELOPMENT ONLY — `productFixtures()` returns [] when NODE_ENV is
 // "production", and nothing here is ever written to a database.
 //
@@ -17,25 +17,50 @@
 //     and the next person reads `hidden = false and test = false` and has to
 //     work out which of the two means what.
 //  3. forum_posts ALREADY has `hidden`, and the three test accounts are all
-//     `suspended = true` — so a test row would be filtered twice over and
-//     would not show up in development either, which is the one place it was
-//     wanted. Punching a dev-only hole through both guards is more moving
-//     parts than this file.
+//     `suspended = true` — so a test row is filtered out of every public
+//     surface in production. That reasoning is why these samples exist; it
+//     is no longer the whole story. The samples cannot be SAVED (no row), so
+//     the review modal could not be tried for real, and the founder asked for
+//     exactly that. So there is now ONE narrow development-only hole, through
+//     the author guard and only that guard: lib/test-accounts.ts lets a
+//     non-hidden PRODUCT by one of those three accounts onto the shelf, the
+//     deck, /p/<id> and /community/<id> in development. Point 1 still holds
+//     for everything else: such a row is a production row, and only the
+//     production code's own filters keep it off the live site — so check
+//     what the DEPLOYED code would do with it before inserting one.
 //
 // The trade-off, stated plainly: these bypass the real query, so they prove
-// the CARD and the GRID render, not that the Supabase filters work. The
+// the DECK and its CARD render, not that the Supabase filters work. The
 // filters were verified separately against a real row. If a product you
 // actually posted is not showing, do not debug it on a page that is also
 // showing fixtures — set PRODUCTS_FIXTURES=off (below) and reload.
 //
-// To delete all of this: remove this file and the one `productFixtures()`
-// call in page.tsx. Nothing else references it, and no data needs cleaning up.
+// THE PRODUCT PAGE AND THE REVIEW MODAL TOO, so the whole flow can be looked
+// at. A card's rating-and-comments row opens /p/<id>, and a fixture has no row
+// there to find: in development app/(marketing)/p/[id]/page.tsx asks
+// `findFixture()` first and renders the sample's page from it — its images,
+// description, link and rating, with no comments. Nothing on it saves
+// anything (there is no row to write to): a logged-out visitor's like,
+// comment and rate buttons only open the join dialog, and a signed-in member
+// gets no stars. Trying a sample from the deck opens its placeholder link in a
+// new tab (mostly *.example.* hosts that do not resolve), and the review modal
+// that follows opens with send disabled and a sentence
+// saying a sample is not saved (`sample` in ./ProductShelf.tsx, read by
+// ./DeckPrompts.tsx). In a production build `findFixture()` returns null
+// before it looks and there are no samples on the deck, so none of this can
+// render.
+//
+// To delete all of this: remove this file, the one `productFixtures()` call in
+// shelf-data.ts, the `findFixture()` branch in app/(marketing)/p/[id]/page.tsx,
+// the `isFixture` check in product-view.ts and the two in ProductShelf.tsx
+// (the own-ratings read and `sample`), and `sample` in DeckPrompts.tsx. No
+// data needs cleaning up.
 //
 // ── WHY THE SCREENSHOTS ARE DRAWN IN CODE ──────────────────────────────────
-// The card leads with a screenshot gallery now, so a fixture with no images
-// proves nothing about the surface it exists to prove — it renders the ONE
-// shape (coverless) that is already the least interesting. Three ways to give
-// these samples pictures, and two of them undo the reasoning above:
+// The card leads with a cover, so a fixture with no image proves nothing about
+// the surface it exists to prove — it renders the ONE shape (coverless) that is
+// already the least interesting. Three ways to give these samples pictures,
+// and two of them undo the reasoning above:
 //
 //   files in public/  — they ship. Everything in public/ is in the production
 //                       build, which is the exact leak this module was written
@@ -52,27 +77,34 @@
 //                       blobs.
 //
 // They are deliberately NOT realistic. A tinted ground, a chrome bar and a few
-// blocks reads as "an app" in a 328px column, which is all the grid shows, and
+// blocks reads as "an app" on a 360px card, which is all the deck shows, and
 // keeping each one well under a kilobyte keeps the module honest about its
-// weight. The per-product tint and the per-image layout are the point: the
-// hover preview has to be visibly DOING something, and six near-identical
-// greys would make a working gallery look broken.
+// weight. The per-product tint and layout are the point: a swipe has to look
+// like it changed something, and near-identical greys would hide that.
 //
 // ⚠️ THE `data:` PREFIX BELOW IS A CONTRACT, not an implementation detail.
-// ProductCard's `webUrl()` accepts `http:`/`https:` only — correctly, because
-// that parse is what stops a legacy `javascript:` value in a real row becoming
-// a one-click injection — so it refuses a data: URI like any other. The card
-// carries a narrow exception for these samples instead (ProductCard's
-// `imageSrc()`), gated on THREE things: a non-production build, an id that
+// `webUrl()` in ./product-view.ts accepts `http:`/`https:` only — correctly,
+// because that parse is what stops a legacy `javascript:` value in a real row
+// becoming a one-click injection — so it refuses a data: URI like any other.
+// That module carries a narrow exception for these samples instead
+// (`imageSrc()`), gated on THREE things: a non-production build, an id that
 // starts with FIXTURE_PREFIX, and a src that starts with exactly
 // `data:image/svg+xml`. Change what `uri()` emits — base64, a different media
 // type, a leading space — and the samples silently go coverless on the one
 // page you opened to look at them. Do NOT "fix" that by widening webUrl() for
 // every row.
 
-import type { PostItem, ProductCategory } from "@/lib/post-types";
+import {
+  ratingFromTotals,
+  UNRATED,
+  type ProductCategory,
+  type ProductItem,
+} from "@/lib/post-types";
 
-/** Prefix on every fixture id — the card uses it to stamp a TEST badge. */
+/** Prefix on every fixture id. A uuid cannot start with it, so it is what
+ *  tells a page a product has no row: /p/<id> renders it from this module
+ *  (findFixture, development only), and it is the one place a `data:` image is
+ *  allowed (./product-view.ts). */
 export const FIXTURE_PREFIX = "fixture-";
 
 export function isFixture(id: string): boolean {
@@ -81,8 +113,7 @@ export function isFixture(id: string): boolean {
 
 // ---- The fake screenshot generator ----------------------------------------
 
-// 3:2, matching the card's `aspect-[3/2]` cover box, so nothing is cropped and
-// the grid never reflows around a sample.
+// 3:2, matching the card's `aspect-[3/2]` cover box, so nothing is cropped.
 const SHOT_W = 360;
 const SHOT_H = 240;
 
@@ -195,15 +226,19 @@ function shotsOf(shade: Shade, layouts: readonly Layout[]): string[] {
 // loanwords where a Thai founder would actually say them (app, AI, deploy),
 // not translated into officialese. Ladprao matches the app's other mock data.
 //
-// The image COUNTS are chosen, not arbitrary. A gallery breaks at its edges,
-// so the set covers all of them: five (the cap — the picker and any "+n" badge
-// have to hold), four, three, two, ONE (nothing to hover to, so the preview
-// affordance must not appear at all), and ZERO (no cover box, and the card
-// still has to fill its row). The one-image sample is also the only one whose
-// picture lives in the LEGACY `image_url` with an empty `image_urls` — that is
-// the shape of every real row written before 0076, and it is the regression
-// that would otherwise reach production unnoticed, because nothing else on a
-// dev machine has that shape.
+// The image COUNTS span the shapes a real row can have, and the top card shows
+// all of them (arrows on a hovering pointer, a one-second autoplay on a phone;
+// the cards behind show the first): five (the cap), four, three, two, ONE (no
+// dots, no arrows, no autoplay), and ZERO (no cover, and the card still has to
+// look finished). The one-image samples are also the only ones whose picture
+// lives in the LEGACY `image_url` with an empty `image_urls` — that is the
+// shape of every real row written before 0076, and it is the regression that
+// would otherwise reach production unnoticed, because nothing else on a dev
+// machine has that shape.
+//
+// The footer's numbers are spread the same way: ratings none / one / many (up
+// to four digits, for the width of "4.4 (1,204)"), and comments zero, one and
+// up to three digits.
 const SAMPLES: {
   name: string;
   blurb: string;
@@ -213,6 +248,16 @@ const SAMPLES: {
   category: ProductCategory;
   host: string;
   author: string;
+  /** The public rating as the database would aggregate it (product_rating_stats
+   *  is a COUNT and a SUM), run through the same ratingFromTotals() as a real
+   *  row. Absent = nobody has rated it. The spread is deliberate: none, ONE
+   *  (the average a single rater gives away), a .x5 case that must round up
+   *  (17/4 = 4.25 -> 4.3), and counts up to four digits for the width of
+   *  "4.4 (1,204)". */
+  rated?: { count: number; sum: number };
+  /** The comment count the card's footer shows. Made up: a fixture has no
+   *  conversation, and its page (findFixture) shows none. */
+  comments: number;
   /** null = a product with no screenshots at all. */
   shots: { shade: Shade; layouts: readonly Layout[] } | null;
   /** Put the single image in `image_url` and leave `image_urls` empty — the
@@ -226,6 +271,8 @@ const SAMPLES: {
     category: "lifestyle",
     host: "https://apps.apple.com/th/app/example-parking/id000000000",
     author: "ณัฐพล ว.",
+    comments: 3,
+    rated: { count: 12, sum: 52 },
     shots: {
       shade: { ground: "#EEF1EE", chrome: "#2F3A33", block: "#9FB0A4" },
       layouts: ["rows", "hero", "form"],
@@ -238,6 +285,8 @@ const SAMPLES: {
     category: "game",
     host: "https://example.itch.io/tuk-tuk-rush",
     author: "Ploy K.",
+    comments: 1,
+    rated: { count: 1, sum: 5 },
     // Five: the cap, and the only sample that exercises it.
     shots: {
       shade: { ground: "#F4EDE3", chrome: "#3A2E24", block: "#C8A87C" },
@@ -251,6 +300,7 @@ const SAMPLES: {
     category: "finance",
     host: "https://slipnai.example.com",
     author: "Somchai T.",
+    comments: 0,
     // ONE image, in the legacy column. See the note on SAMPLES.
     shots: {
       shade: { ground: "#F3F0E9", chrome: "#1B1A17", block: "#B9B3A8" },
@@ -265,6 +315,8 @@ const SAMPLES: {
     category: "ai",
     host: "https://thaidoc-ocr.example.dev",
     author: "Warit S.",
+    comments: 12,
+    rated: { count: 37, sum: 141 },
     shots: {
       shade: { ground: "#EDEFF4", chrome: "#2B3040", block: "#A9AFC2" },
       layouts: ["form", "rows"],
@@ -277,10 +329,83 @@ const SAMPLES: {
     category: "developer",
     host: "https://mangodeploy.example.com",
     author: "Ice P.",
+    comments: 0,
+    rated: { count: 2, sum: 7 },
     shots: {
       shade: { ground: "#EDF2F1", chrome: "#1F2E2B", block: "#9CB8B2" },
       layouts: ["bars", "rows", "tiles", "hero"],
     },
+  },
+  // The five below give the games filter a deck worth judging. One has no cover,
+  // one a name near the 60-character cap (not on the card any more, but in its
+  // accessible name and the live region) and a description at the 160 cap, and
+  // one the legacy single-image row shape the deck must read like any other.
+  {
+    name: "แมวส้มปากซอย",
+    blurb:
+      "เกมเลี้ยงแมวส้มหน้าร้านข้าวแกงปากซอยลาดพร้าว 71 ให้อ้วนที่สุดก่อนป้าเจ้าของร้านกลับมา",
+    category: "game",
+    host: "https://orange-cat-ladprao.example.com",
+    author: "Mint A.",
+    comments: 48,
+    rated: { count: 128, sum: 589 },
+    shots: {
+      shade: { ground: "#F6EBDD", chrome: "#4A3320", block: "#D9A36B" },
+      layouts: ["tiles", "hero"],
+    },
+  },
+  {
+    name: "ผจญภัยรถสองแถวลาดพร้าววังหิน ตามหาคิวสุดท้ายก่อนฝนจะตก",
+    // Exactly MAX_PRODUCT_BLURB (160) characters: the longest description a
+    // card can be given, so the four-line clamp has something to do.
+    blurb:
+      "เกมผจญภัยบนรถสองแถว ต้องเลือกซอยให้ถูกก่อนฝนลง มีทั้งหมด 12 ด่าน เก็บเหรียญไว้ซื้อร่ม เล่นได้ทั้งบนมือถือและคอม ชื่อยาวหน่อยเพราะเรื่องมันยาวจริง ๆ ลองแล้วบอกนะ",
+    category: "game",
+    host: "https://songthaew-quest.example.com",
+    author: "ธนกฤต จ.",
+    comments: 2,
+    shots: {
+      shade: { ground: "#E9EEF0", chrome: "#26343B", block: "#93A9B3" },
+      layouts: ["hero", "bars", "form"],
+    },
+  },
+  {
+    name: "ทายชื่อซอย",
+    blurb: "เกมคำศัพท์ ทายชื่อซอยในลาดพร้าวจากคำใบ้วันละข้อ เล่นจบใน 2 นาที",
+    category: "game",
+    host: "https://guess-the-soi.example.com",
+    author: "Fah N.",
+    comments: 0,
+    rated: { count: 1, sum: 2 },
+    // No cover: a word game has nothing to screenshot.
+    shots: null,
+  },
+  {
+    name: "Ladprao Dash",
+    blurb: "วิ่งหลบวินมอเตอร์ไซค์บนฟุตบาทลาดพร้าว คะแนนรีเซ็ตทุกครั้งที่ตกท่อ",
+    category: "game",
+    host: "https://ladprao-dash.example.com",
+    author: "Nop C.",
+    comments: 7,
+    rated: { count: 9, sum: 28 },
+    shots: {
+      shade: { ground: "#F1EFE8", chrome: "#33302A", block: "#BDB5A4" },
+      layouts: ["bars", "tiles", "rows", "hero"],
+    },
+  },
+  {
+    name: "หมูกระทะ Tycoon",
+    blurb: "เปิดร้านหมูกระทะแถวลาดพร้าว คุมเตาคุมคิวให้ทันก่อนลูกค้าเดินไปร้านข้าง ๆ",
+    category: "game",
+    host: "https://mookrata-tycoon.example.com",
+    author: "Beam L.",
+    comments: 1,
+    rated: { count: 4, sum: 17 },
+    shots: {
+      shade: { ground: "#F5ECE6", chrome: "#40271E", block: "#CFA591" },
+      layouts: ["rows"],
+    },
+    legacy: true,
   },
   {
     name: "เด็กหลังห้อง",
@@ -288,11 +413,25 @@ const SAMPLES: {
     category: "learning",
     host: "https://open.spotify.com/show/example",
     author: "Bank R.",
+    comments: 230,
+    rated: { count: 1204, sum: 5297 },
     // ZERO, and a plausible zero: a podcast has nothing to screenshot. The
     // card has to look finished without a cover, not broken.
     shots: null,
   },
 ];
+
+/**
+ * The sample with this id, or null — ALWAYS null in a production build, where
+ * the check below folds to a constant and the lookup is never reached. For
+ * app/(marketing)/p/[id]/page.tsx, which renders a sample's product page in
+ * development so the card's rating-and-comments row has somewhere to land.
+ */
+export function findFixture(id: string): ProductItem | null {
+  if (process.env.NODE_ENV === "production") return null;
+  if (!isFixture(id)) return null;
+  return productFixtures().find((p) => p.id === id) ?? null;
+}
 
 /**
  * Sample products, or [] in production.
@@ -301,7 +440,7 @@ const SAMPLES: {
  * you are checking whether a product you really posted comes back from the
  * database, where fixtures on screen would be actively misleading.
  */
-export function productFixtures(): PostItem[] {
+export function productFixtures(): ProductItem[] {
   if (process.env.NODE_ENV === "production") return [];
   if (process.env.PRODUCTS_FIXTURES === "off") return [];
 
@@ -312,14 +451,15 @@ export function productFixtures(): PostItem[] {
   return SAMPLES.map((s, i) => {
     const urls = s.shots ? shotsOf(s.shots.shade, s.shots.layouts) : [];
     // Non-legacy samples carry the cover in BOTH columns, because that is what
-    // createPostAction writes for a real row (image_url = the first image).
+    // createProductAction writes for a real row (image_url = the first image).
     // Reading either column directly is still wrong — postImages() is the only
     // supported access — but a fixture that does not match the row shape would
     // hide a bug in whichever consumer got it wrong.
     const legacy = s.legacy === true;
 
     return {
-      id: `${FIXTURE_PREFIX}${s.category}`,
+      // The index too: several samples share a category.
+      id: `${FIXTURE_PREFIX}${s.category}-${i}`,
       title: s.name,
       content: s.blurb,
       kind: "show_and_tell" as const,
@@ -334,12 +474,17 @@ export function productFixtures(): PostItem[] {
         photo_url: null,
         slug: null,
       },
-      // No like/comment affordances and not "yours": a fixture must not look
-      // like something you can interact with, because you cannot.
+      // Not "yours" and no likes: a fixture must not look like something you
+      // can interact with, because you cannot. The comment count is shown,
+      // because the card's footer is half of what a card is now; the
+      // fixture's page shows no comments, because there are none to show.
       isOwn: false,
       likeCount: 0,
       myLike: false,
-      commentCount: 0,
+      commentCount: s.comments,
+      rating: s.rated
+        ? ratingFromTotals(s.rated.sum, s.rated.count)
+        : UNRATED,
     };
   });
 }

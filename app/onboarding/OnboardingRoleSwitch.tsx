@@ -32,6 +32,7 @@ export function OnboardingRoleSwitch({
   userId,
   photoUrl,
   userName,
+  destination,
 }: {
   initialRole: AccountRole;
   founderInitial: FounderInitial;
@@ -39,6 +40,11 @@ export function OnboardingRoleSwitch({
   userId: string;
   photoUrl: string | null;
   userName: string | null;
+  /**
+   * Where the founder form sends them once it is saved (the page's checked
+   * `?next=`). Founder only: the investor form keeps its own /investor finish.
+   */
+  destination?: string;
 }) {
   const tr = useT();
 
@@ -74,7 +80,7 @@ export function OnboardingRoleSwitch({
           <AvatarUploader userId={userId} initialUrl={photoUrl} name={userName} />
         </div>
       </div>
-      <OnboardingForm initial={founderInitial} />
+      <OnboardingForm initial={founderInitial} destination={destination} />
     </>
   );
 }
