@@ -328,7 +328,7 @@ export function MeetupsClient({
               <h2 className="text-lg font-bold tracking-normal mb-5">
                 {tr("Upcoming")}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {later.map((m) => card(m))}
               </div>
             </section>
@@ -338,7 +338,7 @@ export function MeetupsClient({
               <h2 className="text-lg font-bold tracking-normal mb-5">
                 {tr("Past meetups")}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {past.map((m) => card(m, { past: true }))}
               </div>
             </section>

@@ -15,8 +15,9 @@ export default function Loading() {
   return (
     <>
     {/* Signed in, this fallback streams inside AppShell's <main
-        data-shell="public">, beside the 256px rail. The landing-hero copy
-        below makes no sense there, so the app surface gets a plain page
+        data-shell="public">, beside the rail (none below 768px, the 64px icon
+        rail to 1279px, then 256px or 64px). The landing-hero copy below makes
+        no sense there, so the app surface gets a plain page
         skeleton instead: 640px intro, flat text-d2 title (33px x 1.3 ≈ 43px),
         app rhythm py-14 / mb-2 / mb-8. */}
     <div

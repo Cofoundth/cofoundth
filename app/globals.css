@@ -1,5 +1,46 @@
 @import "tailwindcss";
 
+/* The rail as a 64px ICON rail. `rail-collapsed:` styles anything inside the
+   signed-in shell (components/SidebarState.tsx SidebarFrame, which carries
+   data-sidebar and data-overlay) whenever the rail on screen is the icon rail:
+
+     768px (md) - 1279px   always — UNLESS the overlay drawer is open, which
+                           is the full 256px rail floating over the page
+     1280px (xl) and up    only when the member collapsed it (the
+                           cofoundee_sidebar cookie, read on the server, so
+                           the first paint is already right)
+
+   The breakpoints are INSIDE the variant on purpose: below md there is no rail
+   (the phone top bar replaces it), and a collapsed cookie must change nothing
+   there; between md and xl the cookie must change nothing either. Baking them
+   in means no call site can forget one. 48rem / 80rem = Tailwind's md / xl;
+   this file does not override the breakpoints. Every rule the variant emits
+   lands AFTER the plain md:/xl: utilities it overrides (checked in the
+   compiled CSS), which is what lets `xl:pl-64 rail-collapsed:pl-16` work. */
+@custom-variant rail-collapsed {
+  @media (width >= 48rem) and (width < 80rem) {
+    &:where([data-sidebar]:not([data-overlay="open"]) *) {
+      @slot;
+    }
+  }
+  @media (width >= 80rem) {
+    &:where([data-sidebar="collapsed"] *) {
+      @slot;
+    }
+  }
+}
+
+/* The rail while it is an overlay drawer (768-1279px, toggle pressed). Only
+   the stacking changes — the width comes from the base classes, because an
+   open overlay simply stops matching `rail-collapsed:`. */
+@custom-variant rail-overlay {
+  @media (width >= 48rem) and (width < 80rem) {
+    &:where([data-overlay="open"] *) {
+      @slot;
+    }
+  }
+}
+
 @theme inline {
   /* ── Palette — Onfound's warm neutral system ──────────────────────────
      Values read off app.onfound.com's live CSS custom properties (their
@@ -261,10 +302,13 @@
                                rhythm="marketing"> AND every hand-typed
                                py-[88px] (articles, legal) in one place.
      lg:text-d3      -> d2     app page titles are text-d2, flat.
-     lg:grid-cols-3  -> 2 below xl   the content column is viewport minus the
-                               256px rail, so a three-up grid at lg is ~219px
-                               columns at 1024 — the bug CLAUDE.md records.
-                               App grids go three-up at xl; so do these here.
+
+   The card grid (`sm:grid-cols-2 lg:grid-cols-3`) is NOT remapped any more.
+   This block used to hold it at two-up until xl, because the rail took 256px
+   from 1024 and three-up there meant ~219px columns. At 1024-1279 the rail is
+   now the 64px icon rail (the full rail only floats over the page), so
+   three-up at lg is ~278px at 1024 — the same columns the app grids use,
+   which go three-up at lg as well.
 
    Why global CSS rather than a prop on every page: the marketing pages are
    written once for the logged-out reader, and the SAME markup has to serve
@@ -277,7 +321,7 @@
    they would silently lose.) The Thai line-height guard above is !important
    and still applies to the d2 titles, since those elements carry .text-d2.
 
-   ⚠️ COUPLED TO THREE LITERAL CLASS STRINGS — change one, change both ends.
+   ⚠️ COUPLED TO TWO LITERAL CLASS STRINGS — change one, change both ends.
    These selectors match class NAMES, not roles, so a rename does not error:
    the rule simply stops matching and the page silently reverts to marketing
    spacing/size for signed-in members. If you touch any of these, update the
@@ -289,11 +333,9 @@
      .lg\:text-d3      <- the marketing page-title class `text-d2 lg:text-d3`
                           (CLAUDE.md "Typography"; e.g. founders/[slug],
                           insights/[slug], p/[id]).
-     .lg\:grid-cols-3  <- the marketing card-grid class
-                          `gap-4 sm:grid-cols-2 lg:grid-cols-3`.
 
-   Grep for the class before renaming it — `rg 'py-\[88px\]|lg:text-d3|lg:grid-cols-3'`
-   — and if a rhythm/title/grid class is ever tokenised, this block must be
+   Grep for the class before renaming it — `rg 'py-\[88px\]|lg:text-d3'`
+   — and if a rhythm/title class is ever tokenised, this block must be
    re-keyed at the same time. */
 [data-shell="public"] .py-\[88px\] {
   padding-top: 3.5rem;
@@ -303,10 +345,5 @@
   [data-shell="public"] .lg\:text-d3 {
     font-size: 2.0625rem; /* --text-d2 (33px); literal, @theme inline does not guarantee the var */
     line-height: 1.25;
-  }
-}
-@media (width >= 64rem) and (width < 80rem) {
-  [data-shell="public"] .lg\:grid-cols-3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

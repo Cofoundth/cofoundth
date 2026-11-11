@@ -118,7 +118,7 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
           <Card key={c.label} padding="sm">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-1">

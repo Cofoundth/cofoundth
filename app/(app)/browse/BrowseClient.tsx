@@ -911,7 +911,7 @@ export function BrowseClient({
               }
             />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {ranked.map(({ profile, reason }) => (
                 <ProfileCard
                   key={profile.id}
@@ -1089,16 +1089,20 @@ function FilterChip({
   );
 }
 
-// The name RESERVES two lines (min-h-[58px]) rather than truncating to one.
-// Long Thai names and "Woradorn Laodhanadhaworn" wrap at 20px in a 336px
-// column, so heights came out 29 / 58 / 59 across a row and nothing else in
-// the card could line up. Onfound truncates instead, but their names are 14px
-// Latin — cutting a person's name mid-word to save 29px is the worse trade.
+// The name sits on ONE line and truncates (components/DirectoryCard.tsx), with
+// the full name in its title, so every card in a row has the same header
+// height and the rows below it line up. An earlier version reserved two lines
+// instead; the compact card replaced that. At 1024 the three-up grid's 278px
+// columns cut the longest names, which is the trade for lining cards up.
 //
-// The founder grid goes three-up at xl, NOT lg. The design system's card grid
-// (sm:2 lg:3) was measured on MARKETING pages, which have no sidebar. App routes
-// lose 256px to the rail, so lg:grid-cols-3 gives 219px columns at 1024 —
-// narrower than the two-column layout gives at the same width. xl gives 304px.
+// The founder grid goes three-up at lg, the same card grid as the marketing
+// pages (sm:2 lg:3). It was xl while the rail was 256px wide from 1024, when
+// three-up at 1024 meant 219px columns. The rail is a 64px icon rail at
+// 1024-1279 now (the full rail only floats over the page there), so measured
+// with a Windows scrollbar: three-up is 278px at 1024 and 303px at 1100 —
+// two-up would be 425-552px, cards stretched far past the ~300px they are
+// drawn for. From 1280 the rail follows the member's cookie: 299px columns
+// expanded, 336px collapsed. Nothing here keys off the rail state.
 function ProfileCard({
   profile,
   reason,

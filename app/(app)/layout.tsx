@@ -25,13 +25,6 @@ export default async function AppLayout({
 
   const pathname = (await headers()).get("x-pathname") ?? "";
 
-  // Conversation views are full-height by design: they own the viewport and
-  // scroll internally. A marketing-style footer underneath just adds a strip of
-  // page scroll below a pane that is already exactly one screen tall, so these
-  // routes drop it and take the full height instead.
-  const isConversation =
-    pathname.startsWith("/messages/") || pathname.endsWith("/chat");
-
   // Which role this account is, and where a blocked member of it gets sent.
   // `home === null` means the role is ungated — i.e. founder, the unrestricted
   // default. lib/roles.ts owns both answers; nothing here compares
@@ -85,7 +78,6 @@ export default async function AppLayout({
   // routes (app/(marketing)/layout.tsx) through AppShell; the gates are not.
   return (
     <AppShell
-      footer={!isConversation}
       banner={
         <IncompleteProfileBanner
           // The nag is a FOUNDER concern: profile_complete (migration 0046) is

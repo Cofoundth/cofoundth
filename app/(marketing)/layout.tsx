@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
-// Signed in: the same app shell as every app route (rail, mobile bar, footer),
+// Signed in: the same app shell as every app route (rail, mobile bar; no footer),
 // so a member never switches menus by opening a public page. Deliberately NONE
 // of the (app) layout's gates — public pages stay readable to a founder who has
 // not finished onboarding, and to investors. No IncompleteProfileBanner either:

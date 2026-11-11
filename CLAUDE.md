@@ -455,23 +455,28 @@ pages use `<Section>`, not the string.
 ### Layout — measured from their live DOM
 - Section container **`max-w-[1120px]`**, vertical rhythm **`py-[88px]`**
 - Intro/header block **`max-w-[640px]`** — a narrow intro above a wide grid
-- Card grid **`gap-4 sm:grid-cols-2 lg:grid-cols-3`** on MARKETING; app routes use **`xl:grid-cols-3`** (renders 328.4px columns at 1120px, identical to their `.lm-grid`). `gap-4` is the rule for CARD grids; form-field grids are layout inside a component and may differ
+- Card grid **`gap-4 sm:grid-cols-2 lg:grid-cols-3`** — on MARKETING and APP routes alike (renders 328.4px columns at 1120px, identical to their `.lm-grid`). `gap-4` is the rule for CARD grids; form-field grids are layout inside a component and may differ
 - Card body order: meta row → title → excerpt → footer row
 
-**App card grids go three-up at `xl`, not `lg`.** The `lg:grid-cols-3` above was
-measured on marketing pages, which have no sidebar. App routes lose 256px to the
-rail, so the same class produces very different columns:
+**App card grids go three-up at `lg` again (Nov 2026).** They were `xl` while
+the rail took 256px from 1024, when three-up at `lg` meant 219px columns —
+narrower than two-up, which is how the founder card ended up with 148px for a
+name. At 768-1279 the rail is now the 64px icon rail (the full rail only floats
+over the page, see App chrome), so the content column is wide again. Measured
+on /browse with a 15px Windows scrollbar:
 
-| viewport | 2-up | 3-up |
-|---|---|---|
-| 1024 (`lg`) | 336px | **219px** |
-| 1280 (`xl`) | 464px | 304px |
-| 1440 | 512px | 336px |
+| viewport | rail | 2-up | 3-up |
+|---|---|---|---|
+| 1024 (`lg`) | 64 | 425px | **278px** |
+| 1100 | 64 | 463px | 303px |
+| 1280 (`xl`) | 256 (default) | — | 299px |
+| 1280 (`xl`) | 64 (collapsed) | — | 336px |
+| 1440 | 256 | — | 336px |
 
-At `lg` a three-up app grid is NARROWER than the two-up layout at the same
-width, which is how the founder card ended up with 148px for a name and every
-card wrapping differently. Going three-up at `xl` fixed the card without
-touching the card.
+278 at 1024 is the narrowest three-up anywhere, ~7% under the 299 that 1280
+has always shipped; two-up there would stretch a card drawn for ~300px to
+425-552px. If the rail ever takes width at `lg` again, this table is what
+changes.
 - Reading/article pages keep a narrow column; only the rhythm applies
 - Chat/conversation views are full-height and take no vertical rhythm
 
@@ -494,17 +499,43 @@ page containers, and this does not apply to them.
 ### App chrome — sidebar, not top nav
 **Signed in = the app shell on EVERY page.** Onfound splits chrome by surface because
 their marketing site is a different domain; ours is one domain, so a member gets one menu.
-- **The shell** is `components/AppShell.tsx` (skip link → `AppSidebar` → `lg:pl-64`
-  wrapper → `<main id="main">` → `AppFooter`). `AppSidebar` is a fixed `w-64` left rail
-  on `lg+` (brand → vertical nav with badges → org switcher / language / notifications /
-  avatar / sign out) and a slim `sticky` top bar with the hamburger below `lg`.
+- **The shell** is `components/AppShell.tsx` (skip link → `AppSidebar` →
+  `md:pl-16 xl:pl-64 rail-collapsed:pl-16` wrapper → `<main id="main">`). **No footer**
+  on any signed-in page: the legal trio (Privacy (PDPA) / Terms / Code of Conduct) lives
+  as small links at the bottom of the full rail and the overlay drawer, and in the phone
+  menu (`lib/sidebar.ts` `LEGAL_LINKS`). No copyright line or social icons in the app.
+- **Three chromes, chosen by CSS breakpoints alone** (`lib/sidebar.ts` has the map):
+
+  | width | chrome | content offset |
+  |---|---|---|
+  | < 768 (`md`) | slim `sticky` top bar + hamburger (`MobileMenu`) | 0 |
+  | 768–1279 | the **64px icon rail**, always. Its toggle (or Ctrl/Cmd+B) opens the full 256px rail as an **overlay drawer** over the page (scrim, `z-50`); Escape / click outside / focus leaving / the toggle close it, and so does ANY navigation — Back/Forward, or a click on any link in it, the page already showing included — and it stays closed when the member comes back; focus goes in and comes back to the toggle. Not remembered | 64 (the overlay adds none) |
+  | ≥ 1280 (`xl`) | the rail per the member's cookie `cofoundee_sidebar`: 256px by default, collapsible to the icon rail (Ctrl/Cmd+B too) | 256 or 64 |
+
+  768, not 1024: the owner's own laptop renders at ~929 CSS px (Windows display
+  scaling) and was getting the phone layout. The cookie is read on the server and
+  everything else is CSS, so the first paint is right at every width — never measure
+  the viewport in script to pick a chrome. Ctrl/Cmd+B does nothing while typing or
+  while a modal (`aria-modal="true"`) is open: the rail is behind its scrim. The rail
+  (brand → toggle → bell, vertical nav with badges, then org switcher / language /
+  avatar / sign out / legal links) is one `<aside id="app-rail">`; the overlay is that
+  same element at full width.
+- **`rail-collapsed:`** (globals.css custom variant) means "the rail on screen is the
+  icon rail": 768–1279 unless the overlay is open, and ≥ 1280 when collapsed. It carries
+  both breakpoints, so call sites never add one. Icon-rail labels are `RAIL_TIP`
+  tooltips, positioned from the trigger's live rect on hover / focus / nav scroll — a
+  `fixed` box left at its static position drifts once the nav scrolls.
+- Page chrome that sits beside the rail must start at it: a fixed bottom bar visible at
+  768–1023 takes `md:left-16` (and `z-30`, under the rail's `z-40`); a full-height view
+  is `h-[calc(100dvh-4rem)] md:h-dvh` (the 4rem is the phone top bar).
 - **App routes** (`app/(app)/*`, including `/investor`): `app/(app)/layout.tsx` runs its
   gates (login, onboarding, investor allowlist) and then renders `AppShell`.
 - **Marketing routes, signed in**: `app/(marketing)/layout.tsx` renders the same
   `AppShell` with `surface="public"` and **no gates** (public pages stay readable to a
   founder mid-onboarding and to investors). Its `<main>` carries `data-shell="public"`,
   and an unlayered block at the end of `globals.css` puts those pages on app rules:
-  `py-[88px]` → 56px, `lg:text-d3` → d2, `lg:grid-cols-3` → two-up below `xl`. A page
+  `py-[88px]` → 56px, `lg:text-d3` → d2 (card grids need no remap any more — see
+  Layout). A page
   element that only makes sense logged out takes `in-data-[shell=public]:hidden`.
 - **Marketing routes, logged out**: `MarketingNav` (logo / `LanguageSwitcher` / sign in /
   join) + `MarketingFooter`. There is no second nav array anymore — `AppHeader` was

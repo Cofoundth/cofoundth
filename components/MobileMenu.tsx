@@ -11,25 +11,31 @@ export type MobileLink = {
   badge?: number;
   /**
    * A word-shaped marker ("New") rather than a count — ALREADY translated, the
-   * same as `label`. Mirrors SidebarNavItem; this menu is what BOTH the
-   * sidebar's mobile top bar and the marketing header's hamburger render, so
-   * anything the rail shows has to show here too.
+   * same as `label`. Mirrors SidebarNavItem; this menu is what the app
+   * shell's phone top bar renders below 768px, so anything the rail shows has
+   * to show here too.
    */
   tag?: string;
 };
 
-// Hamburger + drop-down panel for small screens. The desktop nav links are
-// `hidden md:flex` / `hidden lg:flex`; this fills the gap so the app is
-// navigable on a phone. Pass the breakpoint via `className`
-// (e.g. "md:hidden" or "lg:hidden") to mirror where the desktop nav appears.
+// Hamburger + drop-down panel for small screens: the app shell's phone top bar
+// renders it below 768px, where the rail does not exist. Pass the breakpoint
+// via `className` to mirror where the desktop nav appears.
 export function MobileMenu({
   links,
   className = "md:hidden",
   footer,
+  legal,
+  legalLabel,
 }: {
   links: MobileLink[];
   className?: string;
   footer?: React.ReactNode;
+  /** Small text links under everything else — the app shell's legal trio,
+   *  which has no footer to live in. Labels ALREADY translated. */
+  legal?: { href: string; label: string }[];
+  /** Accessible name of the legal link group. Already translated. */
+  legalLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -151,6 +157,26 @@ export function MobileMenu({
                 <div className="py-3 flex flex-col gap-2">{footer}</div>
               ) : null}
             </nav>
+            {legal?.length ? (
+              // Its own landmark, outside the main <nav>: these are not
+              // destinations in the app. Wraps — the Thai labels are long and
+              // 12px is their floor.
+              <nav
+                aria-label={legalLabel}
+                className="px-6 pb-4 flex flex-wrap gap-x-4 gap-y-1"
+              >
+                {legal.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    onClick={() => setOpen(false)}
+                    className="text-xs leading-5 text-ink-muted hover:text-navy transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </nav>
+            ) : null}
           </div>
         </>
       )}

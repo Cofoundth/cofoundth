@@ -254,17 +254,27 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Two columns, 5/4 on a 9-track grid with items-start — measured off
-          their /home, which renders 599px / 473px at 1440. Ours ran 3/6/3 of
-          12, giving 236px asides: narrower than a single card. */}
-      <div className="grid lg:grid-cols-9 gap-8 lg:items-start">
+      {/* Two columns from 768px: a fluid main column and a FIXED side column
+          (240px at md, 280 at lg, 320 at xl). It used to be 5/4 of a 9-track
+          grid from 1024 only, which put the owner's ~929px laptop on the
+          phone layout (one 2,200px column, 866px-wide stat panels) and left
+          the main column 402px at 1100. A fraction also grew the side panels
+          into wide strips with a label at one end and its number at the
+          other; a fixed track keeps them at the width their content wants and
+          hands every extra pixel to the main column. Measured main column
+          (side column) with a 15px Windows scrollbar and the rail each width
+          shows by default — 768: 369 (240) · 929: 530 (240) · 1024: 553 (280)
+          · 1100: 629 (280) · 1280: 577 (320) · 1440: 688 (320). */}
+      <div className="grid gap-8 md:items-start md:grid-cols-[minmax(0,1fr)_15rem] lg:grid-cols-[minmax(0,1fr)_17.5rem] xl:grid-cols-[minmax(0,1fr)_20rem]">
         {/* LEFT — who to meet. The third review in a row flagged that this
             column was the community feed, which made /dashboard and /community
             render identically at today's post volume (2 posts: any preview is
             the whole feed). Each page now leads with the thing only it has —
             here the Complement-Score ranking, there the composer + full feed.
-            The feed itself survives as a digest in the right rail. */}
-        <section className="lg:col-span-5 min-w-0 space-y-8">
+            The feed itself survives as a digest in the right rail.
+            `@container`: the founder grid below sizes off THIS column's
+            width, which depends on the rail as much as on the viewport. */}
+        <section className="@container min-w-0 space-y-8">
           {/* MEETUPS FIRST — the soft launch's headline, and the nav lists it
               directly under Dashboard. Below four ranked founder cards it sat
               ~1.5 screens down on a 1536x674 laptop. The empty-state panel
@@ -341,61 +351,71 @@ export default async function DashboardPage() {
               )}
             />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-              {suggested.map(({ row: f }) => {
+            // Two across once the COLUMN is 32rem (512px) — a container query,
+            // so it follows the rail as well as the window: 929px with the
+            // icon rail gives a 530px column, two 257px cards. Narrower (a
+            // phone, or 768px beside the side column) it is one across and
+            // shows the top TWO; two across, the top four, two rows. The
+            // heading's link carries the rest. Four cards stacked one across
+            // used to run the page ~2,000px.
+            <div className="grid gap-4 @lg:grid-cols-2">
+              {suggested.map(({ row: f }, i) => {
                 const why = ((f.i_am as string[] | null) ?? [])
                   .filter((r) => myWants.includes(r))
                   .map((r) => t(ROLE_LABELS[r] ?? r, locale));
                 return (
-                  <DirectoryCard
+                  <div
                     key={f.id as string}
-                    href={`/profile/${(f.slug as string | undefined) ?? f.id}`}
-                    name={f.full_name as string}
-                    photoUrl={f.photo_url as string | null}
-                    location={
-                      f.location
-                        ? provinceLabel(f.location as string, locale)
-                        : null
-                    }
-                    flag={
-                      isWithinMs(f.created_at as string, 7 * DAY_MS)
-                        ? t("New", locale)
-                        : null
-                    }
-                    stage={f.stage as string | null}
-                    stageLabel={
-                      f.stage && STAGE_LABELS[f.stage as string]
-                        ? t(STAGE_LABELS[f.stage as string], locale)
-                        : undefined
-                    }
-                    pill={(() => {
-                      const k = primaryIntent(f.intent as string[] | null);
-                      return k ? t(INTENT_LABELS[k], locale) : null;
-                    })()}
-                    tags={((f.i_am as string[] | null) ?? []).map((r) =>
-                      t(ROLE_LABELS[r] ?? r, locale),
-                    )}
-                    sectors={(f.industry as string[] | null) ?? []}
-                    sectorMax={1}
-                    // The WHY is the blurb slot: the roles they hold that the
-                    // viewer asked for — the ranking, explained in words
-                    // instead of a score.
-                    blurb={
-                      why.length > 0
-                        ? whyTemplate.replace("{role}", why.join(" · "))
-                        : null
-                    }
-                    blurbLabel={t("Why this match", locale)}
-                    chipsIcon={Search}
-                    chipsLabel={t("Looking for", locale)}
-                    chips={((f.looking_for as string[] | null) ?? []).map((r) =>
-                      t(ROLE_LABELS[r] ?? r, locale),
-                    )}
-                    // A stack, not a grid, from lg up — nothing to align with.
-                    // In the sm 2-up the rows stretch and "Looking for" is
-                    // mt-auto, so the bottom row still lands level.
-                    reserveRows={false}
-                  />
+                    className={i >= 2 ? "hidden @lg:block min-w-0" : "min-w-0"}
+                  >
+                    <DirectoryCard
+                      href={`/profile/${(f.slug as string | undefined) ?? f.id}`}
+                      name={f.full_name as string}
+                      photoUrl={f.photo_url as string | null}
+                      location={
+                        f.location
+                          ? provinceLabel(f.location as string, locale)
+                          : null
+                      }
+                      flag={
+                        isWithinMs(f.created_at as string, 7 * DAY_MS)
+                          ? t("New", locale)
+                          : null
+                      }
+                      stage={f.stage as string | null}
+                      stageLabel={
+                        f.stage && STAGE_LABELS[f.stage as string]
+                          ? t(STAGE_LABELS[f.stage as string], locale)
+                          : undefined
+                      }
+                      pill={(() => {
+                        const k = primaryIntent(f.intent as string[] | null);
+                        return k ? t(INTENT_LABELS[k], locale) : null;
+                      })()}
+                      tags={((f.i_am as string[] | null) ?? []).map((r) =>
+                        t(ROLE_LABELS[r] ?? r, locale),
+                      )}
+                      sectors={(f.industry as string[] | null) ?? []}
+                      sectorMax={1}
+                      // The WHY is the blurb slot: the roles they hold that the
+                      // viewer asked for — the ranking, explained in words
+                      // instead of a score.
+                      blurb={
+                        why.length > 0
+                          ? whyTemplate.replace("{role}", why.join(" · "))
+                          : null
+                      }
+                      blurbLabel={t("Why this match", locale)}
+                      chipsIcon={Search}
+                      chipsLabel={t("Looking for", locale)}
+                      chips={((f.looking_for as string[] | null) ?? []).map((r) =>
+                        t(ROLE_LABELS[r] ?? r, locale),
+                      )}
+                      // Every compact row is one fixed line, so two cards side
+                      // by side line up without reserving anything.
+                      density="compact"
+                    />
+                  </div>
                 );
               })}
             </div>
@@ -447,11 +467,17 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        {/* RIGHT — your numbers, then the conversation. The digest is the
-            feed's survival on this page: three headlines, no composer — the
-            full feed with search, pagination and writing lives on /community,
-            which is what keeps the two pages from being the same page. */}
-        <aside className="lg:col-span-4 min-w-0 space-y-8 lg:sticky lg:top-24 self-start">
+        {/* RIGHT — your network and your numbers. The digest is the feed's
+            survival on this page: three headlines, no composer — the full feed
+            with search, pagination and writing lives on /community, which is
+            what keeps the two pages from being the same page.
+
+            From 768px a single stack in the fixed side column. Below it the
+            panels come after the main column, and instead of stretching each
+            one across the full width (an 866px "Your activity" with its labels
+            at one edge and their numbers at the other) they flow two across
+            wherever two 256px panels fit, and keep that natural width. */}
+        <aside className="min-w-0 self-start grid gap-x-4 gap-y-8 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] items-start md:flex md:flex-col md:items-stretch md:gap-8 lg:sticky lg:top-24">
           {/* Faces first — Onfound's most appealing module is an overlapping
               avatar pile over a one-line count: social proof carried by
               people, not numbers. Real members, same pool the ranking uses. */}

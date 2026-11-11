@@ -795,7 +795,9 @@ export default async function ProfileDetailPage({
         <>
           {/* Keeps the fixed bar from covering the last of the page content. */}
           <div className="h-20 lg:hidden" aria-hidden="true" />
-          <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(27,26,23,0.08)] pb-[env(safe-area-inset-bottom)]">
+          {/* md:left-16 — from 768px the 64px icon rail is beside it, and z-30
+              keeps the rail's own z-40 tooltips above it. */}
+          <div className="lg:hidden fixed inset-x-0 md:left-16 bottom-0 z-30 bg-white/95 backdrop-blur border-t border-line shadow-[0_-2px_16px_rgba(27,26,23,0.08)] pb-[env(safe-area-inset-bottom)]">
             <div className="px-4 py-3">
               {mobileCta.href.startsWith("#") ? (
                 <a

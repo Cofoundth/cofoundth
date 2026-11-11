@@ -8,6 +8,7 @@ import { CountBadge } from "@/components/ui";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { timeAgo } from "@/lib/time";
 import { notifHref, notifText } from "@/lib/notifications";
+import { RAIL_TIP } from "@/lib/sidebar";
 import {
   markAllNotificationsRead,
   dismissNotification,
@@ -30,24 +31,28 @@ export type NotifItem = {
   } | null;
 };
 
-// Where the panel opens from. "down-right" suits a top bar (the marketing
-// header, the mobile app bar). "up-right" is for the desktop sidebar rail,
-// where the bell sits in the bottom-left corner: opening down-and-left there
-// puts most of the panel off the left edge and below the fold, and the rail is
-// `fixed`, so nothing can be scrolled into view.
-// "down-left" is the rail's TOP corner: opening down-and-right from a bell
-// 220px from the left edge, anchored on the bell's left so the panel runs INTO
-// the page rather than off it (right-anchoring would push a 384px panel to
-// x=-164). Named for the anchor, like the other two.
-export type BellPlacement = "down-right" | "up-right" | "down-left";
+// Where the panel opens from. "down-right" suits a top bar (the phone app
+// bar, below 768px).
+//
+// "rail" is the rail's top block (from 768px), in both of its widths:
+//   - full (256px — expanded, or the overlay drawer), the bell sits near the
+//     rail's right edge, and the panel drops below it anchored on the bell's
+//     LEFT, so it runs into the page rather than off it (right-anchoring would
+//     push a 320px panel past x=0);
+//   - icon rail (64px), the bell is in the narrow column and the panel opens
+//     BESIDE the rail — left-18 = 72px, the rail plus 8px — top-aligned with
+//     the bell (-mt-9 lifts it by the bell's own 36px height).
+// It is `fixed`, not `absolute`, because the rail clips its contents
+// (overflow-clip, for the width animation) and an absolute panel would be cut
+// off at the rail's edge. top/left stay AUTO, so the box sits at its static
+// position — directly under the bell. The top block never scrolls, so unlike
+// the nav tooltips (lib/sidebar.ts RAIL_TIP) the static position stays right.
+export type BellPlacement = "down-right" | "rail";
 
 const PANEL_PLACEMENT: Record<BellPlacement, string> = {
   "down-right":
     "sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:bottom-auto sm:mt-2 sm:w-96",
-  "up-right":
-    "sm:absolute sm:right-auto sm:left-0 sm:top-auto sm:bottom-full sm:mb-2 sm:w-80",
-  "down-left":
-    "sm:absolute sm:right-auto sm:left-0 sm:bottom-auto sm:top-full sm:mt-2 sm:w-80",
+  rail: "sm:inset-auto sm:mt-2 sm:w-80 rail-collapsed:left-18 rail-collapsed:-mt-9",
 };
 
 export function NotificationBell({
@@ -170,7 +175,9 @@ export function NotificationBell({
         type="button"
         onClick={toggle}
         aria-label={tr("Notifications")}
-        className="relative flex items-center justify-center w-9 h-9 text-ink-muted hover:text-navy transition-colors"
+        className={`relative flex items-center justify-center w-9 h-9 text-ink-muted hover:text-navy transition-colors ${
+          placement === "rail" ? "group/rail" : ""
+        }`}
       >
         <svg
           viewBox="0 0 24 24"
@@ -187,6 +194,17 @@ export function NotificationBell({
         </svg>
         {unread > 0 && (
           <CountBadge n={unread} cap className="absolute top-0.5 right-0" />
+        )}
+        {/* The collapsed rail labels every icon on hover/focus; the bell's
+            name already comes from aria-label, so this copy is aria-hidden.
+            Not while the panel is open — it would sit on top of it. */}
+        {placement === "rail" && !open && (
+          <span
+            aria-hidden="true"
+            className={`hidden rail-collapsed:block ${RAIL_TIP}`}
+          >
+            {tr("Notifications")}
+          </span>
         )}
       </button>
 

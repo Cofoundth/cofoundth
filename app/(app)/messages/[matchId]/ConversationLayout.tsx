@@ -94,7 +94,9 @@ export function ConversationLayout({
           floating as an island with cream gutters either side. The SURFACES
           now fill the content area; the CONTENT inside them is capped at 1120
           (header row, thread, composer) so line lengths are unchanged. */}
-      <div className="relative h-[calc(100dvh-4rem)] lg:h-dvh flex">
+      {/* Minus the 64px phone top bar below 768px; from 768 the chrome is the
+          rail, beside the view rather than above it, so the full height. */}
+      <div className="relative h-[calc(100dvh-4rem)] md:h-dvh flex">
         <div
           className={`flex flex-1 min-w-0 flex-col h-full min-h-0 border-line ${
             collapsed ? "" : "xl:border-r"
