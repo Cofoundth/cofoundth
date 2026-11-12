@@ -129,6 +129,15 @@ export const INVESTOR_HOME = "/funding";
 export const ADD_PRODUCT_PATH = "/products/new";
 
 /**
+ * My products, app/(app)/products/mine — a maker's own products, each with
+ * its public rating and its comments. The deck's top-right corner links here
+ * for a founder who has added one (it is "Add yours" until then). Gated like
+ * ADD_PRODUCT_PATH and listed in isAppShellRoute for the same reason; the page
+ * itself sends a role that cannot post a product back to its home.
+ */
+export const MY_PRODUCTS_PATH = "/products/mine";
+
+/**
  * Per-role route access. `home: null` means the role is ungated — it may read
  * everything, so there is nowhere to bounce it to.
  */
@@ -299,7 +308,8 @@ export function canRoleRead(role: AccountRole, pathname: string): boolean {
  * app/(app) (app/(app)/products/new), so by the same rule it is listed — as
  * itself, never as "/products", which would re-gate the public shelf. It is
  * what makes proxy.ts look up the role there and bounce an investor to
- * /funding on a soft navigation too.
+ * /funding on a soft navigation too. MY_PRODUCTS_PATH (/products/mine) is the
+ * second page.tsx under app/(app)/products and is listed the same way.
  */
 export function isAppShellRoute(pathname: string): boolean {
   return [
@@ -319,6 +329,7 @@ export function isAppShellRoute(pathname: string): boolean {
     "/notifications",
     "/orgs",
     ADD_PRODUCT_PATH,
+    MY_PRODUCTS_PATH,
     "/profile",
     "/settings",
   ].some((p) => pathname === p || pathname.startsWith(`${p}/`));

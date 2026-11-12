@@ -181,6 +181,8 @@ import {
   type PromptProduct,
 } from "./DeckPrompts";
 import { useProductFilter } from "./filter-context";
+import { PhoneHandoffDialog, needsPhone } from "./PhoneHandoff";
+import type { PhonePlatform } from "./product-view";
 
 export type DeckProduct = PromptProduct & {
   /** Which category it is filed under, from productBucketOf() on the server. */
@@ -191,6 +193,12 @@ export type DeckProduct = PromptProduct & {
   blurb: string;
   /** The maker's product, already through webUrl(). Never a raw link_url. */
   href: string;
+  /** Where `href` goes, for the phone handoff's "Open {host} here instead". */
+  host: string;
+  /** The phones it ONLY runs on, or [] when it opens anywhere: a computer
+   *  pressing "Try" on a phone app gets ./PhoneHandoff.tsx's code to scan
+   *  instead of a store page (the owner's call, 2026-11-12). */
+  phones: readonly PhonePlatform[];
   /** "Try {name} on {host}": the accessible name of the card's link, which
    *  has no visible text, and of the Try button. Starts with the button's
    *  visible word, because a voice-control user says what they see
@@ -499,7 +507,7 @@ function Stack({
   category,
   resumeAfter,
   rootRef,
-  locked,
+  locked: promptLocked,
   onTried,
 }: {
   products: readonly DeckProduct[];
@@ -522,6 +530,10 @@ function Stack({
   const [index, setIndex] = useState(() => resumeIndex(products, resumeAfter));
   /** The product whose window.open() was blocked: the notice's link. */
   const [blocked, setBlocked] = useState<DeckProduct | null>(null);
+  /** The phone app this computer just tried: its code to scan is open. */
+  const [handoff, setHandoff] = useState<DeckProduct | null>(null);
+  /** A prompt's modal OR the handoff's is open: the deck takes no input. */
+  const locked = promptLocked || handoff !== null;
 
   const stageRef = useRef<HTMLDivElement>(null);
   /** What the handlers read. `index` is only this, rendered. */
@@ -691,6 +703,16 @@ function Stack({
   function tryProduct() {
     const product = actionableProduct();
     if (!product) return;
+    // A phone app on a computer: the code to scan, not a store page. Still a
+    // try, so the card moves on and the address remembers it; not onTried,
+    // because no tab opened for this one to come back from.
+    if (needsPhone(product.phones)) {
+      setBlocked(null);
+      setHandoff(product);
+      writeAfter(product.id);
+      flyOut(1);
+      return;
+    }
     const opened = window.open(product.href, "_blank");
     // In the same task as the open: before the new page can run, and before
     // the `visibilitychange` that hides this tab, which arrives in a later
@@ -714,9 +736,16 @@ function Stack({
       event.preventDefault();
       return;
     }
-    onTried(product);
     setBlocked(null);
     writeAfter(product.id);
+    // The phone handoff, as in tryProduct. A middle-click or a modifier is the
+    // reader asking the browser for a tab, and gets one.
+    if (isPlainClick(event) && needsPhone(product.phones)) {
+      event.preventDefault();
+      setHandoff(product);
+    } else {
+      onTried(product);
+    }
     flyOut(1);
   }
 
@@ -1157,6 +1186,19 @@ function Stack({
             {fill(labels.openBlocked, { name: blocked.name })}
           </a>
         </div>
+      )}
+
+      {/* A phone app tried from a computer: see ./PhoneHandoff.tsx. Opening
+          the link from it after all is a real try, so it gets the prompts. */}
+      {handoff && (
+        <PhoneHandoffDialog
+          name={handoff.name}
+          href={handoff.href}
+          host={handoff.host}
+          phones={handoff.phones}
+          onClose={() => setHandoff(null)}
+          onOpenHere={() => onTried(handoff)}
+        />
       )}
     </div>
   );

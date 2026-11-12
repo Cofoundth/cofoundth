@@ -182,7 +182,7 @@ const PREVIEW_FETCH = 10;
 // never rendered; `hidden` is not selected because the gate below filters on
 // it rather than deciding in JS.
 const PUBLIC_POST_COLUMNS =
-  "id, author_id, title, content, kind, link_url, image_url, image_urls, tags, created_at";
+  "id, author_id, title, content, kind, link_url, image_url, image_urls, tags, platforms, created_at";
 
 // The author fields a public page may show, plus the three columns the gate
 // reads. `email`, `age` and the rest of profiles stay out of this file (the
@@ -222,6 +222,8 @@ type PublicPostRow = {
   image_url: string | null;
   image_urls: string[] | null;
   tags: string[] | null;
+  /** Where a product runs (0080). */
+  platforms: string[] | null;
   created_at: string;
 };
 

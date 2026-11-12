@@ -25,6 +25,9 @@ export type PostItem = {
    *  so a consumer never has to spell the empty case twice. */
   image_urls: string[];
   tags: string[];
+  /** Where a PRODUCT runs (0080): any of PRODUCT_PLATFORMS, [] when not said
+   *  and on every other kind. Read it through productPlatformsOf(). */
+  platforms: string[];
   created_at: string;
   author: PostAuthor | null;
   isOwn: boolean;
@@ -159,6 +162,43 @@ export const MAX_POST_IMAGE_BYTES = 5 * 1024 * 1024;
 // it is the card link's accessible name, the deck's live-region announcement
 // and the title on /p/<id>, so 60 is a label-sized cap rather than a clamp fit.
 export const MAX_PRODUCT_NAME = 60;
+
+// ---- Where a product runs (migration 0080) ---------------------------------
+// The maker's answer to "Runs on" on /products/new, so a computer pressing
+// "Try" on a phone app gets a code to scan instead of a store page
+// (app/(marketing)/products/PhoneHandoff.tsx; the owner's call, 2026-11-12).
+// A COLUMN, not a tag: see "WHY a tag and not a column" below — `tags` is the
+// category's, and 0080 says why this did not go in there. The database checks
+// the same five slugs (forum_posts_platforms_known): change the two together.
+export const PRODUCT_PLATFORMS = [
+  "web",
+  "ios",
+  "android",
+  "windows",
+  "mac",
+] as const;
+export type ProductPlatform = (typeof PRODUCT_PLATFORMS)[number];
+
+/** English source labels; every surface passes them through t(). */
+export const PLATFORM_LABEL: Record<ProductPlatform, string> = {
+  web: "Web",
+  ios: "iOS",
+  android: "Android",
+  windows: "Windows",
+  mac: "Mac",
+};
+
+export function isProductPlatform(value: unknown): value is ProductPlatform {
+  return (PRODUCT_PLATFORMS as readonly unknown[]).includes(value);
+}
+
+/** The known platforms on a row, in PRODUCT_PLATFORMS order, de-duplicated. */
+export function productPlatformsOf(
+  platforms: readonly string[] | null | undefined,
+): ProductPlatform[] {
+  const set = new Set(platforms ?? []);
+  return PRODUCT_PLATFORMS.filter((p) => set.has(p));
+}
 export const MAX_PRODUCT_BLURB = 160;
 
 /** Every image on a post, in order, as an array — `[]` when it has none.

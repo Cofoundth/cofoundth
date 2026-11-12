@@ -114,7 +114,7 @@ export default async function PostPage({ params, searchParams }: Props) {
   const { data: post } = await supabase
     .from("forum_posts")
     .select(
-      "id, author_id, title, content, kind, link_url, image_url, image_urls, tags, created_at, hidden",
+      "id, author_id, title, content, kind, link_url, image_url, image_urls, tags, platforms, created_at, hidden",
     )
     .eq("id", id)
     .single();
@@ -245,9 +245,11 @@ export default async function PostPage({ params, searchParams }: Props) {
   // The ONE parse before an href: see the header. null renders no link.
   const link = webUrl(post.link_url as string | null);
 
-  // The thread: the same on a product and on any other post.
+  // The thread: the same on a product and on any other post. `#comments` is
+  // where My products' "See all {n} comments" lands (app/(app)/products/mine);
+  // scroll-mt clears the phone's sticky top bar (64.8px) when it jumps here.
   const thread = (
-    <section className="mt-14">
+    <section id="comments" className="mt-14 scroll-mt-20">
       <SectionHeading title={commentsLabel} />
 
       <RealtimeRefresh
@@ -394,6 +396,7 @@ export default async function PostPage({ params, searchParams }: Props) {
             link_url: (post.link_url as string | null) ?? null,
             image_url: (post.image_url as string | null) ?? null,
             image_urls: (post.image_urls as string[] | null) ?? null,
+            platforms: (post.platforms as string[] | null) ?? null,
             tags: (post.tags as string[] | null) ?? null,
           }}
           locale={locale}

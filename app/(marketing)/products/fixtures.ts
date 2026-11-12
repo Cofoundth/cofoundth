@@ -469,6 +469,9 @@ export function productFixtures(): ProductItem[] {
       image_url: urls[0] ?? null,
       image_urls: legacy ? [] : urls,
       tags: [s.category],
+      // "Not said", like every product added before 0080: the samples link
+      // to ordinary sites, so none of them is a phone-only app.
+      platforms: [],
       created_at: new Date(base - i * 36e5).toISOString(),
       author: {
         id: `${FIXTURE_PREFIX}author-${i}`,

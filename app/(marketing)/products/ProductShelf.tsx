@@ -112,12 +112,17 @@
 // shell, and the top line carries the supply CTA instead.
 
 import Link from "next/link";
-import { PackageOpen, Rocket } from "lucide-react";
+import { Package, PackageOpen, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { getAccountRole } from "@/lib/account";
 import { getMyProductRatings } from "@/lib/product-ratings";
-import { ADD_PRODUCT_PATH, canComment, canRate } from "@/lib/roles";
+import {
+  ADD_PRODUCT_PATH,
+  MY_PRODUCTS_PATH,
+  canComment,
+  canRate,
+} from "@/lib/roles";
 import { authHref } from "@/lib/auth-href";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { LEGAL_LINKS } from "@/lib/sidebar";
@@ -137,6 +142,7 @@ import {
   cardFooterLabel,
   displayHost,
   productImages,
+  phonePlatformsOf,
   productName,
 } from "./product-view";
 import { parseAfterParam, type DeckRoute } from "./deck-position";
@@ -205,6 +211,23 @@ export async function ProductShelf({
   // which also holds the reasoning for how these rows are read and filtered.
   const shown = await getShelfProducts();
 
+  // Whether this founder has put anything up yet, which turns the deck's "Add
+  // yours" into "My products" (supplyCta below). A card of theirs on the shelf
+  // answers it for free; otherwise one head-only count, because a product can
+  // be theirs and NOT on the shelf (a moderator hid it), and My products still
+  // lists it.
+  const hasOwnProducts =
+    role === "founder" &&
+    !!user &&
+    (shown.some((p) => p.isOwn) ||
+      ((
+        await supabase
+          .from("forum_posts")
+          .select("id", { count: "exact", head: true })
+          .eq("author_id", user.id)
+          .eq("kind", "show_and_tell")
+      ).count ?? 0) > 0);
+
   // WHAT THE REVIEW MODAL MAY OFFER THIS READER (./DeckPrompts.tsx), decided
   // here, where the role is known, with the same predicates the product page
   // and setProductRatingAction use: a role that canRate, never your own
@@ -252,6 +275,7 @@ export async function ProductShelf({
     tNextImage,
     tSignIn,
     tLegal,
+    tMyProducts,
   ] = await Promise.all([
     tServer("Try what the community built"),
     tServer("Add yours"),
@@ -300,6 +324,7 @@ export async function ProductShelf({
     tServer("Next image"),
     tServer("Sign in"),
     tServer("Legal"),
+    tServer("My products"),
   ]);
   // Exactly the legal trio the app shell shows (one definition, lib/sidebar.ts).
   // Not Contact: the privacy notice carries the contact channel PDPA asks for,
@@ -336,7 +361,11 @@ export async function ProductShelf({
   //                     the one place a product is added from, quietly (it is
   //                     never announced in the community feed). A founder who
   //                     has not onboarded is sent through /onboarding by
-  //                     app/(app)/layout.tsx and comes back to it.
+  //                     app/(app)/layout.tsx and comes back to it. ONCE THEY
+  //                     HAVE ONE (hasOwnProducts), the deck's quiet button is
+  //                     My products instead (MY_PRODUCTS_PATH): their products
+  //                     with ratings and comments, and "Add another" there. The
+  //                     empty state keeps Add your product.
   //   "explorer"        the one control that promotes them to a founder, and
   //                     it ends on ADD_PRODUCT_PATH after onboarding.
   //                     "Add yours" would point at a form they cannot use —
@@ -367,6 +396,18 @@ export async function ProductShelf({
         />
       );
     if (role === "investor") return undefined;
+    if (quiet && hasOwnProducts)
+      return (
+        <LinkButton
+          href={MY_PRODUCTS_PATH}
+          variant="secondary"
+          size="sm"
+          className="whitespace-nowrap"
+        >
+          <Package className="h-4 w-4" strokeWidth={1.5} />
+          {tMyProducts}
+        </LinkButton>
+      );
     return quiet ? (
       <LinkButton
         href={ADD_PRODUCT_PATH}
@@ -377,6 +418,19 @@ export async function ProductShelf({
         <Rocket className="h-4 w-4" strokeWidth={1.5} />
         {tAddYours}
       </LinkButton>
+    ) : hasOwnProducts ? (
+      // An EMPTY shelf can still have products of theirs behind it: a hidden
+      // one, or one whose link the shelf refuses. Without this, the empty
+      // state was the one place a maker could not reach My products from.
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <LinkButton href={ADD_PRODUCT_PATH} size="sm">
+          {tEmptyCta}
+        </LinkButton>
+        <LinkButton href={MY_PRODUCTS_PATH} variant="secondary" size="sm">
+          <Package className="h-4 w-4" strokeWidth={1.5} />
+          {tMyProducts}
+        </LinkButton>
+      </div>
     ) : (
       <LinkButton href={ADD_PRODUCT_PATH} size="sm">
         {tEmptyCta}
@@ -439,6 +493,10 @@ export async function ProductShelf({
       name,
       blurb: p.content,
       href: p.link.toString(),
+      host,
+      // A phone-only app (its store link, or the maker's "Runs on"): a
+      // computer pressing "Try" gets a code to scan instead (./PhoneHandoff.tsx).
+      phones: phonePlatformsOf(p.link, p.platforms),
       // One pass, so a product named "{host}" cannot be substituted into.
       tryAria: tTryAria.replace(/\{(name|host)\}/g, (_, key) =>
         key === "name" ? name : host,

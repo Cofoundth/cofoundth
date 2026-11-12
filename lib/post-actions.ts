@@ -16,6 +16,7 @@ import {
   MAX_PRODUCT_NAME,
   MAX_PRODUCT_IMAGES,
   PRODUCT_CATEGORIES,
+  productPlatformsOf,
 } from "@/lib/post-types";
 import type { PostComment, PostItem } from "@/lib/post-types";
 
@@ -303,6 +304,15 @@ export async function createProductAction(
   // every time the taxonomy did and silently drop its Thai.
   if (!(PRODUCT_CATEGORIES as readonly string[]).includes(category))
     return { error: "Pick a category." };
+  // "Runs on" (0080): one or more of PRODUCT_PLATFORMS, as repeated
+  // `platforms` entries. productPlatformsOf drops anything unknown and
+  // de-duplicates, so what is written always passes the column's check.
+  // Required: it is what lets the deck send a computer a code to scan instead
+  // of a store page (app/(marketing)/products/PhoneHandoff.tsx).
+  const platforms = productPlatformsOf(
+    formData.getAll("platforms").map((v) => String(v)),
+  );
+  if (!platforms.length) return { error: "Pick where it runs." };
 
   const supabase = await createClient();
   const {
@@ -346,6 +356,7 @@ export async function createProductAction(
       // the column's own default, exactly as the composer's product path did.
       ...(imageUrls.length ? { image_urls: imageUrls } : {}),
       tags: [category],
+      platforms,
     })
     .select("id")
     .single();

@@ -7,9 +7,10 @@
 //
 // The fields are the product record as the deck reads it: a name (the card
 // link's accessible name and the title on its page), a description (the card's
-// main text), one category, the link the card opens, and optional screenshots
-// (the first is the cover). Saved as the same forum_posts row a Show & tell
-// always was — kind 'show_and_tell', the category as its one tag.
+// main text), one category, where it runs (one or more platforms), the link
+// the card opens, and optional screenshots (the first is the cover). Saved as
+// the same forum_posts row a Show & tell always was — kind 'show_and_tell',
+// the category as its one tag, the platforms in their own column (0080).
 
 import { useActionState, useState } from "react";
 import { Send } from "lucide-react";
@@ -21,8 +22,11 @@ import {
   CATEGORY_LABEL,
   MAX_PRODUCT_BLURB,
   MAX_PRODUCT_NAME,
+  PLATFORM_LABEL,
   PRODUCT_CATEGORIES,
+  PRODUCT_PLATFORMS,
   type ProductCategory,
+  type ProductPlatform,
 } from "@/lib/post-types";
 import { webUrl } from "@/lib/web-url";
 import { useT } from "@/lib/i18n-client";
@@ -56,7 +60,17 @@ export function AddProductForm() {
   // "https://".
   const [linkTouched, setLinkTouched] = useState(false);
   const [category, setCategory] = useState<ProductCategory | null>(null);
+  // "Runs on" (0080): several at once, kept in PRODUCT_PLATFORMS order.
+  const [platforms, setPlatforms] = useState<ProductPlatform[]>([]);
   const shots = useScreenshots();
+
+  function togglePlatform(p: ProductPlatform) {
+    setPlatforms((prev) =>
+      PRODUCT_PLATFORMS.filter((x) =>
+        x === p ? !prev.includes(p) : prev.includes(x),
+      ),
+    );
+  }
 
   const badLink = linkProblem(link);
   const linkError =
@@ -83,6 +97,7 @@ export function AddProductForm() {
     isPending ||
     shots.preparing ||
     !category ||
+    platforms.length === 0 ||
     !name.trim() ||
     !description.trim() ||
     !link.trim() ||
@@ -162,6 +177,47 @@ export function AddProductForm() {
         {/* The slug ships, never the label: it is stored as the row's one tag
             and the shelf's filter matches on it. */}
         <input type="hidden" name="category" value={category ?? ""} />
+      </div>
+
+      {/* WHERE IT RUNS (0080, the owner's call 2026-11-12). Chips like the
+          category, but several may be on: plenty of products are a website AND
+          an app. Required for the same reason the category is gated on the
+          button (a hidden input cannot be `required`): a phone-only answer is
+          what lets the deck give a computer a code to scan instead of a store
+          page. Slugs ship as repeated `platforms` entries. */}
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <span
+            id="product-platforms-label"
+            className="block text-xs uppercase tracking-[0.15em] text-ink-muted"
+          >
+            {tr("Runs on")}
+          </span>
+          {platforms.length === 0 && (
+            <span className="text-xs text-ink-muted">
+              {tr("Pick all that apply")}
+            </span>
+          )}
+        </div>
+        <div
+          role="group"
+          aria-labelledby="product-platforms-label"
+          className="flex flex-wrap items-center gap-2"
+        >
+          {PRODUCT_PLATFORMS.map((p) => (
+            <ToggleChip
+              key={p}
+              selected={platforms.includes(p)}
+              size="sm"
+              onClick={() => togglePlatform(p)}
+            >
+              {tr(PLATFORM_LABEL[p])}
+            </ToggleChip>
+          ))}
+        </div>
+        {platforms.map((p) => (
+          <input key={p} type="hidden" name="platforms" value={p} />
+        ))}
       </div>
 
       <Input

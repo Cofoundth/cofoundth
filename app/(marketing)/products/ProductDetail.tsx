@@ -62,15 +62,19 @@ import { Card, CardChip, buttonClasses } from "@/components/ui";
 import { t, type Locale } from "@/lib/i18n";
 import {
   CATEGORY_LABEL,
+  PLATFORM_LABEL,
   productCategoryOf,
+  productPlatformsOf,
   type ProductRating,
 } from "@/lib/post-types";
 import {
   displayHost,
+  phonePlatformsOf,
   productImages,
   productName,
   webUrl,
 } from "./product-view";
+import { TryItLink } from "./PhoneHandoff";
 
 /** The columns this reads. Both pages' own selects carry them. */
 export type ProductDetailPost = {
@@ -81,9 +85,9 @@ export type ProductDetailPost = {
   image_url: string | null;
   image_urls?: string[] | null;
   tags: string[] | null;
+  /** Where it runs (0080); absent or [] when the maker did not say. */
+  platforms?: string[] | null;
 };
-
-const LINK_REL = "noopener noreferrer nofollow";
 
 export function ProductDetail({
   post,
@@ -113,6 +117,9 @@ export function ProductDetail({
   const link = webUrl(post.link_url);
   const host = link ? displayHost(link) : null;
   const category = productCategoryOf(post.tags ?? []);
+  // "Runs on", when the maker said (0080). Shown under "Try it", so a visitor
+  // knows before pressing it where the thing works.
+  const platforms = productPlatformsOf(post.platforms);
   // The name as the shelf resolves it. A row with no title gets an h1 for the
   // outline only: its first line is already the description's first line, and
   // printing it twice would read as a mistake.
@@ -191,11 +198,15 @@ export function ProductDetail({
 
           {link && host && (
             <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
-              <a
+              {/* A client island only for the phone handoff (./PhoneHandoff.tsx):
+                  an app-store link pressed on a computer shows a code to scan.
+                  It renders the same <a>, so the link works before hydration. */}
+              <TryItLink
                 href={link.toString()}
-                target="_blank"
-                rel={LINK_REL}
-                aria-describedby={hostId}
+                host={host}
+                name={name}
+                phones={phonePlatformsOf(link, post.platforms)}
+                describedBy={hostId}
                 // Hand-written buttonClasses() rather than <LinkButton>: this
                 // is an EXTERNAL, member-submitted href, so it needs target and
                 // rel and must not be a client-routed next/link. Full width on
@@ -211,11 +222,20 @@ export function ProductDetail({
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
-              </a>
+              </TryItLink>
               <span id={hostId} className="text-sm break-all text-ink-muted">
                 {host}
               </span>
             </div>
+          )}
+
+          {platforms.length > 0 && (
+            <p className="mt-3 text-sm text-ink-muted">
+              {t("Runs on {platforms}", locale).replace(
+                "{platforms}",
+                platforms.map((p) => t(PLATFORM_LABEL[p], locale)).join(" · "),
+              )}
+            </p>
           )}
 
           {rating && (

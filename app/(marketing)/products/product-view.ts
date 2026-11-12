@@ -43,7 +43,11 @@
 
 import { productRatingLabel } from "@/components/ProductRatingSummary";
 import { t, type Locale } from "@/lib/i18n";
-import { MAX_PRODUCT_IMAGES, postImages } from "@/lib/post-types";
+import {
+  MAX_PRODUCT_IMAGES,
+  postImages,
+  productPlatformsOf,
+} from "@/lib/post-types";
 import type { PostItem, ProductItem } from "@/lib/post-types";
 import { webUrl } from "@/lib/web-url";
 import { isFixture } from "./fixtures";
@@ -103,6 +107,59 @@ export function displayHost(link: URL): string {
   // `www.` tells the reader nothing about where they are going; the registrable
   // name is the whole signal.
   return link.hostname.replace(/^www\./, "");
+}
+
+/** A phone OS a product can be opened on. */
+export type PhonePlatform = "ios" | "android";
+
+/**
+ * The phone an app-store link can only be used on, or null for any other link.
+ *
+ * WHY THE LINK DECIDES: a desktop visitor who presses "Try" on a phone app used
+ * to land on its App Store page, where there is nothing to try (the owner's
+ * call, 2026-11-12: "bad UX"). The store link itself says the product lives on
+ * a phone, whatever else is known about it, so ./PhoneHandoff.tsx offers that
+ * visitor a code to scan instead. Exact hostnames, from the parsed URL (webUrl
+ * already resolved `apps.apple.com@evil.example` to its real host).
+ */
+export function storePlatformOf(link: URL): PhonePlatform | null {
+  const host = link.hostname.toLowerCase();
+  if (
+    host === "apps.apple.com" ||
+    host === "itunes.apple.com" ||
+    host === "testflight.apple.com"
+  ) {
+    return "ios";
+  }
+  if (host === "play.google.com") return "android";
+  return null;
+}
+
+/**
+ * The phones a product ONLY runs on — what ./PhoneHandoff.tsx needs — or []
+ * when it opens anywhere. Phone-only means either signal says so:
+ *   · the link is an app store (storePlatformOf): it can only be used there,
+ *     whatever the maker ticked;
+ *   · the maker's "Runs on" (0080) is all phones: a phone app whose link is
+ *     its own website still only RUNS on a phone.
+ * Anything else (web, a desktop OS, nothing said) is [].
+ */
+export function phonePlatformsOf(
+  link: URL,
+  platforms: readonly string[] | null | undefined,
+): PhonePlatform[] {
+  const declared = productPlatformsOf(platforms);
+  const store = storePlatformOf(link);
+  const declaredPhoneOnly =
+    declared.length > 0 &&
+    declared.every((p) => p === "ios" || p === "android");
+  if (!store && !declaredPhoneOnly) return [];
+  const phones = new Set<PhonePlatform>(store ? [store] : []);
+  for (const p of declared) {
+    if (p === "ios" || p === "android") phones.add(p);
+  }
+  // iPhone first, the way the dialog says them.
+  return (["ios", "android"] as const).filter((p) => phones.has(p));
 }
 
 /** The product's screenshots that survive the parse, in order, at most

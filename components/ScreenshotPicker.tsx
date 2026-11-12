@@ -343,11 +343,27 @@ export function ScreenshotPicker({
           : tr("Add screenshots")}
       </Button>
 
-      <p id={hintId} className="mt-2 text-xs text-ink-muted">
-        {tr("Up to {n} images. JPG/PNG, up to 5MB each.").replace(
-          "{n}",
-          String(MAX_PRODUCT_IMAGES),
-        )}
+      {/* WHAT TO UPLOAD, then the limits (the owner's call, 2026-11-12). The
+          deck shows these as the product, so a logo or a poster makes it read
+          like an ad. The sizes are what the card is shaped like: a wide panel
+          on a computer (about 16:10 at laptop sizes), and a phone app's own
+          portrait shots, which the card letterboxes over a blur of themselves.
+          The downscaler caps the long edge at 1600px, so bigger buys nothing.
+          leading-normal: the Thai wraps, and text-xs's own 1.33 is under the
+          1.43 floor for wrapping Thai (CLAUDE.md). */}
+      <p id={hintId} className="mt-2 text-xs leading-normal text-ink-muted">
+        <span className="block">
+          {tr("Only screens from inside the app or game.")}{" "}
+          {tr(
+            "Best at 1600 × 1000 px, landscape. For a phone app: portrait, 1080 × 1920 px.",
+          )}
+        </span>
+        <span className="block">
+          {tr("Up to {n} images. JPG/PNG, up to 5MB each.").replace(
+            "{n}",
+            String(MAX_PRODUCT_IMAGES),
+          )}
+        </span>
       </p>
       {shots.error && (
         <p className="mt-1 text-xs text-danger-ink" role="alert">

@@ -19,10 +19,10 @@ type DB = Awaited<ReturnType<typeof createClient>>;
 const BASE_POST_COLS =
   "id, author_id, title, content, kind, link_url, image_url, tags, created_at";
 
-// `image_urls` arrives in migration 0076. This list is NOT products-only — the
-// community feed and search both select it — so the column and
-// this line landed together in the same change; 0076 is applied.
-const POST_COLS = `${BASE_POST_COLS}, image_urls`;
+// `image_urls` arrives in migration 0076 and `platforms` in 0080. This list is
+// NOT products-only — the community feed and search both select it — so each
+// column and this line landed together in the same change; both are applied.
+const POST_COLS = `${BASE_POST_COLS}, image_urls, platforms`;
 
 type PostRow = Record<string, unknown>;
 
@@ -148,6 +148,7 @@ async function shapePosts(
       // no such key at all. postImages() then falls back to image_url.
       image_urls: ((p.image_urls as string[] | null) ?? []) as string[],
       tags: ((p.tags as string[] | null) ?? []) as string[],
+      platforms: ((p.platforms as string[] | null) ?? []) as string[],
       created_at: p.created_at as string,
       author: a
         ? {
