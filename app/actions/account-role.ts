@@ -9,7 +9,7 @@ import { ADD_PRODUCT_PATH, parseAccountRole } from "@/lib/roles";
 // Where an upgrade ENDS: the Add product page, by way of founder onboarding.
 // Every caller is a "put something on the shelf" moment (the deck, the empty
 // shelf, /products/new itself), so the wizard's finish follows `next` back to
-// the form the explorer was reaching for instead of to /dashboard.
+// the form the explorer was reaching for instead of to the deck.
 // app/onboarding re-checks the value with lib/safe-next.ts before following it.
 const AFTER_UPGRADE = throughOnboarding(ADD_PRODUCT_PATH);
 

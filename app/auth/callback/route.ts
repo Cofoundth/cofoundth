@@ -6,11 +6,12 @@ import {
   parseAccountRole,
   canRoleRead,
   isAppShellRoute,
+  landingFor,
   owesOnboarding,
   roleHome,
   type AccountRole,
 } from "@/lib/roles";
-import { throughOnboarding } from "@/lib/auth-href";
+import { SIGN_IN_LANDING, throughOnboarding } from "@/lib/auth-href";
 import { safeNextPath } from "@/lib/safe-next";
 
 export async function GET(request: Request) {
@@ -21,8 +22,8 @@ export async function GET(request: Request) {
   // /products?…&review=<id> — through Google/LinkedIn's redirectTo and through
   // the email-confirmation link, and arrives here. Attacker-controlled like
   // any query value, so it is followed only if lib/safe-next.ts says it is a
-  // same-origin path; anything else lands where it always did.
-  const next = safeNextPath(searchParams.get("next")) ?? "/dashboard";
+  // same-origin path; anything else lands on the role's landing (below).
+  const requested = safeNextPath(searchParams.get("next"));
   // The role the visitor picked on the signup page, carried across the OAuth
   // round trip by GoogleSignInButton / LinkedInSignInButton. Absent on /login,
   // on the email-confirmation link (that path puts the role in
@@ -89,18 +90,16 @@ export async function GET(request: Request) {
 
   // Record the picked role (OAuth signups only, once) and then route by role.
   //
-  // WHY THE DESTINATION CANNOT JUST BE `next`: it defaults to /dashboard, which
-  // a gated role is not allowed to read. An explorer sent there is bounced by
-  // the middleware to their own home — so without this they pay an extra
-  // redirect through a founder-only route on the first screen they ever see,
-  // and analytics records them as having "visited the dashboard".
+  // WITH NO `next`, the destination is the role's landing (lib/roles.ts
+  // landingFor): the product deck for a founder or an explorer, an investor's
+  // own home. There is no dashboard any more (2026-11-12).
   //
-  // The test is the GATE'S OWN test (proxy.ts): bounce only from an (app)
-  // shell route this role may not read. It used to be `!canRoleRead` alone,
-  // which is right for /dashboard but wrong for every public page — the role
-  // allowlists list app routes, not /p/<id> — so an explorer signing in from a
-  // product page was sent to /products instead of back to the product they
-  // came from. canRoleRead takes a pathname, so the query is cut off first.
+  // WITH A `next` it is followed unless it is an (app) shell route this role
+  // may not read — the GATE'S OWN test (proxy.ts), so a gated role is sent to
+  // its home instead of bouncing through a route it cannot open. Only shell
+  // routes: the role allowlists list app routes, not /p/<id>, so an explorer
+  // signing in from a product page goes back to that product. canRoleRead
+  // takes a pathname, so the query is cut off first.
   //
   // A FOUNDER WHO HAS NOT ONBOARDED is sent through /onboarding, carrying the
   // destination as its `next`. app/(app)/layout.tsx does that for every app
@@ -112,13 +111,14 @@ export async function GET(request: Request) {
   // `onboarded` is null when the profile could not be read; that sends no one
   // through onboarding on a guess, and the app layout still gates app routes.
   const userId = data.session?.user?.id ?? data.user?.id ?? null;
-  let destination = next;
+  let destination = requested ?? SIGN_IN_LANDING;
   if (userId) {
     const { role, onboarded } = await applyPickedRole(
       supabase,
       userId,
       pickedRole,
     );
+    destination = requested ?? landingFor(role);
     const home = roleHome(role);
     const path = destination.split(/[?#]/, 1)[0];
     if (home && isAppShellRoute(path) && !canRoleRead(role, path)) {

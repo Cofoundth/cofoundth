@@ -8,11 +8,40 @@ import { FEATURES } from "@/lib/features";
 import {
   parseAccountRole,
   owesOnboarding,
+  landingFor,
   DEFAULT_ROLE,
   EXPLORER_HOME,
 } from "@/lib/roles";
 import { throughOnboarding } from "@/lib/auth-href";
 import { safeNextPath } from "@/lib/safe-next";
+
+type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
+
+// Where a member who has just signed in goes: `next` when the sign-in started
+// somewhere (a product page, the deck's review prompt), and otherwise their
+// role's landing — the product deck for a founder or an explorer, an
+// investor's own home (lib/roles.ts landingFor; there is no dashboard any
+// more). A founder who never finished onboarding goes through /onboarding
+// first with that destination riding along: the deck is a public page that
+// app/(app)/layout.tsx's onboarding gate never sees. If the profile cannot be
+// read, the role falls open to founder (parseAccountRole) and the destination
+// is followed as it is.
+async function landingAfterSignIn(
+  supabase: ServerSupabase,
+  userId: string,
+  next: string | null,
+): Promise<string> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("account_type, onboarded")
+    .eq("id", userId)
+    .maybeSingle();
+  const role = parseAccountRole(profile?.account_type);
+  const destination = next ?? landingFor(role);
+  return profile && owesOnboarding(role, !!profile.onboarded)
+    ? throughOnboarding(destination)
+    : destination;
+}
 
 // Resolve the origin of the CURRENT request, so confirmation / password-reset
 // links (and any OAuth redirectTo built server-side) land back on whatever host
@@ -161,10 +190,9 @@ export async function signupAction(
   // If email confirmation is OFF in Supabase, signUp returns a session
   // immediately — skip the check-email step.
   //
-  // Lands on `next`, not /dashboard. /dashboard was never where a brand-new
-  // account belonged (the app layout immediately redirected a founder on to
-  // /onboarding, so this was a wasted hop), and for an explorer it is a route
-  // they cannot read — they would be bounced twice before seeing anything.
+  // Lands on `next` — onboarding for a founder, the shelf (or the product the
+  // sign-up started from) for an explorer — never on a default landing: a
+  // brand-new founder belongs on onboarding before anything else.
   if (data.session) redirect(next);
 
   return { step: "check_email", email };
@@ -249,31 +277,41 @@ export async function signInAction(
   }
 
   // Back to where the sign-in started (LoginForm posts the page's `next`), if
-  // lib/safe-next.ts accepts it. /dashboard otherwise, as before; proxy.ts
-  // forwards a gated role from there to its own home.
-  //
-  // A founder who never finished onboarding goes through /onboarding first,
-  // with the destination riding along — the same rule as the OAuth callback,
-  // for the same reason: the deck's sign-in prompt sends them to /products,
-  // which app/(app)/layout.tsx's onboarding gate never sees. If the profile
-  // cannot be read the destination is followed as it is, as before.
-  const destination = safeNextPath(formData.get("next")) ?? "/dashboard";
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("account_type, onboarded")
-    .eq("id", data.user.id)
-    .maybeSingle();
+  // lib/safe-next.ts accepts it; the role's landing otherwise. See
+  // landingAfterSignIn above — the same rule as the OAuth callback.
   redirect(
-    profile &&
-      owesOnboarding(parseAccountRole(profile.account_type), !!profile.onboarded)
-      ? throughOnboarding(destination)
-      : destination,
+    await landingAfterSignIn(
+      supabase,
+      data.user.id,
+      safeNextPath(formData.get("next")),
+    ),
   );
 }
 
 // ------------------------------------------------------------------
 // FORGOT PASSWORD — step 1: send recovery email, step 2: verify + set new
 // ------------------------------------------------------------------
+
+// Supabase's own messages are English (the rate-limit one embeds a live count
+// of seconds, so no dictionary key could ever match it), and they are the
+// failures a member actually reaches here: the form's own validation already
+// stops a blank email, a short code or a short password in the browser. So the
+// reachable ones are mapped by error code to English source strings that
+// lib/translations.json translates (ForgotPasswordForm renders tr(error)).
+// Anything unmapped passes through as Supabase wrote it.
+function resetError(e: { code?: string; message: string }): string {
+  switch (e.code) {
+    case "otp_expired":
+      return "That code is wrong or has expired.";
+    case "same_password":
+      return "Your new password must be different from your current one.";
+    case "over_email_send_rate_limit":
+    case "over_request_rate_limit":
+      return "Too many tries. Wait a moment, then try again.";
+    default:
+      return e.message;
+  }
+}
 
 export type ResetState =
   | { step: "email"; error?: string }
@@ -293,11 +331,13 @@ export async function resetPasswordAction(
 
     if (!email) return { step: "email", error: "Please enter your email." };
 
+    // No `next`: the callback sends whoever follows the link to their role's
+    // landing (there is no dashboard any more).
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/callback?next=/dashboard`,
+      redirectTo: `${origin}/auth/callback`,
     });
 
-    if (error) return { step: "email", error: error.message };
+    if (error) return { step: "email", error: resetError(error) };
     return { step: "verify", email };
   }
 
@@ -326,17 +366,23 @@ export async function resetPasswordAction(
     type: "recovery",
   });
   if (verifyError) {
-    return { step: "verify", email: prev.email, error: verifyError.message };
+    return { step: "verify", email: prev.email, error: resetError(verifyError) };
   }
 
   const { error: updateError } = await supabase.auth.updateUser({
     password: newPassword,
   });
   if (updateError) {
-    return { step: "verify", email: prev.email, error: updateError.message };
+    return { step: "verify", email: prev.email, error: resetError(updateError) };
   }
 
-  redirect("/dashboard");
+  // Signed in by the verified code: on to their landing, like any sign-in.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  redirect(
+    user ? await landingAfterSignIn(supabase, user.id, null) : "/login",
+  );
 }
 
 // ------------------------------------------------------------------

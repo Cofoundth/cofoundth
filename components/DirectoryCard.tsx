@@ -40,18 +40,8 @@
 // rows. ONLY for a single-column stack, where there is no sibling to line up
 // with and the reserve is ~20px of blank per card. A grid must never pass it.
 //
-// `density="compact"` — the dashboard's "Founders you should meet", two across
-// in a ~250-340px column. Every piece of information stays; what goes is air
-// and one label row:
-//   - avatar 36px (sm) instead of 48, gap-2.5, mt-3 / gap-3 in the body
-//   - the blurb / reason become ONE line led by their icon, and their label
-//     ("Why this match") moves to a screen-reader prefix. The sentence carries
-//     the reason by itself ("You're looking for Business · Marketing"); the
-//     chips keep their visible label, because a row of role chips with no
-//     label could be read as the person's own roles.
-//   - every row is a fixed single line (truncate, full text in `title`), so
-//     cards in a row line up with no reservation at all.
-// Measured on /dashboard: 259px -> 217px tall for the same card.
+// (A `density="compact"` variant existed for the dashboard's "Founders you
+// should meet" column. It went with the dashboard, 2026-11-12.)
 
 import Link from "next/link";
 import { Building2, MapPin, Rocket, Sparkles } from "lucide-react";
@@ -134,9 +124,6 @@ export type DirectoryCardProps = {
   /** Default true. false = the blurb/reason rows size to their text instead
    *  of reserving two lines. Single-column stacks only — see the header. */
   reserveRows?: boolean;
-
-  /** "compact" = the dashboard's denser card. See the header. */
-  density?: "default" | "compact";
 };
 
 export function DirectoryCard({
@@ -167,27 +154,9 @@ export function DirectoryCard({
   headerAction,
   footer,
   reserveRows = true,
-  density = "default",
 }: DirectoryCardProps) {
   const interactive = Boolean(headerAction || footer);
-  const compact = density === "compact";
   const twoLineReserve = reserveRows ? " min-h-[39px]" : "";
-  // Compact: one fixed line, led by the label's icon; the label itself is a
-  // screen-reader prefix (see the header).
-  const oneLine = (
-    Icon: ComponentType<{ className?: string; strokeWidth?: number }>,
-    label: string | undefined,
-    text: string,
-  ) => (
-    <p
-      title={text}
-      className="flex items-center gap-1.5 min-w-0 text-xs leading-5 text-ink-muted"
-    >
-      <Icon className="w-3.5 h-3.5 shrink-0 text-gold-ink" strokeWidth={2} />
-      {label && <span className="sr-only">{label}: </span>}
-      <span className="min-w-0 truncate">{text}</span>
-    </p>
-  );
   const inner = (
     // min-w-0 is load-bearing: a grid item defaults to min-width:auto and will
     // not shrink below its content's min-content width, so without it the card
@@ -197,14 +166,8 @@ export function DirectoryCard({
       <Card hoverable padding="xs" className="h-full flex flex-col">
         {/* HEADER — the avatar shares a 48px row with the name, and nothing
             below it is indented past the avatar. */}
-        <div
-          className={`shrink-0 flex items-center ${compact ? "gap-2.5" : "gap-3"}`}
-        >
-          <Avatar
-            name={avatarSeed ?? name}
-            url={photoUrl ?? null}
-            size={compact ? "sm" : "md"}
-          />
+        <div className="shrink-0 flex items-center gap-3">
+          <Avatar name={avatarSeed ?? name} url={photoUrl ?? null} size="md" />
           <div className="flex flex-col justify-center min-w-0 flex-1 overflow-hidden">
             <Heading className="flex items-center gap-1.5 text-sm font-semibold leading-none group-hover:text-gold-ink transition-colors">
               {interactive ? (
@@ -215,9 +178,7 @@ export function DirectoryCard({
                   {name}
                 </Link>
               ) : (
-                <span className="truncate" title={compact ? name : undefined}>
-                  {name}
-                </span>
+                <span className="truncate">{name}</span>
               )}
               {verified && verifiedLabel && (
                 <VerifiedBadge label={verifiedLabel} />
@@ -251,9 +212,7 @@ export function DirectoryCard({
         </div>
 
         {/* BODY — three reserved rows. */}
-        <div
-          className={`flex flex-col flex-1 min-h-0 ${compact ? "mt-3 gap-3" : "mt-4 gap-4"}`}
-        >
+        <div className="flex flex-col flex-1 min-h-0 mt-4 gap-4">
           <div className="flex flex-col gap-1">
             <div className="flex h-[21px] items-center gap-2 overflow-hidden">
               {pill && <CardPill>{pill}</CardPill>}
@@ -279,8 +238,7 @@ export function DirectoryCard({
             </div>
           </div>
 
-          {blurb && compact && oneLine(Rocket, blurbLabel, blurb)}
-          {blurb && !compact && (
+          {blurb && (
             <div className="flex flex-col gap-1.5 min-w-0">
               <CardLabel icon={Rocket}>{blurbLabel}</CardLabel>
               <p
@@ -291,8 +249,7 @@ export function DirectoryCard({
             </div>
           )}
 
-          {reason && compact && oneLine(Sparkles, reasonLabel, reason)}
-          {reason && !compact && (
+          {reason && (
             <div className="flex flex-col gap-1.5 min-w-0">
               {reasonLabel && (
                 <CardLabel icon={Sparkles}>{reasonLabel}</CardLabel>
@@ -306,9 +263,7 @@ export function DirectoryCard({
           )}
 
           {chips.length > 0 && (
-            <div
-              className={`mt-auto flex flex-col min-w-0 ${compact ? "gap-1" : "gap-1.5"}`}
-            >
+            <div className="mt-auto flex flex-col min-w-0 gap-1.5">
               <CardLabel icon={ChipsIcon}>{chipsLabel}</CardLabel>
               <div className="flex flex-row gap-1.5 overflow-hidden h-[22px]">
                 {chips.slice(0, 3).map((c) => (

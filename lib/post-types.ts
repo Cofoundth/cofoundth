@@ -1,5 +1,5 @@
 // Shared post types — client-safe (no imports, no server code).
-// One post model for the merged dashboard + community feed.
+// One post model for the community feed (and the product shelf's rows).
 
 export type PostKind = "post" | "milestone" | "show_and_tell";
 
@@ -41,8 +41,8 @@ export type PostItem = {
 //
 // NOT a field on PostItem. Ratings exist only for products, so only the
 // product readers attach one (getPublicProductsPage in lib/posts.ts, and the
-// two product pages through lib/product-ratings.ts); the feed, the dashboard
-// and search never pay for, or carry, a number that means nothing on a post.
+// two product pages through lib/product-ratings.ts); the feed and search never
+// pay for, or carry, a number that means nothing on a post.
 
 export const MIN_RATING = 1;
 export const MAX_RATING = 5;

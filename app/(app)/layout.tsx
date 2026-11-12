@@ -57,18 +57,17 @@ export default async function AppLayout({
     // that trap for the next role added.
     //
     // The page they asked for rides along as `next`, so finishing onboarding
-    // lands them there instead of on /dashboard. The sign-ins themselves
+    // lands them there instead of on the deck. The sign-ins themselves
     // (signInAction, the OAuth callback, signupAction) already send a founder
     // who owes onboarding through it with the FULL destination, query and all
     // — they have to, because a destination like the deck's /products?… never
     // reaches this layout. This catches whatever else arrives at an app route
     // un-onboarded: a typed URL, an old bookmark, a session that predates
     // this. Only the pathname is known (x-pathname, set by proxy.ts), so a
-    // query is dropped.
-    // /dashboard is the finish's own default, so it is left off the URL.
-    // onboarding re-checks the value with lib/safe-next.ts before using it.
+    // query is dropped. Onboarding re-checks the value with lib/safe-next.ts
+    // before using it.
     redirect(
-      pathname && pathname !== "/dashboard"
+      pathname
         ? `/onboarding?next=${encodeURIComponent(pathname)}`
         : "/onboarding",
     );

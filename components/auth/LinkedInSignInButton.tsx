@@ -24,7 +24,7 @@ type Props = {
 
 export function LinkedInSignInButton({
   label = "Continue with LinkedIn",
-  next = "/dashboard",
+  next,
   role,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,11 +32,16 @@ export function LinkedInSignInButton({
   async function handleClick() {
     setIsLoading(true);
     const supabase = createClient();
-    const roleParam = role ? `&role=${encodeURIComponent(role)}` : "";
+    // No `next` when the sign-in did not start anywhere: the callback then
+    // lands the member on their role's landing.
+    const params = new URLSearchParams();
+    if (next) params.set("next", next);
+    if (role) params.set("role", role);
+    const query = params.toString();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "linkedin_oidc",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${roleParam}`,
+        redirectTo: `${window.location.origin}/auth/callback${query ? `?${query}` : ""}`,
         scopes: "openid profile email",
       },
     });

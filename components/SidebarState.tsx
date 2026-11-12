@@ -316,12 +316,23 @@ export function SidebarFrame({
             (same z-50, and the rail comes later in the DOM, so it paints on
             top). Not a button: a mouse press would focus it, and the
             focus-leaves-the-rail close would fire before this click could put
-            focus back on the toggle. Same scrim as the phone menu. */}
+            focus back on the toggle.
+
+            The phone menu's tint (bg-navy/20), and like it NO blur: the
+            founder dropped the blur from both (2026-11-12). Frosting the page
+            hid the page the member was navigating from; the tint alone still
+            says the page is inactive and that a click on it closes the drawer.
+
+            An OVERLAY at these widths, never a push: a 256px rail taking
+            width below 1280 squeezed the viewport-keyed card grids (3-up
+            columns of 219px at 1024, see CLAUDE.md, Layout), and it would
+            reflow the whole page for a menu that closes on the next
+            navigation. From 1280 the rail is persistent and does take width. */}
         {overlayOpen && (
           <div
             aria-hidden="true"
             onClick={() => closeOverlay(true)}
-            className="hidden md:block xl:hidden fixed inset-0 z-50 bg-navy/20 backdrop-blur-sm"
+            className="hidden md:block xl:hidden fixed inset-0 z-50 bg-navy/20"
           />
         )}
         {children}

@@ -155,7 +155,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { ExternalLink, MessageCircle, SearchX, X } from "lucide-react";
+import { ExternalLink, MessageCircle, SearchX, Star, X } from "lucide-react";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import {
@@ -165,7 +165,7 @@ import {
   LinkButton,
   buttonClasses,
 } from "@/components/ui";
-import type { Locale } from "@/lib/i18n";
+import { t, type Locale } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n-client";
 import type { ProductCategory, ProductRating } from "@/lib/post-types";
 import {
@@ -257,16 +257,43 @@ const LINK_REL = "noopener noreferrer nofollow";
  * because a box this size has no fixed shape to crop to.
  *
  * Its words keep a FIXED share: a 160px band under the pictures on a phone
- * (20px padding top and bottom, three 24px lines of description at the 1.5
- * Thai floor, the footer row pinned to the bottom), or a side panel on a wide
- * screen (`deck-wide:`, app/globals.css), where the description and its rating
- * sit together as one block in the panel's middle — pinned to the top and the
- * bottom they left the tall panel empty between them. Left-aligned there too:
- * a centred paragraph of Thai is ragged on both edges. ./loading.tsx draws the
- * same two shapes.
+ * (20px padding top and bottom, three lines of description, the footer row
+ * pinned to the bottom), or a side panel on a wide screen (`deck-wide:`,
+ * app/globals.css).
+ *
+ * THE WIDE PANEL IS A PRODUCT SPOTLIGHT, not a review snippet (the owner's
+ * call, 2026-11-12: "★ 4.0 (1) 💬 0" under a line of body text read like a
+ * cheap game ad). Still only the four things the card may show (CLAUDE.md,
+ * "Founder decision (2026-11-10)") — what changed is the voice:
+ *   - the description is the card's HEADLINE: the heading face, semibold, at a
+ *     size picked from its length (blurbType below), so a short tagline is set
+ *     big and a long one still fits;
+ *   - under a hairline, the rating and the comment count are a STAT STRIP —
+ *     numerals in the numeral register over small labels (CardStats) — in
+ *     place of the inline icon row, which stays on the phone's narrow band.
+ * The group sits in the panel's middle, left-aligned: a centred paragraph of
+ * Thai is ragged on both edges. ./loading.tsx draws the same two shapes.
  */
 const CARD_BODY =
-  "flex h-40 shrink-0 flex-col p-5 deck-wide:h-auto deck-wide:w-[clamp(16rem,30%,22rem)] deck-wide:justify-center deck-wide:p-6";
+  "flex h-40 shrink-0 flex-col p-5 deck-wide:h-auto deck-wide:w-[clamp(17rem,34%,26rem)] deck-wide:justify-center deck-wide:p-8";
+
+/**
+ * The description's type, by length, so the headline fills the wide panel
+ * without overflowing it. Length is UTF-16 units, so Thai's zero-width marks
+ * count as characters and a Thai line lands a step smaller than a Latin one of
+ * the same visible width — the safe direction. Each step's clamp keeps the
+ * block inside the panel at its shortest (a 34rem-tall page). Phone: one size,
+ * three lines, the band's fixed share.
+ */
+function blurbType(blurb: string): string {
+  const wide =
+    blurb.length <= 36
+      ? "deck-wide:text-d2 deck-wide:line-clamp-4"
+      : blurb.length <= 80
+        ? "deck-wide:text-d1 deck-wide:line-clamp-6"
+        : "deck-wide:text-xl deck-wide:line-clamp-8";
+  return `line-clamp-3 text-lg leading-snug ${wide}`;
+}
 
 /** A big card would need a long drag to commit, and would swing its corners a
  *  long way at full tilt: both are measured against at most this width. */
@@ -997,24 +1024,31 @@ function Stack({
             </div>
 
             <div className={CARD_BODY}>
-              {/* The card's main text now: body size, ink, a step up in the
-                  wide card's side panel. No leading-tight: user-written,
-                  mostly Thai, so it keeps the size's own Thai-safe leading.
-                  Clamped rather than truncated server-side, so the whole
-                  description stays in the DOM for anyone who copies the
-                  card's text; min-h-0 lets the clamp give way before the
+              {/* The card's headline: the heading face, semibold, sized by
+                  length (blurbType). A <p>, not a heading — the cards have no
+                  heading of their own (see ./ProductShelf.tsx). No
+                  leading-tight: user-written, mostly Thai, so each size keeps
+                  its own Thai-safe leading (the lang="th" guard in globals.css
+                  lifts d1/d2). Clamped rather than truncated server-side, so
+                  the whole description stays in the DOM for anyone who copies
+                  the card's text; min-h-0 lets the clamp give way before the
                   footer is pushed off the card. */}
               {product.blurb && (
-                <p className="line-clamp-3 min-h-0 text-base whitespace-pre-wrap text-ink deck-wide:line-clamp-[10] deck-wide:text-xl">
+                <p
+                  className={`min-h-0 font-serif font-semibold whitespace-pre-wrap text-ink ${blurbType(product.blurb)}`}
+                >
                   {product.blurb}
                 </p>
               )}
 
-              <div className="mt-auto flex min-w-0 items-center pt-3 deck-wide:mt-0 deck-wide:pt-5">
-                {/* The product's page, in this tab: see "THE RATING-AND-
-                    COMMENTS ROW" in the header. Not prefetched: each card
-                    mounting would otherwise fetch its page, and a skip must
-                    not cause a request of its own. */}
+              {/* The product's page, in this tab: see "THE RATING-AND-
+                  COMMENTS ROW" in the header. Two faces of ONE destination,
+                  each shown at one size only (display:none takes the other
+                  out of the tab order): the compact row on a phone's band,
+                  the stat strip in the wide panel. Not prefetched: each card
+                  mounting would otherwise fetch its page, and a skip must not
+                  cause a request of its own. */}
+              <div className="mt-auto flex min-w-0 items-center pt-3 deck-wide:hidden">
                 <Link
                   href={pageHrefOf(product)}
                   prefetch={false}
@@ -1027,6 +1061,17 @@ function Stack({
                   <CardFooterFace product={product} locale={locale} />
                 </Link>
               </div>
+              <Link
+                href={pageHrefOf(product)}
+                prefetch={false}
+                aria-label={product.footerAria}
+                data-deck-nodrag=""
+                draggable={false}
+                onClick={onPageLinkClick}
+                className="group/stats relative z-20 mt-8 hidden min-w-0 cursor-pointer grid-cols-2 gap-6 border-t border-line pt-6 deck-wide:grid"
+              >
+                <CardStats product={product} locale={locale} />
+              </Link>
             </div>
           </Card>
         ))}
@@ -1114,6 +1159,73 @@ function Stack({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * The wide panel's stat strip: the average over "{n} ratings", the comment
+ * count over "Comments", numerals in the numeral register (CLAUDE.md,
+ * Typography: 33px, line-height 1, digits only). A face only, like
+ * CardFooterFace: the words for a screen reader are the link's accessible name.
+ *
+ * The rating rules hold here too (components/ProductRatingSummary.tsx): the
+ * count always travels with the average, an unrated product is an OUTLINE star
+ * and "No ratings yet" — never "0.0" — and the palette stays neutral. A zero
+ * is muted, so an empty count reads as "not yet", not as a verdict.
+ */
+function CardStats({
+  product,
+  locale,
+}: {
+  product: DeckProduct;
+  locale: Locale;
+}) {
+  const { average, count } = product.rating;
+  const rated = average !== null && count > 0;
+  const comments = product.commentCount;
+  return (
+    <>
+      <span aria-hidden="true" className="flex min-w-0 flex-col gap-1.5">
+        {rated ? (
+          <span className="flex items-center gap-1.5">
+            <span className="font-serif text-num1 tabular-nums text-ink">
+              {average.toFixed(1)}
+            </span>
+            <Star
+              className="h-5 w-5 shrink-0 text-navy"
+              fill="currentColor"
+              strokeWidth={1.5}
+            />
+          </span>
+        ) : (
+          <span className="flex h-[33px] items-center">
+            <Star
+              className="h-6 w-6 shrink-0 text-ink-muted"
+              fill="none"
+              strokeWidth={1.5}
+            />
+          </span>
+        )}
+        <span className="truncate text-xs text-ink-muted group-hover/stats:text-navy">
+          {rated
+            ? t(count === 1 ? "{n} rating" : "{n} ratings", locale).replace(
+                "{n}",
+                count.toLocaleString("en-US"),
+              )
+            : t("No ratings yet", locale)}
+        </span>
+      </span>
+      <span aria-hidden="true" className="flex min-w-0 flex-col gap-1.5">
+        <span
+          className={`font-serif text-num1 tabular-nums ${comments > 0 ? "text-ink" : "text-ink-muted"}`}
+        >
+          {comments.toLocaleString("en-US")}
+        </span>
+        <span className="truncate text-xs text-ink-muted group-hover/stats:text-navy">
+          {t("Comments", locale)}
+        </span>
+      </span>
+    </>
   );
 }
 

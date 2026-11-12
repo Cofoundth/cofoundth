@@ -284,7 +284,7 @@ export function SignupForm({
               tabIndex={-1}
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-navy"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? tr("Hide password") : tr("Show password")}
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />

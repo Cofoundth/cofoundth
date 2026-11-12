@@ -41,14 +41,17 @@
 //
 // Why both: a layout guard ALONE is not a gate. Next does not re-render a
 // shared layout on client-side navigation, so a layout redirect only fires on a
-// hard load. An investor clicking a link straight through to /dashboard was NOT
-// redirected — verified against the running app, not reasoned about. Middleware
+// hard load. An investor clicking a link straight through to the (since
+// removed) founder dashboard was NOT redirected — verified against the running
+// app, not reasoned about. Middleware
 // is the only layer that reliably sees every navigation.
 //
 // And route gating is NOT the write boundary. A server action is invocable
 // without ever rendering the page it belongs to, so every founder-only write
 // checks the ladder below for itself. Routes decide what a role can LOOK at;
 // the can* predicates decide what it can DO.
+
+import { SIGN_IN_LANDING } from "./auth-href";
 
 export const ACCOUNT_ROLES = ["founder", "explorer", "investor"] as const;
 export type AccountRole = (typeof ACCOUNT_ROLES)[number];
@@ -183,8 +186,8 @@ export const ROLE_ACCESS: Record<
 
   // Investors are funding actors and read-first community members: they can
   // read the funding surface, the community feed, meetups, the company
-  // directory, profiles and their own settings. Everything else — the founder
-  // dashboard, the co-founder directory, connections/DMs, B2B actions — is
+  // directory, profiles and their own settings. Everything else — the
+  // co-founder directory, connections/DMs, B2B actions — is
   // founder-only, and so is every WRITE (posting, RSVPing, proposing), which is
   // enforced separately inside the individual server actions.
   //
@@ -230,6 +233,19 @@ export const ROLE_ACCESS: Record<
  */
 export function roleHome(role: AccountRole): string | null {
   return ROLE_ACCESS[role].home;
+}
+
+/**
+ * Where a sign-in lands this role when nothing asked for anywhere else: its
+ * own home if it is gated (an investor's /funding; the explorer's is the
+ * shelf), and the shelf, SIGN_IN_LANDING, for the ungated founder. There is no
+ * dashboard any more (2026-11-12). The sign-in paths call this — signInAction,
+ * the OAuth callback, password reset, onboarding's finish, proxy.ts's "/" —
+ * and a founder who still owes onboarding is sent through it first by those
+ * same callers (owesOnboarding below).
+ */
+export function landingFor(role: AccountRole): string {
+  return roleHome(role) ?? SIGN_IN_LANDING;
 }
 
 /**
@@ -292,7 +308,8 @@ export function isAppShellRoute(pathname: string): boolean {
     "/browse",
     "/community",
     "/companies",
-    "/dashboard",
+    // No "/dashboard": the page is gone (2026-11-12). proxy.ts redirects the
+    // path before this gate is ever asked about it.
     "/funding",
     "/interests",
     "/investor",

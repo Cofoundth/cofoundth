@@ -9,7 +9,6 @@ import {
   Circle,
   HandCoins,
   Handshake,
-  LayoutDashboard,
   MessageCircle,
   Newspaper,
   Package,
@@ -51,7 +50,6 @@ export type SidebarNavItem = {
 // the collapsed 64px rail has left to show. An href with no entry still gets a
 // neutral mark, so a new nav item can never render as an empty square.
 const ICONS: Record<string, LucideIcon> = {
-  "/dashboard": LayoutDashboard,
   "/meetups": Calendar,
   "/products": Package,
   "/community": MessageCircle,

@@ -38,7 +38,7 @@ type GoogleSignInButtonProps = {
 
 export function GoogleSignInButton({
   label = "Continue with Google",
-  next = "/dashboard",
+  next,
   role,
 }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -46,11 +46,17 @@ export function GoogleSignInButton({
   async function handleClick() {
     setIsLoading(true);
     const supabase = createClient();
-    const roleParam = role ? `&role=${encodeURIComponent(role)}` : "";
+    // No `next` when the sign-in did not start anywhere: the callback then
+    // lands the member on their role's landing (the deck; there is no
+    // dashboard any more).
+    const params = new URLSearchParams();
+    if (next) params.set("next", next);
+    if (role) params.set("role", role);
+    const query = params.toString();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${roleParam}`,
+        redirectTo: `${window.location.origin}/auth/callback${query ? `?${query}` : ""}`,
       },
     });
     if (error) {

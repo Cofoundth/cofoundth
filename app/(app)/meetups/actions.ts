@@ -879,7 +879,6 @@ export async function hostMeetupAction(
   });
 
   revalidatePath("/meetups");
-  revalidatePath("/dashboard");
   redirect(`/meetups/${created.slug}`);
 }
 

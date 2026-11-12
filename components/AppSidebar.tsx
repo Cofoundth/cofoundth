@@ -22,6 +22,7 @@ import { LogOut } from "lucide-react";
 import {
   parseAccountRole,
   roleHome,
+  landingFor,
   canRoleRead,
   isAppShellRoute,
 } from "@/lib/roles";
@@ -49,10 +50,10 @@ export async function AppSidebar() {
     .single();
   const role = parseAccountRole(profile?.account_type);
 
-  // Where the brand mark goes. /dashboard is founder-only, so for a gated role
-  // the logo — the most-clicked thing in any chrome — pointed at a route the
-  // middleware bounces. roleHome() is null for founder, which is the old value.
-  const homeHref = roleHome(role) ?? "/dashboard";
+  // Where the brand mark goes: the role's landing, the same page a sign-in
+  // lands on — the product deck for a founder or an explorer, an investor's own
+  // home. There is no dashboard any more (2026-11-12).
+  const homeHref = landingFor(role);
 
   // Founders land on the My Profile hub (identity, stats, account door) —
   // the public view is one row inside it. Investors keep their own home.
@@ -286,19 +287,16 @@ export async function AppSidebar() {
           // DM, which is why the two reads for it are skipped above.
         ]
       : [
-          { href: "/dashboard", label: await tServer("Dashboard") },
+          // Products LEADS, where Dashboard used to be: there is no dashboard
+          // any more (2026-11-12) and the deck is the page a founder lands on.
+          // No "New" chip on it for the explorer's reason: a permanent badge
+          // on your own landing is noise.
+          { href: "/products", label: await tServer("Products") },
           {
             href: "/meetups",
             label: await tServer("Meetups"),
             // Launch marker, not a surface gate: the item renders either way.
             ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
-          },
-          {
-            href: "/products",
-            label: await tServer("Products"),
-            // Same marker, same reasoning as Meetups above: a doorway to a
-            // brand-new surface, not a gate. /products renders either way.
-            ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
           },
           { href: "/community", label: await tServer("Community") },
           ...insightsItem,
@@ -402,7 +400,7 @@ export async function AppSidebar() {
               and bell 36px each, inside 228px. Anything added here needs room
               taken from somewhere else first. */}
           <div className="px-3.5 h-16 flex items-center justify-between gap-1 shrink-0 rail-collapsed:h-auto rail-collapsed:flex-col rail-collapsed:justify-start rail-collapsed:gap-1 rail-collapsed:px-0 rail-collapsed:py-3.5">
-            {/* The role's own home, not /dashboard — see homeHref above. */}
+            {/* The role's landing — see homeHref above. */}
             <Link href={homeHref} className="flex items-center gap-2.5">
               <BrandMark size="sm" />
               <Wordmark className="text-base rail-collapsed:hidden" />

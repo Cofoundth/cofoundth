@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import { SIGN_IN_LANDING } from "@/lib/auth-href";
 import { tServer } from "@/lib/i18n-server";
 import { investorTypeLabel } from "@/lib/investor";
 import { Card } from "@/components/ui";
@@ -15,7 +16,8 @@ export const dynamic = "force-dynamic";
 
 // Home for investor accounts. New investors get an investor-specific onboarding
 // (NOT the founder/company form); once saved, a placeholder until the full
-// Phase-2 investor module ships. Founders are bounced to /dashboard.
+// Phase-2 investor module ships. Anyone else is bounced to the deck, the page a
+// sign-in lands on (there is no dashboard any more).
 export default async function InvestorPage({
   searchParams,
 }: {
@@ -28,7 +30,7 @@ export default async function InvestorPage({
     .select("account_type, full_name")
     .eq("id", user.id)
     .single();
-  if (profile?.account_type !== "investor") redirect("/dashboard");
+  if (profile?.account_type !== "investor") redirect(SIGN_IN_LANDING);
 
   const { data: inv } = await supabase
     .from("investor_profiles")

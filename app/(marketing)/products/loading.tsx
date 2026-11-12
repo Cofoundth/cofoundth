@@ -32,7 +32,7 @@ const CARD =
 
 /** One description line: a bar centred in its line box (16px in 24, and 20px
  *  in the wide card's 28). */
-const LINE = "h-4 bg-line/50 deck-wide:h-5";
+const LINE = "h-4 bg-line/50 deck-wide:h-7";
 
 /** Chip widths in px, roughly the Thai labels at ToggleChip `sm`: "ทั้งหมด",
  *  "เกม", "การเงิน", "เรียนรู้", "ไลฟ์สไตล์". */
@@ -45,7 +45,7 @@ export default function Loading() {
       aria-hidden="true"
       className="flex h-dvh min-h-[34rem] flex-col overflow-clip in-data-[shell=public]:h-[calc(100dvh-4.0625rem)] md:in-data-[shell=public]:h-dvh animate-pulse motion-reduce:animate-none"
     >
-      <div className="mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-5">
+      <div className="relative mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-4">
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 sm:grid-cols-[1fr_auto_1fr]">
           <div className="col-start-1 row-start-1 h-9 w-9 justify-self-start rounded-[10px] bg-line/70 in-data-[shell=public]:invisible" />
           <div className="col-span-2 row-start-2 flex flex-wrap justify-center gap-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
@@ -76,17 +76,26 @@ export default function Loading() {
               style={{ "--depth": 0 } as CSSProperties}
             >
               <div className="min-h-0 min-w-0 flex-1 bg-line/50" />
-              {/* CARD_BODY's box: the description, then the footer row with
-                  "★ 4.3 (12)" and the comment count. */}
-              <div className="flex h-40 shrink-0 flex-col p-5 deck-wide:h-auto deck-wide:w-[clamp(16rem,30%,22rem)] deck-wide:justify-center deck-wide:p-6">
-                <div className="flex flex-col gap-2 pt-1">
+              {/* CARD_BODY's box: the description (the wide panel's
+                  headline), then the phone's footer row ("★ 4.3 (12)" and
+                  the comment count) or the wide panel's stat strip. */}
+              <div className="flex h-40 shrink-0 flex-col p-5 deck-wide:h-auto deck-wide:w-[clamp(17rem,34%,26rem)] deck-wide:justify-center deck-wide:p-8">
+                <div className="flex flex-col gap-2 pt-1 deck-wide:gap-3">
                   <div className={`${LINE} w-full`} />
                   <div className={`${LINE} w-11/12`} />
                   <div className={`${LINE} w-2/3`} />
                 </div>
-                <div className="mt-auto flex items-center gap-4 pt-3 deck-wide:mt-0 deck-wide:pt-5">
+                <div className="mt-auto flex items-center gap-4 pt-3 deck-wide:hidden">
                   <div className="h-5 w-20 rounded-full bg-line/70" />
                   <div className="h-5 w-10 rounded-full bg-line/50" />
+                </div>
+                <div className="mt-8 hidden grid-cols-2 gap-6 border-t border-line pt-6 deck-wide:grid">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="flex flex-col gap-1.5">
+                      <div className="h-[33px] w-14 rounded-lg bg-line/60" />
+                      <div className="h-3 w-20 rounded-full bg-line/50" />
+                    </div>
+                  ))}
                 </div>
               </div>
             </Card>
@@ -97,6 +106,9 @@ export default function Loading() {
             <div className="h-[46px] flex-1 rounded-full bg-line/70" />
           </div>
         </div>
+        {/* The logged-out legal line under the buttons: ProductShelf.tsx
+            legalLinks. */}
+        <div className="mx-auto mt-3 h-4 w-64 rounded-full bg-line/40 lg:mt-4 in-data-[shell=public]:hidden" />
       </div>
     </div>
   );

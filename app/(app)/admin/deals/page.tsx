@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth";
+import { SIGN_IN_LANDING } from "@/lib/auth-href";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
@@ -29,7 +30,7 @@ const OPEN_STATES = ["confirmed", "admin_review", "signed"];
 export default async function AdminDealsPage() {
   const user = await requireUser();
   const supabase = await createClient();
-  if (!(await isAdminUser(supabase, user))) redirect("/dashboard");
+  if (!(await isAdminUser(supabase, user))) redirect(SIGN_IN_LANDING);
 
   const admin = createAdminClient();
 

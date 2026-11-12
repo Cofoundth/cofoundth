@@ -16,7 +16,7 @@
 //
 // ── THE SHAPES IT COVERS ───────────────────────────────────────────────────
 //   plain          <h2> + mb-5                       (most sites)
-//   with action    heading ... "See all ->" row      (dashboard x4)
+//   with action    heading ... "See all ->" row
 //   with meta      heading ... muted count, baseline-aligned (matches)
 //   divider        border-b border-line pb-2         (settings, CreateOrgForm)
 //   tone="danger"  border-danger-line + text-danger-ink (settings danger zone)

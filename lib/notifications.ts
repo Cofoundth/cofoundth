@@ -24,7 +24,7 @@ export type NotifLike = {
 export function notifHref(n: NotifLike): string {
   switch (n.type) {
     case "profile_view":
-      return n.actor ? `/profile/${n.actor.slug ?? n.actor.id}` : "/dashboard";
+      return n.actor ? `/profile/${n.actor.slug ?? n.actor.id}` : "/notifications";
     case "comment":
     case "mention":
       return n.entityId ? `/community/${n.entityId}` : "/community";
@@ -47,8 +47,10 @@ export function notifHref(n: NotifLike): string {
     case "meetup_request_declined":
     case "meetup_invite":
       return n.data?.slug ? `/meetups/${n.data.slug}` : "/meetups";
+    // No dashboard any more (2026-11-12): an unknown kind opens the list it
+    // came from.
     default:
-      return "/dashboard";
+      return "/notifications";
   }
 }
 

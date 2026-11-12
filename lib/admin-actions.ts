@@ -23,7 +23,6 @@ async function requireAdmin(): Promise<
 function revalidateAll() {
   revalidatePath("/admin/users");
   revalidatePath("/admin/posts");
-  revalidatePath("/dashboard");
   revalidatePath("/community");
   revalidatePath("/browse");
 }

@@ -8,7 +8,7 @@
 //
 // The feed still refreshes on navigation. If a live indicator is wanted back,
 // re-add it as a server-action poll (like the notification bell now does).
-// Kept as a no-op so the dashboard/community callers don't need to change.
+// Kept as a no-op so its callers don't need to change.
 export function RealtimeRefresh(_props: {
   table: string;
   filter?: string;

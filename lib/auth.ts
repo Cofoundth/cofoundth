@@ -21,15 +21,12 @@ export const getUser = cache(async () => {
 // `next`, so signing in brings them back to it (signInAction and the OAuth
 // callback follow it once lib/safe-next.ts accepts it). Only the pathname is
 // known — x-pathname, set by proxy.ts — so a query is dropped, as it is on the
-// onboarding bounce in app/(app)/layout.tsx. /dashboard is the sign-in's own
-// default, so it is left off the URL. The ONE spelling of this redirect: the
+// onboarding bounce in app/(app)/layout.tsx. The ONE spelling of this redirect: the
 // (app) layout, requireUser and the settings page all use it, because layout
 // and page render concurrently and whichever redirects first wins.
 export async function loginHref(): Promise<string> {
   const pathname = (await headers()).get("x-pathname") ?? "";
-  return pathname !== "/dashboard" && safeNextPath(pathname)
-    ? authHref("/login", pathname)
-    : "/login";
+  return safeNextPath(pathname) ? authHref("/login", pathname) : "/login";
 }
 
 // Page-level auth guard. The (app) layout redirects logged-out users, but

@@ -120,6 +120,7 @@ import { getMyProductRatings } from "@/lib/product-ratings";
 import { ADD_PRODUCT_PATH, canComment, canRate } from "@/lib/roles";
 import { authHref } from "@/lib/auth-href";
 import { getLocale, tServer } from "@/lib/i18n-server";
+import { LEGAL_LINKS } from "@/lib/sidebar";
 import {
   EmptyState,
   LinkButton,
@@ -250,6 +251,7 @@ export async function ProductShelf({
     tPreviousImage,
     tNextImage,
     tSignIn,
+    tLegal,
   ] = await Promise.all([
     tServer("Try what the community built"),
     tServer("Add yours"),
@@ -297,7 +299,17 @@ export async function ProductShelf({
     tServer("Previous image"),
     tServer("Next image"),
     tServer("Sign in"),
+    tServer("Legal"),
   ]);
+  // Exactly the legal trio the app shell shows (one definition, lib/sidebar.ts).
+  // Not Contact: the privacy notice carries the contact channel PDPA asks for,
+  // and a fourth link pushed the line onto two on a 390px phone.
+  const legalTargets = await Promise.all(
+    LEGAL_LINKS.map(async (l) => ({
+      href: l.href,
+      label: await tServer(l.label),
+    })),
+  );
 
   // THE SUPPLY SIDE, and the page is now read by FOUR audiences, so this is a
   // four-way switch on `role` with an explicit `null` arm. Written as one
@@ -502,6 +514,37 @@ export async function ProductShelf({
       </div>
     ) : null;
 
+  // THE LEGAL LINKS, logged out only (the owner's call, 2026-11-11). With the
+  // site footer gone this page had no way to the privacy notice (PDPA), the
+  // terms or the code of conduct. A signed-in reader has the same trio in the
+  // app shell's rail and phone menu (lib/sidebar.ts LEGAL_LINKS, the same
+  // list), so they get nothing here.
+  //
+  // A small centred line under the Skip/Try buttons, at every width: one line
+  // from ~355px wide (the Thai trio is ~322px at gap-x-3, measured against the
+  // shipped fonts); a narrower phone wraps it onto two. It used to float in the
+  // bottom-left corner beside the buttons from lg, taking no height, and the
+  // owner rejected it there (2026-11-12): beside the row it read as a stray
+  // element, not as the page's foot. It IS the page's foot now, spaced as the
+  // mirror of the top line (THE EDGES MIRROR, at the root below): one gap under
+  // the buttons (mt-3, lg:mt-4), the container's bottom padding under it. At
+  // mt-2 / lg:mt-3 it sat nearer the buttons than the screen's edge and read
+  // as their caption (the owner flagged it, 2026-11-12). It costs the card
+  // 28px (32 from lg). Last in the DOM, so it is last in the tab order too.
+  const legalLinks =
+    user === null ? (
+      <nav
+        aria-label={tLegal}
+        className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-ink-muted lg:mt-4 lg:gap-x-4"
+      >
+        {legalTargets.map((l) => (
+          <Link key={l.href} href={l.href} className="hover:text-navy">
+            {l.label}
+          </Link>
+        ))}
+      </nav>
+    ) : null;
+
   // THE SPACING IS THE PAGE'S OWN: rhythm={false}, then explicit padding. It is
   // the exemption CLAUDE.md gives chat and article pages (the Section
   // primitive's `rhythm={false}` "for chat/article pages"; chat views "take no
@@ -560,6 +603,16 @@ export async function ProductShelf({
   // a big one 1120 left a third of it empty. ./loading.tsx copies these
   // strings so the skeleton's deck lands where the real one does: change the
   // two together.
+  //
+  // THE EDGES MIRROR. The top line sits one edge padding below the top of the
+  // screen and one gap above the card; the foot repeats both: the legal line
+  // (logged out) one gap under the buttons, and it, or a member's buttons, one
+  // edge padding above the bottom. Edge padding and gap are one number, 12px
+  // and 16 from lg (pt-3 pb-3 lg:pt-4 lg:pb-4 here, mt-3 lg:mt-4 on the deck's
+  // wrapper and on the legal line). Only the buttons sit closer to the card,
+  // 12px at every width (./ProductDeck.tsx), because they act on it. Until
+  // 2026-11-12 the bottom was lg:pb-5 under a top of lg:pt-4: 20px against 16,
+  // which nothing asked for.
   return (
     <div
       data-deck-page=""
@@ -567,7 +620,7 @@ export async function ProductShelf({
     >
       {pageTitle}
       <ProductFilterProvider items={products} initial={initialCategory}>
-        <div className="mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-5">
+        <div className="relative mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-4">
           {/* THE TOP LINE: the corners (leftCorner, rightCorner) and the
               category chips between them, on one line from 640px. On a phone
               the corners take the first line and the chips the whole second,
@@ -615,6 +668,7 @@ export async function ProductShelf({
               supplyCta={emptyStateCta}
             />
           </div>
+          {legalLinks}
         </div>
       </ProductFilterProvider>
     </div>

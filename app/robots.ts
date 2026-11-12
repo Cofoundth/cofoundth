@@ -30,7 +30,6 @@ export default function robots(): MetadataRoute.Robots {
           "/browse",
           "/community",
           "/companies",
-          "/dashboard",
           "/funding",
           "/interests",
           "/investor",

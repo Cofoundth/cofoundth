@@ -7,7 +7,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Everyone the viewer must not see and must not be seen by — both directions
-// merged into one Set for pool filtering (browse, dashboard, tickers).
+// merged into one Set for pool filtering (browse, the shelf, tickers).
 export async function getBlockedIds(userId: string): Promise<Set<string>> {
   const admin = createAdminClient();
   const { data, error } = await admin

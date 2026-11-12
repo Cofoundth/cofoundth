@@ -1,6 +1,6 @@
 // The ONE definition of which surfaces the soft launch shows.
 //
-// These flags hide ENTRY POINTS — nav items, dashboard blocks, a tab — and
+// These flags hide ENTRY POINTS — nav items, page blocks, a tab — and
 // nothing else. The routes stay live and reachable by direct URL on purpose:
 // there are real organizations, org_deals and investor_deals rows in
 // production, and lib/notifications.ts deep-links "deal_proposed" to
@@ -16,15 +16,14 @@
 // original position. That is the whole reason this is one imported module
 // rather than a boolean repeated in four files: the copies cannot drift.
 //
-// `meetupsNew` and `productsNew` are the odd ones out: they are MARKERS, not
-// surfaces. `companies` and `funding` decide whether a nav item exists at all;
-// these two only decorate an item that is already there with a "New" chip for
-// the soft launch. Nothing is hidden when either is false — the Meetups and
-// Products links render either way. (Said as two names rather than "the other
-// two": with four flags in the object that phrase no longer points anywhere.)
-// Set each false once that surface has stopped being news (a few weeks after
-// launch); a permanent "New" badge is just noise that teaches people to ignore
-// the chip.
+// `meetupsNew` is the odd one out: a MARKER, not a surface. `companies` and
+// `funding` decide whether a nav item exists at all; this one only decorates an
+// item that is already there with a "New" chip for the soft launch. Nothing is
+// hidden when it is false — the Meetups link renders either way. Set it false
+// once Meetups has stopped being news (a few weeks after launch); a permanent
+// "New" badge is just noise that teaches people to ignore the chip. (Products
+// had the same marker until 2026-11-12, when the deck became the page every
+// member lands on — a chip on your own landing is that noise.)
 //
 // `investorSignup` is a third kind again: not a surface and not a marker, but a
 // DOORWAY ONTO A ROLE. False removes the "Investor" option from the signup
@@ -48,7 +47,6 @@ export const FEATURES: {
   companies: boolean;
   funding: boolean;
   meetupsNew: boolean;
-  productsNew: boolean;
   investorSignup: boolean;
 } = {
   /** /orgs — the multi-user company directory, B2B connect/chat/deals. */
@@ -57,8 +55,6 @@ export const FEATURES: {
   funding: false,
   /** "New" chip on the Meetups nav item — a launch marker, not a surface. */
   meetupsNew: true,
-  /** "New" chip on the Products nav item — a launch marker, not a surface. */
-  productsNew: true,
   /** The "Investor" option in the signup picker. Existing accounts unaffected. */
   investorSignup: false,
 };

@@ -10,7 +10,7 @@
 //     Postgres, so a "test" row is a production row wearing a label, and the
 //     only thing standing between it and a real visitor is a WHERE clause
 //     somebody has to remember in every query that ever touches forum_posts —
-//     /products, the /community feed, /dashboard, search, notifications. Miss
+//     /products, the /community feed, search, notifications. Miss
 //     one and fake products are live on the real site. A file that does not
 //     exist in a production build cannot leak into a production query.
 //  2. A column added for test data never leaves. It outlives the test data,

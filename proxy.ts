@@ -4,6 +4,8 @@ import {
   ACCOUNT_ROLES,
   canRoleRead,
   isAppShellRoute,
+  landingFor,
+  owesOnboarding,
   parseAccountRole,
   roleHome,
   type AccountRole,
@@ -131,53 +133,55 @@ export async function proxy(request: NextRequest) {
       return parseAccountRole(data?.account_type);
     };
 
+    // Where a signed-in member asking for "/" (or the retired /dashboard) is
+    // sent: their role's landing — the product deck for a founder or an
+    // explorer, an investor's own home — or /onboarding first for a founder who
+    // still owes it, because the deck is a public page that
+    // app/(app)/layout.tsx's onboarding gate never sees. An unreadable profile
+    // sends no one to onboarding on a guess (the app layout still gates app
+    // routes), and its role falls open to founder.
+    const landingOf = async (userId: string): Promise<string> => {
+      const { data } = await session.supabase
+        .from("profiles")
+        .select("account_type, onboarded")
+        .eq("id", userId)
+        .maybeSingle();
+      const role = parseAccountRole(data?.account_type);
+      return data && owesOnboarding(role, !!data.onboarded)
+        ? "/onboarding"
+        : landingFor(role);
+    };
+
     // ---- Signed-in visitors don't need the front door --------------------
     // "/" is the logged-out front door, whichever arm it is on (the maker shelf,
     // or the pitch until the shelf can carry it). Someone who is already a member
-    // asking for it wants the app, so send them to their OWN home. Anonymous
-    // requests fall straight through — the check is gated on session.user, so
-    // the people the page is written for pay nothing here.
-    //
-    // This resolves the role HERE instead of sending everyone to /dashboard and
-    // letting the gate below forward whoever may not read it. The note that used
-    // to sit here argued the opposite — "one hop for the few beats one query for
-    // everyone" — on the premise that the only gated role was a handful of
-    // investor accounts. The pivot to very-early-stage makers breaks that
-    // premise: explorers are the growth target, not the exception, and /products
-    // is their home, so under the old arithmetic most new members would pay a
-    // 307 through a founder-only page to reach the one surface they can read, on
-    // the most-shared URL of the site. It also showed up in analytics as
-    // explorers "visiting the dashboard", which misleads whoever reads the
-    // funnel.
-    //
-    // Still correct now that /products is PUBLIC and outside isAppShellRoute:
-    // roleHome() is a plain string lookup, so this bounce does not care whether
-    // the destination is gated — an explorer lands on the shelf and it is served
-    // by app/(marketing)/layout.tsx, which renders the same AppShell with their
-    // own rail. The gate below is what stopped evaluating /products, not this.
-    //
-    // And it is NOT "one query for everyone": this branch is already gated on
-    // session.user, so anonymous landing traffic — overwhelmingly the majority,
-    // and the thing that note was protecting — still pays nothing. Founders
-    // (home === null) keep going to /dashboard; those who have not onboarded are
-    // then sent to /onboarding by app/(app)/layout.tsx, which only redirects
-    // onward to /login when there is no user, so the chain terminates either way.
+    // asking for it is sent to their LANDING (landingOf above): the product deck
+    // at its own address, /products, where the rail marks it, for a founder or
+    // an explorer; an investor's own home; /onboarding first for a founder who
+    // owes it. Anonymous requests fall straight through — the check is gated on
+    // session.user, so the people the page is written for pay nothing here.
     //
     // THE ONE EXCEPTION: a shared /?category=game is a link to a filtered shelf,
     // so a member follows it to the shelf, query intact, whatever their role. It
-    // is checked before readRole because the answer does not depend on the role.
-    if (session.user && path === "/") {
-      if (request.nextUrl.searchParams.has(PARAM)) {
+    // is checked before the lookup because the answer does not depend on it.
+    //
+    // /dashboard IS RETIRED (2026-11-12) — the deck is the first page a member
+    // sees. The path still arrives from old links, bookmarks and emails, so it
+    // is answered here, before any gate: a member goes where "/" sends them, and
+    // a signed-out visitor to sign in, which then lands them the same way.
+    if (path === "/dashboard" && !session.user) return bounce("/login");
+    if (session.user && (path === "/" || path === "/dashboard")) {
+      if (path === "/" && request.nextUrl.searchParams.has(PARAM)) {
         return bounce("/products", request.nextUrl.search);
       }
-      return bounce(roleHome(await readRole(session.user.id)) ?? "/dashboard");
+      return bounce(await landingOf(session.user.id));
     }
 
     // ---- Role route access -----------------------------------------------
     // This is the REAL gate, and it has to live here. app/(app)/layout.tsx also
     // checks, but Next does not re-render a shared layout on a client-side
     // navigation, so that redirect only fires on a full page load — an investor
-    // clicking through to /dashboard was served the founder dashboard. Verified
+    // clicking through was served the (since removed) founder dashboard. Verified
     // against the running app. Middleware runs on every request, including the
     // RSC fetches a soft navigation makes, so it is the only layer that sees
     // every navigation.

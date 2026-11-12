@@ -355,7 +355,6 @@ export async function updateProfileAction(
   // not re-render on client-side navigation. Without the "layout" scope the
   // rail keeps showing the old value until a full page load.
   revalidatePath("/", "layout");
-  revalidatePath("/dashboard");
   return { ok: true };
 }
 

@@ -505,6 +505,13 @@ their marketing site is a different domain; ours is one domain, so a member gets
   on any signed-in page: the legal trio (Privacy (PDPA) / Terms / Code of Conduct) lives
   as small links at the bottom of the full rail and the overlay drawer, and in the phone
   menu (`lib/sidebar.ts` `LEGAL_LINKS`). No copyright line or social icons in the app.
+- **There is no dashboard (removed 2026-11-12, the founder's call).** A sign-in lands on
+  the product deck, `/products` — `SIGN_IN_LANDING` in `lib/auth-href.ts`, chosen per
+  role by `landingFor()` in `lib/roles.ts`: the deck for founders and explorers, an
+  investor's own home. A founder who still owes onboarding goes through `/onboarding`
+  first. Products leads the founder rail where Dashboard was. `/dashboard` still
+  answers old links, bookmarks and emails: `proxy.ts` sends a member to their landing
+  and a signed-out visitor to `/login`.
 - **Three chromes, chosen by CSS breakpoints alone** (`lib/sidebar.ts` has the map):
 
   | width | chrome | content offset |

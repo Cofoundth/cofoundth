@@ -140,13 +140,13 @@ export default function SignupPage({
 
               <div className="space-y-3">
                 {/* `next` is the product or the deck when the sign-up started
-                    from one, and the button's /dashboard default otherwise.
-                    Either way the callback settles the destination from the
-                    role it just applied: an explorer sent to /dashboard goes
-                    straight to their home instead, and a founder who has not
-                    onboarded is sent to /onboarding with the page they were
-                    heading for as its `next` (lib/auth-href.ts
-                    throughOnboarding), so finishing it lands them there. */}
+                    from one, and absent otherwise. Either way the callback
+                    settles the destination from the role it just applied: with
+                    no `next`, the role's landing (the deck for a founder or an
+                    explorer), and a founder who has not onboarded is sent to
+                    /onboarding with the page they were heading for as its
+                    `next` (lib/auth-href.ts throughOnboarding), so finishing it
+                    lands them there. */}
                 <GoogleSignInButton role={accountType} next={next ?? undefined} />
                 {/* <LinkedInSignInButton role={accountType} next={next ?? undefined} /> */}
               </div>

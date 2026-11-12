@@ -134,8 +134,8 @@ export default async function CommunityPage({
         kind="posts"
       />
 
-      {/* Feed beside the ticker — the 5/4 split the dashboard already runs,
-          measured off the reference app's home. min-w-0 on both: grid items
+      {/* Feed beside the ticker — a 5/4 split, measured off the reference
+          app's home. min-w-0 on both: grid items
           refuse to shrink below their content without it. */}
       <div className="grid lg:grid-cols-9 gap-8 lg:items-start">
         <div className="lg:col-span-5 min-w-0">

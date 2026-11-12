@@ -348,8 +348,8 @@ export default async function ConnectionsPage({
 
   // ---- Who to meet, in the aside -------------------------------------
   // A connections page that only lists what has ALREADY happened is a blank
-  // page until something does. The same Complement Score the dashboard ranks
-  // with fills the second column with the page's actual next action, and it is
+  // page until something does. The Complement Score (lib/matching) fills the
+  // second column with the page's actual next action, and it is
   // there whether or not anyone has written to you yet. Personal tab only.
   const suggestions = await (async () => {
     if (tab !== "personal") return [];
@@ -574,7 +574,7 @@ export default async function ConnectionsPage({
           )}
         </section>
       ) : (
-        // Main + aside from xl, the dashboard's shape. Below xl the aside
+        // Main + aside from xl. Below xl the aside
         // stacks under the conversations, where it reads as the next thing to
         // do rather than a sidebar nobody scrolled to.
         <div className="xl:grid xl:grid-cols-12 xl:gap-8 xl:items-start">

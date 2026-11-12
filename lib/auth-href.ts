@@ -19,19 +19,30 @@ export function authHref(base: "/login" | "/signup", next: string): string {
 }
 
 /**
+ * Where a sign-in lands when nothing asked for anywhere else: the product
+ * deck. There is no dashboard any more (the owner's call, 2026-11-12) — the
+ * shelf is the first page a member sees, as it is for a visitor. A GATED role
+ * still lands on its own home instead (lib/roles.ts landingFor, which is what
+ * the sign-in paths call); this is the ungated founder's, and the explorer's
+ * home is the same page. /dashboard itself now redirects here (proxy.ts), so
+ * old links, bookmarks and emails keep working.
+ */
+export const SIGN_IN_LANDING = "/products";
+
+/**
  * `destination`, by way of onboarding: `/onboarding?next=<destination>`, which
  * onboarding's finish follows once the form is done. For a member who owes
  * onboarding (lib/roles.ts owesOnboarding) at the end of a sign-in.
  *
  * A destination that is already /onboarding is returned as it is, so nothing
  * is wrapped twice (signupAction already wraps a founder's `next` before it
- * reaches the callback). /dashboard is the finish's own default, so it is
- * left off the URL, as app/(app)/layout.tsx does. Like authHref this only
- * writes the parameter; the destination has already passed lib/safe-next.ts,
- * and onboarding checks the nested value again before following it.
+ * reaches the callback). SIGN_IN_LANDING is the finish's own default, so it is
+ * left off the URL. Like authHref this only writes the parameter; the
+ * destination has already passed lib/safe-next.ts, and onboarding checks the
+ * nested value again before following it.
  */
 export function throughOnboarding(destination: string): string {
   if (destination.split(/[?#]/, 1)[0] === "/onboarding") return destination;
-  if (destination === "/dashboard") return "/onboarding";
+  if (destination === SIGN_IN_LANDING) return "/onboarding";
   return `/onboarding?next=${encodeURIComponent(destination)}`;
 }

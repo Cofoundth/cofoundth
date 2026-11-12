@@ -1,10 +1,10 @@
-// Server-only: fetch + shape the merged post feed (forum_posts).
-// Used by the dashboard and /community so both render the identical feed.
+// Server-only: fetch + shape the merged post feed (forum_posts), as /community
+// renders it (the dashboard that shared it is gone, 2026-11-12).
 //
 // THE FEED IS POSTS AND MILESTONES. A product (kind 'show_and_tell') is added
 // quietly on /products/new and is never announced (CLAUDE.md, Language Rules),
-// so getFeedPosts — the /community feed, the /dashboard feed and the feed's
-// load-more — and searchPosts — the feed's search — all exclude the kind with
+// so getFeedPosts — the /community feed and its load-more — and searchPosts —
+// the feed's search — all exclude the kind with
 // FEED_EXCLUDES_KIND. The shelf reader further down is the one place a product
 // is listed. A maker who wants their product seen in the feed writes a post.
 
@@ -20,7 +20,7 @@ const BASE_POST_COLS =
   "id, author_id, title, content, kind, link_url, image_url, tags, created_at";
 
 // `image_urls` arrives in migration 0076. This list is NOT products-only — the
-// community feed, the dashboard and search all select it — so the column and
+// community feed and search both select it — so the column and
 // this line landed together in the same change; 0076 is applied.
 const POST_COLS = `${BASE_POST_COLS}, image_urls`;
 
@@ -470,7 +470,7 @@ export async function publicProductAuthors(
  *
  * Every row carries `rating`, the PUBLIC average + count (lib/product-ratings.ts,
  * migration 0079). It is attached here and not in shapePosts because only
- * products have one: the feed, the dashboard and search do not read it. It is
+ * products have one: the feed and search do not read it. It is
  * identical for every audience - no viewer's own score is ever on these rows -
  * and a failed ratings read makes every row UNRATED rather than failing the
  * shelf.

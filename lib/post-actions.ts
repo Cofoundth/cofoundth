@@ -36,7 +36,6 @@ const KINDS = ["post", "milestone"];
 const HTTP_LINK = /^https?:\/\/.+/;
 
 function revalidateFeeds(postId?: string) {
-  revalidatePath("/dashboard");
   revalidatePath("/community");
   // A show_and_tell post is also a row on the maker shelf, so deleting one
   // (deletePostAction) or moderating one has to drop the cache of both URLs

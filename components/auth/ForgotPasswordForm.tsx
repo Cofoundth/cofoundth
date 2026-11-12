@@ -4,20 +4,28 @@ import { useActionState } from "react";
 import { ArrowRight } from "lucide-react";
 import { resetPasswordAction, type ResetState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui";
+import { useT } from "@/lib/i18n-client";
 
 const INITIAL: ResetState = { step: "email" };
 
 export function ForgotPasswordForm() {
+  const tr = useT();
   const [state, formAction, isPending] = useActionState<ResetState, FormData>(
     resetPasswordAction,
     INITIAL,
   );
+  // resetPasswordAction returns English source strings — its own checks, and
+  // the Supabase failures a member can actually reach (a wrong or expired
+  // code, a rate limit), which it maps by error code — so they translate here
+  // like any label. An unmapped Supabase message has no entry and passes
+  // through in English (t() falls back to the string it was given).
+  const error = state.error ? tr(state.error) : null;
 
   if (state.step === "verify") {
     return (
       <form action={formAction} className="space-y-5 short:space-y-4">
         <div className="text-sm text-ink leading-relaxed">
-          We sent a 6-digit code to{" "}
+          {tr("We sent a 6-digit code to")}{" "}
           <span className="text-navy font-medium">{state.email}</span>.
         </div>
 
@@ -26,7 +34,7 @@ export function ForgotPasswordForm() {
             htmlFor="code"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
           >
-            Verification code
+            {tr("Verification code")}
           </label>
           <input
             id="code"
@@ -48,7 +56,7 @@ export function ForgotPasswordForm() {
             htmlFor="password"
             className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
           >
-            New password
+            {tr("New password")}
           </label>
           <input
             id="password"
@@ -59,17 +67,17 @@ export function ForgotPasswordForm() {
             minLength={8}
             className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
-          <p className="text-xs text-ink-muted mt-2">8+ characters.</p>
+          <p className="text-xs text-ink-muted mt-2">{tr("8+ characters.")}</p>
         </div>
 
-        {state.error && (
+        {error && (
           <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
-            {state.error}
+            {error}
           </div>
         )}
 
         <Button type="submit" size="lg" fullWidth disabled={isPending}>
-          {isPending ? "Resetting…" : "Reset password"}
+          {isPending ? tr("Resetting…") : tr("Reset password")}
           {!isPending && <ArrowRight className="w-4 h-4" />}
         </Button>
       </form>
@@ -83,7 +91,7 @@ export function ForgotPasswordForm() {
           htmlFor="email"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          Email
+          {tr("Email")}
         </label>
         <input
           id="email"
@@ -96,14 +104,14 @@ export function ForgotPasswordForm() {
         />
       </div>
 
-      {state.error && (
+      {error && (
         <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
-          {state.error}
+          {error}
         </div>
       )}
 
       <Button type="submit" size="lg" fullWidth disabled={isPending}>
-        {isPending ? "Sending…" : "Send reset code"}
+        {isPending ? tr("Sending…") : tr("Send reset code")}
         {!isPending && <ArrowRight className="w-4 h-4" />}
       </Button>
     </form>

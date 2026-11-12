@@ -31,8 +31,10 @@ export default async function AuthLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // To "/", which proxy.ts answers for a signed-in member with their landing
+  // (the deck; an investor's own home; onboarding if a founder still owes it).
   if (user) {
-    redirect("/dashboard");
+    redirect("/");
   }
 
   return (
