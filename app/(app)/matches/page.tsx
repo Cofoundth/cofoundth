@@ -11,7 +11,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { FEATURES } from "@/lib/features";
-import { ROLE_LABELS, INTENT_LABELS, complementScore } from "@/lib/matching";
+import { ROLE_LABELS, INTENT_LABELS } from "@/lib/matching";
 import { tServer, getLocale } from "@/lib/i18n-server";
 import { MEETUP_CATEGORIES } from "@/lib/meetups";
 import { provinceLabel } from "@/lib/provinces";
@@ -27,6 +27,7 @@ import {
   cardClasses,
 } from "@/components/ui";
 import { getBlockedIds } from "@/lib/blocking";
+import { declineInterestAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -167,7 +168,9 @@ export default async function ConnectionsPage({
       .from("interests")
       .select("id, note, created_at, to_profile_id")
       .eq("from_profile_id", user.id)
-      .eq("status", "pending")
+      // 'declined' too: "Not interested" is quiet (./actions.ts), so the
+      // sender's list must not change when it is used.
+      .in("status", ["pending", "declined"])
       .order("created_at", { ascending: false }),
   ]);
   const received = (receivedRaw ?? []).filter(
@@ -324,6 +327,7 @@ export default async function ConnectionsPage({
   // Labels used inside synchronous .map() callbacks — resolved here so those
   // callbacks stay sync (await is only valid in this async function body).
   const respondLabel = await tServer("Respond");
+  const notInterestedLabel = await tServer("Not interested");
   const pendingLabel = await tServer("pending");
   const newLabel = await tServer("new");
   const mutualLabel = await tServer("Mutual interest! Start the conversation.");
@@ -346,76 +350,6 @@ export default async function ConnectionsPage({
           );
   const openDirectoryLabel = await tServer("Open directory");
 
-  // ---- Who to meet, in the aside -------------------------------------
-  // A connections page that only lists what has ALREADY happened is a blank
-  // page until something does. The Complement Score (lib/matching) fills the
-  // second column with the page's actual next action, and it is
-  // there whether or not anyone has written to you yet. Personal tab only.
-  const suggestions = await (async () => {
-    if (tab !== "personal") return [];
-    const [{ data: meRow }, { data: pool }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "i_am, intent, looking_for, industry, stage, commitment, location",
-        )
-        .eq("id", user.id)
-        .single(),
-      supabase
-        .from("profiles")
-        .select(
-          "id, slug, full_name, photo_url, i_am, intent, looking_for, industry, stage, commitment, location",
-        )
-        .eq("profile_complete", true)
-        .eq("suspended", false)
-        // The matching POOL is founders only — explorers and investors are not
-        // candidates, and the gate in app/(app)/profile/[id]/actions.ts keeps
-        // them out of the matching MECHANISM too. Do not widen this pin.
-        .eq("account_type", "founder")
-        .not("is_bot", "is", true)
-        .neq("id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(40),
-    ]);
-    // Anyone already in the funnel — matched, or an interest pending either
-    // way — is not a suggestion; neither is a blocked pair.
-    const taken = new Set<string>([
-      ...(matches ?? []).map((m) =>
-        m.profile_a_id === user.id
-          ? (m.profile_b_id as string)
-          : (m.profile_a_id as string),
-      ),
-      ...received.map((r) => r.from_profile_id as string),
-      ...sent.map((x) => x.to_profile_id as string),
-    ]);
-    const me = {
-      i_am: (meRow?.i_am as string[] | null) ?? [],
-      intent: (meRow?.intent as string[] | null) ?? [],
-      looking_for: (meRow?.looking_for as string[] | null) ?? [],
-      industry: (meRow?.industry as string[] | null) ?? [],
-      stage: (meRow?.stage as string | null) ?? null,
-      commitment: (meRow?.commitment as string | null) ?? null,
-      location: (meRow?.location as string | null) ?? null,
-    };
-    return (pool ?? [])
-      .filter((f) => !taken.has(f.id as string) && !blocked.has(f.id as string))
-      .map((f) => ({
-        row: f,
-        fit: complementScore(me, {
-          i_am: (f.i_am as string[] | null) ?? [],
-          intent: (f.intent as string[] | null) ?? [],
-          looking_for: (f.looking_for as string[] | null) ?? [],
-          industry: (f.industry as string[] | null) ?? [],
-          stage: (f.stage as string | null) ?? null,
-          commitment: (f.commitment as string | null) ?? null,
-          location: (f.location as string | null) ?? null,
-        }).score,
-      }))
-      .sort((a, b) => b.fit - a.fit)
-      .slice(0, 4);
-  })();
-  const whoToMeetLabel = await tServer("Founders you should meet");
-  const browseLabel = await tServer("Browse");
 
   const tabItems = [
     { key: "personal", href: "/matches", label: await tServer("Personal") },
@@ -574,11 +508,12 @@ export default async function ConnectionsPage({
           )}
         </section>
       ) : (
-        // Main + aside from xl. Below xl the aside
-        // stacks under the conversations, where it reads as the next thing to
-        // do rather than a sidebar nobody scrolled to.
-        <div className="xl:grid xl:grid-cols-12 xl:gap-8 xl:items-start">
-          <div className="xl:col-span-8">
+        // ONE column, the page's full width (the owner's call, 2026-11-13).
+        // The "Founders you should meet" aside is gone: the directory is one
+        // click away in the rail, and the requests and conversations are what
+        // this page is for.
+        <div>
+          <div>
             {/* ---- Requests (pending interest) ---- */}
             {hasRequests && (
               <section className="mb-14">
@@ -602,35 +537,64 @@ export default async function ConnectionsPage({
                     >
                       {received.map((r) => {
                         const p = profiles.get(r.from_profile_id as string);
+                        const href = profileHref(p, r.from_profile_id as string);
+                        // Two answers, so the row is no longer one link: the
+                        // profile (where Respond leads) and "Not interested"
+                        // (./actions.ts, quiet) sit side by side, and a form
+                        // cannot nest inside an <a>.
                         return (
-                          <Link
+                          <div
                             key={r.id as string}
-                            href={profileHref(p, r.from_profile_id as string)}
-                            className="flex items-start gap-4 p-5 hover:bg-cream transition-colors group"
+                            className="flex items-start gap-4 p-5 hover:bg-cream transition-colors"
                           >
-                            <Avatar
-                              name={p?.full_name as string}
-                              url={p?.photo_url as string | null}
-                              size="md"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-serif text-lg text-navy group-hover:text-gold-ink transition-colors">
-                                {displayName(p)}
+                            <Link
+                              href={href}
+                              className="flex min-w-0 flex-1 items-start gap-4 group"
+                            >
+                              <Avatar
+                                name={p?.full_name as string}
+                                url={p?.photo_url as string | null}
+                                size="md"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-serif text-lg text-navy group-hover:text-gold-ink transition-colors">
+                                  {displayName(p)}
+                                </div>
+                                <div className="text-xs text-ink-muted">
+                                  {roleLine(p) || "—"}
+                                </div>
+                                {r.note ? (
+                                  <p className="text-sm text-ink mt-1.5 line-clamp-2">
+                                    “{r.note as string}”
+                                  </p>
+                                ) : null}
                               </div>
-                              <div className="text-xs text-ink-muted">
-                                {roleLine(p) || "—"}
-                              </div>
-                              {r.note ? (
-                                <p className="text-sm text-ink mt-1.5 line-clamp-2">
-                                  “{r.note as string}”
-                                </p>
-                              ) : null}
+                            </Link>
+                            <div className="mt-1 flex shrink-0 flex-col items-end gap-2">
+                              <Link
+                                href={href}
+                                tabIndex={-1}
+                                aria-hidden="true"
+                                className="text-xs text-navy inline-flex items-center gap-1"
+                              >
+                                {respondLabel}
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </Link>
+                              <form
+                                action={declineInterestAction.bind(
+                                  null,
+                                  r.id as string,
+                                )}
+                              >
+                                <button
+                                  type="submit"
+                                  className="text-xs text-ink-muted transition-colors hover:text-navy"
+                                >
+                                  {notInterestedLabel}
+                                </button>
+                              </form>
                             </div>
-                            <span className="text-xs text-navy inline-flex items-center gap-1 shrink-0 mt-1">
-                              {respondLabel}
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </span>
-                          </Link>
+                          </div>
                         );
                       })}
                     </Card>
@@ -797,54 +761,6 @@ export default async function ConnectionsPage({
               )}
             </section>
           </div>
-
-          <aside className="mt-14 xl:col-span-4 xl:mt-0">
-            {/* items-baseline via className: the action row defaults to
-                items-center, and this row shipped baseline-aligned. */}
-            <SectionHeading
-              title={whoToMeetLabel}
-              action={{ href: "/browse", label: browseLabel }}
-              className="items-baseline mb-5"
-            />
-            {suggestions.length === 0 ? (
-              <EmptyState
-                padding="md"
-                dense
-                description={await tServer("No founders to show yet")}
-              />
-            ) : (
-              <Card
-                padding="none"
-                className="divide-y divide-line overflow-hidden"
-              >
-                {suggestions.map(({ row: f }) => (
-                  <Link
-                    key={f.id as string}
-                    href={`/profile/${(f.slug as string) ?? (f.id as string)}`}
-                    className="flex items-center gap-3 p-4 hover:bg-cream transition-colors group"
-                  >
-                    <Avatar
-                      name={f.full_name as string}
-                      url={f.photo_url as string | null}
-                      size="sm"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm text-navy font-medium truncate group-hover:text-gold-ink transition-colors">
-                        {(f.full_name as string) ?? "Founder"}
-                      </div>
-                      <div className="text-xs text-ink-muted truncate">
-                        {((f.i_am as string[] | null) ?? [])
-                          .map((r) => t(ROLE_LABELS[r], locale))
-                          .filter(Boolean)
-                          .join(" · ") || "—"}
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-navy transition-colors" />
-                  </Link>
-                ))}
-              </Card>
-            )}
-          </aside>
         </div>
       )}
     </Section>

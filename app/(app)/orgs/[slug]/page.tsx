@@ -24,6 +24,7 @@ import { Avatar } from "@/components/Avatar";
 import {
   Card,
   LinkButton,
+  Section,
   SectionHeading,
   VerifiedBadge,
   buttonClasses,
@@ -256,8 +257,11 @@ export default async function OrgPage({ params }: Props) {
   // phone the one action this page exists for is a long scroll away. Reordering
   // the aside above the content would drag the team list and the "no action
   // available" states above the pitch too, so instead a compact bar mirrors the
-  // aside's primary action on small screens only. It is `lg:hidden`, so the
-  // desktop two-column layout is byte-for-byte untouched.
+  // aside's primary action on small screens only. It is `lg:hidden`, and the
+  // two-column layout (aside beside the hero) starts at `lg` too. The two MUST
+  // share a breakpoint: when the grid split at `xl` and the bar hid at `lg`,
+  // 1024-1279 had neither — one long column with the aside, and the page's one
+  // action, at the bottom, and no bar to stand in for it (2026-11-13).
   //
   // The bar LINKS to the aside (#connect) rather than re-rendering
   // <ConnectActions>: that component owns transition state, so a second copy
@@ -301,7 +305,11 @@ export default async function OrgPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-10 py-[88px]">
+    // App rhythm (py-14), not the marketing 88px. The className keeps this
+    // page's own phone gutter (16px below sm, 24px from sm, Section's 40px from
+    // lg) on purpose: changing it would be a phone layout change nobody
+    // measured (2026-11-13).
+    <Section className="px-4 sm:px-6">
       <Link
         href="/orgs"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-navy mb-8"
@@ -310,84 +318,92 @@ export default async function OrgPage({ params }: Props) {
         {await tServer("Companies")}
       </Link>
 
-      {/* ---- Hero ---- */}
-      {/* p-6 is the md tier; sm:p-8 lg:p-10 are breakpoint variants, which
-          never conflict with the base pad (see Card's header). */}
-      <Card as="header" className="sm:p-8 lg:p-10 mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
-          {org.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={org.logo_url as string}
-              alt={org.name as string}
-              className="w-24 h-24 object-cover border border-line shrink-0 rounded-xl"
-            />
-          ) : (
-            <div className="w-24 h-24 bg-white border border-line flex items-center justify-center shrink-0 rounded-xl">
-              <span className="font-serif text-3xl text-navy">
-                {(org.name as string).trim().charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-d2 mb-2 flex items-center gap-2.5 flex-wrap">
-              {org.name as string}
-              {org.verified && (
-                <VerifiedBadge
-                  label={await tServer("Verified company")}
-                  size="lg"
-                />
-              )}
-              {stageLabel && (
-                <span className="text-xs uppercase tracking-[0.15em] px-2 py-1 border border-navy text-navy bg-cream font-sans rounded-full">
-                  {stageLabel}
-                </span>
-              )}
-            </h1>
-
-            {org.tagline && (
-              <p className="text-lg text-ink mt-1.5">{org.tagline as string}</p>
-            )}
-
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-muted">
-              {org.location && (
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-gold-ink" />
-                  {org.location as string}
-                </span>
-              )}
-              {productUrl && (
-                <a
-                  href={productUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 hover:text-navy"
-                >
-                  <ExternalLink className="w-4 h-4 text-gold-ink" />
-                  {await tServer("View product")}
-                </a>
-              )}
-              {org.website && (
-                <a
-                  href={org.website as string}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 hover:text-navy"
-                >
-                  <ExternalLink className="w-4 h-4 text-gold-ink" />
-                  {await tServer("Website")}
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <div className="grid xl:grid-cols-12 gap-8 xl:gap-10">
+      {/* The hero sits IN the main column (2026-11-13), so from lg the aside
+          starts at the top of the page beside it. DOM order is still hero →
+          sections → aside, so below lg the only change is the top padding
+          (88 → 56px). */}
+      <div className="grid lg:grid-cols-12 gap-8 xl:gap-10">
         {/* ---- Main column ---- */}
-        <div className="xl:col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-6 min-w-0">
+          {/* ---- Hero ---- */}
+          {/* p-6 is the md tier; sm:p-8 is the lg tier as a breakpoint variant,
+              which never conflicts with the base pad (see Card's header). The
+              old lg:p-10 was off-menu and dropped (2026-11-13). mb-8 inside a
+              space-y-6 column on purpose: page-header block → content is mb-8
+              (32px) in the rhythm table, and space-y-6's :where() sibling rule
+              loses to the explicit class. */}
+          <Card as="header" className="sm:p-8 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
+              {org.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={org.logo_url as string}
+                  alt={org.name as string}
+                  className="w-24 h-24 object-cover border border-line shrink-0 rounded-xl"
+                />
+              ) : (
+                <div className="w-24 h-24 bg-white border border-line flex items-center justify-center shrink-0 rounded-xl">
+                  <span className="font-serif text-3xl text-navy">
+                    {(org.name as string).trim().charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-d2 mb-2 flex items-center gap-2.5 flex-wrap">
+                  {org.name as string}
+                  {org.verified && (
+                    <VerifiedBadge
+                      label={await tServer("Verified company")}
+                      size="lg"
+                    />
+                  )}
+                  {stageLabel && (
+                    <span className="text-xs uppercase tracking-[0.15em] px-2 py-1 border border-navy text-navy bg-cream font-sans rounded-full">
+                      {stageLabel}
+                    </span>
+                  )}
+                </h1>
+
+                {org.tagline && (
+                  <p className="text-lg text-ink mt-1.5">{org.tagline as string}</p>
+                )}
+
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-muted">
+                  {org.location && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-gold-ink" />
+                      {org.location as string}
+                    </span>
+                  )}
+                  {productUrl && (
+                    <a
+                      href={productUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 hover:text-navy"
+                    >
+                      <ExternalLink className="w-4 h-4 text-gold-ink" />
+                      {await tServer("View product")}
+                    </a>
+                  )}
+                  {org.website && (
+                    <a
+                      href={org.website as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 hover:text-navy"
+                    >
+                      <ExternalLink className="w-4 h-4 text-gold-ink" />
+                      {await tServer("Website")}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+
           {pitch && (
-            <Card as="section" className="sm:p-8 lg:p-10">
+            <Card as="section" className="sm:p-8">
               <SectionHeading
                 title={await tServer("What this company does")}
               />
@@ -398,7 +414,7 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {productImages.length > 0 && (
-            <Card as="section" className="sm:p-8 lg:p-10">
+            <Card as="section" className="sm:p-8">
               <SectionHeading title={await tServer("Product")} />
               <div className="grid grid-cols-2 gap-3">
                 {productImages.map((src, i) => (
@@ -426,21 +442,21 @@ export default async function OrgPage({ params }: Props) {
           )}
 
           {industry.length > 0 && (
-            <Card as="section" className="sm:p-8 lg:p-10">
+            <Card as="section" className="sm:p-8">
               <SectionHeading title={await tServer("Industry")} />
               <Chips items={industry} />
             </Card>
           )}
 
           {capabilities.length > 0 && (
-            <Card as="section" className="sm:p-8 lg:p-10">
+            <Card as="section" className="sm:p-8">
               <SectionHeading title={await tServer("What we offer")} />
               <Chips items={capabilities} />
             </Card>
           )}
 
           {seeking.length > 0 && (
-            <Card as="section" className="sm:p-8 lg:p-10">
+            <Card as="section" className="sm:p-8">
               <SectionHeading
                 title={await tServer("Partnerships we're seeking")}
               />
@@ -450,9 +466,12 @@ export default async function OrgPage({ params }: Props) {
         </div>
 
         {/* ---- Sidebar — connect + deals + team ---- */}
-        <aside className="xl:col-span-4 space-y-5">
+        <aside className="lg:col-span-4 space-y-5 min-w-0">
           {connState !== "self" && mayWrite && (
-            <Card id="connect" className="scroll-mt-6">
+            // scroll-mt-20 below md: the phone's sticky top bar (64.8px) would
+            // cover the card's top at 24px. From md there is no top bar
+            // (2026-11-13).
+            <Card id="connect" className="scroll-mt-20 md:scroll-mt-6">
               <SectionHeading title={await tServer("Connect")} />
               <ConnectActions
                 targetOrgId={org.id as string}
@@ -608,6 +627,6 @@ export default async function OrgPage({ params }: Props) {
           </div>
         </>
       )}
-    </div>
+    </Section>
   );
 }

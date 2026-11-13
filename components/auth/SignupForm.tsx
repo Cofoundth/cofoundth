@@ -1,14 +1,21 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { useActionState, useId, useState, type FormEvent } from "react";
 import { ArrowRight, Check, Eye, EyeOff, Mail, X } from "lucide-react";
 import { signupAction, type SignupState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui";
 import { FEATURES } from "@/lib/features";
 import { useT } from "@/lib/i18n-client";
 import type { AccountRole } from "@/lib/roles";
+import {
+  hasNonAscii,
+  validateEmail,
+  validateName,
+} from "@/lib/signup-validation";
 
 const INITIAL: SignupState = { step: "credentials" };
+
+type Field = "firstName" | "lastName" | "email" | "password" | "confirmPassword";
 
 // Client-side mirror of validatePassword() in app/(auth)/actions.ts.
 // Server re-checks on submit; this is for inline feedback only.
@@ -164,9 +171,25 @@ export function SignupForm({
 }) {
   const tr = useT();
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  // A field's message shows once it has been left (blur) or the form has been
+  // submitted, and then follows every keystroke. Before that, typing a first
+  // letter would already shout "At least 2 letters".
+  const [touched, setTouched] = useState<Record<Field, boolean>>({
+    firstName: false,
+    lastName: false,
+    email: false,
+    password: false,
+    confirmPassword: false,
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const touch = (f: Field) => () =>
+    setTouched((t) => (t[f] ? t : { ...t, [f]: true }));
 
   if (state.step === "check_email") {
     return (
@@ -198,23 +221,104 @@ export function SignupForm({
   const passwordsMismatch =
     confirmPassword.length > 0 && password !== confirmPassword;
 
+  // English messages (translation keys) from lib/signup-validation.ts, the
+  // same module signupAction re-checks with. A password that fails its rules
+  // is caught like every other field (the owner, 2026-11-13: "password still
+  // not catch" — it had only the grey checklist, no red border, no message):
+  // the label row names the problem and the unmet rules below turn red. Thai
+  // characters get their own message, because that is WHY the letter rule
+  // fails for someone whose keyboard is on the Thai layout.
+  const errors: Record<Field, string | null> = {
+    firstName: validateName(firstName, { required: true }),
+    lastName: validateName(lastName, { required: false }),
+    email: validateEmail(email),
+    password: !password
+      ? "Enter a password"
+      : allRulesPass
+        ? null
+        : hasNonAscii(password)
+          ? "Thai keyboard on?"
+          : "Not strong enough",
+    confirmPassword: confirmPassword ? null : "Confirm your password",
+  };
+  const shown = (f: Field) =>
+    (touched[f] || submitted) && errors[f] ? errors[f] : null;
+  // Empty password/confirm only speak after a submit: blurring an empty
+  // password on the way to the email field is not a mistake yet.
+  const shownEmpty = (f: "password" | "confirmPassword") =>
+    submitted ? errors[f] : null;
+  const fieldClass = (f: Field, msg: string | null) =>
+    `w-full px-4 py-3 border bg-white text-ink focus:outline-none rounded-xl ${
+      msg
+        ? "border-danger-line focus:border-danger-ink"
+        : "border-line focus:border-navy"
+    }${f === "password" ? " pr-11" : ""}`;
+  const a11y = (f: Field, msg: string | null) =>
+    msg
+      ? { "aria-invalid": true as const, "aria-describedby": `${f}-error` }
+      : {};
+
+  const firstNameMsg = shown("firstName");
+  const lastNameMsg = shown("lastName");
+  const emailMsg = shown("email");
+  // Empty: only after a submit (shownEmpty). Typed but failing its rules:
+  // once the field has been left, or after a submit, like the other fields.
+  const passwordMsg = password ? shown("password") : shownEmpty("password");
+  const confirmMsg = shownEmpty("confirmPassword");
+  // A Thai keyboard layout types Thai characters into the password, which
+  // fail the letter rule and cannot be retyped at sign-in on another layout.
+  // While the field is still being typed in (no error shown yet), or when the
+  // password passes its rules anyway, this is a WARNING, not an error: it
+  // does not block, and it is navy + weight because the palette has no
+  // warning hue. Once the field is flagged the same words are the error.
+  const keyboardWarning = !passwordMsg && hasNonAscii(password);
+
+  // The button is never disabled for invalid input: a disabled button cannot
+  // explain itself, which was the bug ("s" / "s@s" got a dead Continue and no
+  // word why). Instead a submit with anything invalid is stopped here, every
+  // message is revealed, and focus goes to the first bad field in DOM order.
+  // When everything passes this does nothing and action={formAction} runs.
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const order: [Field, boolean][] = [
+      ["firstName", !!errors.firstName],
+      ["lastName", !!errors.lastName],
+      ["email", !!errors.email],
+      ["password", !allRulesPass],
+      ["confirmPassword", !passwordsMatch],
+    ];
+    const firstBad = order.find(([, bad]) => bad);
+    if (!firstBad) return;
+    e.preventDefault();
+    setSubmitted(true);
+    document.getElementById(firstBad[0])?.focus();
+  };
+
   // space-y-4 and the two passwords side by side: the page has to fit one
   // screen at laptop heights, including while the password rules are showing.
   // Stacked below 640px, where side by side they were ~150px fields with the
   // rules wrapped to three lines under one of them; a phone scrolls anyway.
   return (
-    <form action={formAction} className="space-y-4 short:space-y-3">
+    // noValidate: the native bubbles would duplicate the label-row messages
+    // (and type=email passes "s@s" anyway). required/minLength stay as
+    // semantics (screen readers announce "required"); note noValidate turns
+    // the bubbles off without JS too, which is fine because signupAction
+    // re-validates every field with the same module.
+    <form
+      action={formAction}
+      noValidate
+      onSubmit={onSubmit}
+      className="space-y-4 short:space-y-3"
+    >
       <input type="hidden" name="account_type" value={accountType} />
       {next && <input type="hidden" name="next" value={next} />}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label
+          <LabelRow
             htmlFor="firstName"
-            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-          >
-            {tr("First name")}
-          </label>
+            label={tr("First name")}
+            error={firstNameMsg && tr(firstNameMsg)}
+          />
           <input
             id="firstName"
             name="firstName"
@@ -222,51 +326,61 @@ export function SignupForm({
             required
             autoComplete="given-name"
             autoFocus
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            onBlur={touch("firstName")}
+            {...a11y("firstName", firstNameMsg)}
+            className={fieldClass("firstName", firstNameMsg)}
           />
         </div>
         <div>
-          <label
+          <LabelRow
             htmlFor="lastName"
-            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-          >
-            {tr("Last name")}
-          </label>
+            label={tr("Last name")}
+            error={lastNameMsg && tr(lastNameMsg)}
+          />
           <input
             id="lastName"
             name="lastName"
             type="text"
             autoComplete="family-name"
-            className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            onBlur={touch("lastName")}
+            {...a11y("lastName", lastNameMsg)}
+            className={fieldClass("lastName", lastNameMsg)}
           />
         </div>
       </div>
 
       <div>
-        <label
+        <LabelRow
           htmlFor="email"
-          className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-        >
-          {tr("Email")}
-        </label>
+          label={tr("Email")}
+          error={emailMsg && tr(emailMsg)}
+        />
         <input
           id="email"
           name="email"
           type="email"
           required
           autoComplete="email"
-          className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={touch("email")}
+          {...a11y("email", emailMsg)}
+          className={fieldClass("email", emailMsg)}
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label
+          <LabelRow
             htmlFor="password"
-            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-          >
-            {tr("Password")}
-          </label>
+            label={tr("Password")}
+            error={passwordMsg && tr(passwordMsg)}
+            warning={keyboardWarning ? tr("Thai keyboard on?") : null}
+          />
           <div className="relative">
             <input
               id="password"
@@ -277,7 +391,9 @@ export function SignupForm({
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 pr-11 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
+              onBlur={touch("password")}
+              {...a11y("password", passwordMsg)}
+              className={fieldClass("password", passwordMsg)}
             />
             <button
               type="button"
@@ -296,20 +412,31 @@ export function SignupForm({
 
           {password.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-              <RuleRow ok={rules.length} label={tr("At least 8 characters")} />
-              <RuleRow ok={rules.letter} label={tr("Contains a letter")} />
-              <RuleRow ok={rules.number} label={tr("Contains a number")} />
+              <RuleRow
+                ok={rules.length}
+                flagged={!!passwordMsg}
+                label={tr("At least 8 characters")}
+              />
+              <RuleRow
+                ok={rules.letter}
+                flagged={!!passwordMsg}
+                label={tr("Contains a letter")}
+              />
+              <RuleRow
+                ok={rules.number}
+                flagged={!!passwordMsg}
+                label={tr("Contains a number")}
+              />
             </ul>
           )}
         </div>
 
         <div>
-          <label
+          <LabelRow
             htmlFor="confirmPassword"
-            className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
-          >
-            {tr("Confirm password")}
-          </label>
+            label={tr("Confirm password")}
+            error={confirmMsg && tr(confirmMsg)}
+          />
           <input
             id="confirmPassword"
             name="confirmPassword"
@@ -319,8 +446,10 @@ export function SignupForm({
             minLength={8}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            onBlur={touch("confirmPassword")}
+            {...a11y("confirmPassword", confirmMsg)}
             className={`w-full px-4 py-3 border bg-white text-ink focus:outline-none ${
-              passwordsMismatch
+              passwordsMismatch || confirmMsg
                 ? "border-danger-line focus:border-danger-ink"
                 : passwordsMatch
                   ? "border-line focus:border-line"
@@ -342,16 +471,11 @@ export function SignupForm({
 
       {state.error && (
         <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
-          {state.error}
+          {tr(state.error)}
         </div>
       )}
 
-      <Button
-        type="submit"
-        size="lg"
-        fullWidth
-        disabled={isPending || !allRulesPass || !passwordsMatch}
-      >
+      <Button type="submit" size="lg" fullWidth disabled={isPending}>
         {isPending ? tr("Creating account…") : tr("Continue")}
         {!isPending && <ArrowRight className="w-4 h-4" />}
       </Button>
@@ -359,11 +483,59 @@ export function SignupForm({
   );
 }
 
-function RuleRow({ ok, label }: { ok: boolean; label: string }) {
+/**
+ * A field's label with its message on the SAME row, right-aligned. Not under
+ * the field: the sign-up card has to fit one screen with no scrolling at
+ * 930x600 with the password rules showing, and there is ~52px to spare, so a
+ * message must not add height (2026-11-13). The error span is the input's
+ * aria-describedby target (`{htmlFor}-error`). A warning (the password's
+ * "Thai keyboard on?") is navy + weight, never danger: it does not block.
+ */
+function LabelRow({
+  htmlFor,
+  label,
+  error,
+  warning,
+}: {
+  htmlFor: Field;
+  label: string;
+  error: string | null;
+  warning?: string | null;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <label
+        htmlFor={htmlFor}
+        className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
+      >
+        {label}
+      </label>
+      {error ? (
+        <span id={`${htmlFor}-error`} className="text-xs text-danger-ink text-right">
+          {error}
+        </span>
+      ) : warning ? (
+        <span className="text-xs text-navy font-medium text-right">{warning}</span>
+      ) : null}
+    </div>
+  );
+}
+
+/** One password rule. `flagged` (the field has been left or submitted while
+ *  failing) turns an UNMET rule red, so the reader sees which one to fix. */
+function RuleRow({
+  ok,
+  flagged = false,
+  label,
+}: {
+  ok: boolean;
+  flagged?: boolean;
+  label: string;
+}) {
   return (
     <li
       className={`inline-flex items-center gap-2 ${
-        ok ? "text-gold-ink" : "text-ink-muted"
+        ok ? "text-gold-ink" : flagged ? "text-danger-ink" : "text-ink-muted"
       }`}
     >
       {ok ? (

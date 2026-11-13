@@ -50,7 +50,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select("title")
     .eq("slug", slug)
     .maybeSingle();
-  return { title: data?.title ? `${data.title} · Cofoundee` : "Meetup" };
+  // Bare title — the root layout's "%s · Cofoundee" template adds the suffix.
+  return { title: data?.title ?? "Meetup" };
 }
 
 type AttendeeRow = {
@@ -250,7 +251,7 @@ export default async function MeetupDetailPage({ params }: Props) {
   const tPrivate = await tServer("Private");
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-14">
       <div className="flex items-center justify-between mb-8">
         <Link
           href="/meetups"

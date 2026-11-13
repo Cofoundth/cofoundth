@@ -1801,5 +1801,22 @@
   "Pick all that apply": "เลือกได้หลายอัน",
   "Pick where it runs.": "เลือกว่าใช้งานบนอะไร",
   "Runs on {platforms}": "ใช้งานบน {platforms}",
-  "See the comment": "ดูคอมเมนต์"
+  "See the comment": "ดูคอมเมนต์",
+  "Not interested": "ไม่สนใจ",
+  "Enter your first name": "กรอกชื่อจริง",
+  "At least 2 letters": "อย่างน้อย 2 ตัวอักษร",
+  "Letters only": "ใช้ได้เฉพาะตัวอักษร",
+  "Too long": "ยาวเกินไป",
+  "Enter your email": "กรอกอีเมล",
+  "Not a valid email": "อีเมลไม่ถูกต้อง",
+  "Enter a password": "ตั้งรหัสผ่าน",
+  "Confirm your password": "ยืนยันรหัสผ่านอีกครั้ง",
+  "Thai keyboard on?": "แป้นพิมพ์เป็นภาษาไทยอยู่?",
+  "All fields are required.": "กรอกข้อมูลให้ครบ",
+  "Password is too long (max 72 characters).": "รหัสผ่านยาวเกินไป (ไม่เกิน 72 ตัวอักษร)",
+  "Password must include a letter.": "รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษ",
+  "Password must include a number.": "รหัสผ่านต้องมีตัวเลข",
+  "Passwords don't match.": "รหัสผ่านไม่ตรงกัน",
+  "This email is already registered. Sign in instead, or use forgot password.": "อีเมลนี้สมัครไว้แล้ว เข้าสู่ระบบ หรือกดลืมรหัสผ่าน",
+  "Not strong enough": "ยังไม่ครบเงื่อนไข"
 }

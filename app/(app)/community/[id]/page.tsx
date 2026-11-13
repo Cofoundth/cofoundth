@@ -446,7 +446,7 @@ export default async function PostPage({ params, searchParams }: Props) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-[88px]">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 py-14">
       <Link
         href="/community"
         className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"

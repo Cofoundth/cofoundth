@@ -266,6 +266,13 @@ export function MeetupsClient({
       ) : !hasUpcoming ? (
         <EmptyState
           icon={Calendar}
+          // THE REST OF THE SCREEN, its content centred (the owner's call,
+          // 2026-11-13): a 300px card under the header left half an empty page
+          // under it. The offsets are what sits above and below it — the
+          // Section's 56px top and bottom padding, the header row (~41px) and
+          // its mb-8 — plus the phone's 65px top bar below md. Nothing renders
+          // under this branch (past meetups live in the other one).
+          className="grid place-content-center min-h-[calc(100dvh-16rem)] md:min-h-[calc(100dvh-12rem)]"
           title={tr("No meetups on the calendar")}
           // The description follows the BUTTON, not the other way round. The
           // founder copy is a call to host, and with canHost false there is no

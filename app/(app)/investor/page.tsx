@@ -50,7 +50,7 @@ export default async function InvestorPage({
     : "";
 
   return (
-    <div className="px-6 lg:px-10 py-[88px]">
+    <div className="px-6 lg:px-10 py-14">
         {editing ? (
           <div className="max-w-[640px] mx-auto">
             <h1 className="text-d2 mb-2">

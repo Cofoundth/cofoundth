@@ -57,7 +57,7 @@ export function OnboardingRoleSwitch({
 
   if (initialRole === "investor") {
     return (
-      <div className="max-w-2xl mx-auto px-6 lg:px-10 py-[88px]">
+      <div className="max-w-2xl mx-auto px-6 lg:px-10 py-14">
         <p className="text-ink-muted leading-relaxed mb-6">
           {tr(
             "Tell us how you invest. This is separate from the founder profile — no company or co-founder details needed.",
@@ -72,7 +72,7 @@ export function OnboardingRoleSwitch({
 
   return (
     <>
-      <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-[88px]">
+      <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-14">
         <div className="bg-white border border-line p-6 lg:p-8 mb-6 rounded-xl">
           <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-4">
             {tr("Profile photo")}

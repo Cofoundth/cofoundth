@@ -422,7 +422,7 @@ visits daily does not. App routes are `py-14` (56px) — the Fibonacci 55 step �
 and `components/ui/Section.tsx` defaults to it, so marketing must opt in with
 `rhythm="marketing"`. 56 rather than their 42 on purpose: our page titles are
 42px against their 28px, and a larger heading wants proportionally more air. Do
-not put an app page back on 88.
+not put an app page back on 88. `scripts/design-lint.mjs` now fails it: rule `app-route-rhythm` rejects `py-[88px]`, `pt-[88px]`, `pb-[88px]` and their `-22` twins under `app/(app)` and `app/onboarding`.
 
 **Operational test for "structural"**: any margin/padding between SIBLING
 page-level blocks — sections, the page header, a section heading, a card grid.
@@ -477,6 +477,9 @@ on /browse with a 15px Windows scrollbar:
 has always shipped; two-up there would stretch a card drawn for ~300px to
 425-552px. If the rail ever takes width at `lg` again, this table is what
 changes.
+
+**Main + aside pages split at `lg` too (Nov 2026).** Profile and org detail were `xl` from the same 256px-rail era, which left 1024-1279 with one ~1040px column, the aside (and the page's one action) at the bottom, and no phone CTA bar either, because that bar is `lg:hidden`. The hero card now sits IN the main column, so the aside starts at the top of the page beside it. The profile aside is NOT sticky (the owner's call, 2026-11-13): it is taller than a laptop screen (733px on a full profile against ~575px of room at 630px tall), so pinning it hid its lower cards until the end of the page. A phone-only bar that stands in for the aside must hide at the breakpoint the aside appears at.
+
 - Reading/article pages keep a narrow column; only the rhythm applies
 - Chat/conversation views are full-height and take no vertical rhythm
 

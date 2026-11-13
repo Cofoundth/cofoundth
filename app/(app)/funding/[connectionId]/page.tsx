@@ -135,7 +135,7 @@ export default async function FundingDetailPage({ params }: Props) {
   const bookSigning = await tServer("Book your signing slot");
 
   return (
-    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-[88px]">
+    <div className="max-w-2xl mx-auto px-6 lg:px-10 py-14">
       <Link
         href="/funding"
         className="text-xs text-ink-muted hover:text-navy mb-3 inline-flex items-center gap-1.5"

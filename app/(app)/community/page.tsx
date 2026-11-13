@@ -21,6 +21,15 @@ import { Avatar } from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * How many joins the "What's happening" ticker lists. From lg it is a sticky
+ * column as tall as the screen allows (see the aside below), so it lists
+ * enough to fill one; a phone shows the first PHONE_TICKER_JOINS, under the
+ * feed.
+ */
+const TICKER_JOINS = 20;
+const PHONE_TICKER_JOINS = 5;
+
 export default async function CommunityPage({
   searchParams,
 }: {
@@ -62,7 +71,7 @@ export default async function CommunityPage({
         .eq("account_type", "founder")
         .not("is_bot", "is", true)
         .order("created_at", { ascending: false })
-        .limit(8),
+        .limit(TICKER_JOINS + 8),
       supabase
         .from("meetups")
         .select("id", { count: "exact", head: true })
@@ -71,11 +80,11 @@ export default async function CommunityPage({
         .gte("starts_at", nowISO())
         .lte("starts_at", weekAhead),
     ]);
-  // Over-fetch 8, filter blocked pairs, show 5 — the ticker never goes short
-  // just because the viewer blocked someone recent.
+  // Over-fetch by 8, filter blocked pairs, keep TICKER_JOINS — the ticker
+  // never goes short just because the viewer blocked someone recent.
   const recentJoins = (recentJoinsRaw ?? [])
     .filter((p) => !blocked.has(p.id as string))
-    .slice(0, 5);
+    .slice(0, TICKER_JOINS);
 
   // TWO flags, not one. The old single `canWrite` meant "may post AND may
   // comment", which only worked while every non-founder was refused both. An
@@ -165,15 +174,51 @@ export default async function CommunityPage({
 
         {/* RIGHT — the ticker. Row anatomy matched to theirs: 40px avatar,
             "Name joined" with the age beneath, chevron. Every row is real
-            data; nothing here is seeded copy. */}
-        <aside className="lg:col-span-4 min-w-0 lg:sticky lg:top-24 self-start">
+            data; nothing here is seeded copy.
+
+            AS TALL AS THE SCREEN ALLOWS (the owner's call, 2026-11-13: a
+            sticky column holding a five-row card left the rest of it empty
+            while the feed scrolled). From lg the aside is capped at the
+            viewport below its sticky top (6rem) less 2rem of air, the heading
+            keeps its height, and the card takes the rest: as tall as its rows,
+            scrolling inside once they outrun the screen. min-h-0 is what lets
+            a flex child shrink below its content so overflow can scroll.
+            NO VISIBLE SCROLLBAR, on purpose (2026-11-13): the classic Windows
+            scrollbar (track + arrows) drew INSIDE the 24px-radius card and was
+            clipped by its corners, which read as broken. The row cut off at
+            the card's bottom edge is the cue that it scrolls; the wheel, touch
+            and Tab all still scroll it. No overscroll-contain either, so at
+            either end of the list the wheel hands over to the page.
+            This week's meetups lead, being the one forward-looking row; a
+            phone, where the ticker sits under the whole feed, gets the first
+            PHONE_TICKER_JOINS joins only. */}
+        <aside className="lg:col-span-4 min-w-0 self-start lg:sticky lg:top-24 lg:flex lg:max-h-[calc(100dvh-8rem)] lg:flex-col">
           <SectionHeading title={tTicker} />
-          <Card padding="none" className="px-4 py-1 divide-y divide-line">
-            {(recentJoins ?? []).map((p) => (
+          <Card
+            padding="none"
+            className="px-4 py-1 divide-y divide-line lg:min-h-0 lg:overflow-y-auto lg:[scrollbar-width:none]"
+          >
+            {(weekMeetups ?? 0) > 0 && (
+              <Link
+                href="/meetups"
+                className="flex w-full items-center gap-3 py-3 group"
+              >
+                <span className="w-9 h-9 rounded-full bg-gold-soft grid place-items-center text-base shrink-0">
+                  📅
+                </span>
+                <span className="min-w-0 flex-1 text-sm text-ink">
+                  {tWeekMeetups.replace("{n}", String(weekMeetups))}
+                </span>
+                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-navy transition-colors" />
+              </Link>
+            )}
+            {(recentJoins ?? []).map((p, i) => (
               <Link
                 key={p.id as string}
                 href={`/profile/${(p.slug as string | null) ?? (p.id as string)}`}
-                className="flex w-full items-center gap-3 py-3 group"
+                className={`w-full items-center gap-3 py-3 group ${
+                  i < PHONE_TICKER_JOINS ? "flex" : "hidden lg:flex"
+                }`}
               >
                 <Avatar
                   name={p.full_name as string}
@@ -189,20 +234,6 @@ export default async function CommunityPage({
                 <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-navy transition-colors" />
               </Link>
             ))}
-            {(weekMeetups ?? 0) > 0 && (
-              <Link
-                href="/meetups"
-                className="flex w-full items-center gap-3 py-3 group"
-              >
-                <span className="w-9 h-9 rounded-full bg-gold-soft grid place-items-center text-base shrink-0">
-                  📅
-                </span>
-                <span className="min-w-0 flex-1 text-sm text-ink">
-                  {tWeekMeetups.replace("{n}", String(weekMeetups))}
-                </span>
-                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-navy transition-colors" />
-              </Link>
-            )}
           </Card>
         </aside>
       </div>

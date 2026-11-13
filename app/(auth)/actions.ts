@@ -14,6 +14,7 @@ import {
 } from "@/lib/roles";
 import { throughOnboarding } from "@/lib/auth-href";
 import { safeNextPath } from "@/lib/safe-next";
+import { validateEmail, validateName } from "@/lib/signup-validation";
 
 type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -80,8 +81,13 @@ export async function signupAction(
   const supabase = await createClient();
   const origin = await getRequestOrigin();
 
-  const firstName = String(formData.get("firstName") ?? "").trim();
-  const lastName = String(formData.get("lastName") ?? "").trim();
+  // Inner whitespace collapsed so "Test   User" is stored as "Test User".
+  const firstName = String(formData.get("firstName") ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
+  const lastName = String(formData.get("lastName") ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
   const fullName = `${firstName} ${lastName}`.trim();
   const email = String(formData.get("email") ?? "")
     .trim()
@@ -140,6 +146,14 @@ export async function signupAction(
   if (!firstName || !email || !password) {
     return { step: "credentials", error: "All fields are required." };
   }
+  // The same checks the form shows inline (lib/signup-validation.ts), run
+  // again here because a POST does not have to come from the form. Before any
+  // Supabase call, so "s@s" never reaches findUserByEmail or Auth.
+  const fieldError =
+    validateName(firstName, { required: true }) ??
+    validateName(lastName, { required: false }) ??
+    validateEmail(email);
+  if (fieldError) return { step: "credentials", error: fieldError };
   const passwordError = validatePassword(password);
   if (passwordError) return { step: "credentials", error: passwordError };
   if (password !== confirmPassword) {
@@ -200,7 +214,8 @@ export async function signupAction(
 
 // Password validation rules — kept in sync with client-side checks in
 // SignupForm so the user gets immediate feedback AND the server still
-// enforces (defense in depth).
+// enforces (defense in depth). Names and email are not mirrored by hand: both
+// sides import lib/signup-validation.ts.
 function validatePassword(pw: string): string | null {
   if (pw.length < 8) return "Password must be at least 8 characters.";
   if (pw.length > 72) return "Password is too long (max 72 characters).";

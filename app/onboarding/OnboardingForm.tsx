@@ -266,7 +266,7 @@ export function OnboardingForm({ initial, destination }: Props) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-12 pb-[88px]">
+    <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-12 pb-14">
       <StepIndicator current={step} tr={tr} />
 
       <div className="bg-white border border-line p-8 lg:p-12 rounded-xl">

@@ -1308,6 +1308,52 @@ function checkRule6(src, lines, starts, mask, push, relPath) {
   }
 }
 
+// RULE 7 - the marketing section rhythm on an app route.
+//
+// Two vertical rhythms (CLAUDE.md "Vertical rhythm"): marketing sections pad
+// 88px, app routes pad 56px (`py-14`, the <Section> default). The 88 was
+// measured off Onfound's MARKETING pages and then hand-typed onto app routes
+// too; against their actual app it is more than double (heading 42px from the
+// top there, 88px here), and it is what made app pages read as marketing
+// pages. The profile and org pages were moved off it on 2026-11-13 and seven
+// more legacy sites were still on it, so nothing but this rule stops copy
+// number eight.
+//
+// Matches py-/pt-/pb-[88px] and their Tailwind v4 scale twins py-/pt-/pb-22
+// (22 x 4px = 88px), with or without a variant prefix (`lg:py-[88px]`). The
+// whole class token is reported, prefix included.
+//
+// Scoped to app/(app)/** and app/onboarding/** ONLY. Marketing keeps 88 by
+// design, and components/ui/Section.tsx is the one legitimate home of the
+// string (rhythm="marketing"); neither is under those paths.
+const RULE7_APP_PATH = /^app[\/](?:\(app\)|onboarding)[\/]/;
+const MARKETING_RHYTHM =
+  /(?<=^|[\s"'`{(,])((?:[^\s"'`{}(),]*:)?!?p[ytb]-(?:\[88px\]|22))(?=$|[\s"'`}),])/g;
+
+function checkRule7(src, lines, starts, mask, push, relPath) {
+  const rel = (relPath || "").replace(/\\/g, "/");
+  if (!RULE7_APP_PATH.test(rel)) return;
+  MARKETING_RHYTHM.lastIndex = 0;
+  let m;
+  while ((m = MARKETING_RHYTHM.exec(src))) {
+    const idx = m.index;
+    if (mask[idx]) continue;
+    const { line, column } = positionOf(starts, idx);
+    push({
+      rule: "app-route-rhythm",
+      line,
+      column,
+      class: m[1],
+      element: "app route",
+      snippet: (lines[line - 1] ?? "").trim(),
+      message:
+        `\`${m[1]}\` is the MARKETING section rhythm (88px). App routes pad ` +
+        `56px: use py-14 (pt-14 / pb-14), or <Section>, which defaults to it. ` +
+        `See CLAUDE.md "Vertical rhythm".`,
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Driver
 // ---------------------------------------------------------------------------
@@ -1356,6 +1402,7 @@ function lintFile(absPath, relPath, errors) {
     checkRule4(src, lines, starts, mask, (v) => raw.push(v));
     checkRule5(src, lines, starts, mask, (v) => raw.push(v), relPath);
     checkRule6(src, lines, starts, mask, (v) => raw.push(v), relPath);
+    checkRule7(src, lines, starts, mask, (v) => raw.push(v), relPath);
   } catch (err) {
     errors.push({ path: relPath, message: `scan failed: ${err.message}` });
     return null;
@@ -1471,6 +1518,17 @@ const RULE_DOCS = {
     "        not lint debt. Deliberate: delete `scope` from those two recipes when",
     "        that batch lands. The CARD recipe is NOT scoped - 24px + shadow-xs is",
     "        a treatment marketing does not use, so it would be drift there too.",
+  ],
+  "app-route-rhythm": [
+    "app-route-rhythm - two vertical rhythms: marketing sections pad 88px, app",
+    "  routes pad 56px. The 88 was measured off Onfound's MARKETING pages and",
+    "  hand-typed onto app routes too, which is what made them read as marketing",
+    "  pages (their app's heading sits 42px from the top; ours sat at 88).",
+    "  FIX   py-[88px] -> py-14 (pt-/pb- likewise), or <Section>, whose default",
+    "        rhythm is py-14. See CLAUDE.md \"Vertical rhythm\".",
+    "  NOTE  matches py/pt/pb-[88px] and their -22 scale twins, any variant prefix.",
+    "  SCOPE app/(app)/** and app/onboarding/** only. Marketing keeps 88, and",
+    "        components/ui/Section.tsx (rhythm=\"marketing\") is its one home.",
   ],
 };
 

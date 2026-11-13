@@ -29,7 +29,13 @@ import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { webUrl } from "@/lib/web-url";
 import { Avatar } from "@/components/Avatar";
-import { Card, LinkButton, StageEmblem, buttonClasses } from "@/components/ui";
+import {
+  Card,
+  LinkButton,
+  Section,
+  StageEmblem,
+  buttonClasses,
+} from "@/components/ui";
 import { ExpressInterestForm } from "./ExpressInterestForm";
 import { IncomingInterestBanner } from "./IncomingInterestBanner";
 import { ReportForm } from "./ReportForm";
@@ -296,8 +302,11 @@ export default async function ProfileDetailPage({
   // entire profile. Reordering the aside above the main column would also drag
   // the report-abuse form, founder facts and social links above the pitch —
   // trading one problem for a worse one — so instead a compact bar mirrors the
-  // aside's primary action on small screens only. It is `lg:hidden`, so the
-  // desktop two-column layout is untouched.
+  // aside's primary action on small screens only. It is `lg:hidden`, and the
+  // two-column layout (aside beside the hero) starts at `lg` too. The two MUST
+  // share a breakpoint: when the grid split at `xl` and the bar hid at `lg`,
+  // 1024-1279 had neither — one long column with the aside, and the page's one
+  // action, ~1,460px down, and no bar to stand in for it (2026-11-13).
   //
   // The bar LINKS to the aside (#connect) rather than re-rendering
   // <ExpressInterestForm>: that component owns the open/pending form state, so
@@ -336,93 +345,110 @@ export default async function ProfileDetailPage({
   }
 
   return (
-    <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-10 py-[88px]">
+    // App rhythm (py-14), not the marketing 88px. The className keeps this
+    // page's own phone gutter (16px below sm, 24px from sm, Section's 40px from
+    // lg) on purpose: changing it would be a phone layout change nobody
+    // measured (2026-11-13).
+    <Section className="px-4 sm:px-6">
       {relationship === "incoming" && !isOwnProfile && (
         <IncomingInterestBanner toId={profile.id} otherName={otherName} />
       )}
 
-      {/* ---- Hero ---- */}
-      <Card as="header" padding="lg" className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
-          <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
-          <div className="flex-1 min-w-0">
-            <h1 className="text-d2 flex items-center gap-2.5 flex-wrap">
-              {otherName}
-              <StageEmblem
-                stage={profile.stage as string | null}
-                label={
-                  profile.stage && STAGE_LABELS[profile.stage as string]
-                    ? t(STAGE_LABELS[profile.stage as string], locale)
-                    : ""
-                }
-              />
-              {profile.verified && (
-                <BadgeCheck
-                  className="w-6 h-6 text-gold-ink shrink-0"
-                  strokeWidth={1.5}
-                  aria-label="Verified founder"
-                />
-              )}
-              {isCompany && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink font-sans rounded-full">
-                  <Building2 className="w-3 h-3" strokeWidth={2} />
-                  {t("Company", locale)}
-                </span>
-              )}
-              {profile.age && !isCompany && (
-                <span className="text-ink-muted text-xl font-sans">
-                  , {profile.age}
-                </span>
-              )}
-            </h1>
-
-            {isCompany && (
-              <div className="text-sm text-ink-muted mt-1">
-                {t("Represented by", locale)}{" "}
-                <span className="text-navy font-medium">
-                  {profile.full_name}
-                </span>
-              </div>
-            )}
-
-            <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
-              {rolesLabel && (
-                <span className="text-navy font-medium">{rolesLabel}</span>
-              )}
-              {intentLabel && (
-                <span className="text-gold-ink">· {intentLabel}</span>
-              )}
-              {profile.location && (
-                <span className="inline-flex items-center gap-1 text-ink-muted">
-                  <MapPin className="w-3.5 h-3.5" />{" "}
-                  {provinceLabel(profile.location as string, locale)}
-                </span>
-              )}
-            </div>
-
-            {statusTags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {statusTags.map((tag) => {
-                  const meta = STATUS_TAG_LABELS[tag];
-                  if (!meta) return null;
-                  return (
-                    <span
-                      key={tag}
-                      className={`text-xs uppercase tracking-[0.15em] px-2 py-1 border rounded-full ${meta.tone}`}
-                    >
-                      {t(meta.en, locale)}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      <div className="grid xl:grid-cols-12 gap-8 xl:gap-10">
+      {/* The hero sits IN the main column (2026-11-13), so from lg the aside
+          starts at the top of the page beside it instead of below a full-width
+          band whose content used the left ~45%. DOM order is still hero →
+          sections → aside, so below lg the only change is the top padding
+          (88 → 56px). */}
+      <div className="grid lg:grid-cols-12 gap-8 xl:gap-10">
         {/* ---- Main column ---- */}
-        <div className="xl:col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-6 min-w-0">
+          {/* ---- Hero ---- */}
+          {/* mb-8 inside a space-y-6 column on purpose: page-header block →
+              content is mb-8 (32px) in the rhythm table, and space-y-6's
+              :where() sibling rule loses to the explicit class. */}
+          <Card as="header" padding="lg" className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
+              <Avatar name={profile.full_name} url={profile.photo_url} size="xl" />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-d2 flex items-center gap-2.5 flex-wrap">
+                  {/* Name and age share one span so the comma hugs the name
+                      ("Test User, 30") instead of trailing the emblems as an
+                      orphan (2026-11-13). */}
+                  <span>
+                    {otherName}
+                    {profile.age && !isCompany && (
+                      <span className="text-ink-muted text-xl font-sans">
+                        , {profile.age}
+                      </span>
+                    )}
+                  </span>
+                  <StageEmblem
+                    stage={profile.stage as string | null}
+                    label={
+                      profile.stage && STAGE_LABELS[profile.stage as string]
+                        ? t(STAGE_LABELS[profile.stage as string], locale)
+                        : ""
+                    }
+                  />
+                  {profile.verified && (
+                    <BadgeCheck
+                      className="w-6 h-6 text-gold-ink shrink-0"
+                      strokeWidth={1.5}
+                      aria-label="Verified founder"
+                    />
+                  )}
+                  {isCompany && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs uppercase tracking-[0.15em] border border-line text-gold-ink font-sans rounded-full">
+                      <Building2 className="w-3 h-3" strokeWidth={2} />
+                      {t("Company", locale)}
+                    </span>
+                  )}
+                </h1>
+
+                {isCompany && (
+                  <div className="text-sm text-ink-muted mt-1">
+                    {t("Represented by", locale)}{" "}
+                    <span className="text-navy font-medium">
+                      {profile.full_name}
+                    </span>
+                  </div>
+                )}
+
+                <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
+                  {rolesLabel && (
+                    <span className="text-navy font-medium">{rolesLabel}</span>
+                  )}
+                  {intentLabel && (
+                    <span className="text-gold-ink">· {intentLabel}</span>
+                  )}
+                  {profile.location && (
+                    <span className="inline-flex items-center gap-1 text-ink-muted">
+                      <MapPin className="w-3.5 h-3.5" />{" "}
+                      {provinceLabel(profile.location as string, locale)}
+                    </span>
+                  )}
+                </div>
+
+                {statusTags.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {statusTags.map((tag) => {
+                      const meta = STATUS_TAG_LABELS[tag];
+                      if (!meta) return null;
+                      return (
+                        <span
+                          key={tag}
+                          className={`text-xs uppercase tracking-[0.15em] px-2 py-1 border rounded-full ${meta.tone}`}
+                        >
+                          {t(meta.en, locale)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
           {/* What I'm building */}
           {(profile.pitch ||
             capabilities.length > 0 ||
@@ -656,7 +682,11 @@ export default async function ProfileDetailPage({
         </div>
 
         {/* ---- Sidebar ---- */}
-        <aside className="xl:col-span-4 space-y-5 xl:sticky xl:top-24 self-start">
+        {/* Deliberately NOT sticky (the owner's call, 2026-11-13). The aside is
+            taller than a laptop screen (733px on a full profile against ~575px
+            of room at 630px tall), so pinning it hid its lower cards (the rest
+            of Founder facts, the social links) until the end of the page. */}
+        <aside className="lg:col-span-4 space-y-5 min-w-0">
           {/* What I'm looking for — the headline ask */}
           {seeking.length > 0 && (
             // No border: decision D2 is open, and this panel shipped without
@@ -678,7 +708,10 @@ export default async function ProfileDetailPage({
           {!isOwnProfile && (
             <>
               {relationship !== "incoming" && (
-                <div id="connect" className="scroll-mt-6">
+                // scroll-mt-20 below md: the phone's sticky top bar (64.8px)
+                // would cover the card's top at 24px. From md there is no top
+                // bar (2026-11-13).
+                <div id="connect" className="scroll-mt-20 md:scroll-mt-6">
                   <ExpressInterestForm
                     toId={profile.id}
                     relationship={relationship}
@@ -815,7 +848,7 @@ export default async function ProfileDetailPage({
           </div>
         </>
       )}
-    </div>
+    </Section>
   );
 }
 

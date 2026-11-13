@@ -314,7 +314,10 @@ export async function AppSidebar() {
           ...(FEATURES.funding
             ? [{ href: "/funding", label: await tServer("Funding") }]
             : []),
-          { href: "/activity", label: await tServer("Profile insights") },
+          // No "Profile insights" (/activity): hidden from the rail, the
+          // owner's call (2026-11-13). The page still answers its URL, and
+          // SidebarNav keeps its icon, so putting it back is this one line:
+          // { href: "/activity", label: await tServer("Profile insights") },
         ];
 
   // Every item in a gated role's rail must be a route that role may READ, or
