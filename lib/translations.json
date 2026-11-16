@@ -1833,5 +1833,7 @@
   "Change what people see. Its ratings and comments stay with it.": "แก้สิ่งที่คนอื่นเห็นได้เลย คะแนนกับคอมเมนต์เดิมยังอยู่ครบ",
   "Delete {name}?": "ลบ {name} ไหม?",
   "It comes off the deck, and its ratings and comments are deleted with it. This can’t be undone.": "โปรดักต์จะหายไปจากหน้าโปรดักต์ คะแนนกับคอมเมนต์ทั้งหมดจะถูกลบไปด้วย ย้อนกลับไม่ได้นะ",
-  "Recent milestones": "ก้าวสำคัญล่าสุด"
+  "Recent milestones": "ก้าวสำคัญล่าสุด",
+  "Changes show on its page. It stays off the deck while a moderator has it hidden.": "ที่แก้จะขึ้นในหน้าของมัน แต่ระหว่างที่ผู้ดูแลซ่อนไว้ จะยังไม่ขึ้นในหน้าโปรดักต์",
+  "Its ratings and comments are deleted with it. This can’t be undone.": "คะแนนกับคอมเมนต์ทั้งหมดจะถูกลบไปด้วย ย้อนกลับไม่ได้นะ"
 }

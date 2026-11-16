@@ -6,11 +6,18 @@
 // Products are stored as forum_posts rows too (kind 'show_and_tell'), and
 // this page used to double as the product page. A product now has its own,
 // /products/<id> (app/(marketing)/products/[id]), for every reader, signed in
-// or not. This page only redirects one there — permanently, deck context and
-// all — so every /p/<id> product link already shared keeps working. The same
-// goes for a development sample (`fixture-…`). The decision reads the row's
-// kind and nothing else (lib/public-post.ts getPostKind); the product page
-// applies its own gate.
+// or not. This page only redirects one there — deck context and all — so
+// every /p/<id> product link already shared keeps working. The same goes for
+// a development sample (`fixture-…`). The decision reads the row's kind and
+// nothing else (lib/public-post.ts getPostKind); the product page applies its
+// own gate.
+//
+// It is a permanentRedirect() but NOT an HTTP 308: this page streams (it has
+// a loading.tsx), and once streaming has begun Next answers 200 and redirects
+// in the browser with a meta tag (node_modules/next/dist/docs, redirect /
+// permanentRedirect: "streaming context"). That is why generateMetadata gives
+// a product its full card here too — a link-preview fetcher reads this
+// response's tags — with canonical and og:url on /products/<id>.
 //
 // ── SIGNING IN COMES BACK HERE ────────────────────────────────────────────
 // Every sign-in and sign-up link on this page carries `?next=/p/<id>`
@@ -70,6 +77,7 @@ import {
 import { buttonClasses, Card, Eyebrow, Section } from "@/components/ui";
 import { deckContextQuery } from "../../products/deck-position";
 import { findFixture } from "../../products/fixtures";
+import { productMetadata } from "../../products/product-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -100,10 +108,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!found) return { title: "Post" };
   const { post } = found;
 
-  // A product redirects to its own page, which is its canonical address.
-  if (post.kind === PRODUCT_KIND) {
-    return { alternates: { canonical: `/products/${id}` } };
-  }
+  // A product redirects to its own page — in the browser, because this page
+  // streams (see the header) — so a link preview of an OLD product link reads
+  // THIS response. It gets the product's own card, canonical and og:url on
+  // the new address (../../products/product-metadata.ts).
+  if (post.kind === PRODUCT_KIND) return productMetadata(post);
 
   const title = post.title ?? post.content.slice(0, 70);
   const description = post.content.slice(0, 160);

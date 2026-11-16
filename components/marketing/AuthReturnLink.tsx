@@ -4,7 +4,8 @@
 // MarketingFooter), which bring the reader back to the product they were
 // looking at.
 //
-// A product's page (/p/<id>) and the deck (/products) carry `?next=` back to
+// A product's page (/products/<id>), a public post (/p/<id>) and the deck
+// (/products) carry `?next=` back to
 // themselves — the page with its deck context (`from`, `category`), the deck
 // with its category and position (`after`) — so signing in from the header of
 // a product page lands on that product, and from the deck on the same card.
@@ -42,7 +43,13 @@ type Props = {
 /** Where signing in from this page should come back to, or null for "the
  *  usual place". */
 function returnPathOf(pathname: string, search: URLSearchParams): string | null {
-  if (/^\/p\/[^/]+$/.test(pathname)) {
+  // A product's page (/products/<id>; not the two app pages beside it, which
+  // sign a visitor in themselves) or a public post's (/p/<id>): back to it,
+  // with the deck context it came with.
+  if (
+    /^\/products\/(?!new$|mine$)[^/]+$/.test(pathname) ||
+    /^\/p\/[^/]+$/.test(pathname)
+  ) {
     return `${pathname}${deckContextQuery({
       from: search.getAll("from"),
       category: search.getAll(PARAM),

@@ -72,6 +72,9 @@ export function notifHref(n: NotifLike): string {
   }
 }
 
+// Every substitution below passes a FUNCTION, not the string: names and
+// titles are member-written, and a string replacement treats `$$`, `$&`,
+// `$'` and `` $` `` in it as patterns ("Make $$ fast" would print one $).
 export function notifText(
   n: NotifLike,
   tr: (en: string) => string,
@@ -79,51 +82,51 @@ export function notifText(
   const name = n.actor?.full_name || n.data?.actor_name || tr("Someone");
   switch (n.type) {
     case "profile_view":
-      return tr("{name} viewed your profile").replace("{name}", name);
+      return tr("{name} viewed your profile").replace("{name}", () => name);
     case "comment":
       return tr(
         onProduct(n)
           ? "{name} commented on your product"
           : "{name} commented on your post",
-      ).replace("{name}", name);
+      ).replace("{name}", () => name);
     case "mention":
-      return tr("{name} mentioned you in a comment").replace("{name}", name);
+      return tr("{name} mentioned you in a comment").replace("{name}", () => name);
     case "interest":
-      return tr("{name} is interested in connecting").replace("{name}", name);
+      return tr("{name} is interested in connecting").replace("{name}", () => name);
     case "match":
-      return tr("You and {name} are now connected").replace("{name}", name);
+      return tr("You and {name} are now connected").replace("{name}", () => name);
     case "message":
-      return tr("{name} sent you a message").replace("{name}", name);
+      return tr("{name} sent you a message").replace("{name}", () => name);
     case "deal_proposed":
       return tr("{name} proposed a partnership deal").replace(
         "{name}",
-        n.data?.actor_name || tr("A company"),
+        () => n.data?.actor_name || tr("A company"),
       );
     case "funding_proposed":
-      return tr("{name} sent a funding proposal").replace("{name}", name);
+      return tr("{name} sent a funding proposal").replace("{name}", () => name);
     case "meetup_rsvp":
       return tr("{name} is going to your meetup")
-        .replace("{name}", name)
+        .replace("{name}", () => name)
         .concat(n.data?.title ? ` · ${n.data.title}` : "");
     case "meetup_request":
       return tr("{name} requested a spot at your meetup")
-        .replace("{name}", name)
+        .replace("{name}", () => name)
         .concat(n.data?.title ? ` · ${n.data.title}` : "");
     case "meetup_invite":
       return tr("{name} invited you to a meetup")
-        .replace("{name}", name)
+        .replace("{name}", () => name)
         .concat(n.data?.title ? ` · ${n.data.title}` : "");
     // These two name the MEETUP rather than the host: what the reader wants
     // to know is which door opened, not who turned the handle.
     case "meetup_request_approved":
       return tr("Your request to join {title} was approved").replace(
         "{title}",
-        n.data?.title || tr("the meetup"),
+        () => n.data?.title || tr("the meetup"),
       );
     case "meetup_request_declined":
       return tr("Your request to join {title} was declined").replace(
         "{title}",
-        n.data?.title || tr("the meetup"),
+        () => n.data?.title || tr("the meetup"),
       );
     default:
       return "";

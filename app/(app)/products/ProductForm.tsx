@@ -60,6 +60,8 @@ export type EditableProduct = {
   platforms: ProductPlatform[];
   /** Its screenshots, cover first. */
   images: string[];
+  /** A moderator hid it: saving changes it, but does not put it on the deck. */
+  hidden: boolean;
 };
 
 /** The same two tests createProductAction runs, so the field can say so first. */
@@ -290,19 +292,34 @@ export function ProductForm({
       <div className="flex flex-col gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-ink-muted">
           {editing
-            ? tr(
-                "Changes show on the deck and on its page. Nothing is posted to the community feed.",
-              )
+            ? product.hidden
+              ? tr(
+                  "Changes show on its page. It stays off the deck while a moderator has it hidden.",
+                )
+              : tr(
+                  "Changes show on the deck and on its page. Nothing is posted to the community feed.",
+                )
             : tr(
                 "It goes on the deck and gets its own page. Nothing is posted to the community feed.",
               )}
         </p>
         {editing ? (
-          <div className="flex shrink-0 items-center gap-2">
-            <LinkButton href={productPath(product.id)} variant="secondary">
+          // Two buttons, so on a phone they stack, Save on top and full width
+          // (side by side at 263px, "บันทึกการเปลี่ยนแปลง" broke onto two
+          // lines); side by side again from `sm`.
+          <div className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:items-center">
+            <LinkButton
+              href={productPath(product.id)}
+              variant="secondary"
+              className="w-full sm:w-auto"
+            >
               {tr("Cancel")}
             </LinkButton>
-            <Button type="submit" disabled={blocked}>
+            <Button
+              type="submit"
+              disabled={blocked}
+              className="w-full whitespace-nowrap sm:w-auto"
+            >
               <Check className="h-4 w-4" strokeWidth={1.5} />
               {isPending ? tr("Saving…") : tr("Save changes")}
             </Button>

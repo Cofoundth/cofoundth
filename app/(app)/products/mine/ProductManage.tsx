@@ -18,7 +18,17 @@ import { Button, Dialog, LinkButton } from "@/components/ui";
  *  answering with its own error. An existing dictionary key. */
 const UNREACHABLE = "Something went wrong. Try again.";
 
-export function ProductManage({ id, name }: { id: string; name: string }) {
+export function ProductManage({
+  id,
+  name,
+  hidden,
+}: {
+  id: string;
+  name: string;
+  /** Hidden by a moderator: it is not on the deck, so the dialog does not say
+   *  deleting takes it off. */
+  hidden: boolean;
+}) {
   const tr = useT();
   const titleId = useId();
   const [confirming, setConfirming] = useState(false);
@@ -64,12 +74,18 @@ export function ProductManage({ id, name }: { id: string; name: string }) {
           dismissible={!pending}
         >
           <h2 id={titleId} className="mb-2 text-lg font-bold tracking-normal">
-            {tr("Delete {name}?").replace("{name}", name)}
+            {/* A function, not the string: a name like "Make $$ fast" would
+                otherwise be read as a replacement pattern ($$ -> $). */}
+            {tr("Delete {name}?").replace("{name}", () => name)}
           </h2>
           <p className="text-sm leading-relaxed text-ink-muted">
-            {tr(
-              "It comes off the deck, and its ratings and comments are deleted with it. This can’t be undone.",
-            )}
+            {hidden
+              ? tr(
+                  "Its ratings and comments are deleted with it. This can’t be undone.",
+                )
+              : tr(
+                  "It comes off the deck, and its ratings and comments are deleted with it. This can’t be undone.",
+                )}
           </p>
           {error && (
             <p className="mt-4 text-sm text-danger-ink" role="alert">

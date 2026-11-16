@@ -390,7 +390,11 @@ export default async function MyProductsPage() {
                         : tViewProduct}
                     </LinkButton>
                     <div className="flex flex-wrap items-center gap-2">
-                      <ProductManage id={id} name={name} />
+                      <ProductManage
+                        id={id}
+                        name={name}
+                        hidden={p.hidden === true}
+                      />
                     </div>
                   </div>
                 </Card>

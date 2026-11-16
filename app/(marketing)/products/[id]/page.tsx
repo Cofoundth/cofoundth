@@ -71,11 +71,7 @@ import { authHref } from "@/lib/auth-href";
 import { t, type Locale } from "@/lib/i18n";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { timeAgo } from "@/lib/time";
-import {
-  postImages,
-  productPath,
-  type ProductRating,
-} from "@/lib/post-types";
+import { productPath, type ProductRating } from "@/lib/post-types";
 import {
   getPublicEngagement,
   getPublicPost,
@@ -111,7 +107,7 @@ import { CommentItem } from "@/app/(app)/community/[id]/CommentItem";
 import { deckContextQuery, deckReturnHref } from "../deck-position";
 import { findFixture } from "../fixtures";
 import { ProductDetail, type ProductDetailPost } from "../ProductDetail";
-import { productName } from "../product-view";
+import { productMetadata } from "../product-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -151,36 +147,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!found || found.post.kind !== PRODUCT_KIND) {
     return { title: await tServer("Product") };
   }
-  const { post } = found;
-
-  const title = productName(post, post.content.slice(0, 70));
-  const description = post.content.slice(0, 160);
-  const SITE_URL =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
-  // Always an image, so the social card is rich: the first screenshot, or the
-  // branded site image.
-  const images = [postImages(post)[0] ?? `${SITE_URL}/og-image.png`];
-  return {
-    // Bare title — the root layout's "%s · Cofoundee" template adds the suffix.
-    title,
-    description,
-    // The bare address, whatever deck context the request carries: those
-    // variants are one page.
-    alternates: { canonical: `/products/${id}` },
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      url: `${SITE_URL}/products/${id}`,
-      images,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images,
-    },
-  };
+  // Title, description, canonical and social card: ../product-metadata.ts,
+  // shared with the old /p/<id> address.
+  return productMetadata(found.post);
 }
 
 export default async function ProductPage({ params, searchParams }: Props) {

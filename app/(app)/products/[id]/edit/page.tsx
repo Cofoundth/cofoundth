@@ -117,6 +117,7 @@ export default async function EditProductPage({
               image_url: (post.image_url as string | null) ?? null,
               image_urls: (post.image_urls as string[] | null) ?? null,
             }),
+            hidden: post.hidden === true,
           }}
         />
       </Card>

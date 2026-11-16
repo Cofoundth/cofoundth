@@ -108,7 +108,7 @@ export async function StickySignIn({
             await tServer(
               "{name} is on Cofoundee — sign in to connect and see more.",
             )
-          ).replace("{name}", authorName)}
+          ).replace("{name}", () => authorName)}
         </p>
         <div className="flex items-center gap-2 shrink-0">
           <Link
