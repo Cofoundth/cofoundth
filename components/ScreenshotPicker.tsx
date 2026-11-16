@@ -16,8 +16,17 @@
 //                      downscale in progress, the one error line
 //   <ScreenshotPicker> what the maker sees and presses
 // The form appends `shots.files` to its FormData as repeated `images` entries
-// (createProductAction reads them with getAll), and gates its own submit on
-// `shots.preparing`.
+// (createProductAction and updateProductAction read them with getAll), and
+// gates its own submit on `shots.preparing`.
+//
+// EDITING A PRODUCT starts the strip with the screenshots it already has
+// (`useScreenshots(existing)`): the maker can remove any of them and add new
+// ones, which go after them — the strip has no reordering, so the cover is
+// the first screenshot still on it. The form sends the ones kept as repeated
+// `keep` entries (`shots.kept`, in strip order) and only the NEW files as
+// `images`; updateProductAction keeps a `keep` URL only if the product really
+// has it. Kept screenshots are already uploaded, so they do not count toward
+// MAX_TOTAL_IMAGE_BYTES — only toward MAX_PRODUCT_IMAGES.
 
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
@@ -56,11 +65,13 @@ const ACCEPT_ATTR = POST_IMAGE_TYPES.join(",");
 // split across two files, which is how they drifted in the first place.
 const MAX_TOTAL_IMAGE_BYTES = 4 * 1024 * 1024;
 
-type Shot = { file: File; url: string };
+/** One screenshot on the strip: a file picked here (`url` is its object URL),
+ *  or one the product already has (`file` null, `url` its public URL). */
+type Shot = { file: File | null; url: string };
 
 export type Screenshots = ReturnType<typeof useScreenshots>;
 
-export function useScreenshots() {
+export function useScreenshots(existing: readonly string[] = []) {
   const tr = useT();
 
   // REACT STATE is the source of truth, not the input's own FileList, and that
@@ -74,7 +85,9 @@ export function useScreenshots() {
   // So the input is only a PICKER (it has no `name`, and is emptied after every
   // pick), and the form puts exactly what the strip shows into its FormData, in
   // the strip's order.
-  const [shots, setShots] = useState<Shot[]>([]);
+  const [shots, setShots] = useState<Shot[]>(() =>
+    existing.map((url) => ({ file: null, url })),
+  );
   const [error, setError] = useState<string | null>(null);
   // True while the picked files are being downscaled. The form gates its
   // submit on it and the picker button disables itself on it, and both are
@@ -96,6 +109,8 @@ export function useScreenshots() {
     return url;
   }
   function dropUrl(url: string) {
+    // Only an object URL made here: a kept screenshot's URL is a public one.
+    if (!liveUrls.current.has(url)) return;
     URL.revokeObjectURL(url);
     liveUrls.current.delete(url);
   }
@@ -166,7 +181,8 @@ export function useScreenshots() {
     // the picker button is disabled while `preparing` — two overlapping picks
     // would both total up against the same stale strip and could jointly
     // exceed MAX_TOTAL_IMAGE_BYTES. Keep that disable.
-    let total = shots.reduce((n, s) => n + s.file.size, 0);
+    // Only NEW files are uploaded, so only they count toward the total.
+    let total = shots.reduce((n, s) => n + (s.file?.size ?? 0), 0);
     const take: File[] = [];
     let overflowed = false;
     for (const f of prepared) {
@@ -229,8 +245,11 @@ export function useScreenshots() {
 
   return {
     shots,
-    /** The files to submit, in strip order. The first is the cover. */
-    files: shots.map((s) => s.file),
+    /** The NEW files to submit, in strip order. */
+    files: shots.flatMap((s) => (s.file ? [s.file] : [])),
+    /** The screenshots the product already had and still keeps, in strip
+     *  order — always before the new ones. Empty when adding a product. */
+    kept: shots.flatMap((s) => (s.file ? [] : [s.url])),
     preparing,
     error,
     full: shots.length >= MAX_PRODUCT_IMAGES,

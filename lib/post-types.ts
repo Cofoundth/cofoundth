@@ -3,6 +3,21 @@
 
 export type PostKind = "post" | "milestone" | "show_and_tell";
 
+/**
+ * A product's page: /products/<id>, for every reader
+ * (app/(marketing)/products/[id]). A product is stored as a `show_and_tell`
+ * forum_posts row, but it is not a post: it never links to /community/<id> or
+ * /p/<id> (both of which send a product here anyway, for old links).
+ */
+export function productPath(id: string): string {
+  return `/products/${encodeURIComponent(id)}`;
+}
+
+/** Where a product's maker edits it (app/(app)/products/[id]/edit). */
+export function editProductPath(id: string): string {
+  return `${productPath(id)}/edit`;
+}
+
 export type PostAuthor = {
   id: string;
   full_name: string | null;

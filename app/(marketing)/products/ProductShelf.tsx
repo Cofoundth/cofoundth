@@ -474,12 +474,12 @@ export async function ProductShelf({
   // `link` getShelfProducts() already ran through webUrl(), so it is http(s)
   // or the row is not on the shelf at all, and never a raw link_url.
   //
-  // The footer row's href (/p/<id>) is built in the deck, not here, because it
-  // carries the category the reader has chosen since (deck-position.ts). It is
-  // ONE href for every audience: /p/<id> redirects a signed-in member to
-  // /community/<id>, so do not branch it on the session. A dev fixture's
-  // /p/fixture-… renders the sample in development and does not exist in a
-  // production build.
+  // The footer row's href (/products/<id>) is built in the deck, not here,
+  // because it carries the category the reader has chosen since
+  // (deck-position.ts). It is ONE href for every audience: the product's page
+  // serves a visitor and a member alike (app/(marketing)/products/[id]), so do
+  // not branch it on the session. A dev fixture's /products/fixture-… renders
+  // the sample in development and does not exist in a production build.
   //
   // `sample` marks a dev fixture for the review modal, which can show one but
   // not save it. NODE_ENV is a build-time constant and productFixtures() is []

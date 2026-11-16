@@ -172,6 +172,7 @@ export async function AppSidebar() {
         (n.data as {
           actor_name?: string;
           post_title?: string;
+          post_kind?: string;
           slug?: string;
         }) ?? null,
       readAt: (n.read_at as string | null) ?? null,

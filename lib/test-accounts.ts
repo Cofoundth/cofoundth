@@ -3,9 +3,9 @@
 // test@test.com (founder), test2@test.com (founder) and user@user.com
 // (explorer, admin) are real rows in the ONE database the dev server and
 // cofoundee.co share. All three are `suspended = true`, so every public author
-// gate — the shelf (lib/posts.ts publicProductAuthors), /p/<id>
-// (lib/public-author.ts), /community/<id> — hides what they write from real
-// visitors. That is correct, and it stays correct in production.
+// gate — the shelf (lib/posts.ts publicProductAuthors), the public pages
+// (lib/public-author.ts), a product's member view — hides what they write from
+// real visitors. That is correct, and it stays correct in production.
 //
 // It also hides their PRODUCTS from the developer, which made the deck's review
 // modal untestable against a real row: every product it could show was either
@@ -14,8 +14,8 @@
 // a PRODUCT (kind 'show_and_tell') whose author is one of these accounts:
 //
 //   · the shelf and the deck      getPublicProductsPage (lib/posts.ts)
-//   · /p/<id>                     getPublicPost (app/(marketing)/p/[id])
-//   · /community/<id>             its author gate (app/(app)/community/[id])
+//   · /products/<id>, signed out  getPublicPost (lib/public-post.ts)
+//   · /products/<id>, signed in   its member gate (app/(marketing)/products/[id])
 //
 // NOTHING ELSE WIDENS: not the sitemap, not the landing's "Happening now", not
 // the community feed or search, not posts or milestones, not comments, not a

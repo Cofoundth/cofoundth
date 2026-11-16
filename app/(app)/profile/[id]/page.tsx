@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowRight,
@@ -8,6 +10,7 @@ import {
   ExternalLink,
   MapPin,
   MessageCircle,
+  Package,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -28,7 +31,19 @@ import { SocialLinks } from "@/components/SocialIcons";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/slug";
 import { webUrl } from "@/lib/web-url";
+import {
+  CATEGORY_LABEL,
+  UNRATED,
+  productCategoryOf,
+  productPath,
+} from "@/lib/post-types";
+import { getProductRatings } from "@/lib/product-ratings";
 import { Avatar } from "@/components/Avatar";
+import { ProductRatingSummary } from "@/components/ProductRatingSummary";
+import {
+  productImages,
+  productName,
+} from "@/app/(marketing)/products/product-view";
 import {
   Card,
   LinkButton,
@@ -206,18 +221,40 @@ export default async function ProfileDetailPage({
     if (pvErr) console.error("[profile_views.upsert]", JSON.stringify(pvErr));
   }
 
-  // Recent milestones / shipped posts from this profile — surfaces life
-  // and credibility on the profile page itself. A post an admin hid stays off
-  // it for everyone, the owner included, exactly as it stays off the feed: the
-  // list reads as what visitors see.
-  const { data: recentMilestones } = await supabase
-    .from("forum_posts")
-    .select("id, content, kind, link_url, created_at")
-    .eq("author_id", profile.id)
-    .eq("hidden", false)
-    .in("kind", ["milestone", "show_and_tell"])
-    .order("created_at", { ascending: false })
-    .limit(4);
+  // What this member has made and done, which surfaces life and credibility
+  // on the profile page itself — as TWO lists, because a product is not a
+  // post. Their PRODUCTS (a show_and_tell row with a link, the shelf's own
+  // definition in lib/posts.ts) show as products: the name, the rating, and a
+  // link to the product's page. Their recent MILESTONES show as before. A row
+  // an admin hid stays off both for everyone, the owner included, exactly as
+  // it stays off the feed and the deck: the lists read as what visitors see.
+  const [{ data: recentMilestones }, { data: productRows }] = await Promise.all(
+    [
+      supabase
+        .from("forum_posts")
+        .select("id, content, link_url, created_at")
+        .eq("author_id", profile.id)
+        .eq("hidden", false)
+        .eq("kind", "milestone")
+        .order("created_at", { ascending: false })
+        .limit(4),
+      supabase
+        .from("forum_posts")
+        .select("id, title, content, image_url, image_urls, tags")
+        .eq("author_id", profile.id)
+        .eq("hidden", false)
+        .eq("kind", "show_and_tell")
+        .not("link_url", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(6),
+    ],
+  );
+  const products = productRows ?? [];
+  // The public average and count, through the service role like every product
+  // page (lib/product-ratings.ts); degrades to unrated, never throws.
+  const productRatings = await getProductRatings(
+    products.map((p) => p.id as string),
+  );
 
   // Relationship state with this founder, for the sidebar CTA:
   //   matched  → already connected, show "Message them"
@@ -624,58 +661,128 @@ export default async function ProfileDetailPage({
             </Card>
           )}
 
+          {/* Products — the same row as My products: the cover, the name
+              (a card title, h3 text-xl), the category and the rating. The
+              whole row opens the product's page. */}
+          {products.length > 0 && (
+            <Card as="section" padding="lg">
+              <h2 className="text-lg font-bold tracking-normal mb-5">
+                {t("Products", locale)}
+              </h2>
+              <ul className="divide-y divide-line">
+                {products.map((p) => {
+                  const id = p.id as string;
+                  const name = productName(
+                    {
+                      title: (p.title as string | null) ?? null,
+                      content: p.content as string,
+                    },
+                    t("Product", locale),
+                  );
+                  const cover = productImages({
+                    id,
+                    image_url: (p.image_url as string | null) ?? null,
+                    image_urls: (p.image_urls as string[] | null) ?? null,
+                  })[0];
+                  const category = productCategoryOf(
+                    (p.tags as string[] | null) ?? [],
+                  );
+                  return (
+                    <li key={id} className="py-4 first:pt-0 last:pb-0">
+                      <Link
+                        href={productPath(id)}
+                        className="group flex items-center gap-4"
+                      >
+                        <span className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl bg-cream">
+                          {cover ? (
+                            // `unoptimized`: next.config declares no remote
+                            // image hosts (components/ProductGallery.tsx).
+                            <Image
+                              src={cover}
+                              alt=""
+                              fill
+                              unoptimized
+                              sizes="64px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <Package
+                              className="h-6 w-6 text-ink-muted"
+                              strokeWidth={1.5}
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <h3 className="line-clamp-2 text-xl transition-colors group-hover:text-gold-ink">
+                            {name}
+                          </h3>
+                          <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
+                            {category && (
+                              <span>{t(CATEGORY_LABEL[category], locale)}</span>
+                            )}
+                            <ProductRatingSummary
+                              rating={productRatings.get(id) ?? UNRATED}
+                              locale={locale}
+                            />
+                          </span>
+                        </span>
+                        <ArrowRight
+                          className="h-4 w-4 shrink-0 text-ink-muted transition-colors group-hover:text-navy"
+                          strokeWidth={1.5}
+                          aria-hidden="true"
+                        />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Card>
+          )}
+
           {/* Recent milestones */}
           {(recentMilestones?.length ?? 0) > 0 && (
             <Card as="section" padding="lg">
               <h2 className="text-lg font-bold tracking-normal mb-5">
-                {t("Recent milestones & launches", locale)}
+                {t("Recent milestones", locale)}
               </h2>
               <div className="space-y-4">
-                {(recentMilestones ?? []).map((m) => {
-                  const isMilestone = m.kind === "milestone";
-                  return (
-                    <div
-                      key={m.id as string}
-                      className={`p-4 border-l-2 ${
-                        isMilestone
-                          ? "border-line bg-gold-soft"
-                          : "border-navy bg-cream"
-                      }`}
-                    >
-                      <div className="text-xs uppercase tracking-[0.2em] mb-1.5">
-                        <span
-                          className={isMilestone ? "text-gold-ink" : "text-navy"}
-                        >
-                          {t(isMilestone ? "Milestone" : "Shipped", locale)}
-                        </span>
-                        <span className="text-ink-muted ml-2">
-                          {new Date(m.created_at as string).toLocaleDateString(
-                            locale === "th" ? "th-TH" : "en-GB",
-                            { day: "numeric", month: "short" },
-                          )}
-                        </span>
-                      </div>
-                      <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">
-                        {m.content as string}
-                      </p>
-                      {/* Through webUrl() (lib/web-url.ts): a `link_url`
-                          that is not http/https renders no link at all. */}
-                      {(() => {
-                        const link = webUrl(m.link_url as string | null);
-                        return link ? (
-                          <a
-                            href={link.toString()}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all inline-block"
-                          >
-                            {link.hostname.replace(/^www\./, "")}
-                          </a>
-                        ) : null;
-                      })()}
+                {(recentMilestones ?? []).map((m) => (
+                  <div
+                    key={m.id as string}
+                    className="p-4 border-l-2 border-line bg-gold-soft"
+                  >
+                    <div className="text-xs uppercase tracking-[0.2em] mb-1.5">
+                      <span className="text-gold-ink">
+                        {t("Milestone", locale)}
+                      </span>
+                      <span className="text-ink-muted ml-2">
+                        {new Date(m.created_at as string).toLocaleDateString(
+                          locale === "th" ? "th-TH" : "en-GB",
+                          { day: "numeric", month: "short" },
+                        )}
+                      </span>
                     </div>
-                  );
-                })}
+                    <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">
+                      {m.content as string}
+                    </p>
+                    {/* Through webUrl() (lib/web-url.ts): a `link_url`
+                        that is not http/https renders no link at all. */}
+                    {(() => {
+                      const link = webUrl(m.link_url as string | null);
+                      return link ? (
+                        <a
+                          href={link.toString()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 text-xs text-navy hover:text-gold-ink underline underline-offset-4 decoration-line break-all inline-block"
+                        >
+                          {link.hostname.replace(/^www\./, "")}
+                        </a>
+                      ) : null;
+                    })()}
+                  </div>
+                ))}
               </div>
             </Card>
           )}

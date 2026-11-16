@@ -24,7 +24,7 @@
 //     exactly that. So there is now ONE narrow development-only hole, through
 //     the author guard and only that guard: lib/test-accounts.ts lets a
 //     non-hidden PRODUCT by one of those three accounts onto the shelf, the
-//     deck, /p/<id> and /community/<id> in development. Point 1 still holds
+//     deck and its page, /products/<id>, in development. Point 1 still holds
 //     for everything else: such a row is a production row, and only the
 //     production code's own filters keep it off the live site — so check
 //     what the DEPLOYED code would do with it before inserting one.
@@ -36,8 +36,8 @@
 // showing fixtures — set PRODUCTS_FIXTURES=off (below) and reload.
 //
 // THE PRODUCT PAGE AND THE REVIEW MODAL TOO, so the whole flow can be looked
-// at. A card's rating-and-comments row opens /p/<id>, and a fixture has no row
-// there to find: in development app/(marketing)/p/[id]/page.tsx asks
+// at. A card's rating-and-comments row opens /products/<id>, and a fixture has
+// no row there to find: in development app/(marketing)/products/[id]/page.tsx asks
 // `findFixture()` first and renders the sample's page from it — its images,
 // description, link and rating, with no comments. Nothing on it saves
 // anything (there is no row to write to): a logged-out visitor's like,
@@ -51,7 +51,8 @@
 // render.
 //
 // To delete all of this: remove this file, the one `productFixtures()` call in
-// shelf-data.ts, the `findFixture()` branch in app/(marketing)/p/[id]/page.tsx,
+// shelf-data.ts, the `findFixture()` branches in
+// app/(marketing)/products/[id]/page.tsx and app/(marketing)/p/[id]/page.tsx,
 // the `isFixture` check in product-view.ts and the two in ProductShelf.tsx
 // (the own-ratings read and `sample`), and `sample` in DeckPrompts.tsx. No
 // data needs cleaning up.
@@ -102,7 +103,7 @@ import {
 } from "@/lib/post-types";
 
 /** Prefix on every fixture id. A uuid cannot start with it, so it is what
- *  tells a page a product has no row: /p/<id> renders it from this module
+ *  tells a page a product has no row: /products/<id> renders it from this module
  *  (findFixture, development only), and it is the one place a `data:` image is
  *  allowed (./product-view.ts). */
 export const FIXTURE_PREFIX = "fixture-";
@@ -426,8 +427,9 @@ const SAMPLES: {
 /**
  * The sample with this id, or null — ALWAYS null in a production build, where
  * the check below folds to a constant and the lookup is never reached. For
- * app/(marketing)/p/[id]/page.tsx, which renders a sample's product page in
- * development so the card's rating-and-comments row has somewhere to land.
+ * app/(marketing)/products/[id]/page.tsx, which renders a sample's product
+ * page in development so the card's rating-and-comments row has somewhere to
+ * land (and /p/<id>, which sends an old sample link there).
  */
 export function findFixture(id: string): ProductItem | null {
   if (process.env.NODE_ENV === "production") return null;

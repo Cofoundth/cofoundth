@@ -20,7 +20,7 @@ export default async function AdminPostsPage() {
   const admin = createAdminClient();
   const { data: rows } = await admin
     .from("forum_posts")
-    .select("id, content, author_id, hidden, created_at")
+    .select("id, title, content, kind, author_id, hidden, created_at")
     .order("created_at", { ascending: false })
     .limit(300);
 
@@ -38,6 +38,10 @@ export default async function AdminPostsPage() {
     const a = am.get(p.author_id as string);
     return {
       id: p.id as string,
+      // A product is stored here too (kind 'show_and_tell'), but it is not a
+      // post: the row says so, shows its name and opens its own page.
+      isProduct: p.kind === "show_and_tell",
+      title: (p.title as string | null) ?? null,
       content: p.content as string,
       authorName: (a?.full_name as string | null) ?? null,
       authorSlug: (a?.slug as string | null) ?? null,
@@ -48,6 +52,7 @@ export default async function AdminPostsPage() {
   });
 
   const hiddenCount = posts.filter((p) => p.hidden).length;
+  const productCount = posts.filter((p) => p.isProduct).length;
 
   return (
     <Section>
@@ -57,7 +62,8 @@ export default async function AdminPostsPage() {
           <div className="flex min-w-0 items-baseline gap-2.5">
             <h1 className="text-d2 truncate">Posts</h1>
             <span className="shrink-0 text-sm text-ink-muted">
-              {posts.length} total · {hiddenCount} hidden
+              {posts.length - productCount} posts · {productCount}{" "}
+              products · {hiddenCount} hidden
             </span>
           </div>
         </div>

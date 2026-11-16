@@ -7,7 +7,7 @@ export type PolledNotif = {
   id: string;
   type: string;
   entityId: string | null;
-  data: { actor_name?: string; post_title?: string } | null;
+  data: { actor_name?: string; post_title?: string; post_kind?: string } | null;
   readAt: string | null;
   createdAt: string;
   actorId: string | null;
@@ -43,7 +43,7 @@ export async function fetchNotificationsAction(): Promise<{
       type: n.type as string,
       entityId: (n.entity_id as string | null) ?? null,
       data:
-        (n.data as { actor_name?: string; post_title?: string } | null) ?? null,
+        (n.data as PolledNotif["data"]) ?? null,
       readAt: (n.read_at as string | null) ?? null,
       createdAt: n.created_at as string,
       actorId: (n.actor_id as string | null) ?? null,

@@ -20,7 +20,7 @@
 //      the user comes back to a login page that is not ours). `rel` on the
 //      links; on the deck's window.open(), the opener severed by hand in the
 //      same tick (ProductDeck's header says why it cannot be the feature).
-//   2. `rel="nofollow"` — a public, indexable page (the deck, /p/<id>) must
+//   2. `rel="nofollow"` — a public, indexable page (the deck, /products/<id>) must
 //      not become an SEO pass-through that is worth spamming to get into.
 //   3. The href is PARSED before it is rendered, and only `http:`/`https:`
 //      survives. The writers validate on write today (createPostAction with

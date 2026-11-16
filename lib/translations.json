@@ -1818,5 +1818,20 @@
   "Password must include a number.": "รหัสผ่านต้องมีตัวเลข",
   "Passwords don't match.": "รหัสผ่านไม่ตรงกัน",
   "This email is already registered. Sign in instead, or use forgot password.": "อีเมลนี้สมัครไว้แล้ว เข้าสู่ระบบ หรือกดลืมรหัสผ่าน",
-  "Not strong enough": "ยังไม่ครบเงื่อนไข"
+  "Not strong enough": "ยังไม่ครบเงื่อนไข",
+  "{name} commented on your product": "{name} แสดงความคิดเห็นในโปรดักต์ของคุณ",
+  "This product isn’t available.": "ตอนนี้เปิดโปรดักต์นี้ไม่ได้",
+  "This isn’t available any more.": "ตอนนี้เปิดอันนี้ไม่ได้แล้ว",
+  "Couldn't upload all the images. Nothing was added — try again.": "อัปโหลดรูปไม่ครบ ยังไม่ได้ลงโปรดักต์ให้ ลองใหม่อีกทีนะ",
+  "Couldn't upload all the images. Nothing was changed — try again.": "อัปโหลดรูปไม่ครบ ยังไม่ได้แก้อะไรให้ ลองใหม่อีกทีนะ",
+  "Couldn’t save your changes. Try again.": "บันทึกไม่สำเร็จ ลองอีกทีนะ",
+  "Couldn’t delete it. Try again.": "ลบไม่สำเร็จ ลองอีกทีนะ",
+  "Your changes are saved.": "บันทึกที่แก้ไว้แล้ว",
+  "Changes show on the deck and on its page. Nothing is posted to the community feed.": "ที่แก้จะขึ้นทั้งในหน้าโปรดักต์และหน้าของมันเอง ไม่มีอะไรโพสต์ลงฟีดคอมมูนิตี้",
+  "Edit product": "แก้ไขโปรดักต์",
+  "Back to the product": "กลับไปที่โปรดักต์",
+  "Change what people see. Its ratings and comments stay with it.": "แก้สิ่งที่คนอื่นเห็นได้เลย คะแนนกับคอมเมนต์เดิมยังอยู่ครบ",
+  "Delete {name}?": "ลบ {name} ไหม?",
+  "It comes off the deck, and its ratings and comments are deleted with it. This can’t be undone.": "โปรดักต์จะหายไปจากหน้าโปรดักต์ คะแนนกับคอมเมนต์ทั้งหมดจะถูกลบไปด้วย ย้อนกลับไม่ได้นะ",
+  "Recent milestones": "ก้าวสำคัญล่าสุด"
 }

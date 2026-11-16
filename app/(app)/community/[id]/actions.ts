@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountRole } from "@/lib/account";
 import { isBlockedEitherWay } from "@/lib/blocking";
-import { isRatingScore } from "@/lib/post-types";
+import { isRatingScore, productPath } from "@/lib/post-types";
 import { canComment, canRate } from "@/lib/roles";
 
 export type CommentState = { error?: string } | null;
@@ -41,6 +41,8 @@ export async function toggleLikeAction(postId: string) {
 
   revalidatePath(`/community/${postId}`);
   revalidatePath(`/community`);
+  // A product's like lives on its own page.
+  revalidatePath(productPath(postId));
 }
 
 // --- Product ratings ------------------------------------------------
@@ -64,12 +66,13 @@ export type RatingState = { error?: string } | null;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Every path a product's rating is shown on. `/` and `/products` render the
- *  shelf; /p/<id> is the public page and /community/<id> the member one. */
+ *  shelf, /products/<id> is the product's page and /products/mine lists the
+ *  maker's own. */
 function revalidateProduct(postId: string) {
   revalidatePath("/");
   revalidatePath("/products");
-  revalidatePath(`/p/${postId}`);
-  revalidatePath(`/community/${postId}`);
+  revalidatePath(productPath(postId));
+  revalidatePath("/products/mine");
 }
 
 export async function setProductRatingAction(
@@ -200,6 +203,7 @@ export async function createCommentAction(
 
   revalidatePath(`/community/${postId}`);
   revalidatePath(`/community`);
+  revalidatePath(productPath(postId));
   return null;
 }
 
@@ -217,4 +221,6 @@ export async function deleteCommentAction(commentId: string, postId: string) {
     .eq("author_id", user.id);
 
   revalidatePath(`/community/${postId}`);
+  revalidatePath(productPath(postId));
+  revalidatePath("/products/mine");
 }

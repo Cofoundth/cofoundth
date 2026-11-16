@@ -2,7 +2,7 @@
 
 // A product's screenshots, one at a time: the deck's top card
 // (app/(marketing)/products/ProductDeck.tsx) and the product's own page
-// (app/(marketing)/products/ProductDetail.tsx, on /p/<id> and /community/<id>).
+// (app/(marketing)/products/ProductDetail.tsx, on /products/<id>).
 // ONE component, so the two cannot drift apart in how a reader moves through
 // the pictures.
 //

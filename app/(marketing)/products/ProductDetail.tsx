@@ -1,5 +1,5 @@
-// A product's page: the part /p/<id> (anyone) and /community/<id> (members)
-// share, so the product looks the same whichever of the two a reader is on.
+// A product's page, /products/<id>: the product itself, drawn the same for a
+// visitor and for a member (app/(marketing)/products/[id] renders both).
 //
 // ── WHAT THE PAGE IS FOR, IN THE ORDER IT SHOWS IT ─────────────────────────
 // The deck card itself opens the maker's product in a new tab (CLAUDE.md,
@@ -16,15 +16,16 @@
 //   6. whatever the page adds (`children`: who made it, likes, share)
 //
 // plus, above all of it and only for the maker who has just added it from
-// /products/new, the confirmation /community/<id> passes as `notice`.
+// /products/new (or has just saved an edit), the confirmation the page
+// passes as `notice`.
 //
-// and the comments come after the card, from each page, because the two pages
-// hold different conversations: a preview behind a sign-in on /p/<id>, the
-// whole thread and the composer on /community/<id>.
+// and the comments come after the card, from the page, because the two
+// readers get different conversations: a preview behind a sign-in for a
+// visitor, the whole thread and the composer for a member.
 //
 // ── ONE COLUMN ON A PHONE, TWO FROM `lg` ───────────────────────────────────
 // Stacked, a 3:2 gallery at the narrow column's 560px is 373px tall, and at
-// 1280x800 that put "Try it" at y=753 — under the fixed sign-in bar on /p/<id>,
+// 1280x800 that put "Try it" at y=753 — under the fixed sign-in bar a visitor gets,
 // i.e. the page's primary action below the first viewport. From `lg` the
 // card is the images beside the words (the pages give it the 1120px container
 // there: main + aside, CLAUDE.md's "Layout"), so the description and "Try it"
@@ -109,8 +110,8 @@ export function ProductDetail({
   rateSlot?: ReactNode;
   /** The rest of the card: the maker, likes, share. */
   children?: ReactNode;
-  /** Above everything, in the same column as the card: /community/<id>'s
-   *  "added" confirmation for the maker. */
+  /** Above everything, in the same column as the card: the "added" / "saved"
+   *  confirmation for the maker. */
   notice?: ReactNode;
 }) {
   const images = productImages(post);

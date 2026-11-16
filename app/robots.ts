@@ -16,9 +16,11 @@ export default function robots(): MetadataRoute.Robots {
         // is the layout, never this file.
         //
         // The two rules to keep in mind when editing:
-        //   1. These are PREFIX matches. "/p" would block every product page
-        //      and "/pro…" would block the shelf, so NEVER add a bare "/p".
-        //   2. Nothing public may appear here. /products, /p/<id>, /founders,
+        //   1. These are PREFIX matches. "/p" would block every public post
+        //      and "/pro…" would block the shelf and every product page
+        //      (/products/<id>), so NEVER add a bare "/p" or "/pro".
+        //   2. Nothing public may appear here. /products, /products/<id>,
+        //      /p/<id>, /founders,
         //      /insights, /about, /contact, /privacy, /terms,
         //      /legal-templates and /code-of-conduct are all deliberately
         //      absent. /products in particular is now a PUBLIC marketing

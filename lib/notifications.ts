@@ -3,6 +3,15 @@
 // Client- and server-safe: no hooks, no directives; the translator comes in
 // as an argument (tr from useT() on the client, a t(en, locale) closure on
 // the server).
+//
+// A PRODUCT IS NOT A POST, even though it is stored as one (a forum_posts row
+// with kind 'show_and_tell'). A comment or a mention on one says "your
+// product" and opens the product's page, /products/<id>. The kind is written
+// into `data.post_kind` when the notification is created — by the comment
+// trigger (migration 0081) and by notifyMentions (lib/post-actions.ts) — so
+// this stays a pure mapping with no read. A row from before 0081 has no
+// `post_kind` and reads as a post; its link still works, because
+// /community/<id> sends a product on to /products/<id>.
 
 export type NotifLike = {
   type: string;
@@ -10,6 +19,8 @@ export type NotifLike = {
   data: {
     actor_name?: string;
     post_title?: string;
+    /** forum_posts.kind of the thread a comment / mention is on. */
+    post_kind?: string;
     slug?: string;
     title?: string;
   } | null;
@@ -21,12 +32,19 @@ export type NotifLike = {
   } | null;
 };
 
+/** A comment or mention on a product rather than on a community post. */
+function onProduct(n: NotifLike): boolean {
+  return n.data?.post_kind === "show_and_tell";
+}
+
 export function notifHref(n: NotifLike): string {
   switch (n.type) {
     case "profile_view":
       return n.actor ? `/profile/${n.actor.slug ?? n.actor.id}` : "/notifications";
     case "comment":
     case "mention":
+      if (onProduct(n))
+        return n.entityId ? `/products/${n.entityId}#comments` : "/products";
       return n.entityId ? `/community/${n.entityId}` : "/community";
     case "message":
       return n.entityId ? `/messages/${n.entityId}` : "/matches";
@@ -63,7 +81,11 @@ export function notifText(
     case "profile_view":
       return tr("{name} viewed your profile").replace("{name}", name);
     case "comment":
-      return tr("{name} commented on your post").replace("{name}", name);
+      return tr(
+        onProduct(n)
+          ? "{name} commented on your product"
+          : "{name} commented on your post",
+      ).replace("{name}", name);
     case "mention":
       return tr("{name} mentioned you in a comment").replace("{name}", name);
     case "interest":

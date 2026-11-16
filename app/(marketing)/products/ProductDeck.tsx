@@ -40,7 +40,8 @@
 //
 // ── THE RATING-AND-COMMENTS ROW IS A DIFFERENT DESTINATION ─────────────────
 // The card's footer (the rating and the comment count) is a separate, same-tab
-// link to the product's page on Cofoundee, /p/<id>, where every comment is.
+// link to the product's page on Cofoundee, /products/<id>, where every
+// comment is.
 // It sits ABOVE the card's link (z-20 against z-10, siblings in the DOM — see
 // THE CARD'S TWO LINKS), and a press on it never starts a swipe
 // ([data-deck-nodrag]).
@@ -48,7 +49,7 @@
 // ── COMING BACK RESUMES THE DECK ───────────────────────────────────────────
 // Opening a product — trying it or going to its page — rewrites this page's
 // own history entry to `?after=<id>` first, so a reload, browser Back from
-// /p/<id>, a phone's swipe-back and that page's back link all land on an
+// /products/<id>, a phone's swipe-back and that page's back link all land on an
 // address that says where the reader was, and the stack starts at the card
 // after it. The address is the only place the position is kept;
 // ./deck-position.ts has the whole argument, including what a reload does.

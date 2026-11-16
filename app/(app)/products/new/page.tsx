@@ -43,7 +43,7 @@ import { canPostProduct, roleHome } from "@/lib/roles";
 import { tServer } from "@/lib/i18n-server";
 import { Card, Section } from "@/components/ui";
 import { SwitchToBuilding } from "@/app/(marketing)/products/SwitchToBuilding";
-import { AddProductForm } from "./AddProductForm";
+import { ProductForm } from "../ProductForm";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +85,7 @@ export default async function AddProductPage() {
 
       {mayAdd ? (
         <Card padding="lg">
-          <AddProductForm />
+          <ProductForm />
         </Card>
       ) : (
         // THE EXPLORER. createProductAction's own refusal, said here before

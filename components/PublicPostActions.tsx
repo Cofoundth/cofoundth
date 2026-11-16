@@ -61,10 +61,9 @@ export function PublicPostActions({
  * rating itself is <ProductRatingSummary>, rendered beside this by the page;
  * this is only the door, and it is the SAME join dialog as every other
  * interaction on that page — with a sentence that names what they tried to do.
- * Rating happens at /community/<id>, where /p/<id> sends a signed-in member,
- * which is why `next` is the product's /p/<id> (with the deck context it came
- * with, so its back link still finds the card) and not a second copy of that
- * decision.
+ * Rating happens on the same page once signed in — /products/<id> shows a
+ * member the stars — which is why `next` is the product's /products/<id> (with
+ * the deck context it came with, so its back link still finds the card).
  */
 export function PublicRateButton({ next }: { next: string }) {
   const tr = useT();

@@ -36,27 +36,49 @@ export default async function AdminOverviewPage() {
   const since = msAgoISO(DAYS * DAY_MS);
   const weekAgo = msAgoISO(7 * DAY_MS);
 
+  // forum_posts holds products too (kind 'show_and_tell'). A product is not
+  // a post, so "New posts" leaves them out and they get their own tile.
+  const PRODUCT = "show_and_tell";
   const [
     { count: totalUsers },
     { count: totalPosts },
+    { count: totalProducts },
     { count: totalMatches },
     { count: openReports },
     { data: userRows },
     { data: postRows },
+    { data: productRows },
     { data: matchRows },
     { count: usersWeek },
     { count: postsWeek },
+    { count: productsWeek },
     { count: matchesWeek },
   ] = await Promise.all([
     admin.from("profiles").select("id", { count: "exact", head: true }),
-    admin.from("forum_posts").select("id", { count: "exact", head: true }),
+    admin
+      .from("forum_posts")
+      .select("id", { count: "exact", head: true })
+      .neq("kind", PRODUCT),
+    admin
+      .from("forum_posts")
+      .select("id", { count: "exact", head: true })
+      .eq("kind", PRODUCT),
     admin.from("matches").select("id", { count: "exact", head: true }),
     admin
       .from("reports")
       .select("id", { count: "exact", head: true })
       .eq("status", "open"),
     admin.from("profiles").select("created_at").gte("created_at", since),
-    admin.from("forum_posts").select("created_at").gte("created_at", since),
+    admin
+      .from("forum_posts")
+      .select("created_at")
+      .neq("kind", PRODUCT)
+      .gte("created_at", since),
+    admin
+      .from("forum_posts")
+      .select("created_at")
+      .eq("kind", PRODUCT)
+      .gte("created_at", since),
     admin.from("matches").select("created_at").gte("created_at", since),
     admin
       .from("profiles")
@@ -65,6 +87,12 @@ export default async function AdminOverviewPage() {
     admin
       .from("forum_posts")
       .select("id", { count: "exact", head: true })
+      .neq("kind", PRODUCT)
+      .gte("created_at", weekAgo),
+    admin
+      .from("forum_posts")
+      .select("id", { count: "exact", head: true })
+      .eq("kind", PRODUCT)
       .gte("created_at", weekAgo),
     admin
       .from("matches")
@@ -85,6 +113,13 @@ export default async function AdminOverviewPage() {
       total: totalPosts ?? 0,
       week: postsWeek ?? 0,
       data: dailyBuckets((postRows ?? []) as { created_at: string }[]),
+      color: "#1B1A17",
+    },
+    {
+      label: "New products",
+      total: totalProducts ?? 0,
+      week: productsWeek ?? 0,
+      data: dailyBuckets((productRows ?? []) as { created_at: string }[]),
       color: "#1B1A17",
     },
     {
@@ -118,7 +153,10 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Four KPI tiles in one row from `lg`: a stat row, not a card grid,
+          so it does not take the 3-up card rule (which would leave the
+          fourth tile alone on a second row). */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
           <Card key={c.label} padding="sm">
             <div className="text-xs uppercase tracking-[0.15em] text-ink-muted mb-1">

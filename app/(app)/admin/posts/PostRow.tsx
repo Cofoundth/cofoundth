@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { adminSetPostHidden, adminDeletePost } from "@/lib/admin-actions";
+import { productPath } from "@/lib/post-types";
 import { Button } from "@/components/ui";
 
 export type AdminPost = {
   id: string;
+  /** A product (kind 'show_and_tell'): labelled, and opens /products/<id>. */
+  isProduct: boolean;
+  title: string | null;
   content: string;
   authorName: string | null;
   authorSlug: string | null;
@@ -35,13 +39,26 @@ export function PostRow({ post }: { post: AdminPost }) {
             >
               {post.authorName ?? "—"}
             </Link>
+            {post.isProduct && (
+              <span className="text-xs uppercase tracking-[0.12em] border border-line text-ink-muted px-1 py-0.5 rounded-full">
+                Product
+              </span>
+            )}
             {post.hidden && (
               <span className="text-xs uppercase tracking-[0.12em] border border-danger-line text-danger-ink px-1 py-0.5 rounded-full">
                 Hidden
               </span>
             )}
           </div>
-          <Link href={`/community/${post.id}`} className="block">
+          <Link
+            href={
+              post.isProduct ? productPath(post.id) : `/community/${post.id}`
+            }
+            className="block hover:text-navy"
+          >
+            {post.isProduct && post.title && (
+              <p className="text-sm font-medium text-ink">{post.title}</p>
+            )}
             <p className="text-sm text-ink leading-relaxed line-clamp-3 whitespace-pre-wrap hover:text-navy">
               {post.content}
             </p>

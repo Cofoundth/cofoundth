@@ -1,5 +1,6 @@
 // /products/mine — My products. A maker's own products in one place, each with
-// its public rating and the latest comments on it, and the way to add another.
+// its public rating and the latest comments on it, the way to edit or delete
+// each one (./ProductManage.tsx), and the way to add another.
 // The deck's top-right corner links here for a founder who has added a product
 // (../../../(marketing)/products/ProductShelf.tsx, supplyCta); a founder who
 // has not gets "Add yours" there instead, so an empty list is rare — the empty
@@ -25,16 +26,17 @@
 //                same answer on a full load.
 //
 // ── READS ─────────────────────────────────────────────────────────────────
-// Through the MEMBER'S OWN client: their own posts, the comments on them and
-// the commenters' names, all readable to `authenticated` — the reads
-// /community/<id> makes. Only the public rating goes through the service role
-// (lib/product-ratings.ts), as on every product page.
+// Through the MEMBER'S OWN client: their own products, the comments on them
+// and the commenters' names, all readable to `authenticated` — the reads a
+// product's page (/products/<id>) makes for a member. Only the public rating
+// goes through the service role (lib/product-ratings.ts), as on every product
+// page.
 //
-// HIDDEN PRODUCTS ARE LISTED, MARKED. /community/<id> lets the author open
-// their own hidden post, and a product that silently vanished from the deck
-// with no word anywhere would be worse than a plain "a moderator hid this".
+// HIDDEN PRODUCTS ARE LISTED, MARKED. A product's page lets its maker open it
+// while hidden, and a product that silently vanished from the deck with no
+// word anywhere would be worse than a plain "a moderator hid this".
 //
-// Comments from blocked members are dropped, exactly as on /community/<id>,
+// Comments from blocked members are dropped, exactly as on the product's page,
 // which is where "See all" leads — so the count here is the count there. The
 // maker's own replies count too (they are in that thread), but the preview
 // shows only what OTHER people said: it is the feedback, not the conversation.
@@ -57,7 +59,12 @@ import { getAccountRole } from "@/lib/account";
 import { ADD_PRODUCT_PATH, canPostProduct, roleHome } from "@/lib/roles";
 import { getBlockedIds } from "@/lib/blocking";
 import { getProductRatings } from "@/lib/product-ratings";
-import { CATEGORY_LABEL, UNRATED, productCategoryOf } from "@/lib/post-types";
+import {
+  CATEGORY_LABEL,
+  UNRATED,
+  productCategoryOf,
+  productPath,
+} from "@/lib/post-types";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { timeAgo } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
@@ -67,6 +74,7 @@ import {
   productImages,
   productName,
 } from "@/app/(marketing)/products/product-view";
+import { ProductManage } from "./ProductManage";
 
 export const dynamic = "force-dynamic";
 
@@ -234,7 +242,7 @@ export default async function MyProductsPage() {
         <ul className="space-y-4">
           {products.map((p) => {
             const id = p.id as string;
-            const href = `/community/${id}`;
+            const href = productPath(id);
             const name = productName(
               {
                 title: (p.title as string | null) ?? null,
@@ -365,20 +373,26 @@ export default async function MyProductsPage() {
                     </ul>
                   )}
 
-                  <LinkButton
-                    href={count > shown.length ? `${href}#comments` : href}
-                    variant="secondary"
-                    size="sm"
-                    className="mt-5"
-                  >
-                    {/* One comment the preview does not show is the maker's
-                        own reply: "See all 1 comments" would be wrong twice. */}
-                    {count > shown.length
-                      ? count === 1
-                        ? tSeeOne
-                        : tSeeAll.replace("{n}", count.toLocaleString("en-US"))
-                      : tViewProduct}
-                  </LinkButton>
+                  {/* The way to the product on the left; managing it on
+                      the right, wrapping under it on a phone. */}
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+                    <LinkButton
+                      href={count > shown.length ? `${href}#comments` : href}
+                      variant="secondary"
+                      size="sm"
+                    >
+                      {/* One comment the preview does not show is the maker's
+                          own reply: "See all 1 comments" would be wrong twice. */}
+                      {count > shown.length
+                        ? count === 1
+                          ? tSeeOne
+                          : tSeeAll.replace("{n}", count.toLocaleString("en-US"))
+                        : tViewProduct}
+                    </LinkButton>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ProductManage id={id} name={name} />
+                    </div>
+                  </div>
                 </Card>
               </li>
             );

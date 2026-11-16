@@ -35,7 +35,10 @@ export function CommentComposer({ postId }: { postId: string }) {
         className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y rounded-xl"
       />
       {state?.error && (
-        <div className="text-xs text-danger-ink">{state.error}</div>
+        // Server actions return English literals; the client translates them.
+        <div className="text-xs text-danger-ink" role="alert">
+          {tr(state.error)}
+        </div>
       )}
       <div className="flex justify-end">
         <Button

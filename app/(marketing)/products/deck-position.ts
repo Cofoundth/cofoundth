@@ -18,7 +18,7 @@
 //     the deck, which moves on; the address now says so, so a reload lands on
 //     the card the reader is looking at.
 //   * its PAGE — the card's rating-and-comments row, a same-tab link to
-//     /p/<id>. Browser Back, a phone's swipe-back and that page's own back
+//     /products/<id>. Browser Back, a phone's swipe-back and that page's own back
 //     link all arrive at the rewritten address, and the deck starts at the
 //     card after it.
 //
@@ -50,14 +50,14 @@
 // ids already on the deck.
 //
 // ── HOW THE PRODUCT PAGE KNOWS WHERE "BACK" IS ─────────────────────────────
-// The deck's row links to `/p/<id>?from=products&category=game` (or
+// The deck's row links to `/products/<id>?from=products&category=game` (or
 // `from=home` on /). The product page never echoes those values: it maps
 // `from` to one of the two deck routes it knows and re-parses `category` with
 // the deck's own parser, then builds its back link here. Anything else, or
 // nothing, is /products. So the parameter cannot be used to point the link
 // anywhere else.
 
-import type { ProductCategory } from "@/lib/post-types";
+import { productPath, type ProductCategory } from "@/lib/post-types";
 import { PARAM, parseCategoryParam } from "./categories";
 
 /** On the deck: `?after=<product id>`, the last product the reader opened. */
@@ -118,7 +118,7 @@ export function productPageHref(
 ): string {
   const query = new URLSearchParams({ [FROM_PARAM]: fromValue(route) });
   if (category) query.set(PARAM, category);
-  return `/p/${encodeURIComponent(id)}?${query}`;
+  return `${productPath(id)}?${query}`;
 }
 
 /**
@@ -159,8 +159,9 @@ export function deckReviewPath(
 }
 
 /** The deck-context part of a product page's address, rebuilt from parsed
- *  values, for a redirect that must keep it (/p/<id> -> /community/<id>) and
- *  for the sign-in links on that page. */
+ *  values, for a redirect that must keep it (an old /p/<id> or
+ *  /community/<id> product link -> /products/<id>) and for the sign-in links
+ *  on that page. */
 export function deckContextQuery(search: {
   from?: string | string[];
   category?: string | string[];

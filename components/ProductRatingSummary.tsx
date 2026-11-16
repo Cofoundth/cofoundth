@@ -1,7 +1,7 @@
 // A product's PUBLIC rating, read-only: "★ 4.3 (12)", or "☆ No ratings yet".
 //
 // No "use client" and no hooks, so ONE component renders it on a server page
-// (/p/<id>, /community/<id>) and inside a client tree (the deck) alike. The
+// (/products/<id>, My products, a profile) and inside a client tree (the deck) alike. The
 // caller passes the locale it already has: getLocale() on the server,
 // useLocale() on the client.
 //

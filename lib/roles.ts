@@ -138,6 +138,20 @@ export const ADD_PRODUCT_PATH = "/products/new";
 export const MY_PRODUCTS_PATH = "/products/mine";
 
 /**
+ * A product's edit page, app/(app)/products/[id]/edit (editProductPath in
+ * lib/post-types.ts): its maker changes the name, description, link,
+ * category, platforms and screenshots there (updateProductAction). Inside the
+ * (app) shell, so isAppShellRoute matches it by shape and the gate evaluates
+ * it: an investor is bounced to /funding, an explorer reads the route
+ * (ROLE_ACCESS.explorer covers /products/*) and the page itself sends anyone
+ * who is not the maker away. The product's own page, /products/<id>, is a
+ * MARKETING route and does not match.
+ */
+export function isEditProductPath(pathname: string): boolean {
+  return /^\/products\/[^/]+\/edit\/?$/.test(pathname);
+}
+
+/**
  * Per-role route access. `home: null` means the role is ungated — it may read
  * everything, so there is nowhere to bounce it to.
  */
@@ -312,7 +326,8 @@ export function canRoleRead(role: AccountRole, pathname: string): boolean {
  * second page.tsx under app/(app)/products and is listed the same way.
  */
 export function isAppShellRoute(pathname: string): boolean {
-  return [
+  return (
+    [
     "/activity",
     "/admin",
     "/browse",
@@ -332,7 +347,9 @@ export function isAppShellRoute(pathname: string): boolean {
     MY_PRODUCTS_PATH,
     "/profile",
     "/settings",
-  ].some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  ].some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
+    isEditProductPath(pathname)
+  );
 }
 
 // ---------------------------------------------------------------------------

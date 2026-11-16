@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { publicProductAuthors } from "@/lib/posts";
+import { productPath } from "@/lib/post-types";
 import { FRONT_DOOR_MIN_PRODUCTS } from "@/app/(marketing)/products/shelf-data";
 import { webUrl } from "@/app/(marketing)/products/product-view";
 
@@ -75,7 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Env not available at build time — ship static routes only.
   }
 
-  // ── Products: one /p/<id> per publicly visible show_and_tell post ───────
+  // ── Products: one /products/<id> per publicly visible product ──────────
   // Service role bypasses RLS, so EVERY filter is application code and a
   // forgotten one advertises a row to Google.
   //
@@ -143,7 +144,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .map((p) => {
         const stamp = (p.updated_at ?? p.created_at) as string | null;
         return {
-          url: `${SITE_URL}/p/${p.id}`,
+          url: `${SITE_URL}${productPath(p.id as string)}`,
           lastModified: stamp ? new Date(stamp) : new Date(),
           changeFrequency: "weekly" as const,
           priority: 0.6,

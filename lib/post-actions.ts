@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { getAccountRole } from "@/lib/account";
-import { canComment, canPostProduct, canPostThread } from "@/lib/roles";
+import {
+  canComment,
+  canPostProduct,
+  canPostThread,
+  MY_PRODUCTS_PATH,
+} from "@/lib/roles";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import { webUrl } from "@/lib/web-url";
@@ -16,9 +21,10 @@ import {
   MAX_PRODUCT_NAME,
   MAX_PRODUCT_IMAGES,
   PRODUCT_CATEGORIES,
+  postImages,
   productPlatformsOf,
 } from "@/lib/post-types";
-import type { PostComment, PostItem } from "@/lib/post-types";
+import { productPath, type PostComment, type PostItem } from "@/lib/post-types";
 
 export type PostFormState = { error?: string } | null;
 
@@ -43,7 +49,12 @@ function revalidateFeeds(postId?: string) {
   // that can render the shelf.
   revalidatePath("/products");
   revalidatePath("/");
-  if (postId) revalidatePath(`/community/${postId}`);
+  if (postId) {
+    revalidatePath(`/community/${postId}`);
+    // The id may be a product's, whose page is /products/<id>. A comment or a
+    // like on one comes through here too.
+    revalidatePath(productPath(postId));
+  }
 }
 
 function parseTags(raw: string): string[] | { error: string } {
@@ -147,6 +158,10 @@ async function uploadAll(
   userId: string,
   files: File[],
   tag: string,
+  /** The sentence for a failed batch of several, which says NOTHING was
+   *  saved, in the caller's own words: a post is posted, a product is added,
+   *  an edit is saved. */
+  nothingSaved: string,
 ): Promise<
   | { uploads: { url?: string; path?: string }[]; error?: undefined }
   | { error: string; uploads?: undefined }
@@ -171,10 +186,7 @@ async function uploadAll(
     // up with two of its five screenshots and the member never knowing which.
     return uploads.length === 1
       ? { error: uploads[0].error ?? "Couldn't upload the image. Try again." }
-      : {
-          error:
-            "Couldn't upload all the images. Nothing was posted — try again.",
-        };
+      : { error: nothingSaved };
   }
   return { uploads };
 }
@@ -227,7 +239,12 @@ export async function createPostAction(
 
   // A post or a milestone carries one cover, sent as `image`.
   const files = filesIn(formData, "image").slice(0, 1);
-  const uploaded = await uploadAll(user.id, files, "post.create");
+  const uploaded = await uploadAll(
+    user.id,
+    files,
+    "post.create",
+    "Couldn't upload all the images. Nothing was posted — try again.",
+  );
   if (uploaded.error !== undefined) return { error: uploaded.error };
   const imageUrls = uploaded.uploads.map((u) => u.url as string);
 
@@ -271,14 +288,25 @@ export async function createPostAction(
  * category from PRODUCT_CATEGORIES, canPostProduct, at most MAX_PRODUCT_IMAGES
  * screenshots, each one's type and size, and the all-or-nothing upload.
  *
- * On success it REDIRECTS to the product's member page with `?added=1`, which
- * shows the maker a short confirmation and the way to the deck. It does not
- * return, so the form never renders a stale success state.
+ * On success it REDIRECTS to the product's page (/products/<id>) with
+ * `?added=1`, which shows the maker a short confirmation and the way to the
+ * deck. It does not return, so the form never renders a stale success state.
  */
-export async function createProductAction(
-  _prev: PostFormState,
-  formData: FormData,
-): Promise<PostFormState> {
+type ProductFields = {
+  title: string;
+  content: string;
+  linkUrl: string;
+  category: string;
+  platforms: string[];
+};
+
+/**
+ * A product's fields out of the form, with every rule a product has — the one
+ * set of checks for adding one (createProductAction) and editing one
+ * (updateProductAction), so an edit can never write a row that adding it
+ * would have refused.
+ */
+function productFields(formData: FormData): ProductFields | { error: string } {
   const title = String(formData.get("title") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
   const linkUrl = String(formData.get("link_url") ?? "").trim();
@@ -314,6 +342,17 @@ export async function createProductAction(
   );
   if (!platforms.length) return { error: "Pick where it runs." };
 
+  return { title, content, linkUrl, category, platforms };
+}
+
+export async function createProductAction(
+  _prev: PostFormState,
+  formData: FormData,
+): Promise<PostFormState> {
+  const fields = productFields(formData);
+  if ("error" in fields) return fields;
+  const { title, content, linkUrl, category, platforms } = fields;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -336,7 +375,12 @@ export async function createProductAction(
   const files = filesIn(formData, "images");
   if (files.length > MAX_PRODUCT_IMAGES)
     return { error: `Up to ${MAX_PRODUCT_IMAGES} images per product.` };
-  const uploaded = await uploadAll(user.id, files, "product.create");
+  const uploaded = await uploadAll(
+    user.id,
+    files,
+    "product.create",
+    "Couldn't upload all the images. Nothing was added — try again.",
+  );
   if (uploaded.error !== undefined) return { error: uploaded.error };
   const imageUrls = uploaded.uploads.map((u) => u.url as string);
 
@@ -368,17 +412,228 @@ export async function createProductAction(
   }
 
   const id = row.id as string;
-  // The shelf (/products, and / once it serves the shelf) and the product's own
-  // two pages. NOT the feeds: the product is not in them.
+  // The shelf (/products, and / once it serves the shelf), the product's own
+  // page and My products. NOT the feeds: the product is not in them.
   revalidatePath("/products");
   revalidatePath("/");
-  revalidatePath(`/p/${id}`);
-  revalidatePath(`/community/${id}`);
+  revalidatePath(productPath(id));
+  revalidatePath(MY_PRODUCTS_PATH);
 
-  // OUTSIDE any try: redirect() throws to do its job. The member page, not
-  // /p/<id>: /p/<id> redirects a signed-in member there anyway, and rebuilds
-  // only the deck context on the way, which would drop `added`.
-  redirect(`/community/${encodeURIComponent(id)}?added=1`);
+  // OUTSIDE any try: redirect() throws to do its job.
+  redirect(`${productPath(id)}?added=1`);
+}
+
+/** A forum_posts id as Postgres stores it. Checked before any read, so a
+ *  malformed id is a plain refusal rather than a 22P02 from PostgREST. */
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The refusal for a product this member cannot edit or delete: not theirs,
+ *  not a product, or gone. One sentence for all three on purpose — it says
+ *  nothing about whose it is. */
+const PRODUCT_UNAVAILABLE = "This product isn’t available.";
+
+/**
+ * The maker's own product row, through their own client, or null. The checks
+ * every write to a product repeats: it exists, it IS a product, it is theirs.
+ */
+async function ownProduct(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  productId: string,
+  userId: string,
+) {
+  if (typeof productId !== "string" || !UUID.test(productId)) return null;
+  const { data } = await supabase
+    .from("forum_posts")
+    .select("id, author_id, kind, image_url, image_urls")
+    .eq("id", productId)
+    .maybeSingle();
+  if (!data || data.kind !== "show_and_tell" || data.author_id !== userId)
+    return null;
+  return {
+    id: data.id as string,
+    images: postImages({
+      image_url: (data.image_url as string | null) ?? null,
+      image_urls: (data.image_urls as string[] | null) ?? null,
+    }),
+  };
+}
+
+/**
+ * Best-effort: remove screenshots a product no longer uses (an edit dropped
+ * them, or the product was deleted) from the post-images bucket. Only objects
+ * in the maker's OWN folder — uploadPostImage writes `<user id>/post-…` — so
+ * a URL that points anywhere else, or at someone else's upload, is left alone.
+ * A failure is logged, never shown: the row is already right.
+ */
+async function removeProductImages(userId: string, urls: string[]) {
+  const marker = "/storage/v1/object/public/post-images/";
+  const paths = urls
+    .map((url) => {
+      const i = url.indexOf(marker);
+      return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
+    })
+    .filter((p): p is string => !!p && p.startsWith(`${userId}/`));
+  if (!paths.length) return;
+  const { error } = await createAdminClient()
+    .storage.from("post-images")
+    .remove(paths);
+  if (error) console.error("[product.images] orphaned", paths, error.message);
+}
+
+/** Every page a product's contents show on. */
+function revalidateProduct(productId: string) {
+  revalidatePath("/products");
+  revalidatePath("/");
+  revalidatePath(productPath(productId));
+  revalidatePath(MY_PRODUCTS_PATH);
+}
+
+/**
+ * EDIT a product, from /products/<id>/edit (app/(app)/products/[id]/edit).
+ * Its MAKER only, and only a product: the row is re-read through their own
+ * client and refused unless it is a `show_and_tell` they wrote — a server
+ * action is invocable with any arguments, so the page's own check is not the
+ * gate. Every field rule is createProductAction's (productFields), so an edit
+ * can never write what adding would have refused.
+ *
+ * WHAT IT NEVER TOUCHES: `kind` (a product stays a product — migration 0081
+ * refuses the change at the database too), `hidden` (moderation; 0078),
+ * `author_id`, the ratings, the comments and the likes. Editing is quiet, like
+ * adding: nothing is posted anywhere.
+ *
+ * SCREENSHOTS. The form sends the ones the maker kept as `keep` (in strip
+ * order) and the new files as `images`. A `keep` URL survives only if the
+ * product really has it — anything else is dropped, so this cannot be used to
+ * point a product at someone else's image. The new files go through the same
+ * checks and the same all-or-nothing upload as adding; the result is the kept
+ * ones followed by the new ones, the first being the cover. Screenshots the
+ * product no longer uses are removed from storage afterwards, best-effort.
+ *
+ * On success it REDIRECTS to the product's page with `?saved=1`.
+ */
+export async function updateProductAction(
+  productId: string,
+  _prev: PostFormState,
+  formData: FormData,
+): Promise<PostFormState> {
+  const fields = productFields(formData);
+  if ("error" in fields) return fields;
+  const { title, content, linkUrl, category, platforms } = fields;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  // The ladder's `product` cell, as for adding one. Only a founder has
+  // products to begin with; this keeps the two writes saying the same thing.
+  const role = await getAccountRole(supabase, user.id);
+  if (!canPostProduct(role)) return { error: "Only founders can add products." };
+
+  const product = await ownProduct(supabase, productId, user.id);
+  if (!product) return { error: PRODUCT_UNAVAILABLE };
+
+  const kept = Array.from(
+    new Set(formData.getAll("keep").map((v) => String(v))),
+  ).filter((url) => product.images.includes(url));
+  const files = filesIn(formData, "images");
+  if (kept.length + files.length > MAX_PRODUCT_IMAGES)
+    return { error: `Up to ${MAX_PRODUCT_IMAGES} images per product.` };
+  const uploaded = await uploadAll(
+    user.id,
+    files,
+    "product.update",
+    "Couldn't upload all the images. Nothing was changed — try again.",
+  );
+  if (uploaded.error !== undefined) return { error: uploaded.error };
+  const imageUrls = [...kept, ...uploaded.uploads.map((u) => u.url as string)];
+
+  // Scoped to the maker twice — `forum_posts_update_own` (RLS) and the
+  // author_id filter here — and `.select()` so a row that matched nothing
+  // reads as a failure rather than a silent success.
+  const { data: updated, error } = await supabase
+    .from("forum_posts")
+    .update({
+      title,
+      content,
+      link_url: linkUrl,
+      tags: [category],
+      platforms,
+      // The cover in the legacy single column too, as createProductAction
+      // writes it; every renderer goes through postImages().
+      image_url: imageUrls[0] ?? null,
+      image_urls: imageUrls,
+    })
+    .eq("id", product.id)
+    .eq("author_id", user.id)
+    .select("id");
+
+  if (error || !updated?.length) {
+    console.error("[product.update]", error);
+    await removePostImages(uploaded.uploads);
+    return { error: "Couldn’t save your changes. Try again." };
+  }
+
+  await removeProductImages(
+    user.id,
+    product.images.filter((url) => !imageUrls.includes(url)),
+  );
+  revalidateProduct(product.id);
+
+  // OUTSIDE any try: redirect() throws to do its job.
+  redirect(`${productPath(product.id)}?saved=1`);
+}
+
+/**
+ * DELETE a product, from My products (app/(app)/products/mine). Its maker
+ * only, and only a product, re-checked here like updateProductAction. Its
+ * ratings, comments and likes go with it (ON DELETE CASCADE on
+ * product_ratings, forum_comments and forum_likes); the comment and mention
+ * notifications that point at it are removed too, since they would only open
+ * a 404; its screenshots are removed from storage, best-effort. Reports about
+ * it stay: they are the moderators' record.
+ *
+ * Returns an error to show, or null. The list re-renders without it.
+ */
+export async function deleteProductAction(
+  productId: string,
+): Promise<{ error?: string } | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const product = await ownProduct(supabase, productId, user.id);
+  if (!product) return { error: PRODUCT_UNAVAILABLE };
+
+  // `.select()` for the same reason as the edit: zero rows is a failure.
+  const { data: gone, error } = await supabase
+    .from("forum_posts")
+    .delete()
+    .eq("id", product.id)
+    .eq("author_id", user.id)
+    .select("id");
+  if (error || !gone?.length) {
+    console.error("[product.delete]", error);
+    return { error: "Couldn’t delete it. Try again." };
+  }
+
+  // Notifications are insert- and delete-locked by RLS (0028), hence the
+  // service role. Best-effort: the product is already gone.
+  const { error: notifError } = await createAdminClient()
+    .from("notifications")
+    .delete()
+    .eq("entity_id", product.id)
+    .in("type", ["comment", "mention"]);
+  if (notifError)
+    console.error("[product.delete] notifications", notifError.message);
+  await removeProductImages(user.id, product.images);
+
+  revalidateProduct(product.id);
+  return null;
 }
 
 // Full-DB search (title / content / tags / author) — beyond the loaded page.
@@ -482,14 +737,23 @@ export async function createPostCommentAction(
   // A blocked pair can't talk here either. The post itself already 404s for
   // this viewer (/community/[id]), so this closes the direct-action path that
   // skips the page — and it deliberately doesn't say who blocked whom.
+  //
+  // The refusals name what the reader was looking at: this action also takes
+  // comments on a PRODUCT (its page's composer, and the deck's review modal),
+  // and a product is not a post. A row that is gone has no kind left to name.
   const { data: post } = await supabase
     .from("forum_posts")
-    .select("author_id")
+    .select("author_id, kind")
     .eq("id", postId)
     .maybeSingle();
-  if (!post) return { error: "This post isn’t available." };
+  if (!post) return { error: "This isn’t available any more." };
   if (await isBlockedEitherWay(user.id, post.author_id as string)) {
-    return { error: "This post isn’t available." };
+    return {
+      error:
+        post.kind === "show_and_tell"
+          ? PRODUCT_UNAVAILABLE
+          : "This post isn’t available.",
+    };
   }
 
   const { error } = await supabase
@@ -522,7 +786,11 @@ async function notifyMentions(
 
     const admin = createAdminClient();
     const [{ data: post }, { data: commenters }] = await Promise.all([
-      admin.from("forum_posts").select("author_id, title").eq("id", postId).single(),
+      admin
+        .from("forum_posts")
+        .select("author_id, title, kind")
+        .eq("id", postId)
+        .single(),
       admin.from("forum_comments").select("author_id").eq("post_id", postId),
     ]);
 
@@ -556,9 +824,12 @@ async function notifyMentions(
         actor_id: commenterId,
         type: "mention",
         entity_id: postId,
+        // post_kind: so a mention on a product reads and links as one
+        // (lib/notifications.ts). The comment trigger writes the same key.
         data: {
           actor_name: (me?.full_name as string) ?? "Someone",
           post_title: (post?.title as string) ?? "",
+          post_kind: (post?.kind as string) ?? "post",
         },
       })),
     );

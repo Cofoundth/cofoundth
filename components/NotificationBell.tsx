@@ -20,7 +20,12 @@ export type NotifItem = {
   id: string;
   type: string;
   entityId: string | null;
-  data: { actor_name?: string; post_title?: string; slug?: string } | null;
+  data: {
+    actor_name?: string;
+    post_title?: string;
+    post_kind?: string;
+    slug?: string;
+  } | null;
   readAt: string | null;
   createdAt: string;
   actor: {
