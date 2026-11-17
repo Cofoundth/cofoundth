@@ -11,6 +11,7 @@ const TABS = [
   { href: "/admin/posts", label: "Posts" },
   { href: "/admin/meetups", label: "Meetups" },
   { href: "/admin/deals", label: "Deals" },
+  { href: "/admin/rewards", label: "Monthly draw" },
   // Insights (blog) hidden for now — public Insights pages aren't linked.
   // Re-enable when the blog goes live.
   // { href: "/admin/insights", label: "Insights" },

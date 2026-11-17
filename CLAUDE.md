@@ -632,6 +632,8 @@ Onfound's measured 24px card is equally underivable from their own `--radius`.
 
 Products are added quietly on /products/new and are never announced in the community feed; announcing is the maker's choice, by writing a normal post.
 
+**Founder-approved exception (2026-11-17): the monthly draw.** The one deliberate piece of gamification: a streak with a small prize (one lottery ticket a month). A member who comments on 3 different posts or products a day (other members' content, not hidden, each comment 20+ characters) for 5 days in a row, by Bangkok time, is in that month's draw; a streak counts for the month it finishes in. The rules live in ONE place, `lib/rewards.ts` (the member's page and the admin draw both run it). Eligibility is recomputed from the comments that exist, never stored, so a deleted or removed comment stops counting. Members follow their progress (and see every comment they made, counted or not and why) at `/rewards`; an admin draws once per month at `/admin/rewards`, stored in `monthly_draws` (0087), which can't be redrawn. The winner is announced by the team, with consent. Keep the prize small, and add no points, badges, leaderboards or streak notifications without the founder saying so.
+
 ---
 
 ## ✅ Currently Built (Phase 0)
@@ -772,7 +774,7 @@ user_google_tokens
 1. **Community-first** — features that help community grow > features that don't
 2. **Co-founder matching is built but NOT the headline.** Don't make it the main marketing message.
 3. **B2B (company profile type) is first-class**, not an afterthought
-4. **Design for trust** — no swiping on people, no gamification, no urgency hacks (the product deck is the one swipe exception, see Language Rules)
+4. **Design for trust** — no swiping on people, no gamification, no urgency hacks (the product deck is the one swipe exception and the monthly draw the one gamification exception, see Language Rules)
 5. **Mutual interest required** before messaging unlocks (current pattern)
 6. **Free for all users** in Phase 0–1
 7. **Build for Thailand first** — Thai + English UI, PDPA compliant, Thai cultural register

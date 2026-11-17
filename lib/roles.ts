@@ -204,6 +204,9 @@ export const ROLE_ACCESS: Record<
       pathname.startsWith("/profile/") ||
       // Their own notifications are their own data.
       pathname === "/notifications" ||
+      // The monthly draw is earned by commenting, which is exactly what an
+      // explorer does — so its progress page is theirs too.
+      pathname === "/rewards" ||
       pathname === "/settings",
   },
 
@@ -346,6 +349,7 @@ export function isAppShellRoute(pathname: string): boolean {
     ADD_PRODUCT_PATH,
     MY_PRODUCTS_PATH,
     "/profile",
+    "/rewards",
     "/settings",
   ].some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
     isEditProductPath(pathname)

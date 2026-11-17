@@ -12,6 +12,9 @@ import {
 } from "@/lib/post-cleanup";
 import { productPath } from "@/lib/post-types";
 import { MY_PRODUCTS_PATH } from "@/lib/roles";
+import { randomInt } from "node:crypto";
+import { drawEntrants } from "@/lib/draw-data";
+import { isMonth, monthOf } from "@/lib/rewards";
 
 type Result = { ok?: boolean; error?: string };
 
@@ -146,4 +149,50 @@ export async function adminDeleteUser(userId: string): Promise<Result> {
 
   revalidateAll();
   return { ok: true };
+}
+
+// ---- Monthly draw ---------------------------------------------------------
+
+/**
+ * Draw `month`'s winner (`YYYY-MM`), once. The entrants are recomputed here,
+ * on the server, from the comments that exist now (lib/draw-data.ts) — never
+ * taken from the page — and the pick is a cryptographic random index into
+ * that list sorted by id. The result is stored once: monthly_draws.month is
+ * the primary key (0087), so a second press says "already drawn" instead of
+ * drawing again. Only a month that is over can be drawn.
+ */
+export async function drawMonthlyWinner(
+  month: string,
+): Promise<Result & { winner?: string }> {
+  const ctx = await requireAdmin();
+  if ("error" in ctx) return ctx;
+  if (!isMonth(month)) return { error: "Pick a month." };
+  if (month >= monthOf(new Date()))
+    return { error: "A month can be drawn once it is over." };
+
+  const entrants = await drawEntrants(month);
+  if (entrants === null)
+    return { error: "Couldn’t read this month’s comments. Try again." };
+  if (!entrants.length) return { error: "Nobody qualified that month." };
+
+  const winner = entrants[randomInt(entrants.length)];
+  const { error } = await ctx.admin.from("monthly_draws").insert({
+    month: `${month}-01`,
+    winner_id: winner.id,
+    eligible_count: entrants.length,
+    drawn_by: ctx.selfId,
+    // The pool as it was, in the order it was indexed (0088), so the record
+    // can always say who was in this draw.
+    entrant_ids: entrants.map((e) => e.id),
+  });
+  if (error) {
+    if (error.code === "23505")
+      return { error: "That month has already been drawn." };
+    console.error("[draw.save]", error.message);
+    return { error: "Couldn’t save the draw. Try again." };
+  }
+
+  revalidatePath("/admin/rewards");
+  revalidatePath("/rewards");
+  return { ok: true, winner: winner.name };
 }

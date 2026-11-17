@@ -275,6 +275,9 @@ export async function AppSidebar() {
           // keeps its marker — that one IS news to them.
           { href: "/products", label: await tServer("Products") },
           { href: "/community", label: await tServer("Community") },
+          // The monthly draw is earned by commenting — the explorer's one
+          // write — so it sits right under the two places they comment.
+          { href: "/rewards", label: await tServer("Monthly draw") },
           ...insightsItem,
           {
             href: "/meetups",
@@ -300,6 +303,9 @@ export async function AppSidebar() {
             ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
           },
           { href: "/community", label: await tServer("Community") },
+          // Next to Community: the draw is earned by commenting there and on
+          // products.
+          { href: "/rewards", label: await tServer("Monthly draw") },
           ...insightsItem,
           { href: "/browse", label: await tServer("Founders") },
           {
