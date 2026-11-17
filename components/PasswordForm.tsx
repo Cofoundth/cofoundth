@@ -68,7 +68,9 @@ export function PasswordForm() {
           </span>
         )}
         {state?.error && (
-          <span className="text-sm text-danger-ink">{state.error}</span>
+          <span role="alert" className="text-sm text-danger-ink">
+            {tr(state.error)}
+          </span>
         )}
       </div>
     </form>

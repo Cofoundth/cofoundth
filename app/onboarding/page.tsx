@@ -31,7 +31,7 @@ export default async function OnboardingPage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, first_name, last_name, photo_url, type, account_type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, location, commitment, runway, experience, pitch, why_this, background, work_experience, education, skills",
+      "full_name, first_name, last_name, photo_url, type, account_type, company_name, capabilities, partnership_seeking, status_tags, i_am, intent, looking_for, industry, stage, location, commitment, runway, experience, pitch, project_url, project_images, why_this, background, work_experience, education, skills, activities, help_with, needs_help_with, building_since",
     )
     .eq("id", user.id)
     .single();
@@ -97,6 +97,17 @@ export default async function OnboardingPage({
         work_experience: (profile.work_experience as string | null) ?? "",
         education: (profile.education as string | null) ?? "",
         skills: (profile.skills as string[] | null) ?? [],
+        // The wizard EDITS these six and saveOnboardingAction writes all of
+        // them, so they must start from what is stored: left out, a founder
+        // who reopened the wizard and clicked through had their project link,
+        // project images, activities, help topics and building-since replaced
+        // with nothing — the bug Settings had too (found 2026-11-17).
+        project_url: (profile.project_url as string | null) ?? "",
+        project_images: (profile.project_images as string[] | null) ?? [],
+        activities: (profile.activities as string[] | null) ?? [],
+        help_with: (profile.help_with as string[] | null) ?? [],
+        needs_help_with: (profile.needs_help_with as string[] | null) ?? [],
+        building_since: (profile.building_since as string | null) ?? "",
       }
     : {};
 

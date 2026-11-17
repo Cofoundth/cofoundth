@@ -61,9 +61,14 @@ const BASE_STYLES = `
   .footer { text-align: center; font-size: 11px; color: #6A655D; margin-top: 32px; }
 `;
 
+// `title` is the email's SUBJECT, and the subjects carry member-written names
+// raw (they are plain text in the mail header, where that is correct). Inside
+// <title> they are HTML, so they are escaped here, once, for every caller — a
+// name containing `</title>` used to inject markup into a Cofoundee-branded
+// email sent to someone else.
 function wrap(title: string, body: string) {
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>${title}</title><style>${BASE_STYLES}</style></head>
+<html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${BASE_STYLES}</style></head>
 <body><div class="container"><div class="card">${body}</div>
 <div class="footer">Cofoundee — Built by founders, for founders.</div></div></body></html>`;
 }

@@ -54,7 +54,9 @@
 -- ── WHAT IS NOT HERE ──────────────────────────────────────────────────────
 -- profiles has the same two kinds of hole (photo_url takes any URL; skills,
 -- capabilities and the other arrays have no size). That is a separate table
--- with its own writers (onboarding, OAuth avatars), so it gets its own change.
+-- with its own writers (the editors, the sign-up function), so it gets its own
+-- change: 0085 and 0086. (An earlier draft of this note said OAuth avatars
+-- write photo_url; they do not — only the avatar upload does.)
 
 -- ── the log ───────────────────────────────────────────────────────────────
 

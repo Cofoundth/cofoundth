@@ -1851,5 +1851,21 @@
   "At least 5 characters.": "อย่างน้อย 5 ตัวอักษร",
   "Couldn’t update the report. Try again.": "อัปเดตรายงานไม่สำเร็จ ลองอีกทีนะ",
   "Report not found.": "ไม่พบรายงานนี้",
-  "That image is too large. Pick one under 4MB.": "รูปใหญ่เกินไป เลือกรูปที่เล็กกว่า 4MB นะ"
+  "That image is too large. Pick one under 4MB.": "รูปใหญ่เกินไป เลือกรูปที่เล็กกว่า 4MB นะ",
+  "That doesn't look like a LinkedIn link.": "ลิงก์นี้ไม่ใช่ลิงก์ LinkedIn นะ",
+  "That doesn't look like a valid link.": "ลิงก์นี้ดูไม่ถูกต้องนะ",
+  "That doesn't look like a valid project link.": "ลิงก์โปรเจกต์นี้ดูไม่ถูกต้องนะ",
+  "Age must be a whole number between 16 and 100.": "อายุต้องเป็นตัวเลขจำนวนเต็มระหว่าง 16 ถึง 100",
+  "Company name is required for company profiles.": "โปรไฟล์บริษัทต้องใส่ชื่อบริษัทด้วยนะ",
+  "Replace the [ ] placeholders with your real details — don't submit the template as-is.": "แทนที่ส่วนในวงเล็บ [ ] ด้วยข้อมูลจริงของคุณก่อนนะ อย่าส่งเทมเพลตไปทั้งอย่างนั้น",
+  "Password must be 72 characters or less.": "รหัสผ่านต้องไม่เกิน 72 ตัวอักษร",
+  "Please select a valid commitment level.": "เลือกระดับความทุ่มเทให้ถูกต้องนะ",
+  "Please select a valid experience level.": "เลือกระดับประสบการณ์ให้ถูกต้องนะ",
+  "Please select a valid runway.": "เลือกเงินทุนสำรองให้ถูกต้องนะ",
+  "Please select a valid stage.": "เลือกช่วงของธุรกิจให้ถูกต้องนะ",
+  "Please select a valid time building.": "เลือกระยะเวลาที่ลงมือทำให้ถูกต้องนะ",
+  "Invalid role.": "บทบาทไม่ถูกต้อง",
+  "Invalid intent.": "ตัวเลือกไม่ถูกต้อง",
+  "Invalid 'looking for' role.": "บทบาทที่กำลังมองหาไม่ถูกต้อง",
+  "Invalid profile type.": "ประเภทโปรไฟล์ไม่ถูกต้อง"
 }

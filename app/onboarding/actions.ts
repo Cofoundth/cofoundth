@@ -271,7 +271,10 @@ export async function saveOnboardingAction(
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[onboarding.save]", error.message);
+    return { error: "Couldn’t save your changes. Try again." };
+  }
 
   // Finish where they were heading — the product a sign-up started from — if
   // lib/safe-next.ts accepts the posted `next`, and on the deck otherwise (only

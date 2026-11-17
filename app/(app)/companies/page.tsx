@@ -18,12 +18,19 @@ export default async function CompaniesPage({
   const user = await requireUser();
   const locale = await getLocale();
 
-  // All onboarded companies (excluding self for the "send request" affordance)
+  // All onboarded companies (excluding self for the "send request" affordance).
+  // Founder rows only, and never a suspended or bot account: `type` and
+  // `onboarded` alone used to be the whole filter, so a suspended company
+  // stayed listed and an explorer who PATCHed type='company' appeared too
+  // (the database refuses the latter since 0085; this is the read side).
   const { data: companies } = await supabase
     .from("profiles")
     .select(COMPANY_COLUMNS)
     .eq("type", "company")
     .eq("onboarded", true)
+    .eq("account_type", "founder")
+    .eq("suspended", false)
+    .not("is_bot", "is", true)
     .order("created_at", { ascending: false });
 
   // Current user's profile — used to scope "send partnership request"

@@ -108,6 +108,13 @@ export default async function SettingsPage({
     work_experience: profile.work_experience ?? "",
     education: profile.education ?? "",
     skills: arr(profile.skills),
+    // These four are SELECTED above and EDITED by the form, so they must be
+    // handed to it: left out, the form started them empty and every save
+    // wrote [] / NULL over what the member had (found 2026-11-17).
+    activities: arr(profile.activities),
+    help_with: arr(profile.help_with),
+    needs_help_with: arr(profile.needs_help_with),
+    building_since: (profile.building_since as string | null) ?? "",
   };
 
   // A GATED ROLE HAS NO FOUNDER PROFILE TO EDIT.

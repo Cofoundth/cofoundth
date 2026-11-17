@@ -304,8 +304,13 @@ export function OnboardingForm({ initial, destination }: Props) {
         )}
 
         {error && (
-          <div className="mt-6 px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
-            {error}
+          // Server actions return English literals; translated here, like
+          // every other form's refusal.
+          <div
+            role="alert"
+            className="mt-6 px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl"
+          >
+            {tr(error)}
           </div>
         )}
 

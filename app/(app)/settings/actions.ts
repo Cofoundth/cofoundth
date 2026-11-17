@@ -83,6 +83,14 @@ const MAX_SKILLS = 30;
 const MAX_ACTIVITIES = 20;
 const MAX_HELP_WITH = 15;
 
+/** What profiles.linkedin_url's CHECK accepts (linkedin_url_format, 0001):
+ *  the same pattern, so the form refuses exactly what the database would. */
+const LINKEDIN_LINK = /^https?:\/\/([a-z]+\.)?linkedin\.com\/.+/i;
+
+/** A failed profile write, in words. The database's own message (a CHECK or a
+ *  0085 guard naming a column) is for the log, not for the member. */
+const SAVE_FAILED = "Couldn’t save your changes. Try again.";
+
 const cap = (arr: string[], max: number) =>
   arr.map((s) => s.slice(0, MAX_ITEM_LEN)).slice(0, max);
 
@@ -258,6 +266,11 @@ export async function updateProfileAction(
   };
   const linkedin = normLink(linkedinRaw);
   if (linkedin && typeof linkedin !== "string") return linkedin;
+  // The column's own CHECK (linkedin_url_format, 0001) accepts linkedin.com
+  // links only. Refused HERE, in words, rather than letting the database say
+  // `violates check constraint "linkedin_url_format"` to the member.
+  if (linkedin && !LINKEDIN_LINK.test(linkedin))
+    return { error: "That doesn't look like a LinkedIn link." };
   const instagram = normLink(instagramRaw);
   if (instagram && typeof instagram !== "string") return instagram;
   const facebook = normLink(facebookRaw);
@@ -347,7 +360,10 @@ export async function updateProfileAction(
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[settings.profile]", error.message);
+    return { error: SAVE_FAILED };
+  }
 
   revalidatePath("/settings");
   revalidatePath(`/profile/${user.id}`);
@@ -415,7 +431,10 @@ export async function updateIdentityAction(
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[settings.identity]", error.message);
+    return { error: SAVE_FAILED };
+  }
 
   revalidatePath("/settings");
   // The rail shows the name and lives in a layout, which Next does not

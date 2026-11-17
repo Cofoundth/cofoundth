@@ -685,7 +685,11 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           </span>
         )}
         {state?.error && (
-          <span className="text-sm text-danger-ink">{state.error}</span>
+          // Server actions return English literals; the client translates
+          // them (untranslated, every refusal read English in the Thai UI).
+          <span role="alert" className="text-sm text-danger-ink">
+            {tr(state.error)}
+          </span>
         )}
       </div>
     </form>

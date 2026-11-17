@@ -29,5 +29,12 @@ export const TH: Record<string, string> = translations;
 
 export function t(en: string, locale: Locale): string {
   if (locale === "en") return en;
-  return TH[en] ?? en;
+  // An OWN key only. A plain `TH[en]` reads the prototype chain, so
+  // t("__proto__") returned Object.prototype and t("constructor") a function,
+  // and rendering either threw — member-written values (a profile's help
+  // topics, its activities) go through here, so one crafted value broke that
+  // profile for every Thai-locale reader. hasOwnProperty.call rather than
+  // Object.hasOwn: this runs for every string on every page, and hasOwn is
+  // missing before iOS Safari 15.4.
+  return Object.prototype.hasOwnProperty.call(TH, en) ? TH[en] : en;
 }
