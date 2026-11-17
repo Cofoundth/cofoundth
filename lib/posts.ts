@@ -12,7 +12,7 @@ import { type createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { UNRATED, type PostItem, type PostKind, type ProductItem } from "./post-types";
 import { getProductRatings } from "./product-ratings";
-import { devTestAuthorIds } from "./test-accounts";
+import { devTestAuthorIds, TEST_ACCOUNT_EMAILS } from "./test-accounts";
 
 type DB = Awaited<ReturnType<typeof createClient>>;
 
@@ -425,6 +425,11 @@ function productsQuery<C extends string>(
  */
 const PUBLIC_AUTHOR_COLS = "id, full_name, photo_url, slug";
 
+/** The shelf query's join to the author, for its in-query gate (see
+ *  getPublicProductsPage). Selects only `id`; shapePosts never reads `gate`,
+ *  so nothing from it reaches a page. */
+const AUTHOR_GATE_EMBED = "gate:profiles!forum_posts_author_id_fkey!inner(id)";
+
 /**
  * The authors whose products may be published, resolved as an ALLOWLIST: the
  * returned map contains only ids positively confirmed visible, so a row whose
@@ -494,18 +499,39 @@ export async function getPublicProductsPage({
       ? excludeAuthorIds
       : new Set(excludeAuthorIds ?? []);
 
-  // Flat over-fetch, not `Math.min(excluded.size, ...)` as the feed uses: TWO
-  // JS-side filters drop rows here, not one. Blocked pairs cannot become a
-  // query clause (the reverse direction of a block is invisible even to the
-  // service role), and the author gate is deliberately resolved by the query
-  // that renders the author. If both together drop more than MAX_OVERFETCH
-  // rows the page comes back short, which is the honest trade for keeping the
-  // gate and the render in lockstep.
-  const rows = await selectPosts((cols) =>
-    productsQuery(admin, cols, [])
+  // THE AUTHOR GATE, INSIDE THE QUERY, so it runs BEFORE the LIMIT. It used to
+  // run only after it (publicProductAuthors, below), which let ANY account the
+  // gate refuses — an explorer, an investor, a suspended member — push the
+  // real products out of the page: their rows filled the newest-first window
+  // and were then dropped, and about eighty of them left an empty deck and
+  // flipped / back to the landing. Worse, suspending a flooding account —
+  // the moderator's remedy — did exactly that to the deck.
+  //
+  // `profiles!forum_posts_author_id_fkey!inner` joins each row to its author
+  // and drops it unless the author passes (the FK is named because forum_likes
+  // and forum_comments give PostgREST other paths from posts to profiles).
+  // The filters are publicProductAuthors' own, column for column. In
+  // DEVELOPMENT ONLY the test accounts pass as well (lib/test-accounts.ts);
+  // TEST_ACCOUNT_EMAILS is empty in a production build, which takes the
+  // plain arm. publicProductAuthors still runs below: it resolves the author
+  // that is RENDERED, and it is the gate the sitemap shares.
+  //
+  // Over-fetch for blocked pairs only, as the feed does: a block cannot become
+  // a query clause (the reverse direction of one is private to its owner).
+  const rows = await selectPosts((cols) => {
+    const q = productsQuery(admin, `${cols}, ${AUTHOR_GATE_EMBED}`, [])
       .order("created_at", { ascending: false })
-      .limit(limit + MAX_OVERFETCH),
-  );
+      .limit(limit + Math.min(excluded.size, MAX_OVERFETCH));
+    return TEST_ACCOUNT_EMAILS.length
+      ? q.or(
+          `and(suspended.eq.false,is_bot.not.is.true,account_type.eq.founder),email.in.(${TEST_ACCOUNT_EMAILS.map((e) => `"${e}"`).join(",")})`,
+          { referencedTable: "gate" },
+        )
+      : q
+          .eq("gate.suspended", false)
+          .not("gate.is_bot", "is", true)
+          .eq("gate.account_type", "founder");
+  });
 
   const unblocked = excluded.size
     ? rows.filter((p) => !excluded.has(p.author_id as string))

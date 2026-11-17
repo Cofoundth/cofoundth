@@ -81,6 +81,7 @@ import {
 } from "@/lib/public-post";
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
+import { ReportButton } from "@/components/ReportButton";
 import {
   PublicPostActions,
   PublicRateButton,
@@ -363,7 +364,8 @@ async function PublicProduct({
 
 /**
  * A product for a signed-in member: the member's own stars, the like, the
- * whole thread with the composer, Share, and Edit for its maker. Read through
+ * whole thread with the composer, Share, Edit for its maker and Report for
+ * everyone else (the product, and each comment). Read through
  * the member's own client (forum_posts, forum_comments and profiles are all
  * readable to `authenticated`); only the moderation flags of the maker and the
  * public rating go through the service role.
@@ -603,9 +605,13 @@ async function MemberProduct({
         </div>
 
         {/* The like control and the comment read-out on the left, one type
-            scale; Share and, for its maker, Edit on the right. Share sends the
-            bare /products/<id>, which opens for anyone. */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t border-line pt-5 text-sm">
+            scale; Share and, for its maker, Edit on the right — and for
+            everyone else Report, the last and quietest item, as on the feed
+            card. Share sends the bare /products/<id>, which opens for anyone.
+            Report is a DIRECT child of this flex-wrap row on purpose: opening
+            it swaps the link for a full-width reason box, which wraps onto its
+            own line under the row (components/ReportButton.tsx). */}
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-5 text-sm">
           <div className="flex items-center gap-4">
             <LikeButton
               postId={post.id as string}
@@ -624,7 +630,7 @@ async function MemberProduct({
               <span className="sr-only">{commentsLabel}</span>
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-4">
             {isAuthor && (
               <Link href={`${productPath(id)}/edit`} className={ROW_LINK}>
                 <Pencil
@@ -643,6 +649,7 @@ async function MemberProduct({
               }
             />
           </div>
+          {!isAuthor && <ReportButton kind="post" targetId={id} size="sm" />}
         </div>
       </ProductDetail>
 

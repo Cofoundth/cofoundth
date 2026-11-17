@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountRole } from "@/lib/account";
 import { canPostThread } from "@/lib/roles";
+import { isRateLimited, RATE_LIMITED } from "@/lib/write-limits";
 
 export type PostState = { error?: string } | null;
 
@@ -65,7 +66,14 @@ export async function createPostAction(
     .select("id")
     .single();
 
-  if (error) return { error: error.message };
+  // Never the database's own message: one of them is migration 0083's bare
+  // `rate_limited`, which means nothing to a member.
+  if (error) {
+    console.error("[community.new]", error);
+    return {
+      error: isRateLimited(error) ? RATE_LIMITED.post : "Couldn't post. Try again.",
+    };
+  }
 
   redirect(`/community/${data.id}`);
 }

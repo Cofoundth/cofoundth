@@ -25,6 +25,18 @@ import {
   productPlatformsOf,
 } from "@/lib/post-types";
 import { productPath, type PostComment, type PostItem } from "@/lib/post-types";
+import {
+  cleanUpDeletedPost,
+  DELETED_POST_COLUMNS,
+  removeOwnImages,
+  type DeletedPost,
+} from "@/lib/post-cleanup";
+import {
+  isRateLimited,
+  LINK_TOO_LONG,
+  MAX_LINK_LENGTH,
+  RATE_LIMITED,
+} from "@/lib/write-limits";
 
 export type PostFormState = { error?: string } | null;
 
@@ -211,6 +223,7 @@ export async function createPostAction(
     return { error: "Keep it under 5000 characters." };
   if (title.length > 200) return { error: "Title must be 200 chars or less." };
   if (!KINDS.includes(kind)) return { error: "Bad kind." };
+  if (linkUrl.length > MAX_LINK_LENGTH) return { error: LINK_TOO_LONG };
   if (linkUrl && !HTTP_LINK.test(linkUrl))
     return { error: "Link must start with http:// or https://" };
 
@@ -264,7 +277,9 @@ export async function createPostAction(
   if (error) {
     console.error("[post.create]", error);
     await removePostImages(uploaded.uploads);
-    return { error: "Couldn't post. Try again." };
+    return {
+      error: isRateLimited(error) ? RATE_LIMITED.post : "Couldn't post. Try again.",
+    };
   }
 
   revalidateFeeds();
@@ -324,6 +339,7 @@ function productFields(formData: FormData): ProductFields | { error: string } {
   // send someone to the real thing — so the link is required, and it has to
   // survive the same parse the shelf runs before it will show a card at all.
   if (!linkUrl) return { error: "Add a link so people can try it." };
+  if (linkUrl.length > MAX_LINK_LENGTH) return { error: LINK_TOO_LONG };
   if (!HTTP_LINK.test(linkUrl) || !webUrl(linkUrl))
     return { error: "Link must start with http:// or https://" };
   // Stored as the row's ONE tag (lib/post-types.ts says why a tag and not a
@@ -408,7 +424,11 @@ export async function createProductAction(
   if (error || !row) {
     console.error("[product.create]", error);
     await removePostImages(uploaded.uploads);
-    return { error: "Couldn't add your product. Try again." };
+    return {
+      error: isRateLimited(error)
+        ? RATE_LIMITED.product
+        : "Couldn't add your product. Try again.",
+    };
   }
 
   const id = row.id as string;
@@ -457,28 +477,6 @@ async function ownProduct(
       image_urls: (data.image_urls as string[] | null) ?? null,
     }),
   };
-}
-
-/**
- * Best-effort: remove screenshots a product no longer uses (an edit dropped
- * them, or the product was deleted) from the post-images bucket. Only objects
- * in the maker's OWN folder — uploadPostImage writes `<user id>/post-…` — so
- * a URL that points anywhere else, or at someone else's upload, is left alone.
- * A failure is logged, never shown: the row is already right.
- */
-async function removeProductImages(userId: string, urls: string[]) {
-  const marker = "/storage/v1/object/public/post-images/";
-  const paths = urls
-    .map((url) => {
-      const i = url.indexOf(marker);
-      return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
-    })
-    .filter((p): p is string => !!p && p.startsWith(`${userId}/`));
-  if (!paths.length) return;
-  const { error } = await createAdminClient()
-    .storage.from("post-images")
-    .remove(paths);
-  if (error) console.error("[product.images] orphaned", paths, error.message);
 }
 
 /** Every page a product's contents show on. */
@@ -576,9 +574,12 @@ export async function updateProductAction(
     return { error: "Couldn’t save your changes. Try again." };
   }
 
-  await removeProductImages(
+  // Screenshots the edit dropped (lib/post-cleanup.ts: the maker's own folder
+  // only, best-effort).
+  await removeOwnImages(
     user.id,
     product.images.filter((url) => !imageUrls.includes(url)),
+    "product.images",
   );
   revalidateProduct(product.id);
 
@@ -609,28 +610,20 @@ export async function deleteProductAction(
   const product = await ownProduct(supabase, productId, user.id);
   if (!product) return { error: PRODUCT_UNAVAILABLE };
 
-  // `.select()` for the same reason as the edit: zero rows is a failure.
+  // `.select()` for the same reason as the edit: zero rows is a failure. And
+  // what it returns is the row AS DELETED, which is what the cleanup works
+  // from (lib/post-cleanup.ts): the notifications and the screenshots.
   const { data: gone, error } = await supabase
     .from("forum_posts")
     .delete()
     .eq("id", product.id)
     .eq("author_id", user.id)
-    .select("id");
+    .select(DELETED_POST_COLUMNS);
   if (error || !gone?.length) {
     console.error("[product.delete]", error);
     return { error: "Couldn’t delete it. Try again." };
   }
-
-  // Notifications are insert- and delete-locked by RLS (0028), hence the
-  // service role. Best-effort: the product is already gone.
-  const { error: notifError } = await createAdminClient()
-    .from("notifications")
-    .delete()
-    .eq("entity_id", product.id)
-    .in("type", ["comment", "mention"]);
-  if (notifError)
-    console.error("[product.delete] notifications", notifError.message);
-  await removeProductImages(user.id, product.images);
+  await cleanUpDeletedPost(gone[0] as unknown as DeletedPost, "product.delete");
 
   revalidateProduct(product.id);
   return null;
@@ -662,17 +655,24 @@ export async function loadMoreFeedAction(before: string): Promise<PostItem[]> {
   });
 }
 
+// A member deleting their own post. The row's image and the notifications that
+// point at it go too (lib/post-cleanup.ts) — the same cleanup deleting a
+// product does, and an admin removal does. `.select()` returns the row only if
+// THIS delete removed it, which is the one signal safe to clean up after.
 export async function deletePostAction(id: string) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
-  await supabase
+  const { data: gone } = await supabase
     .from("forum_posts")
     .delete()
     .eq("id", id)
-    .eq("author_id", user.id);
+    .eq("author_id", user.id)
+    .select(DELETED_POST_COLUMNS);
+  if (gone?.length)
+    await cleanUpDeletedPost(gone[0] as unknown as DeletedPost, "post.delete");
   revalidateFeeds(id);
 }
 
@@ -762,7 +762,11 @@ export async function createPostCommentAction(
 
   if (error) {
     console.error("[comment.create]", error);
-    return { error: "Couldn't post comment. Try again." };
+    return {
+      error: isRateLimited(error)
+        ? RATE_LIMITED.comment
+        : "Couldn't post comment. Try again.",
+    };
   }
   void notifyMentions(postId, user.id, content);
   revalidateFeeds(postId);
@@ -886,8 +890,15 @@ export async function reportContentAction(
 }
 
 // Admin-only: act on a report. "remove" deletes the offending content (post /
-// comment / message) and resolves; "resolve" closes it without deleting;
-// "dismiss" marks it dismissed.
+// product / comment / message) and resolves; "resolve" closes it without
+// deleting; "dismiss" marks it dismissed. A profile or a meetup is never
+// deleted from a report — the reports page offers no "remove" for them.
+//
+// A removed post or product goes with its image(s) and the notifications that
+// point at it (lib/post-cleanup.ts), exactly as when its author deletes it: a
+// removal that left the reported picture public at its URL would not be one.
+// A failed delete returns an error and leaves the report OPEN, so the queue
+// never says "resolved" about something that is still up.
 export async function moderateReportAction(
   reportId: string,
   decision: "remove" | "resolve" | "dismiss",
@@ -906,28 +917,68 @@ export async function moderateReportAction(
     .single();
   if (!report) return { error: "Report not found." };
 
+  // The page the removed thing showed on, to drop from the cache below.
+  let onPostId: string | undefined;
   if (decision === "remove") {
-    const table =
-      report.target_kind === "post"
-        ? "forum_posts"
-        : report.target_kind === "comment"
-          ? "forum_comments"
-          : report.target_kind === "message"
-            ? "messages"
-            : null; // never auto-delete a profile from a report
-    if (table) await admin.from(table).delete().eq("id", report.target_id);
+    const targetId = report.target_id as string;
+    if (report.target_kind === "post") {
+      const { data: gone, error } = await admin
+        .from("forum_posts")
+        .delete()
+        .eq("id", targetId)
+        .select(DELETED_POST_COLUMNS);
+      if (error) {
+        console.error("[report.remove] post", error.message);
+        return { error: "Couldn’t remove it. Try again." };
+      }
+      if (gone?.length)
+        await cleanUpDeletedPost(gone[0] as unknown as DeletedPost, "report.remove");
+      onPostId = targetId;
+    } else if (report.target_kind === "comment") {
+      const { data: gone, error } = await admin
+        .from("forum_comments")
+        .delete()
+        .eq("id", targetId)
+        .select("post_id");
+      if (error) {
+        console.error("[report.remove] comment", error.message);
+        return { error: "Couldn’t remove it. Try again." };
+      }
+      onPostId = (gone?.[0]?.post_id as string | undefined) ?? undefined;
+    } else if (report.target_kind === "message") {
+      const { error } = await admin
+        .from("messages")
+        .delete()
+        .eq("id", targetId);
+      if (error) {
+        console.error("[report.remove] message", error.message);
+        return { error: "Couldn’t remove it. Try again." };
+      }
+    } else {
+      return { error: "This kind of report can’t be removed from here." };
+    }
+    // Removed content leaves the pages it showed on NOW, before the status
+    // write below, which can fail on its own: a post's page or a product's
+    // (revalidateFeeds covers both, and the shelf), plus My products, whose
+    // rows count comments.
+    revalidateFeeds(onPostId);
+    if (onPostId) revalidatePath(MY_PRODUCTS_PATH);
   }
 
-  await admin
+  const { error: statusError } = await admin
     .from("reports")
     .update({
       status: decision === "dismiss" ? "dismissed" : "resolved",
       resolved_at: new Date().toISOString(),
     })
     .eq("id", reportId);
-
   revalidatePath("/admin/reports");
-  revalidateFeeds();
+  if (statusError) {
+    // After a "remove" the content is already gone; the admin sees this and
+    // can mark the report resolved again.
+    console.error("[report.status]", statusError.message);
+    return { error: "Couldn’t update the report. Try again." };
+  }
   return { ok: true };
 }
 

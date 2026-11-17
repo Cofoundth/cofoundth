@@ -55,6 +55,7 @@ import { LikeButton } from "./LikeButton";
 import { CommentComposer } from "./CommentComposer";
 import { CommentItem } from "./CommentItem";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
+import { ReportButton } from "@/components/ReportButton";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -380,8 +381,19 @@ export default async function PostPage({ params, searchParams }: Props) {
             borderless icon + count pairs sitting side by side. The row owns the
             type scale so the like control and the comment read-out can never
             drift apart. */}
-        <div className="mt-8 pt-6 border-t border-line flex items-center gap-4 text-sm">
+        <div className="mt-8 pt-6 border-t border-line flex flex-wrap items-center gap-x-4 gap-y-3 text-sm">
           {engagement}
+          {/* Report, for somebody else's post — as on its feed card, the last
+              and quietest item. A direct child of this flex-wrap row, so the
+              reason box opens on its own line (components/ReportButton.tsx). */}
+          {user && user.id !== post.author_id && (
+            <ReportButton
+              kind="post"
+              targetId={post.id as string}
+              className="ml-auto"
+              size="sm"
+            />
+          )}
         </div>
       </Card>
 

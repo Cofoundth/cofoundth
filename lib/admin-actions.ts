@@ -5,6 +5,13 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { hardDeleteUser } from "@/lib/delete-user";
+import {
+  cleanUpDeletedPost,
+  DELETED_POST_COLUMNS,
+  type DeletedPost,
+} from "@/lib/post-cleanup";
+import { productPath } from "@/lib/post-types";
+import { MY_PRODUCTS_PATH } from "@/lib/roles";
 
 type Result = { ok?: boolean; error?: string };
 
@@ -29,22 +36,57 @@ function revalidateAll() {
 
 // ---- Posts ----------------------------------------------------------
 
+// Every page one forum_posts row shows on. It may be a PRODUCT, whose page is
+// /products/<id> and which is listed on the shelf (/products, and / while it
+// serves the shelf) and on its maker's My products — none of which
+// revalidateAll() names.
+function revalidatePost(postId: string) {
+  revalidatePath(`/community/${postId}`);
+  revalidatePath(productPath(postId));
+  revalidatePath("/products");
+  revalidatePath("/");
+  revalidatePath(MY_PRODUCTS_PATH);
+}
+
 export async function adminSetPostHidden(
   postId: string,
   hidden: boolean,
 ): Promise<Result> {
   const ctx = await requireAdmin();
   if ("error" in ctx) return ctx;
-  await ctx.admin.from("forum_posts").update({ hidden }).eq("id", postId);
+  const { error } = await ctx.admin
+    .from("forum_posts")
+    .update({ hidden })
+    .eq("id", postId);
+  if (error) {
+    // Said, not dropped: a "Hide" that silently failed leaves the post public.
+    console.error("[admin.post.hidden]", error.message);
+    return { error: "Couldn’t update it. Try again." };
+  }
   revalidateAll();
+  revalidatePost(postId);
   return { ok: true };
 }
 
+// The image(s) and the notifications that point at the row go with it
+// (lib/post-cleanup.ts) — the same cleanup its author's own delete runs. A
+// failed delete says so instead of reporting success.
 export async function adminDeletePost(postId: string): Promise<Result> {
   const ctx = await requireAdmin();
   if ("error" in ctx) return ctx;
-  await ctx.admin.from("forum_posts").delete().eq("id", postId);
+  const { data: gone, error } = await ctx.admin
+    .from("forum_posts")
+    .delete()
+    .eq("id", postId)
+    .select(DELETED_POST_COLUMNS);
+  if (error) {
+    console.error("[admin.post.delete]", error.message);
+    return { error: "Couldn’t delete it. Try again." };
+  }
+  if (gone?.length)
+    await cleanUpDeletedPost(gone[0] as unknown as DeletedPost, "admin.post.delete");
   revalidateAll();
+  revalidatePost(postId);
   return { ok: true };
 }
 

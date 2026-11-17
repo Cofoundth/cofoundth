@@ -87,6 +87,9 @@ export function PostCard({
   const [visibleComments, setVisibleComments] = useState(5);
   const [commentCount, setCommentCount] = useState(post.commentCount);
   const [draft, setDraft] = useState("");
+  // A refused comment says why (e.g. migration 0083's "commenting very fast"),
+  // and keeps the draft; it used to fail without a word.
+  const [commentError, setCommentError] = useState<string | null>(null);
   const [submitting, startSubmit] = useTransition();
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
@@ -136,7 +139,10 @@ export function PostCard({
     startSubmit(async () => {
       const fd = new FormData();
       fd.set("content", text);
-      const res = await createPostCommentAction(post.id, null, fd);
+      const res = await createPostCommentAction(post.id, null, fd).catch(
+        () => ({ error: "Couldn't post comment. Try again." }),
+      );
+      setCommentError(res?.error ?? null);
       if (!res?.error) {
         setDraft("");
         await loadComments();
@@ -369,6 +375,11 @@ export function PostCard({
                 <Send className="w-3.5 h-3.5" />
               </Button>
             </form>
+          )}
+          {canComment && commentError && (
+            <p role="alert" className="-mt-2 mb-4 text-xs text-danger-ink">
+              {tr(commentError)}
+            </p>
           )}
 
           {loading && comments === null ? (

@@ -33,6 +33,7 @@ import { ImagePlus, X } from "lucide-react";
 import {
   MAX_POST_IMAGE_BYTES,
   MAX_PRODUCT_IMAGES,
+  MAX_UPLOAD_IMAGE_BYTES,
   POST_IMAGE_TYPES,
 } from "@/lib/post-types";
 import { useT } from "@/lib/i18n-client";
@@ -62,8 +63,10 @@ const ACCEPT_ATTR = POST_IMAGE_TYPES.join(",");
 // meets this limit in the normal case.
 //
 // IF bodySizeLimit MOVES, MOVE THIS, AND KEEP THE GAP. They are one contract
-// split across two files, which is how they drifted in the first place.
-const MAX_TOTAL_IMAGE_BYTES = 4 * 1024 * 1024;
+// split across two files, which is how they drifted in the first place. The
+// number lives in lib/post-types.ts (MAX_UPLOAD_IMAGE_BYTES) since the feed
+// composer's one photo needed the same ceiling.
+const MAX_TOTAL_IMAGE_BYTES = MAX_UPLOAD_IMAGE_BYTES;
 
 /** One screenshot on the strip: a file picked here (`url` is its object URL),
  *  or one the product already has (`file` null, `url` its public URL). */

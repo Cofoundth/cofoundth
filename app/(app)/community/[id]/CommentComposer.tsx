@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useState } from "react";
 import { Send } from "lucide-react";
 import { createPostCommentAction, type PostFormState } from "@/lib/post-actions";
 import { useT } from "@/lib/i18n-client";
@@ -8,28 +8,42 @@ import { Button } from "@/components/ui";
 
 const INITIAL: PostFormState = null;
 
+// The comment box under a thread and under a product.
+//
+// The draft is CONTROLLED, and that is the point of it: React resets a form
+// after every action it runs, success or refusal, and an uncontrolled textarea
+// went blank with it — so a refused comment ("You're commenting very fast…
+// try again", migration 0083) took what the member had typed with it. A
+// controlled value survives the reset; the action below clears it only when
+// the comment really posted.
 export function CommentComposer({ postId }: { postId: string }) {
   const tr = useT();
-  const action = createPostCommentAction.bind(null, postId);
+  const [draft, setDraft] = useState("");
   const [state, formAction, isPending] = useActionState<PostFormState, FormData>(
-    action,
+    async (prev, formData) => {
+      // A request that fails IN TRANSIT (offline, a deploy mid-session)
+      // rejects, and useActionState would rethrow it into app/error.tsx —
+      // the page and the draft gone. Said like any other refusal instead.
+      try {
+        const result = await createPostCommentAction(postId, prev, formData);
+        if (!result?.error) setDraft("");
+        return result;
+      } catch {
+        return { error: "Couldn't post comment. Try again." };
+      }
+    },
     INITIAL,
   );
-  const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    if (!isPending && !state?.error && formRef.current) {
-      formRef.current.reset();
-    }
-  }, [isPending, state]);
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-3">
+    <form action={formAction} className="space-y-3">
       <textarea
         name="content"
         rows={3}
         maxLength={2000}
         required
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
         aria-label={tr("Add your comment…")}
         placeholder={tr("Add your comment…")}
         className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y rounded-xl"

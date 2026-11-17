@@ -5,9 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAccountRole } from "@/lib/account";
 import { isBlockedEitherWay } from "@/lib/blocking";
 import { isRatingScore, productPath } from "@/lib/post-types";
-import { canComment, canRate } from "@/lib/roles";
-
-export type CommentState = { error?: string } | null;
+import { canRate } from "@/lib/roles";
 
 // --- Likes ----------------------------------------------------------
 
@@ -167,45 +165,11 @@ export async function clearProductRatingAction(
 }
 
 // --- Comments -------------------------------------------------------
-
-export async function createCommentAction(
-  postId: string,
-  _prev: CommentState,
-  formData: FormData,
-): Promise<CommentState> {
-  const content = String(formData.get("content") ?? "").trim();
-  if (!content) return { error: "Comment can't be empty." };
-  if (content.length > 2000)
-    return { error: "Comment too long (max 2000 chars)." };
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated." };
-
-  // AN EXPLORER IS DELIBERATELY ALLOWED HERE. This is the thread-detail twin of
-  // lib/post-actions.ts createPostCommentAction, and commenting is the explorer
-  // role's whole point — narrowing it to founders would remove a feature, not
-  // close a hole. Only investors are read-only in the community.
-  const role = await getAccountRole(supabase, user.id);
-  if (!canComment(role))
-    return { error: "Investor accounts don’t comment in the community." };
-
-  const { error } = await supabase
-    .from("forum_comments")
-    .insert({ post_id: postId, author_id: user.id, content });
-
-  if (error) {
-    console.error("[forum_comments.insert]", error);
-    return { error: "Couldn't post comment. Try again." };
-  }
-
-  revalidatePath(`/community/${postId}`);
-  revalidatePath(`/community`);
-  revalidatePath(productPath(postId));
-  return null;
-}
+//
+// Writing one is lib/post-actions.ts createPostCommentAction, for every
+// surface (this page's composer, the feed card, the product page, the deck's
+// review modal). The twin that used to sit here had no caller and skipped the
+// block check, so it was removed rather than kept in step.
 
 export async function deleteCommentAction(commentId: string, postId: string) {
   const supabase = await createClient();

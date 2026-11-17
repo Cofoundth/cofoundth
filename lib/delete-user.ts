@@ -76,6 +76,31 @@ export async function hardDeleteUser(
     return { error: "Couldn't delete the account. Try again." };
   }
 
+  // The account's posts and products are about to cascade away, but the
+  // notifications pointing at them will not: notifications.entity_id has no
+  // foreign key, so other members' "mentioned you" rows would stay and open a
+  // page that no longer exists. Their ids are read NOW, while the rows still
+  // exist; the notifications go in step 6, once the account is gone. Paged,
+  // because PostgREST returns at most 1000 rows to one read.
+  const ownPostIds: string[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error: postsError } = await admin
+      .from("forum_posts")
+      .select("id")
+      .eq("author_id", userId)
+      .order("id")
+      .range(from, from + 999);
+    if (postsError) {
+      // Not fatal — the account still goes — but step 6 will then miss
+      // whatever this page held, so say so.
+      console.error("[hardDeleteUser] post ids", postsError.message);
+      break;
+    }
+    if (!page?.length) break;
+    ownPostIds.push(...page.map((p) => p.id as string));
+    if (page.length < 1000) break;
+  }
+
   // 4. The account itself. Everything above exists so that this line can
   // succeed; if it still fails, nothing destructive has happened yet.
   const { error } = await admin.auth.admin.deleteUser(userId);
@@ -87,13 +112,47 @@ export async function hardDeleteUser(
   // 5. ONLY NOW the storage objects, which no foreign key protects and no
   // rollback can bring back. Best-effort: the account is already gone, and a
   // failed cleanup must not report the deletion as failed.
+  //
+  // PAGED. list() returns one page of names — storage-js asks for 100 unless
+  // told otherwise — and a single call used to leave everything after the
+  // 100th file public, the NEWEST ones (names sort by upload time), which on a
+  // removed spam account are the very images that were reported. Each round
+  // deletes what it listed and lists again from the top; it stops when a page
+  // comes back empty, on any error, or after a generous number of rounds. A
+  // folder entry (no id) is skipped: uploads are flat (`<user id>/<file>`).
   for (const bucket of ["avatars", "post-images"]) {
-    const { data: files } = await admin.storage.from(bucket).list(userId);
-    if (files?.length) {
-      await admin.storage
+    for (let round = 0; round < 100; round++) {
+      const { data: files, error: listError } = await admin.storage
         .from(bucket)
-        .remove(files.map((f) => `${userId}/${f.name}`));
+        .list(userId, { limit: 1000 });
+      if (listError) {
+        console.error(`[hardDeleteUser] list ${bucket}`, listError.message);
+        break;
+      }
+      const paths = (files ?? [])
+        .filter((f) => f.id)
+        .map((f) => `${userId}/${f.name}`);
+      if (!paths.length) break;
+      const { error: removeError } = await admin.storage
+        .from(bucket)
+        .remove(paths);
+      if (removeError) {
+        console.error(`[hardDeleteUser] remove ${bucket}`, removeError.message);
+        break;
+      }
     }
+  }
+
+  // 6. The notifications that pointed at the account's posts (read before
+  // step 4). In chunks, so a long list stays inside one request URL.
+  for (let i = 0; i < ownPostIds.length; i += 100) {
+    const { error: notifError } = await admin
+      .from("notifications")
+      .delete()
+      .in("entity_id", ownPostIds.slice(i, i + 100))
+      .in("type", ["comment", "mention"]);
+    if (notifError)
+      console.error("[hardDeleteUser] notifications", notifError.message);
   }
 
   return {};

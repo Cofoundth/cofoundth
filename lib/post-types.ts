@@ -150,6 +150,18 @@ export const POST_IMAGE_TYPES = [
  *  (lib/post-actions.ts) and the screenshot picker's read the same number. */
 export const MAX_POST_IMAGE_BYTES = 5 * 1024 * 1024;
 
+/**
+ * The most image bytes ONE Server Action request may carry in total: the
+ * screenshot picker's running total for a product, the feed composer's one
+ * photo for a post. It has to sit under two ceilings, with room left for the
+ * multipart boundaries and the form's other fields: next.config.ts's
+ * bodySizeLimit (6mb) and Vercel's function request limit (about 4.5MB). A
+ * body over either is refused BEFORE the action runs, and the request then
+ * fails in transit instead of returning a sentence — so this is checked in the
+ * browser, before sending. IF bodySizeLimit MOVES, MOVE THIS, AND KEEP THE GAP.
+ */
+export const MAX_UPLOAD_IMAGE_BYTES = 4 * 1024 * 1024;
+
 // NOT a layout guard — the deck card clamps the description and does not show
 // the name at all, so nothing can overflow, and the card's size comes from the
 // screen (app/(marketing)/products/ProductDeck.tsx, CARD_BODY), never from what

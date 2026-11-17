@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
+import { ReportButton } from "@/components/ReportButton";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { timeAgo } from "@/lib/time";
 import { deleteCommentAction } from "./actions";
@@ -70,6 +71,15 @@ export function CommentItem({
         <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">
           {content}
         </p>
+        {/* Report, for somebody else's comment — the feed card's comments
+            have had it all along; this row is the thread on a post's page and
+            on a product's. A row of its own (flex-wrap) so the reason box
+            opens under the comment, full width. */}
+        {!isOwn && (
+          <div className="mt-1 flex flex-wrap items-center">
+            <ReportButton kind="comment" targetId={id} />
+          </div>
+        )}
       </div>
     </div>
   );

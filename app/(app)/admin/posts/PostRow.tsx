@@ -26,7 +26,13 @@ const DENSE = "px-2 py-1 text-[11px]";
 export function PostRow({ post }: { post: AdminPost }) {
   const [pending, start] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const run = (fn: () => Promise<unknown>) => start(() => fn().then(() => {}));
+  // Both actions answer { ok } or { error }; a refusal is shown, not dropped.
+  const [error, setError] = useState<string | null>(null);
+  const run = (fn: () => Promise<{ error?: string }>) =>
+    start(async () => {
+      const res = await fn().catch(() => ({ error: "Couldn’t reach the server." }));
+      setError(res?.error ?? null);
+    });
 
   return (
     <div className="p-4">
@@ -108,6 +114,11 @@ export function PostRow({ post }: { post: AdminPost }) {
           )}
         </div>
       </div>
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-danger-ink">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
