@@ -61,6 +61,7 @@ function toDrawComment(r: Row): MemberDrawComment | null {
     id: r.id,
     postId: r.post.id,
     postAuthorId: r.post.author_id,
+    postIsProduct: r.post.kind === "show_and_tell",
     // "Not available" is the app's own sense of moderated: a hidden post, or
     // a post by a suspended or bot account — the same rows whose pages 404
     // for members (app/(app)/community/[id], app/(marketing)/products/[id]).
@@ -195,8 +196,8 @@ export async function drawEntrants(
 
   const qualified = new Map<string, number>();
   for (const [authorId, comments] of byAuthor) {
-    const { postsByDay } = judgeComments(comments, authorId);
-    const s = standing(month, qualifyingDays(postsByDay), today);
+    const { productsByDay } = judgeComments(comments, authorId);
+    const s = standing(month, qualifyingDays(productsByDay), today);
     if (s.eligible) qualified.set(authorId, s.bestRun);
   }
   if (!qualified.size) return [];

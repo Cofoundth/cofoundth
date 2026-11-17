@@ -101,7 +101,7 @@ export default async function AdminRewardsPage({
   ] = await Promise.all([
     tServer("Monthly draw"),
     tServer(
-      "Members who commented on 3 different posts or products a day, 5 days in a row, worked out from the comments that exist now.",
+      "Members who commented on 3 different products a day, 5 days in a row, worked out from the comments that exist now.",
     ),
     tServer("{n} qualified"),
     tServer("Winner: {name}"),

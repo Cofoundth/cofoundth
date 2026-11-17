@@ -5,12 +5,17 @@
 // a month. Recorded there next to the deck's exception.
 //
 // THE RULES, in the order the code applies them:
-//   · A comment COUNTS when it is on somebody else's post or product, that
-//     post is not hidden, and it is at least DRAW_MIN_COMMENT_CHARS long.
-//     Only the FIRST counted comment on a post in a day counts toward that
-//     day: three comments on one post are one post, not three.
-//   · A day QUALIFIES when DRAW_MIN_POSTS_PER_DAY different posts or products
-//     got a counted comment from the member that day.
+//   · PRODUCTS ONLY (the founder's call, 2026-11-17): a comment on a community
+//     post or milestone never counts — the draw exists to get makers feedback.
+//   · A comment COUNTS when it is on somebody else's product, that product is
+//     available (not hidden, and not by a suspended or bot account), and it
+//     is at least DRAW_MIN_COMMENT_CHARS long. Only the FIRST counted comment
+//     on a product in a day counts toward that day: three comments on one
+//     product are one product, not three.
+//   · A day QUALIFIES when DRAW_MIN_PRODUCTS_PER_DAY different products got a
+//     counted comment from the member that day. Nobody can qualify while the
+//     shelf has fewer live products than that — the founder chose to keep the
+//     bar at 3 anyway (2026-11-17, when the shelf had 2).
 //   · A member is ELIGIBLE for a month when DRAW_STREAK_DAYS qualifying days
 //     in a row END inside that month — a streak that starts on the 29th and
 //     finishes on the 2nd counts for the month it finishes in.
@@ -22,7 +27,7 @@
 //
 // WHY THESE RULES AND NOT "3 COMMENTS A DAY": the cheapest way to post three
 // comments is three "nice 👍"s, and every comment notifies a maker. Different
-// posts plus a minimum length make the rule "give three people feedback" —
+// products plus a minimum length make the rule "give three makers feedback" —
 // the same effort for a real member, and the behaviour worth paying for.
 //
 // WHAT MAKES IT HARD TO GAME, without any extra tracking: since migrations
@@ -36,7 +41,7 @@
 // all run this one copy, so the page a member reads and the list the draw
 // picks from cannot disagree.
 
-export const DRAW_MIN_POSTS_PER_DAY = 3;
+export const DRAW_MIN_PRODUCTS_PER_DAY = 3;
 export const DRAW_MIN_COMMENT_CHARS = 20;
 export const DRAW_STREAK_DAYS = 5;
 
@@ -51,6 +56,8 @@ export type DrawComment = {
   id: string;
   postId: string;
   postAuthorId: string;
+  /** kind 'show_and_tell': only products count. */
+  postIsProduct: boolean;
   postHidden: boolean;
   content: string;
   /** ISO timestamp, as stored (server-set since 0083). */
@@ -58,7 +65,13 @@ export type DrawComment = {
 };
 
 /** Why a comment did or did not count. */
-export type CommentVerdict = "counted" | "own" | "hidden" | "short" | "repeat";
+export type CommentVerdict =
+  | "counted"
+  | "not_product"
+  | "own"
+  | "hidden"
+  | "short"
+  | "repeat";
 
 /** The Bangkok calendar day of a timestamp, as `YYYY-MM-DD`. */
 export function bangkokDay(iso: string): string {
@@ -121,17 +134,17 @@ function chars(s: string): number {
 
 /**
  * Judge one member's comments. Returns a verdict per comment and, per Bangkok
- * day, how many DIFFERENT posts got a counted comment.
+ * day, how many DIFFERENT products got a counted comment.
  */
 export function judgeComments(
   comments: DrawComment[],
   memberId: string,
 ): {
   verdicts: Map<string, CommentVerdict>;
-  postsByDay: Map<string, number>;
+  productsByDay: Map<string, number>;
 } {
   const verdicts = new Map<string, CommentVerdict>();
-  const postsByDay = new Map<string, number>();
+  const productsByDay = new Map<string, number>();
   const seen = new Set<string>();
   const inOrder = [...comments].sort((a, b) =>
     a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0,
@@ -139,7 +152,8 @@ export function judgeComments(
   for (const c of inOrder) {
     const day = bangkokDay(c.createdAt);
     let verdict: CommentVerdict;
-    if (c.postAuthorId === memberId) verdict = "own";
+    if (!c.postIsProduct) verdict = "not_product";
+    else if (c.postAuthorId === memberId) verdict = "own";
     else if (c.postHidden) verdict = "hidden";
     else if (chars(c.content) < DRAW_MIN_COMMENT_CHARS) verdict = "short";
     else if (seen.has(`${day}|${c.postId}`)) verdict = "repeat";
@@ -147,17 +161,17 @@ export function judgeComments(
     verdicts.set(c.id, verdict);
     if (verdict === "counted") {
       seen.add(`${day}|${c.postId}`);
-      postsByDay.set(day, (postsByDay.get(day) ?? 0) + 1);
+      productsByDay.set(day, (productsByDay.get(day) ?? 0) + 1);
     }
   }
-  return { verdicts, postsByDay };
+  return { verdicts, productsByDay };
 }
 
-/** The days on which the member reached DRAW_MIN_POSTS_PER_DAY. */
-export function qualifyingDays(postsByDay: Map<string, number>): Set<string> {
+/** The days on which the member reached DRAW_MIN_PRODUCTS_PER_DAY. */
+export function qualifyingDays(productsByDay: Map<string, number>): Set<string> {
   return new Set(
-    [...postsByDay]
-      .filter(([, n]) => n >= DRAW_MIN_POSTS_PER_DAY)
+    [...productsByDay]
+      .filter(([, n]) => n >= DRAW_MIN_PRODUCTS_PER_DAY)
       .map(([day]) => day),
   );
 }

@@ -1,8 +1,9 @@
 // /rewards — a member's progress toward this month's draw.
 //
 // The monthly draw is a founder-approved exception to "no gamification"
-// (CLAUDE.md, 2026-11-17): comments on 3 different posts or products a day, 5
-// days in a row, put a member in the month's draw for one lottery ticket. This
+// (CLAUDE.md, 2026-11-17): comments on 3 different PRODUCTS a day (community
+// posts don't count), 5 days in a row, put a member in the month's draw for
+// one lottery ticket. This
 // page is also the "see my own comments" page the CEO asked for — every
 // comment the member made this month, marked counted or not and why.
 //
@@ -33,7 +34,7 @@ import {
   bangkokDay,
   daysOf,
   DRAW_MIN_COMMENT_CHARS,
-  DRAW_MIN_POSTS_PER_DAY,
+  DRAW_MIN_PRODUCTS_PER_DAY,
   DRAW_STREAK_DAYS,
   judgeComments,
   monthOf,
@@ -55,10 +56,11 @@ export async function generateMetadata(): Promise<Metadata> {
 /** The English key for each verdict's label (translated below). */
 const VERDICT_LABEL: Record<CommentVerdict, string> = {
   counted: "Counted",
-  own: "Your own post",
-  hidden: "The post isn’t available",
+  not_product: "Not a product",
+  own: "Your own product",
+  hidden: "The product isn’t available",
   short: "Under 20 characters",
-  repeat: "Same post twice that day",
+  repeat: "Same product twice that day",
 };
 
 export default async function RewardsPage() {
@@ -87,10 +89,10 @@ export default async function RewardsPage() {
     getBlockedIds(user.id),
   ]);
 
-  const { verdicts, postsByDay } = judgeComments(comments ?? [], user.id);
-  const qualifying = qualifyingDays(postsByDay);
+  const { verdicts, productsByDay } = judgeComments(comments ?? [], user.id);
+  const qualifying = qualifyingDays(productsByDay);
   const { eligible, currentRun } = standing(month, qualifying, today);
-  const todayPosts = postsByDay.get(today) ?? 0;
+  const todayProducts = productsByDay.get(today) ?? 0;
   const thisMonth = (comments ?? []).filter((c) =>
     bangkokDay(c.createdAt).startsWith(month),
   );
@@ -137,35 +139,35 @@ export default async function RewardsPage() {
   ] = await Promise.all([
     t("Monthly draw"),
     t(
-      "Comment on 3 different posts or products a day, 5 days in a row, and you’re in this month’s draw for a lottery ticket.",
+      "Comment on 3 different products a day, 5 days in a row, and you’re in this month’s draw for a lottery ticket.",
     ),
     t("You’re in this month’s draw so far."),
     t(
-      "We check again when we draw at the end of the month: a comment that’s gone by then — deleted, or on a post that was removed or hidden — doesn’t count.",
+      "We check again when we draw at the end of the month: a comment that’s gone by then — deleted, or on a product that was removed or hidden — doesn’t count.",
     ),
     t("Team accounts aren’t in the draw. This page shows how the rules count your comments."),
     t("Streak: {n} of {total} days"),
-    t("Today: {n} of {total} posts"),
+    t("Today: {n} of {total} products"),
     t("You won the draw for {month}!"),
     t("We’ll send you a message to hand over your prize."),
     t("How it works"),
     t(
-      "Comment on {n} different posts or products a day. Several comments on the same post count once.",
+      "Comment on {n} different products a day. Only products count, not community posts, and several comments on the same product count once.",
     ),
-    t("Only other members’ posts count, and each comment needs at least {n} characters."),
+    t("Only other members’ products count, and each comment needs at least {n} characters."),
     t("Do that {n} days in a row, by Bangkok time. A streak can start late last month."),
     t(
       "The winner is drawn at random after the month ends, from the comments that still count then.",
     ),
     t("This month"),
-    t("{n}+ posts"),
+    t("{n}+ products"),
     t("Some"),
     t("None"),
     t("Your comments this month"),
-    t("No comments yet this month. Find a product or a post to give feedback on."),
+    t("No comments yet this month. Open the deck and give a maker feedback."),
     t("Couldn’t load your progress. Try again in a moment."),
-    t("A post that’s no longer available"),
-    t("{day}: {n} of {total} posts"),
+    t("A post or product that’s no longer available"),
+    t("{day}: {n} of {total} products"),
   ]);
   const verdictLabels = Object.fromEntries(
     await Promise.all(
@@ -185,7 +187,7 @@ export default async function RewardsPage() {
   const dayBox = (day: string) => {
     if (day > today) return "text-ink-muted";
     if (qualifying.has(day)) return "bg-navy text-white";
-    if ((postsByDay.get(day) ?? 0) > 0) return "border-2 border-navy bg-gold text-ink";
+    if ((productsByDay.get(day) ?? 0) > 0) return "border-2 border-navy bg-gold text-ink";
     return "border border-line text-ink-muted";
   };
 
@@ -234,8 +236,8 @@ export default async function RewardsPage() {
               </p>
               <p className="mt-1 text-sm text-ink-muted">
                 {fill(tToday, {
-                  n: Math.min(todayPosts, DRAW_MIN_POSTS_PER_DAY),
-                  total: DRAW_MIN_POSTS_PER_DAY,
+                  n: Math.min(todayProducts, DRAW_MIN_PRODUCTS_PER_DAY),
+                  total: DRAW_MIN_PRODUCTS_PER_DAY,
                 })}
               </p>
             </div>
@@ -256,8 +258,8 @@ export default async function RewardsPage() {
                 <span className="sr-only">
                   {fill(tDayStatus, {
                     day: dayName(day),
-                    n: Math.min(postsByDay.get(day) ?? 0, DRAW_MIN_POSTS_PER_DAY),
-                    total: DRAW_MIN_POSTS_PER_DAY,
+                    n: Math.min(productsByDay.get(day) ?? 0, DRAW_MIN_PRODUCTS_PER_DAY),
+                    total: DRAW_MIN_PRODUCTS_PER_DAY,
                   })}
                 </span>
               </li>
@@ -266,7 +268,7 @@ export default async function RewardsPage() {
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-muted">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-3 w-3 rounded bg-navy" aria-hidden="true" />
-              {fill(tLegendFull, { n: DRAW_MIN_POSTS_PER_DAY })}
+              {fill(tLegendFull, { n: DRAW_MIN_PRODUCTS_PER_DAY })}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="h-3 w-3 rounded border-2 border-navy bg-gold" aria-hidden="true" />
@@ -283,7 +285,7 @@ export default async function RewardsPage() {
       <section className="mb-14">
         <h2 className="mb-5 text-lg font-bold tracking-normal">{tHow}</h2>
         <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-ink">
-          <li>{fill(tRule1, { n: DRAW_MIN_POSTS_PER_DAY })}</li>
+          <li>{fill(tRule1, { n: DRAW_MIN_PRODUCTS_PER_DAY })}</li>
           <li>{fill(tRule2, { n: DRAW_MIN_COMMENT_CHARS })}</li>
           <li>{fill(tRule3, { n: DRAW_STREAK_DAYS })}</li>
           <li>{tRule4}</li>
