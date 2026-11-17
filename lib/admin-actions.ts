@@ -159,11 +159,17 @@ export async function adminDeleteUser(userId: string): Promise<Result> {
  * taken from the page — and the pick is a cryptographic random index into
  * that list sorted by id. The result is stored once: monthly_draws.month is
  * the primary key (0087), so a second press says "already drawn" instead of
- * drawing again. Only a month that is over can be drawn.
+ * drawing again. Only a month that is over can be drawn. The admin page shows
+ * it as a wheel (app/(app)/admin/rewards/DrawWheel.tsx) that lands on the
+ * winner this returns — the wheel is the show; the pick happens here.
  */
 export async function drawMonthlyWinner(
   month: string,
-): Promise<Result & { winner?: string }> {
+): Promise<
+  | { ok: true; winnerId: string; entrants: { id: string; name: string }[] }
+  // `drawn`: the month has a stored result, so the page should show it.
+  | { error: string; drawn?: true }
+> {
   const ctx = await requireAdmin();
   if ("error" in ctx) return ctx;
   if (!isMonth(month)) return { error: "Pick a month." };
@@ -187,12 +193,18 @@ export async function drawMonthlyWinner(
   });
   if (error) {
     if (error.code === "23505")
-      return { error: "That month has already been drawn." };
+      return { error: "That month has already been drawn.", drawn: true };
     console.error("[draw.save]", error.message);
     return { error: "Couldn’t save the draw. Try again." };
   }
 
-  revalidatePath("/admin/rewards");
-  revalidatePath("/rewards");
-  return { ok: true, winner: winner.name };
+  // NO revalidatePath: both pages are force-dynamic, so nothing is cached,
+  // and revalidating would re-render the admin page while its wheel is still
+  // spinning — the result on screen before the wheel stops. The wheel lands
+  // on `winnerId` among `entrants`: the pool this draw really used.
+  return {
+    ok: true,
+    winnerId: winner.id,
+    entrants: entrants.map((e) => ({ id: e.id, name: e.name })),
+  };
 }

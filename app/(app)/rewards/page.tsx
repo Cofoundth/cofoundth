@@ -2,10 +2,10 @@
 //
 // The monthly draw is a founder-approved exception to "no gamification"
 // (CLAUDE.md, 2026-11-17): comments on 3 different PRODUCTS a day (community
-// posts don't count), 5 days in a row, put a member in the month's draw for
-// one lottery ticket. This
-// page is also the "see my own comments" page the CEO asked for — every
-// comment the member made this month, marked counted or not and why.
+// posts don't count), 5 days in a row, put a member's name on the month's
+// wheel; one spin picks the ONE winner of a lottery ticket. This page is also
+// the "see my own comments" page the CEO asked for — every comment the member
+// made this month, marked counted or not and why.
 //
 // Everything here is worked out by lib/rewards.ts from the member's own
 // comments (lib/draw-data.ts memberDrawComments), the same rules the admin
@@ -139,11 +139,11 @@ export default async function RewardsPage() {
   ] = await Promise.all([
     t("Monthly draw"),
     t(
-      "Comment on 3 different products a day, 5 days in a row, and you’re in this month’s draw for a lottery ticket.",
+      "Comment on 3 different products a day, 5 days in a row, and your name goes on this month’s wheel. One spin picks one winner of a lottery ticket.",
     ),
-    t("You’re in this month’s draw so far."),
+    t("Your name is on this month’s wheel so far."),
     t(
-      "We check again when we draw at the end of the month: a comment that’s gone by then — deleted, or on a product that was removed or hidden — doesn’t count.",
+      "We check again before we spin at the end of the month: a comment that’s gone by then — deleted, or on a product that was removed or hidden — doesn’t count.",
     ),
     t("Team accounts aren’t in the draw. This page shows how the rules count your comments."),
     t("Streak: {n} of {total} days"),
@@ -157,7 +157,7 @@ export default async function RewardsPage() {
     t("Only other members’ products count, and each comment needs at least {n} characters."),
     t("Do that {n} days in a row, by Bangkok time. A streak can start late last month."),
     t(
-      "The winner is drawn at random after the month ends, from the comments that still count then.",
+      "After the month ends we spin a wheel of everyone who still qualifies. One name wins; everyone else tries again next month.",
     ),
     t("This month"),
     t("{n}+ products"),
