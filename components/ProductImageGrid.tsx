@@ -137,10 +137,22 @@ function Viewer({
   const several = images.length > 1;
   const name = `${altPrefix} ${index + 1}`;
   /** The press a swipe is measured from. */
-  const press = useRef<{ id: number; x: number; y: number } | null>(null);
-  /** The click a finished swipe leaves behind is not a click beside the
-   *  picture, and must not close the viewer. */
+  const press = useRef<{ x: number; y: number } | null>(null);
+  /** The click a mouse swipe leaves behind is not a click beside the picture,
+   *  and must not close the viewer. Any new press clears it (the column's
+   *  pointerdown, below): a touch swipe leaves no click to clear it. */
   const swiped = useRef(false);
+
+  /** A finished drag of (dx, dy): a step when it was a sideways swipe on an
+   *  unzoomed page. Zoomed in, a sideways drag is the reader panning across
+   *  the picture, and the browser's own. */
+  function endSwipe(dx: number, dy: number) {
+    if (!several) return;
+    if ((window.visualViewport?.scale ?? 1) > 1.01) return;
+    if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) <= Math.abs(dy)) return;
+    swiped.current = true;
+    onStep(dx < 0 ? 1 : -1);
+  }
 
   // ← and → step. The viewer is the dialog on top (components/ui/Dialog.tsx
   // keeps Escape and Tab for the top one), and nothing opens over it. A
@@ -180,6 +192,9 @@ function Viewer({
     >
       <div
         onClick={onBackdropClick}
+        onPointerDownCapture={() => {
+          swiped.current = false;
+        }}
         className="flex h-[calc(100dvh-2rem)] flex-col gap-3"
       >
         <div onClick={onBackdropClick} className="flex justify-end">
@@ -193,29 +208,39 @@ function Viewer({
           </button>
         </div>
 
-        {/* pan-y: a vertical drag still scrolls, a sideways one is a swipe
-            (it reaches pointerup instead of being taken as a pan), and a
-            pinch still zooms. */}
+        {/* A finger's swipe is read from TOUCH events, which keep coming
+            while the browser pans: no touch-action here, so a pinch-zoomed
+            picture pans in every direction as it would anywhere (pointer
+            events stop at the browser's pan). A mouse or a pen drags through
+            pointer events. One finger only: a second one is a pinch. */}
         <div
           onClick={onBackdropClick}
+          onTouchStart={(e) => {
+            const t = e.touches[0];
+            press.current =
+              e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
+          }}
+          onTouchEnd={(e) => {
+            const p = press.current;
+            const t = e.changedTouches[0];
+            if (e.touches.length > 0) return;
+            press.current = null;
+            if (p && t) endSwipe(t.clientX - p.x, t.clientY - p.y);
+          }}
+          onTouchCancel={() => {
+            press.current = null;
+          }}
           onPointerDown={(e) => {
-            press.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
-            swiped.current = false;
+            if (e.pointerType === "touch") return;
+            press.current = { x: e.clientX, y: e.clientY };
           }}
           onPointerUp={(e) => {
+            if (e.pointerType === "touch") return;
             const p = press.current;
             press.current = null;
-            if (!several || !p || p.id !== e.pointerId) return;
-            const dx = e.clientX - p.x;
-            const dy = e.clientY - p.y;
-            if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) <= Math.abs(dy)) return;
-            swiped.current = true;
-            onStep(dx < 0 ? 1 : -1);
+            if (p) endSwipe(e.clientX - p.x, e.clientY - p.y);
           }}
-          onPointerCancel={() => {
-            press.current = null;
-          }}
-          className="relative min-h-0 flex-1 touch-pan-y touch-pinch-zoom"
+          className="relative min-h-0 flex-1"
         >
           {/* A plain <img>, centred by auto margins at its own shape and
               capped by the box: the element is exactly the picture, so a
@@ -247,8 +272,14 @@ function Viewer({
               <ChevronLeft className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
             </button>
             {/* Digits only, so nothing to translate. White pill: white text
-                on the doubled scrim over the cream modal is under 3:1. */}
-            <span className="rounded-full bg-white px-3 py-1.5 text-sm text-navy tabular-nums shadow-lg">
+                on the doubled scrim over the cream modal is under 3:1. A
+                status, so a step is spoken: which picture, and where in the
+                set (focus stays on the control that was pressed). */}
+            <span
+              role="status"
+              className="rounded-full bg-white px-3 py-1.5 text-sm text-navy tabular-nums shadow-lg"
+            >
+              <span className="sr-only">{name}, </span>
               {index + 1} / {images.length}
             </span>
             <button

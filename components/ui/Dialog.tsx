@@ -109,6 +109,18 @@ const openDialogs: object[] = [];
 // effect runs, so the stack is always empty there and it hydrates as it was
 // rendered.
 
+// ── ONE PAGE LOCK, COUNTED ─────────────────────────────────────────────────
+// Every open dialog holds the scroll lock on <html>; the FIRST to open takes
+// it and keeps what <html> had, the LAST to close gives that back. It used to
+// be per dialog (save at mount, put back at unmount), which is only right if
+// dialogs close innermost first. They do not always: Back with a picture open
+// over the deck's product modal unmounts both in one commit, React runs the
+// cleanups parent first, and the inner one then put back the "hidden" it had
+// saved, so no page could scroll again until a reload (found in review,
+// 2026-11-19).
+let pageLocks = 0;
+let unlocked: { overflow: string; paddingRight: string } | null = null;
+
 function focusables(panel: HTMLElement): HTMLElement[] {
   return Array.from(
     panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
@@ -185,16 +197,25 @@ export function Dialog({
   // *children* (the partnership success panel) must not unlock mid-flow.
   // paddingRight compensates for the scrollbar the lock removes, otherwise the
   // page underneath visibly jumps sideways as the dialog opens.
+  // The lock itself is shared (pageLocks, above).
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     const root = document.documentElement;
-    const { overflow, paddingRight } = root.style;
-    const scrollbar = window.innerWidth - root.clientWidth;
-    root.style.overflow = "hidden";
-    if (scrollbar > 0) root.style.paddingRight = `${scrollbar}px`;
+    if (pageLocks++ === 0) {
+      unlocked = {
+        overflow: root.style.overflow,
+        paddingRight: root.style.paddingRight,
+      };
+      const scrollbar = window.innerWidth - root.clientWidth;
+      root.style.overflow = "hidden";
+      if (scrollbar > 0) root.style.paddingRight = `${scrollbar}px`;
+    }
     return () => {
-      root.style.overflow = overflow;
-      root.style.paddingRight = paddingRight;
+      if (--pageLocks === 0 && unlocked) {
+        root.style.overflow = unlocked.overflow;
+        root.style.paddingRight = unlocked.paddingRight;
+        unlocked = null;
+      }
       opener?.focus?.();
     };
   }, []);
