@@ -40,6 +40,14 @@
 // which is where "See all" leads — so the count here is the count there. The
 // maker's own replies count too (they are in that thread), but the preview
 // shows only what OTHER people said: it is the feedback, not the conversation.
+//
+// ── A GRID, AT THE FULL WIDTH ─────────────────────────────────────────────
+// A collection of cards is a grid page (CLAUDE.md, Layout): the 1120px
+// container, the intro block at 640 inside it, and the system's card grid,
+// three up from `lg` (the founder's call, 2026-11-18: the 640 column left the
+// page empty either side). Each card fills its cell's height and keeps its
+// buttons on the bottom edge, so a row of cards with and without comments
+// still lines up.
 
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -197,7 +205,7 @@ export default async function MyProductsPage() {
   );
 
   return (
-    <Section width="narrow">
+    <Section>
       {/* Not prefetched: the shelf is a 200-row read, and this link is a way
           out, not the next step. Same as the Add product page. */}
       <Link
@@ -210,7 +218,7 @@ export default async function MyProductsPage() {
       </Link>
 
       <div className="mb-8 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-        <div className="min-w-0">
+        <div className="min-w-0 max-w-[640px]">
           <h1 className="text-d2 mb-2">{tTitle}</h1>
           <p className="text-sm text-ink-muted">{tIntro}</p>
         </div>
@@ -239,7 +247,7 @@ export default async function MyProductsPage() {
           }
         />
       ) : (
-        <ul className="space-y-4">
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => {
             const id = p.id as string;
             const href = productPath(id);
@@ -263,8 +271,8 @@ export default async function MyProductsPage() {
               count.toLocaleString("en-US"),
             );
             return (
-              <li key={id}>
-                <Card padding="md">
+              <li key={id} className="flex">
+                <Card padding="md" className="flex w-full flex-col">
                   <div className="flex items-start gap-4">
                     <Link
                       href={href}
@@ -374,8 +382,9 @@ export default async function MyProductsPage() {
                   )}
 
                   {/* The way to the product on the left; managing it on
-                      the right, wrapping under it on a phone. */}
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+                      the right, wrapping under it in a narrow cell. On the
+                      card's bottom edge, so a row of cards lines up. */}
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5">
                     <LinkButton
                       href={count > shown.length ? `${href}#comments` : href}
                       variant="secondary"
