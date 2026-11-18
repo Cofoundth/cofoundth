@@ -1,10 +1,9 @@
 "use client";
 
-// A product's screenshots, one at a time: the deck's top card
-// (app/(marketing)/products/ProductDeck.tsx) and the product's own page
-// (app/(marketing)/products/ProductDetail.tsx, on /products/<id>).
-// ONE component, so the two cannot drift apart in how a reader moves through
-// the pictures.
+// A product's screenshots, one at a time (or four at a time, `perView`): the
+// deck's cards (app/(marketing)/products/ProductDeck.tsx). The product's own
+// page shows every picture at once instead (components/ProductImageGrid.tsx).
+// The box fills its positioned parent, whatever shape the deck gives it.
 //
 // Every image is mounted, stacked, one opaque. A change of image paints the new
 // one only once it has LOADED and keeps the old one until then, so the box
@@ -29,7 +28,7 @@
 // "While a finger is down" means down anywhere in the gallery's SCOPE: the
 // nearest ancestor carrying `data-gallery-scope`, or the image box itself when
 // there is none. On the deck the scope is the whole card, because a press
-// anywhere on it may be the start of a swipe; on a product page it is the box.
+// anywhere on it may be the start of a swipe.
 //
 // TWO THINGS HERE ARE FOR THE DECK AND INERT ELSEWHERE, written down so nobody
 // strips them as dead:
@@ -38,8 +37,8 @@
 //   * the `group-has-[[data-gallery-zone]:hover]/card` reveal in ARROW: on the
 //     deck the card's link covers the images, so the image box under it is
 //     never :hover itself, and the link carries `data-gallery-zone` to say
-//     "the pointer is over the card". With no `group/card` ancestor (a product
-//     page) the plain `group-hover/gallery` reveal does the work.
+//     "the pointer is over the card". With no `group/card` ancestor the plain
+//     `group-hover/gallery` reveal does the work.
 //
 // `inactive` is the deck's card BEHIND the top one: first image only, no
 // controls, no clock. A gallery only ever goes from inactive to active (the
@@ -92,10 +91,8 @@ export function ProductGallery({
   inactive = false,
   preload = false,
   fit = "cover",
-  shape = "3:2",
   backdrop = false,
   sizes,
-  altPrefix,
   className,
   perView = 1,
 }: {
@@ -108,22 +105,16 @@ export function ProductGallery({
   /** Fetch the images past the first now: the deck's card next in line, so
    *  they come out of the cache once it is the top card. */
   preload?: boolean;
-  /** `contain` letterboxes, so nothing is cropped: both callers use it (a
-   *  product page, and the deck card over its `backdrop`). `cover` crops into
-   *  the box: the default, which no caller uses today. */
+  /** `contain` letterboxes, so nothing is cropped: the deck card, over its
+   *  `backdrop`. `cover` crops into the box: the default, which no caller uses
+   *  today. */
   fit?: "cover" | "contain";
-  /** `3:2`: a 3:2 box at the width it is given (a product page). `fill`: the
-   *  box fills its positioned parent, whatever shape that is (the deck card,
-   *  which is as big as the screen allows). */
-  shape?: "3:2" | "fill";
   /** Behind a `contain` picture, a blurred, cropped copy of it, so a
    *  screenshot of any shape fills the box without being cut (the deck). */
   backdrop?: boolean;
+  /** The images are decorative (alt=""): the deck card's link already names
+   *  the product. */
   sizes: string;
-  /** Unset: the images are decorative (alt=""), because the deck card's link
-   *  already names the product. Set: image i is "{altPrefix} {i + 1}", and the
-   *  images not on screen are hidden from assistive tech. */
-  altPrefix?: string;
   /** The box's corners, which depend on what it sits in. */
   className?: string;
   /** Pictures per view: 1, or 4 as a grid (a computer's deck card; see the
@@ -311,13 +302,7 @@ export function ProductGallery({
     };
   }, [active, groups.length, clock]);
 
-  const box = cn(
-    "overflow-hidden bg-cream",
-    shape === "fill"
-      ? "absolute inset-0"
-      : "relative aspect-[3/2] w-full shrink-0",
-    className,
-  );
+  const box = cn("absolute inset-0 overflow-hidden bg-cream", className);
 
   if (images.length === 0) {
     return (
@@ -370,8 +355,7 @@ export function ProductGallery({
           <Image
             key={g}
             src={group[0]}
-            alt={altPrefix ? `${altPrefix} ${g + 1}` : ""}
-            aria-hidden={altPrefix && g !== visible ? true : undefined}
+            alt=""
             fill
             unoptimized
             loading="eager"
@@ -390,7 +374,6 @@ export function ProductGallery({
           // cell's cream showing.
           <div
             key={g}
-            aria-hidden={altPrefix && g !== visible ? true : undefined}
             className={cn(
               "absolute inset-0 grid gap-1 bg-white",
               group.length >= 3
@@ -411,7 +394,7 @@ export function ProductGallery({
               >
                 <Image
                   src={src}
-                  alt={altPrefix ? `${altPrefix} ${g * perView + i + 1}` : ""}
+                  alt=""
                   fill
                   unoptimized
                   loading="eager"
@@ -427,8 +410,7 @@ export function ProductGallery({
         ),
       )}
 
-      {/* Which image is showing. Decorative: the count says nothing a reader
-          of the alt text does not already have. No z-index, so on the deck it
+      {/* Which image is showing. Decorative, as the images are. No z-index, so on the deck it
           sits below the card's link and a press here still opens the
           product. */}
       {several && (

@@ -1139,7 +1139,6 @@ function Stack({
                 labels={labels}
                 inactive={depth > 0}
                 preload={depth === 1}
-                shape="fill"
                 fit="contain"
                 backdrop
                 sizes="(min-aspect-ratio: 4/3) 70vw, 100vw"
@@ -1155,8 +1154,7 @@ function Stack({
                   inactive={depth > 0}
                   preload={depth === 1}
                   perView={4}
-                  shape="fill"
-                  fit="contain"
+                    fit="contain"
                   sizes="(min-width: 768px) 35vw, 100vw"
                   className="hidden rounded-t-3xl md:block deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
                 />

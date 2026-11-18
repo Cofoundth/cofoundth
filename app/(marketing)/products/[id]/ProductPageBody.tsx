@@ -255,8 +255,8 @@ async function PublicProduct({
   const authorName = author.full_name ?? aFounder;
   const commentsGated = total > comments.length;
 
-  // The 1120px container, because from `lg` the product card is images beside
-  // words (see ProductDetail); everything under it keeps the 640px column.
+  // One 1120px column of cards, the comments included (ProductDetail, "THE
+  // FORMAT").
   return (
     <ProductFrame mode={mode} className="pb-28">
       <ProductDetail
@@ -265,20 +265,19 @@ async function PublicProduct({
         backHref={backHref}
         rating={rating}
         rateSlot={signedIn ? null : <PublicRateButton next={returnPath} />}
+        maker={
+          <div className="flex items-center gap-3">
+            <Avatar name={author.full_name} url={author.photo_url} size="sm" />
+            <p className="min-w-0 text-sm text-ink-muted">
+              <span className="font-medium text-navy">{authorName}</span>
+              {" · "}
+              {await tServer("shipped")}
+              {" · "}
+              {publicTimeAgo(createdAt, locale)}
+            </p>
+          </div>
+        }
       >
-        {/* Who made it: below the product, because the product is what the
-            visitor came to see. */}
-        <div className="mt-6 flex items-center gap-3">
-          <Avatar name={author.full_name} url={author.photo_url} size="sm" />
-          <p className="min-w-0 text-sm text-ink-muted">
-            <span className="font-medium text-navy">{authorName}</span>
-            {" · "}
-            {await tServer("shipped")}
-            {" · "}
-            {publicTimeAgo(createdAt, locale)}
-          </p>
-        </div>
-
         <div className="mt-6 flex items-center justify-between gap-4 border-t border-line pt-5">
           {signedIn ? (
             <span />
@@ -301,7 +300,7 @@ async function PublicProduct({
           page exists for, so the way to it cannot depend on someone having
           gone first. Read-only here, and only the preview rows reached the
           server render (lib/public-post.ts getPublicEngagement). */}
-      <section className="mx-auto mt-14 max-w-[640px]">
+      <section className="mt-14">
         <SectionHeading title={await tServer("Comments")} />
         {comments.length > 0 ? (
           <Card padding="responsive">
@@ -346,7 +345,7 @@ async function PublicProduct({
 
       {!signedIn && (
         <>
-          <JoinCta next={returnPath} className="mx-auto mt-14 max-w-[640px]" />
+          <JoinCta next={returnPath} className="mt-14" />
           {/* Pinned to the bottom of the SCREEN: a page's, not a modal's. */}
           {mode === "page" && (
             <StickySignIn next={returnPath} authorName={authorName} />
@@ -583,8 +582,8 @@ async function MemberProduct({
       </Card>
     ) : null;
 
-  // The 1120px container: from `lg` the product card is images beside words
-  // (ProductDetail); the thread under it keeps the 640px column.
+  // One 1120px column of cards, the thread included (ProductDetail, "THE
+  // FORMAT").
   return (
     <ProductFrame mode={mode}>
       <ProductDetail
@@ -609,30 +608,30 @@ async function MemberProduct({
             <RatingControl postId={post.id as string} initialScore={myScore} />
           ) : null
         }
-      >
-        {/* Who made it, below the product: the product is what the reader
-            came to see. */}
-        <div className="mt-6 flex items-center gap-3">
-          <Link href={authorHref}>
-            <Avatar
-              name={author?.full_name as string}
-              url={author?.photo_url as string | null}
-              size="sm"
-            />
-          </Link>
-          <p className="min-w-0 text-sm text-ink-muted">
-            <Link
-              href={authorHref}
-              className="font-medium text-navy transition-colors hover:text-gold-ink"
-            >
-              {authorName}
+        maker={
+          <div className="flex items-center gap-3">
+            <Link href={authorHref}>
+              <Avatar
+                name={author?.full_name as string}
+                url={author?.photo_url as string | null}
+                size="sm"
+              />
             </Link>
-            {" · "}
-            {tShipped}
-            {" · "}
-            {timeAgo(post.created_at as string, locale)}
-          </p>
-        </div>
+            <p className="min-w-0 text-sm text-ink-muted">
+              <Link
+                href={authorHref}
+                className="font-medium text-navy transition-colors hover:text-gold-ink"
+              >
+                {authorName}
+              </Link>
+              {" · "}
+              {tShipped}
+              {" · "}
+              {timeAgo(post.created_at as string, locale)}
+            </p>
+          </div>
+        }
+      >
 
         {/* The like control and the comment read-out on the left, one type
             scale; Share and, for its maker, Edit on the right — and for
@@ -686,10 +685,7 @@ async function MemberProduct({
       {/* The thread. `#comments` is where a comment notification and My
           products' "See all {n} comments" land; scroll-mt clears the phone's
           sticky top bar (64.8px) when it jumps here. */}
-      <section
-        id="comments"
-        className="mx-auto mt-14 max-w-[640px] scroll-mt-20"
-      >
+      <section id="comments" className="mt-14 scroll-mt-20">
         <SectionHeading title={commentsLabel} />
 
         <RealtimeRefresh
