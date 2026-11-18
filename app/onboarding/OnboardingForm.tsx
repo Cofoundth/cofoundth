@@ -392,16 +392,36 @@ function StepIndicator({ current, tr }: { current: number; tr: TR }) {
         ))}
       </div>
 
-      {/* Labels — fixed-width columns aligned under each icon */}
+      {/* Labels — fixed-width columns aligned under each icon. A label is
+          wider than its 40px column (Thai "ข้อมูล และไอเดีย" is ~95px), and
+          text-center cannot centre text that overflows its box: CSS
+          start-aligns it, so it ran off to the right, and the last label
+          pushed the page 13px sideways. A flex box CAN place an overflowing
+          child, so: centred under the middle icons, and grown inward from
+          the first and last, so nothing leaves the form.
+          Below `sm` only the CURRENT step's label shows: four do not fit
+          side by side on a phone (English is uppercase and tracked:
+          "CONVICTION" and "INFO & IDEAS" overlapped by 42px at 375px), and
+          the numbered circles still say where you are. */}
       <div className="flex items-start mt-3">
         {STEPS.map((s, i) => (
           <Fragment key={s.num}>
             <div
-              className={`text-xs uppercase tracking-[0.2em] whitespace-nowrap w-10 text-center shrink-0 ${
-                i === current ? "text-navy font-medium" : "text-ink-muted"
+              className={`w-10 shrink-0 flex ${
+                i === 0
+                  ? "justify-start"
+                  : i === STEPS.length - 1
+                    ? "justify-end"
+                    : "justify-center"
               }`}
             >
-              {tr(s.title)}
+              <span
+                className={`text-xs uppercase tracking-[0.2em] whitespace-nowrap ${
+                  i === current ? "text-navy font-medium" : "hidden sm:inline text-ink-muted"
+                }`}
+              >
+                {tr(s.title)}
+              </span>
             </div>
             {i < STEPS.length - 1 && <div className="flex-1 mx-2" />}
           </Fragment>
