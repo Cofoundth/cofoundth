@@ -17,8 +17,12 @@
 //     shelf has fewer live products than that — the founder chose to keep the
 //     bar at 3 anyway (2026-11-17, when the shelf had 2).
 //   · A member is ELIGIBLE for a month when DRAW_STREAK_DAYS qualifying days
-//     in a row END inside that month — a streak that starts on the 29th and
-//     finishes on the 2nd counts for the month it finishes in.
+//     in a row fall INSIDE that month. Everyone starts again from zero on the
+//     1st (the founder's call, 2026-11-18): a day in one month never counts
+//     toward the next, so a streak that starts on the 29th is lost on the 1st,
+//     and a streak that got someone into one month's draw never also buys the
+//     next month's after a single day. The last day a fresh streak can start
+//     and still make the month is therefore the 5th-from-last (lastStartDay).
 //   · Days are Bangkok days (UTC+7; Thailand has no daylight saving, so a
 //     fixed offset is exact).
 //
@@ -113,18 +117,26 @@ export function daysOf(month: string): string[] {
   return days;
 }
 
+/** The last day of `month`. */
+export function lastDayOf(month: string): string {
+  const days = daysOf(month);
+  return days[days.length - 1];
+}
+
+/** The last day a fresh streak can start and still finish inside `month`. */
+export function lastStartDay(month: string): string {
+  return addDays(lastDayOf(month), -(DRAW_STREAK_DAYS - 1));
+}
+
 /**
- * The UTC instants a month's comments are read between: from midnight
- * Bangkok `DRAW_STREAK_DAYS - 1` days BEFORE the month (a streak finishing on
- * the 4th started in the month before) to midnight Bangkok after its last day.
+ * The UTC instants a month's comments are read between: midnight Bangkok on
+ * the 1st to midnight Bangkok after its last day. Nothing before the 1st:
+ * everyone starts from zero then.
  */
 export function readWindow(month: string): { from: string; to: string } {
-  const first = addDays(`${month}-01`, -(DRAW_STREAK_DAYS - 1));
-  const days = daysOf(month);
-  const after = addDays(days[days.length - 1], 1);
   const midnight = (day: string) =>
     new Date(Date.parse(`${day}T00:00:00Z`) - BANGKOK_OFFSET_MS).toISOString();
-  return { from: midnight(first), to: midnight(after) };
+  return { from: midnight(`${month}-01`), to: midnight(addDays(lastDayOf(month), 1)) };
 }
 
 /** Length in characters (code points), the way a member would count them. */
@@ -176,19 +188,23 @@ export function qualifyingDays(productsByDay: Map<string, number>): Set<string> 
   );
 }
 
-/** Consecutive qualifying days ending ON `day` (0 if `day` does not qualify). */
-export function runEndingOn(day: string, qualifying: Set<string>): number {
+/**
+ * Consecutive qualifying days ending ON `day` (0 if `day` does not qualify),
+ * counting back no further than `from` — the 1st of the month being judged,
+ * since a streak never reaches back across it.
+ */
+export function runEndingOn(day: string, qualifying: Set<string>, from = ""): number {
   let n = 0;
-  for (let d = day; qualifying.has(d); d = addDays(d, -1)) n++;
+  for (let d = day; d >= from && qualifying.has(d); d = addDays(d, -1)) n++;
   return n;
 }
 
 /**
- * Where a member stands for `month`, as of `today` (a Bangkok day).
+ * Where a member stands for `month`, as of `today` (a Bangkok day). Only the
+ * month's own days count.
  *
- *   eligible    — DRAW_STREAK_DAYS in a row END inside the month.
- *   bestRun     — the longest run that ends inside the month (counting the
- *                 days it carried in from the month before).
+ *   eligible    — DRAW_STREAK_DAYS in a row inside the month, by today.
+ *   bestRun     — the longest run inside the month so far.
  *   currentRun  — the run still alive today: ending today, or ending
  *                 yesterday while today is not over. 0 for a past month.
  */
@@ -197,17 +213,86 @@ export function standing(
   qualifying: Set<string>,
   today: string,
 ): { eligible: boolean; bestRun: number; currentRun: number } {
+  const first = `${month}-01`;
   let bestRun = 0;
   for (const day of daysOf(month)) {
     if (day > today) break;
-    bestRun = Math.max(bestRun, runEndingOn(day, qualifying));
+    bestRun = Math.max(bestRun, runEndingOn(day, qualifying, first));
   }
   const inMonth = today.startsWith(month);
   const currentRun = inMonth
     ? Math.max(
-        runEndingOn(today, qualifying),
-        runEndingOn(addDays(today, -1), qualifying),
+        runEndingOn(today, qualifying, first),
+        runEndingOn(addDays(today, -1), qualifying, first),
       )
     : 0;
   return { eligible: bestRun >= DRAW_STREAK_DAYS, bestRun, currentRun };
+}
+
+/**
+ * What is still open to a member in `month`, as of `today`:
+ *
+ *   in        — already in the month's draw.
+ *   on_track  — not yet, but `need` more qualifying days in a row still fit
+ *               before the month ends (today counts while it isn't done).
+ *   out       — too few days left to make DRAW_STREAK_DAYS in a row: nothing
+ *               more is possible until everyone starts again on the 1st.
+ *
+ * A month that is over is `in` or `out`. Says nothing about whether there are
+ * enough products to comment on; that is a fact about the shelf, not the
+ * member, and the pages check it separately.
+ */
+export function outlook(
+  month: string,
+  qualifying: Set<string>,
+  today: string,
+): { status: "in" | "on_track" | "out"; need: number } {
+  if (standing(month, qualifying, today).eligible) return { status: "in", need: 0 };
+  if (!today.startsWith(month)) return { status: "out", need: DRAW_STREAK_DAYS };
+  const first = `${month}-01`;
+  const doneToday = qualifying.has(today);
+  // The run today can still extend: today's own when it's done, otherwise
+  // the one that ended yesterday (alive until today is over).
+  const run = runEndingOn(doneToday ? today : addDays(today, -1), qualifying, first);
+  const need = DRAW_STREAK_DAYS - run;
+  const left =
+    Math.round((Date.parse(lastDayOf(month)) - Date.parse(today)) / DAY_MS) + (doneToday ? 0 : 1);
+  return { status: left >= need ? "on_track" : "out", need };
+}
+
+/** What a member's page tells them to do next in the month in progress. */
+export type NextStep =
+  | { kind: "in" } //                 already in this month's draw
+  | { kind: "too_late"; restart: string } // not enough days left; restart = next 1st
+  | { kind: "shelf"; products: number } // fewer products than a day needs
+  | { kind: "unknown" } //            the product count couldn't be read: no deadline
+  | { kind: "start_today" } //        today is the last day a fresh streak can start
+  | { kind: "start_by"; day: string } // no streak alive: start by `day`
+  | { kind: "one_more" } //           one more qualifying day
+  | { kind: "more"; days: number }; // `days` more in a row
+
+/**
+ * The next step for `month` (the month in progress) as of `today`. `products`
+ * is how many products the member could comment on: with fewer than a day
+ * needs, nothing they do can get them in, and that comes before any deadline
+ * — but never before "too late", which is true either way. Null (the count
+ * couldn't be read) gives "unknown" rather than a deadline the page can't
+ * stand behind.
+ */
+export function nextStep(
+  month: string,
+  qualifying: Set<string>,
+  today: string,
+  products: number | null,
+): NextStep {
+  const { status, need } = outlook(month, qualifying, today);
+  if (status === "in") return { kind: "in" };
+  if (status === "out") return { kind: "too_late", restart: `${nextMonth(month)}-01` };
+  if (products === null) return { kind: "unknown" };
+  if (products < DRAW_MIN_PRODUCTS_PER_DAY) return { kind: "shelf", products };
+  if (need >= DRAW_STREAK_DAYS) {
+    const by = lastStartDay(month);
+    return today === by ? { kind: "start_today" } : { kind: "start_by", day: by };
+  }
+  return need === 1 ? { kind: "one_more" } : { kind: "more", days: need };
 }

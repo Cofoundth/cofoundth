@@ -1,12 +1,13 @@
 // /admin/rewards — the monthly draw (a founder-approved exception to "no
 // gamification", CLAUDE.md).
 //
-//   · A month not yet drawn: who qualifies, computed from the comments that
-//     exist NOW (lib/draw-data.ts drawEntrants — the same rules the member's
-//     /rewards page shows them) and, once the month is over, a wheel of their
-//     names. Spin picks one winner on the server and stores it
-//     (lib/admin-actions.ts drawMonthlyWinner); the wheel then lands on them
-//     (DrawWheel.tsx).
+//   · A month not yet drawn: everyone TAKING PART and where each stands — in,
+//     can still make it, out — computed from the comments that exist NOW
+//     (lib/draw-data.ts trackMonth — the same rules the member's /rewards
+//     page shows them), a note when the shelf has fewer products than a day
+//     needs, and, once the month is over, a wheel of the names in. Spin picks
+//     one winner on the server and stores it (lib/admin-actions.ts
+//     drawMonthlyWinner); the wheel then lands on them (DrawWheel.tsx).
 //   · A drawn month: the STORED result — the wheel built from the stored pool
 //     (monthly_draws.entrant_ids, 0088), resting on the winner — never a
 //     recomputation, which would drift as comments and posts are deleted.
@@ -19,9 +20,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
-import { drawEntrants } from "@/lib/draw-data";
+import { liveProductMakers, trackMonth } from "@/lib/draw-data";
 import { drawMonthlyWinner } from "@/lib/admin-actions";
-import { isMonth, monthOf, nextMonth, previousMonth } from "@/lib/rewards";
+import {
+  DRAW_MIN_PRODUCTS_PER_DAY,
+  isMonth,
+  monthOf,
+  nextMonth,
+  previousMonth,
+} from "@/lib/rewards";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
 import { Card, Section } from "@/components/ui";
@@ -33,6 +40,14 @@ const NAV_LINK =
   "inline-flex items-center gap-1 text-sm text-ink-muted transition-colors hover:text-navy";
 
 type Person = { id: string; full_name: string | null; slug: string | null };
+
+// Apart without colour: in = filled tan, can still make it = outlined, out =
+// plain muted text.
+const STATUS_CHIP = {
+  in: "whitespace-nowrap rounded-full bg-gold-soft px-2.5 py-0.5 text-xs text-ink",
+  on_track: "whitespace-nowrap rounded-full border border-line px-2.5 py-0.5 text-xs text-ink",
+  out: "whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs text-ink-muted",
+} as const;
 
 export default async function AdminRewardsPage({
   searchParams,
@@ -64,11 +79,18 @@ export default async function AdminRewardsPage({
     .maybeSingle();
   if (drawError) console.error("[draw] read", drawError.message);
 
-  // Drawn: the stored pool. Not drawn: who qualifies now. Neither when the
-  // draw itself couldn't be read: shown as undrawn, a month that may already
-  // be drawn would offer Spin.
+  // Drawn: the stored pool. Not drawn: everyone taking part and where they
+  // stand, and who qualifies now. Neither when the draw itself couldn't be
+  // read: shown as undrawn, a month that may already be drawn would offer
+  // Spin. The shelf matters only to a month still running: below a day's
+  // worth of products, nobody can get in.
   const stored = (draw?.entrant_ids as string[] | null) ?? [];
-  const live = draw || drawError ? null : await drawEntrants(month);
+  const [tracked, makers] = await Promise.all([
+    draw || drawError ? null : trackMonth(month),
+    over ? null : liveProductMakers(),
+  ]);
+  const live = tracked ? tracked.entrants : null;
+  const shelf = makers ? makers.length : null;
   const ids = draw
     ? [...new Set([draw.winner_id, draw.drawn_by, ...stored])].filter(
         (v): v is string => typeof v === "string",
@@ -81,7 +103,7 @@ export default async function AdminRewardsPage({
     : null;
   if (named?.error) console.error("[draw] names", named.error.message);
   const people = (named?.data ?? []) as Person[];
-  const failed = Boolean(drawError || named?.error) || (!draw && live === null);
+  const failed = Boolean(drawError || named?.error) || (!draw && tracked === null);
   const person = (id: unknown) => people.find((p) => p.id === id);
   const winner = person(draw?.winner_id);
   const drawer = person(draw?.drawn_by);
@@ -107,8 +129,16 @@ export default async function AdminRewardsPage({
     tInProgress,
     tNobody,
     tPool,
-    tQualifying,
-    tDays,
+    tProgress,
+    tStreakBest,
+    tBest,
+    tIn,
+    tOnTrack,
+    tOut,
+    tNotIn,
+    tNobodyYet,
+    tNobodyTook,
+    tShelf,
     tLoadFailed,
     tWinnerTag,
     tPrev,
@@ -116,7 +146,7 @@ export default async function AdminRewardsPage({
   ] = await Promise.all([
     tServer("Monthly draw"),
     tServer(
-      "Members who commented on 3 different products a day, 5 days in a row, worked out from the comments that exist now.",
+      "Members who commented on 3 different products a day, 5 days in a row inside the month, worked out from the comments that exist now. Everyone starts again from zero on the 1st.",
     ),
     tServer("{n} qualified"),
     tServer("Winner: {name}"),
@@ -124,8 +154,18 @@ export default async function AdminRewardsPage({
     tServer("This month isn’t over yet. The draw opens on the 1st."),
     tServer("Nobody qualified this month."),
     tServer("On the wheel"),
-    tServer("Qualifying now"),
-    tServer("{n} days in a row"),
+    tServer("Progress"),
+    tServer("Streak {n} · best {best}"),
+    tServer("Best streak {best}"),
+    tServer("In"),
+    tServer("Can still make it"),
+    tServer("Out this month"),
+    tServer("Not in"),
+    tServer("Nobody is taking part yet."),
+    tServer("Nobody took part."),
+    tServer(
+      "Live products: {n}. A day needs {total} different ones, so nobody can qualify until there are more.",
+    ),
     tServer("Couldn’t load this month. Try again."),
     tServer("Winner"),
     tServer("Previous month"),
@@ -232,6 +272,14 @@ export default async function AdminRewardsPage({
         ) : (
           <p className="text-sm text-ink-muted">{over ? tNobody : tInProgress}</p>
         )}
+        {/* Third, after the wheel's slot, so it never moves the wheel. */}
+        {!failed && shelf !== null && shelf < DRAW_MIN_PRODUCTS_PER_DAY && (
+          <p className="text-sm text-ink">
+            {tShelf
+              .replace("{n}", () => String(shelf))
+              .replace("{total}", () => String(DRAW_MIN_PRODUCTS_PER_DAY))}
+          </p>
+        )}
       </Card>
 
       {draw && stored.length > 0 && !failed && (
@@ -267,27 +315,49 @@ export default async function AdminRewardsPage({
         </section>
       )}
 
-      {!draw && live && live.length > 0 && (
+      {/* Everyone taking part in a month not yet drawn, and where each
+          stands — the tracking, not just the finished. A drawn month shows
+          its stored pool above instead: a recomputation would drift. */}
+      {tracked && (
         <section>
-          <h2 className="mb-5 text-lg font-bold tracking-normal">{tQualifying}</h2>
-          <Card padding="none" className="divide-y divide-line overflow-hidden">
-            {live.map((e) => (
-              <div
-                key={e.id}
-                className="flex items-center justify-between gap-4 px-6 py-4"
-              >
-                <Link
-                  href={profileHref(e)}
-                  className="min-w-0 truncate text-sm font-medium text-navy hover:text-gold-ink"
+          <h2 className="mb-5 text-lg font-bold tracking-normal">{tProgress}</h2>
+          {tracked.members.length ? (
+            <Card padding="none" className="divide-y divide-line overflow-hidden">
+              {tracked.members.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4"
                 >
-                  {e.name}
-                </Link>
-                <span className="shrink-0 text-sm text-ink-muted tabular-nums">
-                  {tDays.replace("{n}", () => String(e.bestRun))}
-                </span>
-              </div>
-            ))}
-          </Card>
+                  <Link
+                    href={profileHref(m)}
+                    className="min-w-0 truncate text-sm font-medium text-navy hover:text-gold-ink"
+                  >
+                    {m.name}
+                  </Link>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="text-sm text-ink-muted tabular-nums">
+                      {over
+                        ? tBest.replace("{best}", () => String(m.bestRun))
+                        : tStreakBest
+                            .replace("{n}", () => String(m.currentRun))
+                            .replace("{best}", () => String(m.bestRun))}
+                    </span>
+                    <span className={STATUS_CHIP[m.status]}>
+                      {m.status === "in"
+                        ? tIn
+                        : m.status === "on_track"
+                          ? tOnTrack
+                          : over
+                            ? tNotIn
+                            : tOut}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </Card>
+          ) : (
+            <p className="text-sm text-ink-muted">{over ? tNobodyTook : tNobodyYet}</p>
+          )}
         </section>
       )}
     </Section>

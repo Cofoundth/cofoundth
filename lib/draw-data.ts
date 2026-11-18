@@ -11,6 +11,7 @@ import { isAdminEmail } from "@/lib/admin";
 import {
   bangkokDay,
   judgeComments,
+  outlook,
   qualifyingDays,
   readWindow,
   standing,
@@ -158,19 +159,69 @@ export function outOfTheDraw(p: {
   );
 }
 
+/** One member's place in a month, for the admin's progress list. */
+export type TrackedMember = {
+  id: string;
+  name: string;
+  slug: string | null;
+  /** lib/rewards.ts outlook(): in the draw, can still make it, or out. */
+  status: "in" | "on_track" | "out";
+  currentRun: number;
+  bestRun: number;
+  /** Qualifying days in the month so far, in a row or not. */
+  days: number;
+};
+
+const PEOPLE_COLUMNS = "id, full_name, slug, email, suspended, is_bot, is_admin, account_type";
+type Person = {
+  id: string;
+  full_name: string | null;
+  slug: string | null;
+  email: string | null;
+  suspended: boolean | null;
+  is_bot: boolean | null;
+  is_admin: boolean | null;
+  account_type: string | null;
+};
+
+/** Profiles by id, 100 to a request: a long `in (…)` list outgrows the URL a
+ *  GET can carry. Null when any request fails. */
+async function peopleByIds(
+  admin: ReturnType<typeof createAdminClient>,
+  ids: string[],
+): Promise<Person[] | null> {
+  const out: Person[] = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data, error } = await admin
+      .from("profiles")
+      .select(PEOPLE_COLUMNS)
+      .in("id", ids.slice(i, i + 100));
+    if (error) {
+      console.error("[draw] people", error.message);
+      return null;
+    }
+    out.push(...((data ?? []) as Person[]));
+  }
+  return out;
+}
+
+const STATUS_ORDER = { in: 0, on_track: 1, out: 2 } as const;
+
 /**
- * Everyone eligible for `month`, sorted by id — the ORDER the draw indexes
+ * Everyone TAKING PART in `month` — at least one counted comment in it — and
+ * where each stands as of `today` (`members`, best placed first), plus the
+ * ones in the draw (`entrants`), sorted by id: the ORDER the draw indexes
  * into, so it must not depend on anything but the ids. `today` caps a month
- * still in progress (a preview); for a finished month pass any later day.
+ * still in progress; for a finished month pass any later day.
  *
- * Out of the draw whatever their comments: outOfTheDraw() above, and any role
- * that cannot comment. Returns null when a read FAILS, so the caller refuses
- * to draw instead of drawing from a partial list.
+ * Out of both whatever their comments: outOfTheDraw() above, and any role
+ * that cannot comment. Null when a read FAILS, so nobody acts on — or draws
+ * from — a partial list.
  */
-export async function drawEntrants(
+export async function trackMonth(
   month: string,
   today = bangkokDay(new Date().toISOString()),
-): Promise<DrawEntrant[] | null> {
+): Promise<{ members: TrackedMember[]; entrants: DrawEntrant[] } | null> {
   const admin = createAdminClient();
   const { from, to } = readWindow(month);
 
@@ -194,34 +245,99 @@ export async function drawEntrants(
     byAuthor.set(r.author_id, list);
   }
 
-  const qualified = new Map<string, number>();
+  const judged = new Map<string, Omit<TrackedMember, "id" | "name" | "slug">>();
   for (const [authorId, comments] of byAuthor) {
     const { productsByDay } = judgeComments(comments, authorId);
-    const s = standing(month, qualifyingDays(productsByDay), today);
-    if (s.eligible) qualified.set(authorId, s.bestRun);
+    // Taking part = something counted. Comments that never count (on posts,
+    // too short, on their own product) are not a place in the draw.
+    if (!productsByDay.size) continue;
+    const qualifying = qualifyingDays(productsByDay);
+    const { currentRun, bestRun } = standing(month, qualifying, today);
+    judged.set(authorId, {
+      status: outlook(month, qualifying, today).status,
+      currentRun,
+      bestRun,
+      days: qualifying.size,
+    });
   }
-  if (!qualified.size) return [];
+  if (!judged.size) return { members: [], entrants: [] };
 
-  const { data: people, error } = await admin
-    .from("profiles")
-    .select("id, full_name, slug, email, suspended, is_bot, is_admin, account_type")
-    .in("id", [...qualified.keys()]);
-  if (error) {
-    console.error("[draw] entrants", error.message);
-    return null;
-  }
+  const people = await peopleByIds(admin, [...judged.keys()]);
+  if (!people) return null;
 
-  return (people ?? [])
+  const members: TrackedMember[] = people
     .filter(
       (p) =>
         !outOfTheDraw(p) &&
         (p.account_type === "founder" || p.account_type === "explorer"),
     )
     .map((p) => ({
-      id: p.id as string,
-      name: (p.full_name as string | null) || "—",
-      slug: (p.slug as string | null) ?? null,
-      bestRun: qualified.get(p.id as string) ?? 0,
+      id: p.id,
+      name: p.full_name || "—",
+      slug: p.slug ?? null,
+      ...judged.get(p.id)!,
     }))
+    .sort(
+      (a, b) =>
+        STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
+        b.currentRun - a.currentRun ||
+        b.bestRun - a.bestRun ||
+        a.name.localeCompare(b.name),
+    );
+
+  const entrants = members
+    .filter((m) => m.status === "in")
+    .map((m) => ({ id: m.id, name: m.name, slug: m.slug, bestRun: m.bestRun }))
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
+  return { members, entrants };
+}
+
+/** Everyone in `month`'s draw, sorted by id (see trackMonth). Null when a
+ *  read fails, so the caller refuses to draw from a partial list. */
+export async function drawEntrants(
+  month: string,
+  today = bangkokDay(new Date().toISOString()),
+): Promise<DrawEntrant[] | null> {
+  return (await trackMonth(month, today))?.entrants ?? null;
+}
+
+/**
+ * The maker of every live product (one entry per product): not hidden, by an
+ * account that is neither suspended nor a bot — the products a comment can
+ * count on (lib/rewards.ts). Null when the read fails.
+ *
+ * Ids rather than a count, because what a MEMBER can comment on is personal:
+ * not their own products, and not those of anyone in a block with them either
+ * way (getBlockedIds) — the comment action refuses those, the product page
+ * 404s and the deck leaves them out. Count with commentableFor(). Below
+ * DRAW_MIN_PRODUCTS_PER_DAY nobody (or that member) can qualify: the founder
+ * kept the bar at 3 anyway, so the pages say so rather than show a deadline
+ * nobody can meet. Only the size matters there, so 1000 rows is plenty.
+ */
+export async function liveProductMakers(): Promise<string[] | null> {
+  const { data, error } = await createAdminClient()
+    .from("forum_posts")
+    .select("author_id, author:profiles!forum_posts_author_id_fkey!inner(suspended, is_bot)")
+    .eq("kind", "show_and_tell")
+    .eq("hidden", false)
+    .eq("author.suspended", false)
+    .eq("author.is_bot", false)
+    .limit(1000);
+  if (error) {
+    console.error("[draw] products", error.message);
+    return null;
+  }
+  return (data ?? []).map((r) => r.author_id as string);
+}
+
+/** How many of `makers` (liveProductMakers) a member can comment on. */
+export function commentableFor(
+  makers: string[] | null,
+  memberId: string,
+  blocked: Set<string>,
+): number | null {
+  return makers === null
+    ? null
+    : makers.filter((m) => m !== memberId && !blocked.has(m)).length;
 }

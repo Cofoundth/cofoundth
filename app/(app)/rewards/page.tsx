@@ -14,6 +14,16 @@
 // a post deleted or hidden since) no longer counts — and the copy says so
 // rather than promising an entry is permanent.
 //
+// THE STATUS, in one of three states (lib/rewards.ts outlook): in the draw;
+// can still make it — with the next step in plain words (the last day a fresh
+// streak can start, or how many more days in a row); or too late for this
+// month. Everyone starts again from zero on the 1st (the founder's call,
+// 2026-11-18), so the page also says when that is, and once it has happened
+// it keeps LAST month's result on top: in the draw and waiting, spun and not
+// them, or not in it — a win has its own card. And when there are fewer
+// products to comment on than a day needs, it says nobody can get in yet
+// instead of offering a deadline nobody can meet.
+//
 // Founders and explorers (anyone who can comment). Investors are sent home.
 // Team accounts are never in the draw (lib/draw-data.ts outOfTheDraw) and are
 // told so. A suspended member is not: suspension is silent everywhere else in
@@ -22,14 +32,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle2, Gift, MessageCircle } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Gift, MessageCircle } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountRole } from "@/lib/account";
 import { isAdminUser } from "@/lib/admin";
 import { getBlockedIds } from "@/lib/blocking";
 import { canComment, roleHome } from "@/lib/roles";
-import { memberDrawComments } from "@/lib/draw-data";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { commentableFor, liveProductMakers, memberDrawComments } from "@/lib/draw-data";
 import {
   bangkokDay,
   daysOf,
@@ -38,6 +49,8 @@ import {
   DRAW_STREAK_DAYS,
   judgeComments,
   monthOf,
+  nextMonth,
+  nextStep,
   previousMonth,
   qualifyingDays,
   standing,
@@ -74,28 +87,83 @@ export default async function RewardsPage() {
   const month = monthOf(now);
   const today = bangkokDay(now.toISOString());
 
-  const [comments, { data: wins }, staff, blocked] = await Promise.all([
-    memberDrawComments(supabase, user.id, month),
-    // RLS (0087) returns only draws this member won; 0088 grants only these
-    // columns. Recent ones only: the news is for the month or two after a
-    // win, not a banner forever.
-    supabase
-      .from("monthly_draws")
-      .select("month")
-      .gte("month", `${previousMonth(previousMonth(month))}-01`)
-      .order("month", { ascending: false })
-      .limit(1),
-    isAdminUser(supabase, user),
-    getBlockedIds(user.id),
-  ]);
+  const last = previousMonth(month);
+  const [comments, lastComments, { data: wins }, staff, blocked, makers, lastDraw] =
+    await Promise.all([
+      memberDrawComments(supabase, user.id, month),
+      memberDrawComments(supabase, user.id, last),
+      // RLS (0087) returns only draws this member won; 0088 grants only these
+      // columns. Recent ones only: the news is for the month or two after a
+      // win, not a banner forever.
+      supabase
+        .from("monthly_draws")
+        .select("month")
+        .gte("month", `${previousMonth(last)}-01`)
+        .order("month", { ascending: false })
+        .limit(1),
+      isAdminUser(supabase, user),
+      getBlockedIds(user.id),
+      liveProductMakers(),
+      // Last month's draw, if it has been spun: whether this member was in
+      // its stored pool and whether they won. Through the service role, since
+      // RLS shows a member only the draws they won and never the pool (0087,
+      // 0088). Only those two booleans leave the server: never the winner's
+      // id, never anybody else's.
+      createAdminClient()
+        .from("monthly_draws")
+        .select("winner_id, entrant_ids")
+        .eq("month", `${last}-01`)
+        .maybeSingle(),
+    ]);
 
+  // This month: only its own days count — everyone starts from zero on the 1st.
   const { verdicts, productsByDay } = judgeComments(comments ?? [], user.id);
   const qualifying = qualifyingDays(productsByDay);
-  const { eligible, currentRun } = standing(month, qualifying, today);
+  const { currentRun } = standing(month, qualifying, today);
+  // In, or what to do next — including "you can't get in yet" when there are
+  // fewer products THIS member can comment on than a day needs (not their
+  // own, not a blocked pair's): a deadline they can't meet is not a status.
+  // A failed count gives no deadline at all (lib/rewards.ts nextStep).
+  const products = commentableFor(makers, user.id, blocked);
+  const step = nextStep(month, qualifying, today, products);
   const todayProducts = productsByDay.get(today) ?? 0;
   const thisMonth = (comments ?? []).filter((c) =>
     bangkokDay(c.createdAt).startsWith(month),
   );
+
+  // Last month. Until the spin: the same rules over the comments that exist
+  // now. After it: in the STORED pool (a comment deleted since doesn't
+  // rewrite a draw that has happened) — or meeting the rules, for an account
+  // the draw leaves out whatever its comments. That is a suspended one, and
+  // suspension is silent everywhere in the app: so they read "not you this
+  // time" like anyone else, never "you weren't in it" next to a streak of 5.
+  const lastJudged = lastComments ? judgeComments(lastComments, user.id) : null;
+  const lastQualifying = lastJudged ? qualifyingDays(lastJudged.productsByDay) : new Set<string>();
+  const lastStanding = standing(last, lastQualifying, today);
+  const lastSpun = lastDraw.data
+    ? {
+        won: lastDraw.data.winner_id === user.id,
+        inPool: ((lastDraw.data.entrant_ids as string[] | null) ?? []).includes(user.id),
+      }
+    : null;
+  const lastIn = lastStanding.eligible || !!lastSpun?.inPool;
+  const tookPartLast = !!lastJudged && lastJudged.productsByDay.size > 0;
+  // Nothing to say about last month for someone who didn't take part, or
+  // whose win already has its own card above — nor when a read failed, since
+  // a guess about a draw is worse than no card.
+  if (lastDraw.error) console.error("[rewards] last draw", lastDraw.error.message);
+  const lastCard =
+    staff ||
+    lastComments === null ||
+    lastDraw.error ||
+    lastSpun?.won ||
+    !(lastIn || tookPartLast)
+      ? null
+      : lastIn
+        ? lastSpun
+          ? "spun"
+          : "waiting"
+        : "missed";
 
   const dateLocale = locale === "th" ? "th-TH" : "en-GB";
   const monthName = (m: string) =>
@@ -136,6 +204,19 @@ export default async function RewardsPage() {
     tReadFailed,
     tUnavailable,
     tDayStatus,
+    tInNext,
+    tStartBy,
+    tStartToday,
+    tMoreDays,
+    tOneMore,
+    tTooLate,
+    tShelf,
+    tLastWaiting,
+    tLastWaitingBody,
+    tLastSpun,
+    tLastSpunBody,
+    tLastMissed,
+    tLastMissedBody,
   ] = await Promise.all([
     t("Monthly draw"),
     t(
@@ -155,7 +236,9 @@ export default async function RewardsPage() {
       "Comment on {n} different products a day. Only products count, not community posts, and several comments on the same product count once.",
     ),
     t("Only other members’ products count, and each comment needs at least {n} characters."),
-    t("Do that {n} days in a row, by Bangkok time. A streak can start late last month."),
+    t(
+      "Do that {n} days in a row inside the month, by Bangkok time. Everyone starts again from zero on the 1st.",
+    ),
     t(
       "After the month ends we spin a wheel of everyone who still qualifies. One name wins; everyone else tries again next month.",
     ),
@@ -168,6 +251,23 @@ export default async function RewardsPage() {
     t("Couldn’t load your progress. Try again in a moment."),
     t("A post or product that’s no longer available"),
     t("{day}: {n} of {total} products"),
+    t("On {date} everyone starts again from zero. Your place in this month’s draw stays."),
+    t("Start by {date} to make it this month."),
+    t("Start today to make it this month."),
+    t("{n} more days in a row and you’re in."),
+    t("One more day and you’re in."),
+    t(
+      "Too late for this month: there aren’t enough days left for {n} in a row. Everyone starts again from zero on {date}.",
+    ),
+    t(
+      "Products you can comment on right now: {n}. A day needs {total} different ones, so you can’t get in until the shelf grows.",
+    ),
+    t("You’re in the draw for {month}."),
+    t("The winner is drawn after the month ends, and the team announces it."),
+    t("The draw for {month} is done."),
+    t("Not you this time. This month is a fresh start."),
+    t("You weren’t in the draw for {month}."),
+    t("Your best streak was {n} of {total} days. This month is a fresh start."),
   ]);
   const verdictLabels = Object.fromEntries(
     await Promise.all(
@@ -210,6 +310,29 @@ export default async function RewardsPage() {
         </Card>
       )}
 
+      {/* Last month's result, kept on the page after the 1st: the new month
+          starts from zero, and without this the old one would just vanish. */}
+      {lastCard && (
+        <Card padding="md" className="mb-8 flex items-start gap-3">
+          <CalendarCheck className="mt-0.5 h-5 w-5 shrink-0 text-navy" strokeWidth={1.5} aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="font-medium text-ink">
+              {fill(
+                lastCard === "waiting" ? tLastWaiting : lastCard === "spun" ? tLastSpun : tLastMissed,
+                { month: monthName(last) },
+              )}
+            </p>
+            <p className="mt-1 text-sm text-ink-muted">
+              {lastCard === "waiting"
+                ? tLastWaitingBody
+                : lastCard === "spun"
+                  ? tLastSpunBody
+                  : fill(tLastMissedBody, { n: lastStanding.bestRun, total: DRAW_STREAK_DAYS })}
+            </p>
+          </div>
+        </Card>
+      )}
+
       {comments === null ? (
         <Card padding="md" className="mb-14">
           <p role="alert" className="text-sm text-danger-ink">
@@ -220,26 +343,49 @@ export default async function RewardsPage() {
         <Card padding="md" className="mb-14">
           {staff ? (
             <p className="mb-6 text-sm text-ink-muted">{tStaff}</p>
-          ) : eligible ? (
+          ) : step.kind === "in" ? (
             <div className="mb-6 flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-navy" strokeWidth={1.5} aria-hidden="true" />
               <div className="min-w-0">
                 <p className="text-lg font-bold tracking-normal text-ink">{tIn}</p>
                 <p className="mt-1 text-sm text-ink-muted">{tInBody}</p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {fill(tInNext, { date: dayName(`${nextMonth(month)}-01`) })}
+                </p>
               </div>
             </div>
           ) : null}
-          {(staff || !eligible) && (
+          {(staff || step.kind !== "in") && (
             <div className="mb-6">
               <p className="text-lg font-bold tracking-normal text-ink">
                 {fill(tStreak, { n: currentRun, total: DRAW_STREAK_DAYS })}
               </p>
-              <p className="mt-1 text-sm text-ink-muted">
-                {fill(tToday, {
-                  n: Math.min(todayProducts, DRAW_MIN_PRODUCTS_PER_DAY),
-                  total: DRAW_MIN_PRODUCTS_PER_DAY,
-                })}
-              </p>
+              {step.kind !== "too_late" && (
+                <p className="mt-1 text-sm text-ink-muted">
+                  {fill(tToday, {
+                    n: Math.min(todayProducts, DRAW_MIN_PRODUCTS_PER_DAY),
+                    total: DRAW_MIN_PRODUCTS_PER_DAY,
+                  })}
+                </p>
+              )}
+              {/* The next step, in plain words: what it takes from here, or why
+                  nothing can happen this month. Not for the team, who are never
+                  "in". */}
+              {!staff && step.kind !== "in" && step.kind !== "unknown" && (
+                <p className="mt-3 text-sm text-ink">
+                  {step.kind === "too_late"
+                    ? fill(tTooLate, { n: DRAW_STREAK_DAYS, date: dayName(step.restart) })
+                    : step.kind === "shelf"
+                      ? fill(tShelf, { n: step.products, total: DRAW_MIN_PRODUCTS_PER_DAY })
+                      : step.kind === "start_today"
+                        ? tStartToday
+                        : step.kind === "start_by"
+                          ? fill(tStartBy, { date: dayName(step.day) })
+                          : step.kind === "one_more"
+                            ? tOneMore
+                            : fill(tMoreDays, { n: step.days })}
+                </p>
+              )}
             </div>
           )}
 
