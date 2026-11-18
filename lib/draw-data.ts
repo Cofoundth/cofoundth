@@ -8,6 +8,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { type createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
+import { devTestAuthorIds } from "@/lib/test-accounts";
 import {
   bangkokDay,
   judgeComments,
@@ -54,10 +55,16 @@ type Row = {
   } | null;
 };
 
-function toDrawComment(r: Row): MemberDrawComment | null {
+function toDrawComment(r: Row, devTest: Set<string>): MemberDrawComment | null {
   // A comment whose post is unreadable cannot be judged; it is left out
   // rather than guessed at.
   if (!r.post) return null;
+  // DEVELOPMENT ONLY: a PRODUCT by one of the three test accounts is
+  // available here, as it already is on the shelf and its page in development
+  // (lib/test-accounts.ts), so the draw can be tried end to end against real
+  // rows. `devTest` is the empty Set in a production build, read without a
+  // query, and a moderator-hidden row stays hidden either way.
+  const devProduct = r.post.kind === "show_and_tell" && devTest.has(r.post.author_id);
   return {
     id: r.id,
     postId: r.post.id,
@@ -68,14 +75,19 @@ function toDrawComment(r: Row): MemberDrawComment | null {
     // for members (app/(app)/community/[id], app/(marketing)/products/[id]).
     postHidden:
       r.post.hidden === true ||
-      r.post.author?.suspended === true ||
-      r.post.author?.is_bot === true,
+      (!devProduct && (r.post.author?.suspended === true || r.post.author?.is_bot === true)),
     content: r.content,
     createdAt: r.created_at,
     postKind: r.post.kind ?? "post",
     postTitle: r.post.title,
     postSnippet: (r.post.content ?? "").slice(0, 120),
   };
+}
+
+/** The test accounts among a read's post authors (lib/test-accounts.ts):
+ *  always the empty Set, without a query, in a production build. */
+function devTestAuthorsOf(rows: Row[]): Promise<Set<string>> {
+  return devTestAuthorIds([...new Set(rows.flatMap((r) => (r.post ? [r.post.author_id] : [])))]);
 }
 
 /**
@@ -129,8 +141,9 @@ export async function memberDrawComments(
     return q.order("id").limit(PAGE);
   }, "member comments");
   if (!rows) return null;
+  const devTest = await devTestAuthorsOf(rows);
   return rows
-    .map(toDrawComment)
+    .map((r) => toDrawComment(r, devTest))
     .filter((c): c is MemberDrawComment => c !== null)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
 }
@@ -236,9 +249,10 @@ export async function trackMonth(
   }, "comments");
   if (!rows) return null;
 
+  const devTest = await devTestAuthorsOf(rows);
   const byAuthor = new Map<string, DrawComment[]>();
   for (const r of rows) {
-    const c = toDrawComment(r);
+    const c = toDrawComment(r, devTest);
     if (!c) continue;
     const list = byAuthor.get(r.author_id) ?? [];
     list.push(c);
@@ -328,7 +342,25 @@ export async function liveProductMakers(): Promise<string[] | null> {
     console.error("[draw] products", error.message);
     return null;
   }
-  return (data ?? []).map((r) => r.author_id as string);
+  return [...(data ?? []).map((r) => r.author_id as string), ...(await devTestProductMakers())];
+}
+
+/** DEVELOPMENT ONLY: the makers of the test accounts' live products, which
+ *  count in development like every other place that shows them
+ *  (lib/test-accounts.ts). `[]` in a production build, without a query. */
+async function devTestProductMakers(): Promise<string[]> {
+  if (process.env.NODE_ENV === "production") return [];
+  const { data, error } = await createAdminClient()
+    .from("forum_posts")
+    .select("author_id, author:profiles!forum_posts_author_id_fkey!inner(suspended)")
+    .eq("kind", "show_and_tell")
+    .eq("hidden", false)
+    .eq("author.suspended", true)
+    .limit(1000);
+  if (error) return [];
+  const makers = (data ?? []).map((r) => r.author_id as string);
+  const test = await devTestAuthorIds([...new Set(makers)]);
+  return makers.filter((m) => test.has(m));
 }
 
 /** How many of `makers` (liveProductMakers) a member can comment on. */

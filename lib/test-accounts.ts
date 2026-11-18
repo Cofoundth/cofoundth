@@ -16,6 +16,13 @@
 //   · the shelf and the deck      getPublicProductsPage (lib/posts.ts)
 //   · /products/<id>, signed out  getPublicPost (lib/public-post.ts)
 //   · /products/<id>, signed in   its member gate (app/(marketing)/products/[id])
+//   · the monthly draw            lib/draw-data.ts: a comment on such a product
+//                                 counts toward a streak, and the product counts
+//                                 on the "products you can comment on" check —
+//                                 so /rewards can be tried end to end with real
+//                                 rows (added 2026-11-18). The test accounts
+//                                 themselves are still never IN a draw: they are
+//                                 suspended, and outOfTheDraw() drops them.
 //
 // NOTHING ELSE WIDENS: not the sitemap, not the landing's "Happening now", not
 // the community feed or search, not posts or milestones, not comments, not a
