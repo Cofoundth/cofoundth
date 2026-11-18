@@ -2,9 +2,10 @@
 // visitor and for a member (app/(marketing)/products/[id] renders both).
 //
 // ── WHAT THE PAGE IS FOR, IN THE ORDER IT SHOWS IT ─────────────────────────
-// The deck card itself opens the maker's product in a new tab (CLAUDE.md,
-// Language Rules); its rating-and-comments row, and any shared product link,
-// open THIS page: the whole product, with every comment. A visitor here may
+// The deck's "Try" opens the maker's product in a new tab (CLAUDE.md,
+// Language Rules); a tap on its card, its ↑ and its rating row open THIS page
+// in a modal over the deck (./ProductModal.tsx), and a shared product link
+// opens it as a page: the whole product, with every comment. A visitor here may
 // not have tried it yet, so the order on the page is the order of what they
 // came to do:
 //
@@ -101,8 +102,9 @@ export function ProductDetail({
 }: {
   post: ProductDetailPost;
   locale: Locale;
-  /** deckReturnHref() in ./deck-position.ts. */
-  backHref: string;
+  /** deckReturnHref() in ./deck-position.ts; null in the deck's modal
+   *  (./ProductModal.tsx), which closes instead of linking back. */
+  backHref: string | null;
   /** null when the rating could not be read for this kind of post. */
   rating: ProductRating | null;
   /** Beside the rating: the stars for a member who may rate, the sign-in door
@@ -141,14 +143,16 @@ export function ProductDetail({
 
       {/* Not prefetched: in production every product page would otherwise
           fetch the whole shelf just by being looked at. */}
-      <Link
-        href={backHref}
-        prefetch={false}
-        className="mb-5 inline-flex items-center gap-1.5 py-1 text-sm text-ink-muted transition-colors hover:text-navy"
-      >
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-        {t("Back to products", locale)}
-      </Link>
+      {backHref && (
+        <Link
+          href={backHref}
+          prefetch={false}
+          className="mb-5 inline-flex items-center gap-1.5 py-1 text-sm text-ink-muted transition-colors hover:text-navy"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          {t("Back to products", locale)}
+        </Link>
+      )}
 
       <Card
         as="article"

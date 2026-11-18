@@ -6,9 +6,11 @@
 //
 // ── THE ONE SWIPE IN THE PRODUCT, AND WHAT KEEPS IT FROM BEING A RATING ────
 // CLAUDE.md's Language Rules allow exactly this and nothing wider: a deck over
-// products, never over a person or a company. Left skips; right (and a tap on
-// the card) opens the maker's product itself in a NEW TAB, and this tab stays
-// on the deck. The swipe records nothing: no database write, no browser
+// products, never over a person or a company. Left skips; right opens the
+// maker's product itself in a NEW TAB, and this tab stays on the deck. A TAP on
+// the card is not a try: it opens the product's own page in a modal over the
+// deck (see THE PRODUCT'S PAGE, IN A MODAL). The swipe records nothing: no
+// database write, no browser
 // storage, no cookie, no analytics. A swipe left is "not now", said to nobody,
 // and it changes nothing but the screen. What happens when the reader comes
 // back from that tab — a review modal for a member, a sign-in offer for a
@@ -16,11 +18,11 @@
 // star and pressing send, never by the swipe.
 //
 // ── RIGHT OPENS THE PRODUCT, IN A NEW TAB, INSIDE THE GESTURE ──────────────
-// A right swipe, → on the deck, "Try" and a tap on the card's images or
-// description all open `href` — already through webUrl() on the server
-// (./ProductShelf.tsx), so this file never sees a raw link_url, and that parse
-// is what stands between a member-supplied `javascript:` URL and the tab.
-//   · "Try" and the card are REAL links, `target="_blank"` with
+// A right swipe, → on the deck and "Try" open `href` — already through
+// webUrl() on the server (./ProductShelf.tsx), so this file never sees a raw
+// link_url, and that parse is what stands between a member-supplied
+// `javascript:` URL and the tab.
+//   · "Try" is a REAL link, `target="_blank"` with
 //     `rel="noopener noreferrer nofollow"`: the browser opens the tab itself,
 //     before hydration too, and a link the reader activated is never
 //     popup-blocked. The click handler only moves the deck on.
@@ -38,21 +40,30 @@
 //     notice over the deck carries a real link to the same product — the
 //     fallback a reader can always activate.
 //
-// ── THE RATING-AND-COMMENTS ROW IS A DIFFERENT DESTINATION ─────────────────
-// The card's footer (the rating and the comment count) is a separate, same-tab
-// link to the product's page on Cofoundee, /products/<id>, where every
-// comment is.
-// It sits ABOVE the card's link (z-20 against z-10, siblings in the DOM — see
-// THE CARD'S TWO LINKS), and a press on it never starts a swipe
+// ── THE PRODUCT'S PAGE, IN A MODAL ─────────────────────────────────────────
+// A tap on the card means "tell me more", not "take me there" (the founder's
+// call, 2026-11-18: it used to open the maker's site). So a tap on the card,
+// its ↑ button, ↑ on the deck and the card's footer (the rating and the
+// comment count) all open the product's own page, every comment and the
+// stars included, in a modal over the deck: `?product=<id>` pushed onto this
+// address, which ./ProductShelf.tsx renders with ./ProductModal.tsx (the
+// header there says why a parameter and not an intercepted route). The deck
+// is locked while it is up and while it opens, writes no `after` for it, and
+// does not move: closing the modal lands on the same card.
+//
+// Every one of those controls is still a real link to /products/<id>, so a
+// tap before hydration, a middle-click or "open in new tab" opens the page
+// itself; only a plain click becomes the modal. The footer and the ↑ sit
+// ABOVE the card's link (z-20 against z-10, siblings in the DOM — see THE
+// CARD'S TWO LINKS), and a press on either never starts a swipe
 // ([data-deck-nodrag]).
 //
 // ── COMING BACK RESUMES THE DECK ───────────────────────────────────────────
-// Opening a product — trying it or going to its page — rewrites this page's
-// own history entry to `?after=<id>` first, so a reload, browser Back from
-// /products/<id>, a phone's swipe-back and that page's back link all land on an
-// address that says where the reader was, and the stack starts at the card
-// after it. The address is the only place the position is kept;
-// ./deck-position.ts has the whole argument, including what a reload does.
+// Trying a product rewrites this page's own history entry to `?after=<id>`
+// first, so a reload lands on an address that says where the reader was, and
+// the stack starts at the card after it. The address is the only place the
+// position is kept; ./deck-position.ts has the whole argument, including what
+// a reload does. Opening the modal writes nothing (above).
 //
 // The stack re-reads the address whenever the router's search params change,
 // and moves only when `after` there differs from what the deck itself last
@@ -114,20 +125,21 @@
 // ── WHAT THE CARD SHOWS ────────────────────────────────────────────────────
 // ONLY the images, the description, the rating and the comment count: CLAUDE.md,
 // Language Rules, "Founder decision (2026-11-10)". No visible product name, no
-// maker. The name is still in the card link's accessible name ("Try {name} on
-// {host}") and in the live region, so a screen reader still hears what it is.
+// maker. The name is still in the card link's accessible name ("More about
+// {name}") and in the live region, so a screen reader still hears what it is.
 //
 // ── THE CARD'S TWO LINKS ───────────────────────────────────────────────────
-// The stretched-link pattern, because the card holds a second destination (the
-// footer row) and the gallery's arrows, and neither a link nor a button can
-// nest in <a>. ONE absolutely-positioned <a> to the product covers the card at
-// `z-10`; the footer link and the arrows sit at `z-20`. They are SIBLINGS in
+// The stretched-link pattern, because the card holds a second control (the
+// footer row), the ↑ and the gallery's arrows, and neither a link nor a
+// button can nest in <a>. ONE absolutely-positioned <a> to the product's page
+// covers the card at `z-10`; the footer link, the ↑ and the arrows sit at
+// `z-20`. They are SIBLINGS in
 // the DOM, not ancestor and descendant, so nothing needs to cancel an event: a
 // press lands on one or the other, decided by paint order. That z-20 is not
 // decoration. The stretched <a> is the topmost element over the rest of the
 // card (`document.elementsFromPoint()` returns it first at the images and the
 // description), so a control added without z-20 paints underneath it, and a
-// reader aiming for it opens the maker's site instead.
+// reader aiming for it opens the product's page instead.
 //
 // The stretched <a> is the FIRST thing in the card on purpose: tab order is DOM
 // order, and the primary destination should not be the last stop.
@@ -148,6 +160,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useTransition,
   type CSSProperties,
   type DragEvent,
   type KeyboardEvent,
@@ -156,7 +169,15 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { ExternalLink, MessageCircle, SearchX, Star, X } from "lucide-react";
+import {
+  ChevronUp,
+  ExternalLink,
+  Loader2,
+  MessageCircle,
+  SearchX,
+  Star,
+  X,
+} from "lucide-react";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import {
@@ -171,9 +192,13 @@ import { useLocale } from "@/lib/i18n-client";
 import type { ProductRating } from "@/lib/post-types";
 import type { FilterBucket } from "./categories";
 import {
+  PRODUCT_PARAM,
+  parseProductParam,
   productPageHref,
   readAfterFromAddress,
+  readProductFromAddress,
   resumeIndex,
+  startIndex,
   writeAfterToAddress,
   type DeckRoute,
 } from "./deck-position";
@@ -183,6 +208,10 @@ import {
   type PromptProduct,
 } from "./DeckPrompts";
 import { useProductFilter } from "./filter-context";
+import {
+  clearOpenedFromDeck,
+  markOpenedFromDeck,
+} from "./product-modal-state";
 import { PhoneHandoffDialog, needsPhone } from "./PhoneHandoff";
 import type { PhonePlatform } from "./product-view";
 
@@ -201,11 +230,13 @@ export type DeckProduct = PromptProduct & {
    *  pressing "Try" on a phone app gets ./PhoneHandoff.tsx's code to scan
    *  instead of a store page (the owner's call, 2026-11-12). */
   phones: readonly PhonePlatform[];
-  /** "Try {name} on {host}": the accessible name of the card's link, which
-   *  has no visible text, and of the Try button. Starts with the button's
-   *  visible word, because a voice-control user says what they see
-   *  (WCAG 2.5.3). */
+  /** "Try {name} on {host}": the accessible name of the Try button. Starts
+   *  with the button's visible word, because a voice-control user says what
+   *  they see (WCAG 2.5.3). */
   tryAria: string;
+  /** "More about {name}": the card's link and its ↑, which have no visible
+   *  text and open the product's page in the modal. */
+  moreAria: string;
   /** Every image, in order, already through ./product-view.ts's image parse and
    *  capped at MAX_PRODUCT_IMAGES. [] for a product with no screenshots. */
   images: readonly string[];
@@ -408,6 +439,7 @@ export function ProductDeck({
   supplyCta,
   route,
   resumeAfter,
+  resumeAt,
   viewer,
   computer,
   phoneOnlyBuckets,
@@ -430,6 +462,9 @@ export function ProductDeck({
   /** `?after=` as the SERVER read it, for the first paint. The stack prefers
    *  the address once it is in a browser: see Stack. */
   resumeAfter: string | null;
+  /** `?product=` as the server read it: the deck starts AT that card when it
+   *  is on it (deck-position.ts startIndex), under its open modal. */
+  resumeAt: string | null;
   /** Who is reading, for the prompts: see ./DeckPrompts.tsx. */
   viewer: DeckViewer;
   /** The server read the reader as a computer (lib/device.ts): its cards show
@@ -449,7 +484,7 @@ export function ProductDeck({
     [products, matches],
   );
   const [announced, setAnnounced] = useState(() =>
-    positionOf(matching, resumeIndex(matching, resumeAfter), labels),
+    positionOf(matching, startIndex(matching, resumeAfter, resumeAt), labels),
   );
   /** The stack's root: where focus goes back to when a prompt closes. */
   const deckRef = useRef<HTMLDivElement>(null);
@@ -478,6 +513,7 @@ export function ProductDeck({
           route={route}
           category={selected}
           resumeAfter={resumeAfter}
+          resumeAt={resumeAt}
           rootRef={deckRef}
           locked={prompts.locked}
           onTried={prompts.tried}
@@ -532,6 +568,7 @@ function Stack({
   route,
   category,
   resumeAfter,
+  resumeAt,
   rootRef,
   locked: promptLocked,
   onTried,
@@ -543,6 +580,7 @@ function Stack({
   route: DeckRoute;
   category: FilterBucket | null;
   resumeAfter: string | null;
+  resumeAt: string | null;
   rootRef: RefObject<HTMLDivElement | null>;
   /** A prompt's modal is open: the deck takes no input. */
   locked: boolean;
@@ -556,13 +594,23 @@ function Stack({
   const searchParams = useSearchParams();
   // WHERE THE STACK STARTS: the server's read of `?after=` for the first paint,
   // then the ADDRESS, before the browser paints (below).
-  const [index, setIndex] = useState(() => resumeIndex(products, resumeAfter));
+  const [index, setIndex] = useState(() =>
+    startIndex(products, resumeAfter, resumeAt),
+  );
   /** The product whose window.open() was blocked: the notice's link. */
   const [blocked, setBlocked] = useState<DeckProduct | null>(null);
   /** The phone app this computer just tried: its code to scan is open. */
   const [handoff, setHandoff] = useState<DeckProduct | null>(null);
-  /** A prompt's modal OR the handoff's is open: the deck takes no input. */
-  const locked = promptLocked || handoff !== null;
+  /** The product's page is on its way into the modal (./ProductModal.tsx). */
+  const [opening, startOpening] = useTransition();
+  /** It is up, over this deck: `?product=` on the address, read with the
+   *  SERVER's parser — a value it refuses renders no modal, and must not lock
+   *  a deck with nothing to close. */
+  const modalOpen =
+    parseProductParam(searchParams.getAll(PRODUCT_PARAM)) !== null;
+  /** A prompt's modal, the handoff's, or the product's is open, or opening:
+   *  the deck takes no input. */
+  const locked = promptLocked || handoff !== null || modalOpen || opening;
 
   const stageRef = useRef<HTMLDivElement>(null);
   /** What the handlers read. `index` is only this, rendered. */
@@ -603,7 +651,11 @@ function Stack({
     const first = knownAfter.current === undefined;
     if (!first && after === knownAfter.current) return;
     knownAfter.current = after;
-    const start = resumeIndex(products, after);
+    // The first read also honours `?product=`: a deck loaded with its modal
+    // open starts AT that card. Later reads move only for `after`.
+    const start = first
+      ? startIndex(products, after, readProductFromAddress())
+      : resumeIndex(products, after);
     if (start === indexRef.current) return;
     if (!first) {
       // An outside navigation: whatever was in flight is moot.
@@ -623,6 +675,9 @@ function Stack({
       gesture.current?.listeners.abort();
       cancelAnimationFrame(frame.current);
       clearTimeout(flyTimer.current);
+      // A modal met after the deck has gone was not opened by its push
+      // (./product-modal-state.ts).
+      clearOpenedFromDeck();
     },
     [],
   );
@@ -789,23 +844,23 @@ function Stack({
     setBlocked(null);
   }
 
-  /** The footer row: the product's page on Cofoundee, in this tab. */
-  function onPageLinkClick(event: MouseEvent<HTMLAnchorElement>) {
-    if (locked) {
-      event.preventDefault();
-      return;
-    }
-    // A new tab is the browser's; the deck stays where it is.
-    if (!isPlainClick(event)) return;
-    const product = actionableProduct();
+  /** The top card's own page, in the modal over this deck (see THE
+   *  PRODUCT'S PAGE, IN A MODAL): the card's link, its ↑, its footer, and ↑
+   *  on the deck. A middle-click or a modifier on one of the links asks the
+   *  browser for the page in a new tab, and gets it. */
+  function openProduct(event: MouseEvent<HTMLElement> | null) {
+    if (event && !isPlainClick(event)) return;
     // next/link would navigate on its own (it stands down when the default is
-    // prevented); this does it instead, after writing the position.
-    event.preventDefault();
+    // prevented), and the stretched <a> would go to the page.
+    event?.preventDefault();
+    const product = actionableProduct();
     if (!product) return;
-    // BEFORE the push: this rewrites the deck's own entry, and once the push
-    // lands the current entry is the product's page.
-    writeAfter(product.id);
-    router.push(pageHrefOf(product));
+    const url = new URL(window.location.href);
+    url.searchParams.set(PRODUCT_PARAM, product.id);
+    markOpenedFromDeck(product.id);
+    startOpening(() => {
+      router.push(`${url.pathname}${url.search}`, { scroll: false });
+    });
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -826,6 +881,9 @@ function Stack({
     } else if (event.key === "ArrowRight") {
       event.preventDefault();
       tryProduct();
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      openProduct(null);
     }
   }
 
@@ -1037,17 +1095,18 @@ function Stack({
             // A column on a phone, a row on a wide screen (CARD_BODY).
             className="group/card absolute inset-x-0 top-0 bottom-5 flex origin-bottom cursor-grab touch-pan-y flex-col border border-line shadow-lg select-none active:cursor-grabbing deck-wide:flex-row [transform:translateY(calc(var(--depth)_*_10px))_scale(calc(1_-_var(--depth)_*_0.04))]"
           >
-            {/* Stretched, and a real link so a tap, a middle-click and
-                assistive tech all work before hydration. It covers the
+            {/* Stretched, and a real link to the product's page, so a tap
+                before hydration, a middle-click and assistive tech all reach
+                it; after hydration a plain click opens it in the modal
+                instead (see THE PRODUCT'S PAGE, IN A MODAL). It covers the
                 pictures, so it is also what says the pointer is over them
                 (`data-gallery-zone`, see components/ProductGallery.tsx). */}
             <a
-              href={product.href}
-              target="_blank"
-              rel={LINK_REL}
-              aria-label={product.tryAria}
+              href={pageHrefOf(product)}
+              aria-label={product.moreAria}
+              aria-haspopup="dialog"
               draggable={false}
-              onClick={onTryLinkClick}
+              onClick={openProduct}
               data-gallery-zone=""
               className="absolute inset-0 z-10 cursor-grab rounded-3xl active:cursor-grabbing"
             />
@@ -1102,6 +1161,36 @@ function Stack({
                   className="hidden rounded-t-3xl md:block deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
                 />
               )}
+              {/* "More about", where a dating app keeps its own: the
+                  pictures' corner. Out of the tab order: the card's link above
+                  is the same control for a keyboard. z-20, over that link; a
+                  press here is never a swipe. A spinner while the page is on
+                  its way. */}
+              {depth === 0 && (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  data-deck-nodrag=""
+                  aria-label={product.moreAria}
+                  aria-haspopup="dialog"
+                  onClick={openProduct}
+                  className="absolute right-3 bottom-3 z-20 grid h-10 w-10 place-items-center rounded-full border border-line bg-white text-navy shadow-lg hover:bg-cream"
+                >
+                  {opening ? (
+                    <Loader2
+                      className="h-5 w-5 animate-spin motion-reduce:animate-none"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <ChevronUp
+                      className="h-5 w-5"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
+              )}
             </div>
 
             <div className={CARD_BODY}>
@@ -1122,8 +1211,8 @@ function Stack({
                 </p>
               )}
 
-              {/* The product's page, in this tab: see "THE RATING-AND-
-                  COMMENTS ROW" in the header. Two faces of ONE destination,
+              {/* The product's page, in the modal: see "THE PRODUCT'S
+                  PAGE, IN A MODAL" in the header. Two faces of ONE control,
                   each shown at one size only (display:none takes the other
                   out of the tab order): the compact row on a phone's band,
                   the stat strip in the wide panel. Not prefetched: each card
@@ -1134,9 +1223,10 @@ function Stack({
                   href={pageHrefOf(product)}
                   prefetch={false}
                   aria-label={product.footerAria}
+                  aria-haspopup="dialog"
                   data-deck-nodrag=""
                   draggable={false}
-                  onClick={onPageLinkClick}
+                  onClick={openProduct}
                   className="relative z-20 -my-2 inline-flex min-w-0 cursor-pointer items-center gap-4 py-2 text-sm"
                 >
                   <CardFooterFace product={product} locale={locale} />
@@ -1146,9 +1236,10 @@ function Stack({
                 href={pageHrefOf(product)}
                 prefetch={false}
                 aria-label={product.footerAria}
+                aria-haspopup="dialog"
                 data-deck-nodrag=""
                 draggable={false}
-                onClick={onPageLinkClick}
+                onClick={openProduct}
                 className="group/stats relative z-20 mt-8 hidden min-w-0 cursor-pointer grid-cols-2 gap-6 border-t border-line pt-6 deck-wide:grid"
               >
                 <CardStats product={product} locale={locale} />
@@ -1237,6 +1328,22 @@ function Stack({
           >
             {fill(labels.openBlocked, { name: blocked.name })}
           </a>
+        </div>
+      )}
+
+      {/* The product's page is on its way into the modal: the modal's own
+          scrim (components/ui/Dialog.tsx) at once, so the tap is answered
+          before the page arrives, and the modal takes its place in the same
+          frame. */}
+      {opening && !modalOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-50 grid place-items-center bg-navy/40 backdrop-blur-sm"
+        >
+          <Loader2
+            className="h-7 w-7 animate-spin text-white motion-reduce:animate-none"
+            strokeWidth={1.5}
+          />
         </div>
       )}
 

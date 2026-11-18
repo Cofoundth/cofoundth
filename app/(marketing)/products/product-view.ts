@@ -5,8 +5,8 @@
 //
 // ── THE OUTBOUND LINK IS SECURITY-SENSITIVE ───────────────────────────────
 // `link_url` is user-submitted, and on the shelf it leaves Cofoundee from two
-// places: the deck card itself (a right swipe, →, "Try", a tap on the card,
-// all in a new tab — ./ProductDeck.tsx) and the "Try it" button on the
+// places: the deck (a right swipe, →, "Try", all in a new tab —
+// ./ProductDeck.tsx) and the "Try it" button on the
 // product's own page (./ProductDetail.tsx). Outside the shelf, a post's or a
 // milestone's link_url is also a link in the community feed card
 // (components/PostCard.tsx — products are not in the feed), and any kind's is
@@ -95,8 +95,8 @@ function imageSrc(raw: string, fixture: boolean): string | null {
  *
  * Read OUT on the deck card, not shown on it: the card shows only the images,
  * the description, the rating and the comment count (CLAUDE.md, "Founder
- * decision (2026-11-10)"), so the host is in the card link's and the Try
- * button's accessible name ("Try {name} on {host}"). On the product page's
+ * decision (2026-11-10)"), so the host is in the Try button's accessible
+ * name ("Try {name} on {host}"). On the product page's
  * "Try it" button (./ProductDetail.tsx) it is printed beside the button and is
  * the button's description. A visitor is about to leave for a stranger's
  * domain, `link_url` is SUBMITTED BY A MEMBER, and a phone has no status bar

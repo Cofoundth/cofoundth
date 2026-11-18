@@ -93,7 +93,13 @@ import { createPostCommentAction } from "@/lib/post-actions";
 import { MAX_RATING } from "@/lib/post-types";
 import type { FilterBucket } from "./categories";
 import { setProductRatingAction } from "@/app/(app)/community/[id]/actions";
-import { deckReviewPath, takeReviewFromAddress } from "./deck-position";
+import { useSearchParams } from "next/navigation";
+import {
+  PRODUCT_PARAM,
+  deckReviewPath,
+  parseProductParam,
+  takeReviewFromAddress,
+} from "./deck-position";
 
 /** How long after a product opens the deck waits to see the reader leave
  *  (this tab hidden, or this window blurred). If they have not left by then,
@@ -161,9 +167,26 @@ export function useDeckPrompts({
   const signInOffered = useRef(false);
   const wasOpen = useRef(false);
 
+  // The product's own page open over the deck (./ProductModal.tsx): a prompt
+  // that comes due then — a try opened in a background tab, whose grace timer
+  // ends while the reader is reading another product — waits for it to close
+  // rather than opening on top of it.
+  const searchParams = useSearchParams();
+  const productModalOpen =
+    parseProductParam(searchParams.getAll(PRODUCT_PARAM)) !== null;
+  const productModalRef = useRef(productModalOpen);
+  const deferred = useRef<PromptProduct | null>(null);
+  useEffect(() => {
+    productModalRef.current = productModalOpen;
+  }, [productModalOpen]);
+
   const show = useCallback(
     (product: PromptProduct) => {
       if (promptRef.current) return; // never two at once
+      if (productModalRef.current) {
+        deferred.current = product;
+        return;
+      }
       let next: Prompt | null = null;
       if (viewer.signedIn) {
         if (product.reviewable) next = { kind: "review", product };
@@ -182,6 +205,14 @@ export function useDeckPrompts({
     promptRef.current = null;
     setPrompt(null);
   }, []);
+
+  // ...and is asked once the product's modal has closed.
+  useEffect(() => {
+    if (productModalOpen || !deferred.current) return;
+    const product = deferred.current;
+    deferred.current = null;
+    show(product);
+  }, [productModalOpen, show]);
 
   const tried = useCallback(
     (product: PromptProduct) => {

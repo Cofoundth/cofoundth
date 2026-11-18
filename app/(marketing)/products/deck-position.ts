@@ -10,17 +10,18 @@
 // CLAUDE.md, Language Rules: the swipe itself stores, counts and shows
 // nothing. "Where the reader is" therefore lives only in the address — no
 // localStorage, no sessionStorage, no cookie, no row. The moment a reader
-// OPENS a product, the deck rewrites its own history entry to
-// `?after=<that product's id>` (replaceState: no new entry). Opening a product
-// is either of two things, and both write it:
-//   * TRYING it — right swipe, →, "Try", a tap on the card's images or
-//     description. The maker's site opens in a NEW TAB and this tab stays on
-//     the deck, which moves on; the address now says so, so a reload lands on
-//     the card the reader is looking at.
-//   * its PAGE — the card's rating-and-comments row, a same-tab link to
-//     /products/<id>. Browser Back, a phone's swipe-back and that page's own back
-//     link all arrive at the rewritten address, and the deck starts at the
-//     card after it.
+// TRIES a product — right swipe, →, "Try" — the deck rewrites its own history
+// entry to `?after=<that product's id>` (replaceState: no new entry). The
+// maker's site opens in a NEW TAB and this tab stays on the deck, which moves
+// on; the address now says so, so a reload lands on the card the reader is
+// looking at.
+//
+// A tap on the card, its ↑ button and its rating row are not a try: they open
+// the product's own page in a MODAL over the deck (./ProductModal.tsx), at
+// `?product=<id>` on this same address, pushed so Back closes it. That writes
+// no `after`, and the deck under the modal does not move: closing it lands on
+// the same card. Opening /products/<id> as a page (a middle-click, a shared
+// link) still comes back through its own back link, below.
 //
 // A skip writes nothing. A left swipe changes the screen and nothing else; the
 // address learns a position only when a product is opened, which is the one
@@ -86,6 +87,27 @@ function first(raw: string | readonly string[] | undefined): string | undefined 
   return typeof raw === "string" ? raw : raw?.[0];
 }
 
+/** `?product=<id>`: the product open in the deck's modal (./ProductModal.tsx),
+ *  on / and /products alike. */
+export const PRODUCT_PARAM = "product";
+
+/**
+ * `?product=` as a product id, or null. Unlike `after`, this one IS fetched
+ * (./ProductShelf.tsx renders the product), so it must have the shape of a
+ * real id before any query sees it: a uuid, or a dev fixture's `fixture-…` id
+ * (./fixtures.ts).
+ */
+export function parseProductParam(
+  raw: string | readonly string[] | undefined,
+): string | null {
+  const value = first(raw);
+  if (!value) return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ||
+    /^fixture-[a-z0-9-]{1,48}$/.test(value)
+    ? value
+    : null;
+}
+
 /**
  * `?after=` as a product id, or null. The shape check is not about trust (the
  * value is only ever compared against the ids already on the deck, never
@@ -108,6 +130,29 @@ export function resumeIndex(
   if (!after) return 0;
   const i = products.findIndex((p) => p.id === after);
   return i === -1 ? 0 : i + 1;
+}
+
+/** Where a deck starts: AT `?product=` when that product is on it — a
+ *  shared or reloaded address with its modal open, so closing the modal
+ *  lands on that very card — and otherwise after `?after=` (resumeIndex). */
+export function startIndex(
+  products: readonly { id: string }[],
+  after: string | null,
+  product: string | null,
+): number {
+  if (product) {
+    const i = products.findIndex((p) => p.id === product);
+    if (i !== -1) return i;
+  }
+  return resumeIndex(products, after);
+}
+
+/** `?product=` as the browser's address has it, through the same parser
+ *  the server uses. Browser-only. */
+export function readProductFromAddress(): string | null {
+  return parseProductParam(
+    new URLSearchParams(window.location.search).getAll(PRODUCT_PARAM),
+  );
 }
 
 /** A product's page as the deck links to it. */

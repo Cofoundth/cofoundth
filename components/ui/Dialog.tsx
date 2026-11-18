@@ -83,6 +83,12 @@ const FOCUSABLE_SELECTOR = [
 // order"), so an unfiltered `querySelector(...)[0]` picked a hidden input,
 // focus stayed on the trigger BEHIND the scrim, and a screen reader announced
 // nothing. Both the focus-pull and the Tab trap read this one list.
+// The open dialogs, innermost last. Every dialog listens on `window`, so a
+// dialog opened from inside another (the join prompt or the phone code from a
+// product in the deck's product modal) would otherwise have BOTH answer one
+// Escape, and both trap Tab: only the one on top does.
+const openDialogs: object[] = [];
+
 function focusables(panel: HTMLElement): HTMLElement[] {
   return Array.from(
     panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
@@ -140,6 +146,17 @@ export function Dialog({
   children,
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  /** This dialog's place in openDialogs. */
+  const token = useRef<object>({});
+
+  useEffect(() => {
+    const me = token.current;
+    openDialogs.push(me);
+    return () => {
+      const i = openDialogs.lastIndexOf(me);
+      if (i !== -1) openDialogs.splice(i, 1);
+    };
+  }, []);
 
   // Lock the page behind the overlay, and hand focus back to whatever opened
   // the dialog on the way out. Mount-once on purpose: a dialog that swaps its
@@ -175,6 +192,8 @@ export function Dialog({
   // of walking into the page behind the overlay.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      // A dialog opened on top of this one has the keys.
+      if (openDialogs[openDialogs.length - 1] !== token.current) return;
       if (e.key === "Escape") {
         if (dismissible) onClose();
         else onEscape?.();

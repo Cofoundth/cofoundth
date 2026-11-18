@@ -69,7 +69,8 @@
 //
 // THE SWIPE HERE IS NOT A RATING. The whole shelf is ./ProductDeck.tsx, the
 // founder-approved exception in CLAUDE.md's Language Rules: left skips, right
-// (and a tap on the card) opens the product itself in a new tab. When the
+// opens the product itself in a new tab, and a tap on the card opens its own
+// page in a modal over the deck (./ProductModal.tsx). When the
 // reader comes back from it, ./DeckPrompts.tsx asks a member to rate and
 // comment, or offers a visitor sign-in, once per visit. There is no grid. The
 // swipe is a way of browsing, and it leaves nothing behind: no row, no
@@ -112,6 +113,7 @@
 // shell, and the top line carries the supply CTA instead.
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { Package, PackageOpen, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
@@ -145,7 +147,13 @@ import {
   phonePlatformsOf,
   productName,
 } from "./product-view";
-import { parseAfterParam, type DeckRoute } from "./deck-position";
+import {
+  parseAfterParam,
+  parseProductParam,
+  type DeckRoute,
+} from "./deck-position";
+import { ProductModal, ProductModalSkeleton } from "./ProductModal";
+import { ProductPageBody } from "./[id]/ProductPageBody";
 import { ProductDeck, type DeckProduct } from "./ProductDeck";
 import { ProductFilterProvider } from "./filter-context";
 import { isFixture } from "./fixtures";
@@ -164,17 +172,21 @@ export async function ProductShelf({
   searchParams: Promise<{
     category?: string | string[];
     after?: string | string[];
+    product?: string | string[];
   }>;
   /** Which page is rendering the shelf, so a product's page can link back to
    *  the same deck. */
   route: DeckRoute;
 }) {
   // Next 16: searchParams is a Promise.
-  const { category: raw, after: rawAfter } = await searchParams;
+  const { category: raw, after: rawAfter, product: rawProduct } = await searchParams;
 
-  // `?after=<id>`: the last product the reader opened — tried in a new tab, or
-  // went to the page of — written by the deck so that a reload, or coming
-  // back, resumes after it. Read here so that address paints the right card
+  // `?product=<id>`: the product whose own page is open in the modal over
+  // the deck (./ProductModal.tsx). Shape-checked before it reaches a query.
+  const modalId = parseProductParam(rawProduct);
+
+  // `?after=<id>`: the last product the reader tried in a new tab, written
+  // by the deck so that a reload, or coming back, resumes after it. Read here so that address paints the right card
   // first. (`?review=` is the deck's, read in the browser: ./DeckPrompts.tsx.)
   // See ./deck-position.ts.
   const resumeAfter = parseAfterParam(rawAfter);
@@ -276,6 +288,10 @@ export async function ProductShelf({
     tNextImage,
     tPreviousGroup,
     tNextGroup,
+    tMoreAria,
+    tClose,
+    tProduct,
+    tDiscard,
     tSignIn,
     tLegal,
     tMyProducts,
@@ -325,6 +341,10 @@ export async function ProductShelf({
     tServer("Next image"),
     tServer("Previous screenshots"),
     tServer("Next screenshots"),
+    tServer("More about {name}"),
+    tServer("Close"),
+    tServer("Product"),
+    tServer("Discard the comment you were writing?"),
     tServer("Sign in"),
     tServer("Legal"),
     tServer("My products"),
@@ -473,7 +493,7 @@ export async function ProductShelf({
   // name, but its link's accessible name, the live region and the prompts'
   // titles need one.
   //
-  // `href` is the maker's product, which the card opens in a new tab: the
+  // `href` is the maker's product, which "Try" opens in a new tab: the
   // `link` getShelfProducts() already ran through webUrl(), so it is http(s)
   // or the row is not on the shelf at all, and never a raw link_url.
   //
@@ -520,6 +540,7 @@ export async function ProductShelf({
       tryAria: tTryAria.replace(/\{(name|host)\}/g, (_, key) =>
         key === "name" ? name : host,
       ),
+      moreAria: tMoreAria.replace("{name}", () => name),
       images: productImages(p),
       rating: p.rating,
       commentCount: p.commentCount,
@@ -731,6 +752,7 @@ export async function ProductShelf({
               products={products}
               route={route}
               resumeAfter={resumeAfter}
+              resumeAt={modalId}
               viewer={{
                 signedIn: user !== null,
                 canComment: role !== null && canComment(role),
@@ -763,6 +785,29 @@ export async function ProductShelf({
           {legalLinks}
         </div>
       </ProductFilterProvider>
+
+      {/* The product's own page over the deck, at `?product=<id>`: the same
+          ProductPageBody as /products/<id>, in its modal mode. Streamed: the
+          modal and its skeleton arrive with the deck, the product after. */}
+      {modalId && (
+        <ProductModal
+          productId={modalId}
+          name={products.find((p) => p.id === modalId)?.name ?? tProduct}
+          closeLabel={tClose}
+          discardLabel={tDiscard}
+        >
+          <Suspense fallback={<ProductModalSkeleton />}>
+            <ProductPageBody
+              id={modalId}
+              mode="modal"
+              search={{
+                from: route === "/" ? "home" : "products",
+                category: initialCategory ?? undefined,
+              }}
+            />
+          </Suspense>
+        </ProductModal>
+      )}
     </div>
   );
 }

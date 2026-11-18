@@ -11,6 +11,7 @@ import {
   type AccountRole,
 } from "@/lib/roles";
 import { PARAM } from "@/app/(marketing)/products/categories";
+import { PRODUCT_PARAM } from "@/app/(marketing)/products/deck-position";
 
 // Ship the CSP in report-only mode first to verify the policy + nonce
 // propagation against real prod without risking a blank app, then flip to
@@ -162,8 +163,9 @@ export async function proxy(request: NextRequest) {
     // session.user, so the people the page is written for pay nothing here.
     //
     // THE ONE EXCEPTION: a shared /?category=game is a link to a filtered shelf,
-    // so a member follows it to the shelf, query intact, whatever their role. It
-    // is checked before the lookup because the answer does not depend on it.
+    // and /?product=<id> one to a product open over it (its modal), so a member
+    // follows either to the shelf, query intact, whatever their role. It is
+    // checked before the lookup because the answer does not depend on it.
     //
     // /dashboard IS RETIRED (2026-11-12) — the deck is the first page a member
     // sees. The path still arrives from old links, bookmarks and emails, so it
@@ -171,7 +173,11 @@ export async function proxy(request: NextRequest) {
     // a signed-out visitor to sign in, which then lands them the same way.
     if (path === "/dashboard" && !session.user) return bounce("/login");
     if (session.user && (path === "/" || path === "/dashboard")) {
-      if (path === "/" && request.nextUrl.searchParams.has(PARAM)) {
+      if (
+        path === "/" &&
+        (request.nextUrl.searchParams.has(PARAM) ||
+          request.nextUrl.searchParams.has(PRODUCT_PARAM))
+      ) {
         return bounce("/products", request.nextUrl.search);
       }
       return bounce(await landingOf(session.user.id));

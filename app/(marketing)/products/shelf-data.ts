@@ -126,7 +126,7 @@ const SHELF_TITLE = "Products — try what the Thai startup community built";
 const SHELF_DESCRIPTION =
   "Apps, games and tools made by founders in the Cofoundee community. Browse the shelf, open one and try the real thing — no signup needed.";
 const SHELF_SHARE_DESCRIPTION =
-  "Apps, games and tools made by founders in the Cofoundee community. Every card opens the real thing, one tap away.";
+  "Apps, games and tools made by founders in the Cofoundee community. Swipe through them and try the real thing in one tap.";
 
 /**
  * Metadata for either route the shelf renders on. `canonical` is "/" on both,

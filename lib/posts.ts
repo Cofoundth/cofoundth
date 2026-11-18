@@ -296,8 +296,8 @@ export async function searchPosts(
 // ---- The PUBLIC maker shelf (/products) -----------------------------------
 //
 // A product is a `forum_posts` row with kind = 'show_and_tell' AND a
-// `link_url`. A product links OUT - App Store, Play Store, a web app: the deck
-// card opens it in a new tab, and so does its page's "Try it" - and nothing
+// `link_url`. A product links OUT - App Store, Play Store, a web app: the
+// deck's "Try" opens it in a new tab, and so does its page's "Try it" - and nothing
 // here hosts, embeds or proxies anybody's product, so a show_and_tell post
 // with nothing to click is not a product: it is off the shelf, and (like every
 // show_and_tell) out of the feed too, so only its own page shows it. New ones
