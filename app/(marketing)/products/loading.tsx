@@ -19,7 +19,8 @@
 // "Sign in" goes), the audience the shelf is the front door for; the mark is
 // dropped inside the app shell, where the right-hand pill stands for the
 // supply CTA. The chips WRAP (./ProductFilters.tsx), so their height depends on
-// how many categories have products: five placeholders at their Thai widths.
+// how many categories have products: three placeholders (All and this
+// phase's two shelves, ./categories.ts) at their Thai widths.
 //
 // Purely decorative: aria-hidden keeps screen readers on the route announcement
 // rather than reading a wall of empty boxes. No copy, so nothing to translate —
@@ -35,8 +36,10 @@ const CARD =
 const LINE = "h-4 bg-line/50 deck-wide:h-7";
 
 /** Chip widths in px, roughly the Thai labels at ToggleChip `sm`: "ทั้งหมด",
- *  "เกม", "การเงิน", "เรียนรู้", "ไลฟ์สไตล์". */
-const CHIP_WIDTHS = [72, 52, 74, 70, 84];
+ *  "เกม", "แอป" — this phase's three (./categories.ts FILTER_BUCKETS). Five
+ *  wrapped onto a second line on a phone that the real row never needs, and
+ *  the deck jumped ~42px when the page arrived. */
+const CHIP_WIDTHS = [72, 52, 52];
 
 export default function Loading() {
   return (

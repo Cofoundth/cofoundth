@@ -57,8 +57,8 @@
 // nothing, is /products. So the parameter cannot be used to point the link
 // anywhere else.
 
-import { productPath, type ProductCategory } from "@/lib/post-types";
-import { PARAM, parseCategoryParam } from "./categories";
+import { productPath } from "@/lib/post-types";
+import { PARAM, parseCategoryParam, type FilterBucket } from "./categories";
 
 /** On the deck: `?after=<product id>`, the last product the reader opened. */
 export const AFTER_PARAM = "after";
@@ -114,7 +114,7 @@ export function resumeIndex(
 export function productPageHref(
   id: string,
   route: DeckRoute,
-  category: ProductCategory | null,
+  category: FilterBucket | null,
 ): string {
   const query = new URLSearchParams({ [FROM_PARAM]: fromValue(route) });
   if (category) query.set(PARAM, category);
@@ -149,7 +149,7 @@ export function deckReturnHref(
  */
 export function deckReviewPath(
   productId: string,
-  category: ProductCategory | null,
+  category: FilterBucket | null,
 ): string {
   const query = new URLSearchParams();
   if (category) query.set(PARAM, category);

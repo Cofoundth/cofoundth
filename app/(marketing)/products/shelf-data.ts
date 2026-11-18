@@ -7,7 +7,8 @@ import { getUser } from "@/lib/auth";
 import { getBlockedIds } from "@/lib/blocking";
 import { getPublicProductsPage } from "@/lib/posts";
 import { productFixtures } from "./fixtures";
-import { webUrl } from "./product-view";
+import { phoneOnly, webUrl } from "./product-view";
+import { viewerKind } from "@/lib/device";
 
 /**
  * How much of the shelf one request fetches, and therefore how much the
@@ -58,7 +59,7 @@ export const FRONT_DOOR_MIN_PRODUCTS = 3;
  * identity, so accepting the blocked Set or an options object would give
  * generateMetadata and the page body one read each.
  */
-export const getShelfProducts = cache(async () => {
+export const getShelfProductsAnyDevice = cache(async () => {
   const user = await getUser();
 
   // Blocked pairs disappear from each other everywhere, and the feed already
@@ -114,10 +115,27 @@ export const getShelfProducts = cache(async () => {
   // bucketing as a real row and earn their category a chip like one. A fixture
   // that did not count toward its own category would make the page lie about
   // itself: its chip would be missing while its card sat in the deck.
+  //
   return [...real, ...productFixtures()].flatMap((post) => {
     const link = webUrl(post.link_url);
     return link ? [{ ...post, link }] : [];
   });
+});
+
+/**
+ * The shelf THIS reader is shown: getShelfProductsAnyDevice(), less what their
+ * device cannot run. A COMPUTER never sees a product that only runs on a phone
+ * (the founder's call, 2026-11-18; lib/device.ts says who is a computer) —
+ * except the maker, on their own product. Dropped HERE, on the one array
+ * everything reads, so the deck, the filter's chips, the front-door count and
+ * the metadata all agree about what a computer is shown. The unfiltered list
+ * is what tells ./ProductShelf.tsx that an empty deck on a computer is a shelf
+ * of phone apps, not an empty shelf.
+ */
+export const getShelfProducts = cache(async () => {
+  const all = await getShelfProductsAnyDevice();
+  if ((await viewerKind()) !== "computer") return all;
+  return all.filter((post) => post.isOwn || !phoneOnly(post.link, post.platforms));
 });
 
 /** The one decision about which arm / is on. Costs no read of its own. */

@@ -40,8 +40,7 @@
 
 import { useT } from "@/lib/i18n-client";
 import { ToggleChip, cn } from "@/components/ui";
-import { PRODUCT_CATEGORIES } from "@/lib/post-types";
-import { CATEGORY_LABEL } from "./categories";
+import { FILTER_BUCKETS, FILTER_LABEL } from "./categories";
 import { useProductFilter } from "./filter-context";
 
 export function ProductFilters({ className }: { className?: string }) {
@@ -49,7 +48,7 @@ export function ProductFilters({ className }: { className?: string }) {
   const { selected, available, select } = useProductFilter();
 
   const selectedIsEmpty = selected !== null && !available.includes(selected);
-  const shown = PRODUCT_CATEGORIES.filter(
+  const shown = FILTER_BUCKETS.filter(
     (c) => c === selected || available.includes(c),
   );
 
@@ -72,7 +71,7 @@ export function ProductFilters({ className }: { className?: string }) {
           // Tapping the selected chip again clears the filter.
           onClick={() => select(selected === c ? null : c)}
         >
-          {tr(CATEGORY_LABEL[c])}
+          {tr(FILTER_LABEL[c])}
         </ToggleChip>
       ))}
     </div>

@@ -37,6 +37,12 @@ function phoneOS(): PhonePlatform | null {
   // iPadOS 13+ asks for the desktop site and says "Macintosh"; a Mac has no
   // touch screen, an iPad does.
   if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return "ios";
+  // An Android tablet's Chrome asks for the desktop site by default and says
+  // "X11; Linux": a finger as its main pointer gives it away, the same test
+  // components/TouchHint.tsx uses. A Chromebook says "X11; CrOS".
+  if (/X11; Linux/.test(ua) && window.matchMedia("(pointer: coarse)").matches) {
+    return "android";
+  }
   return null;
 }
 

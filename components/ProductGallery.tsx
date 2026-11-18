@@ -23,7 +23,8 @@
 //   prefers-reduced-motion No autoplay on anything, so the arrows are SHOWN
 //                          on anything, always visible: on a touch screen they
 //                          are then the only way past the first image, and
-//                          without them images 2–5 could not be reached.
+//                          without them every image after the first could
+//                          not be reached.
 //
 // "While a finger is down" means down anywhere in the gallery's SCOPE: the
 // nearest ancestor carrying `data-gallery-scope`, or the image box itself when
@@ -44,11 +45,22 @@
 // controls, no clock. A gallery only ever goes from inactive to active (the
 // deck's cards are keyed by product and the top one leaves the slice when it
 // flies out), so an active gallery always starts at its first image.
+//
+// `perView` (the founder's call, 2026-11-18): 4 on a COMPUTER's deck card,
+// which moves through the screenshots four at a time, each four as a grid —
+// 2 x 2 when full; a last group of 3 is one wide across the top and two
+// below, of 2 one above the other, of 1 the one filling the box. Everything
+// above then applies to GROUPS: the arrows, dots and clock move a group at a
+// time, a group shows once all of its pictures have loaded or failed, and a
+// group whose every picture failed is skipped. With the default 1 a group is
+// one image and nothing changes. On a touch screen the clock waits three
+// times as long, since there are four pictures to look at.
 
 import Image from "next/image";
 import {
   useEffect,
   useEffectEvent,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -85,6 +97,7 @@ export function ProductGallery({
   sizes,
   altPrefix,
   className,
+  perView = 1,
 }: {
   /** Already through productImages() in app/(marketing)/products/
    *  product-view.ts: parsed, and capped. */
@@ -113,9 +126,21 @@ export function ProductGallery({
   altPrefix?: string;
   /** The box's corners, which depend on what it sits in. */
   className?: string;
+  /** Pictures per view: 1, or 4 as a grid (a computer's deck card; see the
+   *  header). */
+  perView?: 1 | 4;
 }) {
   const active = !inactive;
-  const several = images.length > 1;
+  /** What the gallery moves through: single images, or groups of `perView`. */
+  const groups = useMemo(() => {
+    const out: string[][] = [];
+    for (let i = 0; i < images.length; i += perView) {
+      out.push(images.slice(i, i + perView));
+    }
+    return out;
+  }, [images, perView]);
+  const several = groups.length > 1;
+  const clock = perView > 1 ? AUTOPLAY_MS * 3 : AUTOPLAY_MS;
   const boxRef = useRef<HTMLDivElement>(null);
   /** The image asked for. The dots show this. */
   const [wanted, setWanted] = useState(0);
@@ -124,13 +149,36 @@ export function ProductGallery({
   const [shown, setShown] = useState(0);
   /** What the handlers read. `wanted` is only this, rendered. */
   const wantedRef = useRef(0);
+  /** Groups ready to show: every picture in them has loaded or failed, and at
+   *  least one loaded. */
   const loaded = useRef(new Set<number>());
+  /** Groups with nothing to show: every picture in them failed. */
   const broken = useRef(new Set<number>());
+  /** Per group, each picture's last report by position: loaded (true) or
+   *  failed (false). One entry per picture, so one that fails and then loads
+   *  counts once, as loaded. */
+  const settled = useRef(new Map<number, Map<number, boolean>>());
 
   useEffect(() => {
     if (!preload) return;
-    for (const src of images.slice(1)) new window.Image().src = src;
-  }, [preload, images]);
+    for (const src of images.slice(perView)) new window.Image().src = src;
+  }, [preload, images, perView]);
+
+  /** Picture `i` of group `g` has loaded (`ok`) or failed. Once the whole
+   *  group has, it is ready (or broken), and shown if it is the one wanted. */
+  function settle(g: number, i: number, ok: boolean) {
+    const s = settled.current.get(g) ?? new Map<number, boolean>();
+    s.set(i, ok);
+    settled.current.set(g, s);
+    if (s.size < (groups[g]?.length ?? 1)) return;
+    if (![...s.values()].some(Boolean)) {
+      broken.current.add(g);
+      return;
+    }
+    broken.current.delete(g);
+    loaded.current.add(g);
+    if (wantedRef.current === g) setShown(g);
+  }
 
   function show(next: number) {
     wantedRef.current = next;
@@ -141,7 +189,7 @@ export function ProductGallery({
   /** The image `dir` away from the wanted one, wrapping, past any that failed
    *  to load. */
   function neighbour(dir: 1 | -1): number {
-    const n = images.length;
+    const n = groups.length;
     for (let step = 1; step < n; step++) {
       const i = (((wantedRef.current + dir * step) % n) + n) % n;
       if (!broken.current.has(i)) return i;
@@ -171,7 +219,7 @@ export function ProductGallery({
   });
 
   useEffect(() => {
-    if (!active || images.length < 2) return;
+    if (!active || groups.length < 2) return;
     const box = boxRef.current;
     if (!box) return;
     const scope = box.closest<HTMLElement>("[data-gallery-scope]") ?? box;
@@ -207,7 +255,7 @@ export function ProductGallery({
       timer = window.setTimeout(() => {
         autoplayStep();
         schedule();
-      }, AUTOPLAY_MS);
+      }, clock);
     };
     const release = (e: PointerEvent) => {
       if (held.delete(e.pointerId)) schedule();
@@ -261,7 +309,7 @@ export function ProductGallery({
       listeners.abort();
       io.disconnect();
     };
-  }, [active, images.length]);
+  }, [active, groups.length, clock]);
 
   const box = cn(
     "overflow-hidden bg-cream",
@@ -287,7 +335,10 @@ export function ProductGallery({
     );
   }
 
-  const mounted = active ? images : images.slice(0, 1);
+  const mounted = active ? groups : groups.slice(0, 1);
+  /** The group painted. An inactive gallery mounts only the first, so it shows
+   *  the first, whatever `shown` was left at by an earlier turn on top. */
+  const visible = active ? shown : 0;
 
   return (
     <div ref={boxRef} className={cn("group/gallery", box)}>
@@ -295,7 +346,7 @@ export function ProductGallery({
           the letterboxed one. Same URL, so it costs no request. */}
       {backdrop && (
         <Image
-          src={images[shown]}
+          src={groups[visible]?.[0] ?? images[0]}
           alt=""
           aria-hidden
           fill
@@ -306,38 +357,75 @@ export function ProductGallery({
           className="scale-110 object-cover opacity-60 blur-2xl"
         />
       )}
-      {mounted.map((src, i) => (
-        // `unoptimized` is NOT a shortcut — it is the only way next/image
-        // renders these today. next.config.ts declares no `images` block, so
-        // the default `remotePatterns: []` applies and image-loader.js throws
-        // "hostname … is not configured" for EVERY remote src. Delete this one
-        // prop the day the storage host joins remotePatterns, and `sizes`
-        // starts doing something.
-        //
-        // Keyed by position: two uploads of the same file are two images.
-        <Image
-          key={i}
-          src={src}
-          alt={altPrefix ? `${altPrefix} ${i + 1}` : ""}
-          aria-hidden={altPrefix && i !== shown ? true : undefined}
-          fill
-          unoptimized
-          loading="eager"
-          draggable={false}
-          sizes={sizes}
-          onLoad={() => {
-            loaded.current.add(i);
-            if (wantedRef.current === i) setShown(i);
-          }}
-          onError={() => {
-            broken.current.add(i);
-          }}
-          className={cn(
-            fit === "cover" ? "object-cover" : "object-contain",
-            i === shown ? "opacity-100" : "opacity-0",
-          )}
-        />
-      ))}
+      {mounted.map((group, g) =>
+        perView === 1 ? (
+          // `unoptimized` is NOT a shortcut — it is the only way next/image
+          // renders these today. next.config.ts declares no `images` block, so
+          // the default `remotePatterns: []` applies and image-loader.js throws
+          // "hostname … is not configured" for EVERY remote src. Delete this one
+          // prop the day the storage host joins remotePatterns, and `sizes`
+          // starts doing something.
+          //
+          // Keyed by position: two uploads of the same file are two images.
+          <Image
+            key={g}
+            src={group[0]}
+            alt={altPrefix ? `${altPrefix} ${g + 1}` : ""}
+            aria-hidden={altPrefix && g !== visible ? true : undefined}
+            fill
+            unoptimized
+            loading="eager"
+            draggable={false}
+            sizes={sizes}
+            onLoad={() => settle(g, 0, true)}
+            onError={() => settle(g, 0, false)}
+            className={cn(
+              fit === "cover" ? "object-cover" : "object-contain",
+              g === visible ? "opacity-100" : "opacity-0",
+            )}
+          />
+        ) : (
+          // A group of up to four, as a grid (see the header). A broken
+          // picture inside a group that still has others just leaves its
+          // cell's cream showing.
+          <div
+            key={g}
+            aria-hidden={altPrefix && g !== visible ? true : undefined}
+            className={cn(
+              "absolute inset-0 grid gap-1 bg-white",
+              group.length >= 3
+                ? "grid-cols-2 grid-rows-2"
+                : group.length === 2
+                  ? "grid-cols-1 grid-rows-2"
+                  : "grid-cols-1 grid-rows-1",
+              g === visible ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {group.map((src, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "relative min-h-0 min-w-0 overflow-hidden bg-cream",
+                  group.length === 3 && i === 0 && "col-span-2",
+                )}
+              >
+                <Image
+                  src={src}
+                  alt={altPrefix ? `${altPrefix} ${g * perView + i + 1}` : ""}
+                  fill
+                  unoptimized
+                  loading="eager"
+                  draggable={false}
+                  sizes={sizes}
+                  onLoad={() => settle(g, i, true)}
+                  onError={() => settle(g, i, false)}
+                  className={fit === "cover" ? "object-cover" : "object-contain"}
+                />
+              </div>
+            ))}
+          </div>
+        ),
+      )}
 
       {/* Which image is showing. Decorative: the count says nothing a reader
           of the alt text does not already have. No z-index, so on the deck it
@@ -348,7 +436,7 @@ export function ProductGallery({
           aria-hidden="true"
           className="pointer-events-none absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-navy/40 px-2 py-1.5"
         >
-          {images.map((_, i) => (
+          {groups.map((_, i) => (
             <span
               key={i}
               className={cn(

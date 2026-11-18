@@ -34,6 +34,7 @@ import {
   MAX_POST_IMAGE_BYTES,
   MAX_PRODUCT_IMAGES,
   MAX_UPLOAD_IMAGE_BYTES,
+  MIN_PRODUCT_IMAGES,
   POST_IMAGE_TYPES,
 } from "@/lib/post-types";
 import { useT } from "@/lib/i18n-client";
@@ -50,7 +51,7 @@ const ACCEPT_ATTR = POST_IMAGE_TYPES.join(",");
 // comment records why that number: it was sized for ONE 5MB image plus
 // multipart overhead, from the avatar work, when one image was all a post
 // could carry. A product carries MAX_PRODUCT_IMAGES of them, so the maximum
-// payload the per-file caps accept is 5 x 5MB = 25MB against a 6MB ceiling —
+// payload the per-file caps accept is 8 x 5MB = 40MB against a 6MB ceiling —
 // and the framework rejects an oversized body BEFORE the action runs, so not
 // one of its per-file checks and not one line of its orphan cleanup executes.
 // next.config.ts names the symptom: "An unexpected response was received from
@@ -59,7 +60,7 @@ const ACCEPT_ATTR = POST_IMAGE_TYPES.join(",");
 // 4MiB leaves ~2MiB of the 6MiB ceiling for the multipart boundaries, the
 // description, the name, the link, the category and React's own action
 // payload. That is deliberately loose — the downscaler puts a 1600px
-// screenshot at 150-400KB, so five of them land around 1-2MB and a maker never
+// screenshot at 150-400KB, so eight of them land around 1-3MB and a maker never
 // meets this limit in the normal case.
 //
 // IF bodySizeLimit MOVES, MOVE THIS, AND KEEP THE GAP. They are one contract
@@ -292,10 +293,16 @@ export function ScreenshotPicker({
         >
           {tr("Screenshots")}
         </span>
+        {/* Below the minimum this is what makes the form's disabled Save
+            legible (ProductForm gates on it), and it counts down as they
+            add; at or above it, the count against the cap. */}
         <span className="text-xs text-ink-muted tabular-nums">
-          {shots.shots.length > 0
-            ? `${shots.shots.length}/${MAX_PRODUCT_IMAGES}`
-            : tr("Optional")}
+          {shots.shots.length < MIN_PRODUCT_IMAGES
+            ? tr("Add {n} more").replace(
+                "{n}",
+                String(MIN_PRODUCT_IMAGES - shots.shots.length),
+              )
+            : `${shots.shots.length}/${MAX_PRODUCT_IMAGES}`}
         </span>
       </div>
 
@@ -381,10 +388,9 @@ export function ScreenshotPicker({
           )}
         </span>
         <span className="block">
-          {tr("Up to {n} images. JPG/PNG, up to 5MB each.").replace(
-            "{n}",
-            String(MAX_PRODUCT_IMAGES),
-          )}
+          {tr("{min} to {max} images. JPG/PNG, up to 5MB each.")
+            .replace("{min}", String(MIN_PRODUCT_IMAGES))
+            .replace("{max}", String(MAX_PRODUCT_IMAGES))}
         </span>
       </p>
       {shots.error && (

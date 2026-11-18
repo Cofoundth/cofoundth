@@ -61,6 +61,9 @@ import { CheckCircle2, MessageCircle, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
+import { getUser } from "@/lib/auth";
+import { viewerKind } from "@/lib/device";
+import { isPhoneOnly } from "../product-view";
 import { getAccountRole } from "@/lib/account";
 import { canComment, canRate } from "@/lib/roles";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
@@ -148,9 +151,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!found || found.post.kind !== PRODUCT_KIND) {
     return { title: await tServer("Product") };
   }
+  // A computer does not see a phone-only product (see the page below), so
+  // it does not get its name in the tab either — unless the page opens for
+  // this reader after all: its maker, or an admin. Bots still get the card.
+  if (
+    isPhoneOnly(found.post.link_url, found.post.platforms) &&
+    (await viewerKind()) === "computer" &&
+    !(await opensPhoneOnlyAnyway(found.post.author_id))
+  ) {
+    return { title: await tServer("Product") };
+  }
   // Title, description, canonical and social card: ../product-metadata.ts,
   // shared with the old /p/<id> address.
   return productMetadata(found.post);
+}
+
+/** Whether the signed-in reader is the maker or an admin: the two a
+ *  phone-only product's page still opens for on a computer (MemberProduct). */
+async function opensPhoneOnlyAnyway(authorId: string): Promise<boolean> {
+  const user = await getUser();
+  if (!user) return false;
+  if (user.id === authorId) return true;
+  return isAdminUser(await createClient(), user);
 }
 
 export default async function ProductPage({ params, searchParams }: Props) {
@@ -199,6 +221,15 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   const found = await getPublicPost(id);
   if (!found || found.post.kind !== PRODUCT_KIND) notFound();
+  // A COMPUTER never sees a product that only runs on a phone (the founder's
+  // call, 2026-11-18; lib/device.ts): a 404 here, like a hidden one. Phones,
+  // tablets and link-preview bots still get the page.
+  if (
+    isPhoneOnly(found.post.link_url, found.post.platforms) &&
+    (await viewerKind()) === "computer"
+  ) {
+    notFound();
+  }
   const { post, author } = found;
   const [{ likeCount, comments, total }, rating] = await Promise.all([
     getPublicEngagement(id),
@@ -430,6 +461,18 @@ async function MemberProduct({
   // is the right answer — it says nothing about who blocked whom. Comments
   // from blocked members are dropped the same way the feed drops their posts.
   if (await isBlockedEitherWay(userId, authorId)) notFound();
+
+  // Phone-only on a computer: a 404, as signed out (ProductPage above) —
+  // except for its maker, who manages it from wherever they are, and an
+  // admin, who moderates it.
+  if (
+    !isAuthor &&
+    isPhoneOnly(post.link_url as string | null, post.platforms as string[] | null) &&
+    (await viewerKind()) === "computer" &&
+    !(await isAdminUser(supabase, viewer))
+  ) {
+    notFound();
+  }
   const blocked = await getBlockedIds(userId);
 
   // Commenting: founders AND explorers (canComment). Investors read only.

@@ -90,7 +90,8 @@ import { Button, Dialog, LinkButton, Textarea } from "@/components/ui";
 import { authHref } from "@/lib/auth-href";
 import { useT } from "@/lib/i18n-client";
 import { createPostCommentAction } from "@/lib/post-actions";
-import { MAX_RATING, type ProductCategory } from "@/lib/post-types";
+import { MAX_RATING } from "@/lib/post-types";
+import type { FilterBucket } from "./categories";
 import { setProductRatingAction } from "@/app/(app)/community/[id]/actions";
 import { deckReviewPath, takeReviewFromAddress } from "./deck-position";
 
@@ -139,7 +140,7 @@ export function useDeckPrompts({
   /** The WHOLE shelf, not the filtered deck: `?review=` can name any of it. */
   products: readonly PromptProduct[];
   viewer: DeckViewer;
-  category: ProductCategory | null;
+  category: FilterBucket | null;
   /** Where focus goes when a modal closes, unless it is already inside. */
   deckRef: RefObject<HTMLElement | null>;
 }): {

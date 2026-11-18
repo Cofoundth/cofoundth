@@ -48,17 +48,18 @@
 //   those rows under "All" and under no category, i.e. visible in the
 //   unfiltered deck and unreachable from every filter.
 //
-// Client-side that subtlety costs nothing, because `productBucketOf()` is the
-// same `productCategoryOf(tags) ?? "other"` the server tally already used —
-// one function, so whether a chip is offered and the cards behind it are
-// derived from the same expression and cannot drift. The negation query
-// existed only because SQL had no way to say "?? other".
+// Client-side that subtlety costs nothing. Today there is no "other" chip at
+// all: `productBucketOf()` (./categories.ts) reads `productCategoryOf(tags)`
+// and puts everything that is not a game — those untagged rows included — on
+// the apps shelf. One function, so whether a chip is offered and the cards
+// behind it are derived from the same expression and cannot drift. The
+// negation query existed only because SQL had no way to say that.
 
 // PARAM and parseCategoryParam come from ./categories, which carries no "use
 // client" — the SERVER page parses the same query string with the same
 // function, and a shared parser must not drag a client module into the server
 // graph.
-import { PARAM, parseCategoryParam } from "./categories";
+import { FILTER_BUCKETS, PARAM, parseCategoryParam, type FilterBucket } from "./categories";
 import { writeAfterToAddress } from "./deck-position";
 import { useSearchParams } from "next/navigation";
 import {
@@ -69,12 +70,11 @@ import {
   useMemo,
   useState,
 } from "react";
-import { PRODUCT_CATEGORIES, type ProductCategory } from "@/lib/post-types";
 
 /** Put ONE selection into `?category=` (or take it out), leaving every other
  *  query parameter and the hash alone. A no-op when the address already says
  *  it, so calling it on every read costs nothing. */
-function writeAddress(selected: ProductCategory | null) {
+function writeAddress(selected: FilterBucket | null) {
   const url = new URL(window.location.href);
   if (selected) url.searchParams.set(PARAM, selected);
   else url.searchParams.delete(PARAM);
@@ -86,15 +86,15 @@ function writeAddress(selected: ProductCategory | null) {
 
 type FilterValue = {
   /** null is "All": no category, the whole shelf. */
-  selected: ProductCategory | null;
+  selected: FilterBucket | null;
   /** The categories with at least one product on the WHOLE fetched shelf, in
-   *  PRODUCT_CATEGORIES order: the chips the filter offers. Never the
+   *  FILTER_BUCKETS order: the chips the filter offers. Never the
    *  filtered view, or choosing one category would take every other chip
    *  away. */
-  available: readonly ProductCategory[];
-  select: (c: ProductCategory | null) => void;
+  available: readonly FilterBucket[];
+  select: (c: FilterBucket | null) => void;
   /** The one predicate the deck filters through. */
-  matches: (bucket: ProductCategory) => boolean;
+  matches: (bucket: FilterBucket) => boolean;
 };
 
 const FilterContext = createContext<FilterValue | null>(null);
@@ -107,24 +107,24 @@ export function ProductFilterProvider({
   /** Every product on the shelf, bucketed. Only the bucket is read — the page
    *  passes the same array it passes to the deck, so the two cannot disagree
    *  about what is being counted. */
-  items: readonly { bucket: ProductCategory }[];
+  items: readonly { bucket: FilterBucket }[];
   /** From the server's own read of `?category=`, so the FIRST PAINT is already
    *  filtered rather than flashing the whole shelf and then narrowing. It can
    *  be STALE on a Back/Forward restore from the router cache; the address
    *  effect below corrects it before paint. */
-  initial: ProductCategory | null;
+  initial: FilterBucket | null;
   children: React.ReactNode;
 }) {
-  const [selected, setSelected] = useState<ProductCategory | null>(initial);
+  const [selected, setSelected] = useState<FilterBucket | null>(initial);
 
   const matches = useCallback(
-    (bucket: ProductCategory) => selected === null || selected === bucket,
+    (bucket: FilterBucket) => selected === null || selected === bucket,
     [selected],
   );
 
   const available = useMemo(() => {
     const present = new Set(items.map((i) => i.bucket));
-    return PRODUCT_CATEGORIES.filter((c) => present.has(c));
+    return FILTER_BUCKETS.filter((c) => present.has(c));
   }, [items]);
 
   // THE URL STAYS SHAREABLE: a choice the reader makes is written into it
@@ -142,7 +142,7 @@ export function ProductFilterProvider({
   // it reads `after` from the address as it remounts, so the address has to
   // stop resuming first. Re-choosing the category already shown changes
   // nothing, so it keeps the position.
-  const select = useCallback((c: ProductCategory | null) => {
+  const select = useCallback((c: FilterBucket | null) => {
     const shown = parseCategoryParam(
       new URLSearchParams(window.location.search).getAll(PARAM),
     );

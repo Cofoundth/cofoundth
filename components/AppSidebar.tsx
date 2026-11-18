@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
+import { phoneOnlyNotifTargets } from "@/lib/notification-phone-only";
 import { FEATURES } from "@/lib/features";
 import { tServer } from "@/lib/i18n-server";
 import { signOutAction } from "@/app/(auth)/actions";
@@ -153,6 +154,12 @@ export async function AppSidebar() {
         .in("id", actorIds)
     : { data: [] as { id: string }[] };
   const actorMap = new Map((actorRows ?? []).map((a) => [a.id as string, a]));
+  // A comment or a mention on a product a computer cannot open is shown
+  // unlinked there (lib/notification-phone-only.ts).
+  const phoneOnlyTargets = await phoneOnlyNotifTargets(supabase, notifRows ?? [], {
+    id: user.id,
+    isAdmin: () => isAdmin({ email: user.email, isAdminFlag: profile?.is_admin }),
+  });
   const notifItems: NotifItem[] = (notifRows ?? []).map((n) => {
     const actor = n.actor_id
       ? ((actorMap.get(n.actor_id as string) as
@@ -178,6 +185,7 @@ export async function AppSidebar() {
       readAt: (n.read_at as string | null) ?? null,
       createdAt: n.created_at as string,
       actor,
+      phoneOnly: phoneOnlyTargets.has(n.entity_id as string),
     };
   });
 

@@ -130,8 +130,17 @@ export type PostComment = {
 
 /** Per product. The Add product page's screenshot picker
  *  (components/ScreenshotPicker.tsx) caps itself here and createProductAction
- *  re-checks, because a cap enforced only in the UI is not a cap. */
-export const MAX_PRODUCT_IMAGES = 5;
+ *  re-checks, because a cap enforced only in the UI is not a cap. 8 since
+ *  0089 (2026-11-18): a computer's deck card shows them four at a time, so
+ *  eight is two full grids. The database caps it too (0089). */
+export const MAX_PRODUCT_IMAGES = 8;
+
+/** The fewest a product may be saved with (the founder's call, 2026-11-18):
+ *  one full 2 x 2 grid on a computer's deck card. Enforced by the picker
+ *  (the form's Save waits for it) and by createProductAction and
+ *  updateProductAction — NOT by the database: a CHECK would also refuse every
+ *  later write to the products made before the rule (0089 says why). */
+export const MIN_PRODUCT_IMAGES = 4;
 
 /** The image types a post or product may carry. lib/post-actions.ts maps each
  *  to its storage extension (IMG_EXT) and is the real gate; the pickers build

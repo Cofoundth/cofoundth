@@ -9,6 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { type createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
 import { devTestAuthorIds } from "@/lib/test-accounts";
+import { isPhoneOnly } from "@/app/(marketing)/products/product-view";
 import {
   bangkokDay,
   judgeComments,
@@ -27,13 +28,17 @@ export type MemberDrawComment = DrawComment & {
   postKind: string;
   postTitle: string | null;
   postSnippet: string;
+  /** A product that only runs on a phone, whose page a computer cannot open
+   *  (app/(marketing)/products/product-view.ts isPhoneOnly). Display only:
+   *  the draw counts the comment the same on every device. */
+  postPhoneOnly: boolean;
 };
 
 /** comments → their post → its author's moderation flags. The FKs are named
  *  because forum_likes and forum_comments give PostgREST other paths between
  *  these tables. */
 const POST_EMBED =
-  "post:forum_posts!forum_comments_post_id_fkey(id, author_id, hidden, kind, title, content, author:profiles!forum_posts_author_id_fkey(suspended, is_bot))";
+  "post:forum_posts!forum_comments_post_id_fkey(id, author_id, hidden, kind, title, content, link_url, platforms, author:profiles!forum_posts_author_id_fkey(suspended, is_bot))";
 const COLUMNS = `id, author_id, content, created_at, ${POST_EMBED}`;
 
 /** PostgREST's ceiling on one response. */
@@ -51,6 +56,8 @@ type Row = {
     kind: string | null;
     title: string | null;
     content: string | null;
+    link_url: string | null;
+    platforms: string[] | null;
     author: { suspended: boolean | null; is_bot: boolean | null } | null;
   } | null;
 };
@@ -81,6 +88,7 @@ function toDrawComment(r: Row, devTest: Set<string>): MemberDrawComment | null {
     postKind: r.post.kind ?? "post",
     postTitle: r.post.title,
     postSnippet: (r.post.content ?? "").slice(0, 120),
+    postPhoneOnly: r.post.kind === "show_and_tell" && isPhoneOnly(r.post.link_url, r.post.platforms),
   };
 }
 

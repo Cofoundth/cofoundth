@@ -108,6 +108,7 @@
   "Upload logo": "อัปโหลดโลโก้",
   "JPG/PNG, up to 5MB.": "JPG/PNG ไม่เกิน 5MB",
   "Up to {n} images. JPG/PNG, up to 5MB each.": "ได้สูงสุด {n} รูป JPG/PNG ไม่เกินรูปละ 5MB",
+  "{min} to {max} images. JPG/PNG, up to 5MB each.": "{min} ถึง {max} รูป ไฟล์ JPG/PNG ไม่เกิน 5MB ต่อรูป",
   "What your company does": "บริษัทของคุณทำอะไร",
   "Up to ~200 words. What you build, for whom, and the value.": "ไม่เกิน ~200 คำ คุณสร้างอะไร เพื่อใคร และคุณค่าคืออะไร",
   "e.g. We build warehouse-automation software that cuts fulfilment time for Thai online sellers by half.": "เช่น เราพัฒนาซอฟต์แวร์จัดการคลังสินค้าอัตโนมัติ ที่ช่วยลดเวลาจัดส่งของร้านค้าออนไลน์ไทยลงครึ่งหนึ่ง",
@@ -1654,7 +1655,7 @@
   "Name your product.": "ตั้งชื่อโปรดักต์ด้วยนะ",
   "Add a link so people can try it.": "ใส่ลิงก์ด้วย เพื่อให้คนกดไปลองได้",
   "Pick just one category.": "เลือกหมวดเดียวพอ",
-  "Up to 5 images per product.": "ใส่รูปได้สูงสุด 5 รูปต่อโปรดักต์",
+  "Up to 8 images per product.": "ใส่รูปได้สูงสุด 8 รูปต่อโปรดักต์",
   "Couldn't upload all the images. Nothing was posted — try again.": "อัปโหลดรูปไม่ครบ ยังไม่ได้โพสต์ให้ ลองใหม่อีกทีนะ",
   "Couldn't upload the image. Try again.": "อัปโหลดรูปไม่สำเร็จ ลองใหม่อีกทีนะ",
   "{name} isn't a JPG, PNG, WebP, or GIF.": "{name} ไม่ใช่ไฟล์ JPG, PNG, WebP หรือ GIF",
@@ -1941,5 +1942,15 @@
   "Your own product": "โปรดักต์ของคุณเอง",
   "The product isn’t available": "โปรดักต์นี้ไม่พร้อมใช้งานแล้ว",
   "Same product twice that day": "โปรดักต์เดิมในวันเดียวกัน",
-  "Members who commented on 3 different products a day, 5 days in a row inside the month, worked out from the comments that exist now. Everyone starts again from zero on the 1st.": "สมาชิกที่คอมเมนต์ในโปรดักต์ต่างกันวันละ 3 อัน ติดกัน 5 วันภายในเดือนเดียวกัน คำนวณจากคอมเมนต์ที่มีอยู่ตอนนี้ ทุกคนเริ่มนับใหม่จากศูนย์ทุกวันที่ 1"
+  "Members who commented on 3 different products a day, 5 days in a row inside the month, worked out from the comments that exist now. Everyone starts again from zero on the 1st.": "สมาชิกที่คอมเมนต์ในโปรดักต์ต่างกันวันละ 3 อัน ติดกัน 5 วันภายในเดือนเดียวกัน คำนวณจากคอมเมนต์ที่มีอยู่ตอนนี้ ทุกคนเริ่มนับใหม่จากศูนย์ทุกวันที่ 1",
+  "Games": "เกม",
+  "Apps": "แอป",
+  "Add at least 4 screenshots.": "เพิ่มสกรีนช็อตอย่างน้อย 4 รูป",
+  "Add {n} more": "เพิ่มอีก {n} รูป",
+  "Previous screenshots": "สกรีนช็อตชุดก่อนหน้า",
+  "Next screenshots": "สกรีนช็อตชุดถัดไป",
+  "Opens on a phone": "เปิดได้บนมือถือ",
+  "Everything on the shelf runs on phones": "โปรดักต์บนชั้นตอนนี้ใช้งานบนมือถือทั้งหมด",
+  "Open this page on your phone to try them.": "เปิดหน้านี้บนมือถือเพื่อลองใช้ได้เลย",
+  "Everything in this category runs on phones": "โปรดักต์หมวดนี้ใช้งานบนมือถือทั้งหมด"
 }

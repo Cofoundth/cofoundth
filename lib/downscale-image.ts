@@ -7,13 +7,13 @@
 // ── WHY THIS EXISTS: THE TRANSPORT, NOT THE PIXELS ────────────────────────
 // A product post carries up to MAX_PRODUCT_IMAGES screenshots at 5MB each
 // (lib/post-types.ts, lib/post-actions.ts) through a Server Action whose body
-// limit is 6mb (next.config.ts). 25MB of accepted payload against a 6MB
+// limit is 6mb (next.config.ts). 40MB of accepted payload against a 6MB
 // ceiling. Worse, the framework rejects an oversized body BEFORE the action
 // function runs, so none of createProductAction's per-file validation and none of
 // its orphan cleanup ever execute — the maker gets "An unexpected response was
 // received from the server." and no idea which file to blame.
 //
-// Raising the limit was the wrong fix (25MB through a Server Action is a bad
+// Raising the limit was the wrong fix (40MB through a Server Action is a bad
 // shape, and serverless request-body limits sit below it anyway). Lowering the
 // per-file cap was also wrong: a phone screenshot off a Thai founder's device
 // is routinely 1-3MB, so the cap would reject exactly the normal case and send

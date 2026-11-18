@@ -20,6 +20,7 @@ import {
   MAX_PRODUCT_BLURB,
   MAX_PRODUCT_NAME,
   MAX_PRODUCT_IMAGES,
+  MIN_PRODUCT_IMAGES,
   PRODUCT_CATEGORIES,
   postImages,
   productPlatformsOf,
@@ -391,6 +392,8 @@ export async function createProductAction(
   const files = filesIn(formData, "images");
   if (files.length > MAX_PRODUCT_IMAGES)
     return { error: `Up to ${MAX_PRODUCT_IMAGES} images per product.` };
+  if (files.length < MIN_PRODUCT_IMAGES)
+    return { error: `Add at least ${MIN_PRODUCT_IMAGES} screenshots.` };
   const uploaded = await uploadAll(
     user.id,
     files,
@@ -539,6 +542,10 @@ export async function updateProductAction(
   const files = filesIn(formData, "images");
   if (kept.length + files.length > MAX_PRODUCT_IMAGES)
     return { error: `Up to ${MAX_PRODUCT_IMAGES} images per product.` };
+  // An edit cannot leave fewer than the minimum, including on a product saved
+  // before the rule (the founder's call: they keep theirs until edited).
+  if (kept.length + files.length < MIN_PRODUCT_IMAGES)
+    return { error: `Add at least ${MIN_PRODUCT_IMAGES} screenshots.` };
   const uploaded = await uploadAll(
     user.id,
     files,

@@ -136,7 +136,7 @@ import { BrandMark } from "@/components/Brand";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { AuthReturnLink } from "@/components/marketing/AuthReturnLink";
 import { productBucketOf } from "./categories";
-import { getShelfProducts } from "./shelf-data";
+import { getShelfProducts, getShelfProductsAnyDevice } from "./shelf-data";
 import { ProductFilters } from "./ProductFilters";
 import {
   cardFooterLabel,
@@ -155,6 +155,7 @@ import { SwitchToBuilding } from "./SwitchToBuilding";
 // the same function the client does — and a server file cannot import from
 // a client module.
 import { parseCategoryParam } from "./categories";
+import { viewerKind } from "@/lib/device";
 
 export async function ProductShelf({
   searchParams,
@@ -273,6 +274,8 @@ export async function ProductShelf({
     tOpenBlocked,
     tPreviousImage,
     tNextImage,
+    tPreviousGroup,
+    tNextGroup,
     tSignIn,
     tLegal,
     tMyProducts,
@@ -322,6 +325,8 @@ export async function ProductShelf({
     tServer("Open {name}"),
     tServer("Previous image"),
     tServer("Next image"),
+    tServer("Previous screenshots"),
+    tServer("Next screenshots"),
     tServer("Sign in"),
     tServer("Legal"),
     tServer("My products"),
@@ -484,6 +489,22 @@ export async function ProductShelf({
   // `sample` marks a dev fixture for the review modal, which can show one but
   // not save it. NODE_ENV is a build-time constant and productFixtures() is []
   // in production, so this is false for every row a production build renders.
+  // The categories with products this computer is not shown
+  // (./shelf-data.ts): the deck says so when a filter on one comes up empty.
+  // Both lists are cached reads; on anything but a computer they are the same.
+  const shownIds = new Set(shown.map((p) => p.id));
+  const phoneOnlyBuckets = [
+    ...new Set(
+      (await getShelfProductsAnyDevice())
+        .filter((p) => !shownIds.has(p.id))
+        .map((p) => productBucketOf(p.tags)),
+    ),
+  ];
+  const [tPhonesHereTitle, tPhonesHereBody] = await Promise.all([
+    tServer("Everything in this category runs on phones"),
+    tServer("Open this page on your phone to try them."),
+  ]);
+
   const products: DeckProduct[] = shown.map((p) => {
     const name = productName(p, tAnonymous);
     const host = displayHost(p.link);
@@ -621,6 +642,16 @@ export async function ProductShelf({
   const sectionClass = "pt-6 pb-12 lg:pt-8";
 
   if (products.length === 0) {
+    // Empty on a COMPUTER only because everything on the shelf runs on phones
+    // (./shelf-data.ts): saying the shelf is empty would be false, and "add
+    // yours" would be the wrong answer to it. Both lists are cached reads.
+    const phonesOnly = (await getShelfProductsAnyDevice()).length > 0;
+    const [phonesTitle, phonesBody] = phonesOnly
+      ? await Promise.all([
+          tServer("Everything on the shelf runs on phones"),
+          tServer("Open this page on your phone to try them."),
+        ])
+      : [tEmptyTitle, emptyBody];
     return (
       <Section rhythm={false} className={sectionClass}>
         {pageTitle}
@@ -636,8 +667,8 @@ export async function ProductShelf({
             the shelf reaches FRONT_DOOR_MIN_PRODUCTS.) */}
         <EmptyState
           icon={PackageOpen}
-          title={tEmptyTitle}
-          description={emptyBody}
+          title={phonesTitle}
+          description={phonesBody}
           action={emptyStateCta}
         />
       </Section>
@@ -707,6 +738,8 @@ export async function ProductShelf({
                 signedIn: user !== null,
                 canComment: role !== null && canComment(role),
               }}
+              computer={(await viewerKind()) === "computer"}
+              phoneOnlyBuckets={phoneOnlyBuckets}
               labels={{
                 deckName: tDeckName,
                 skip: tSkip,
@@ -719,9 +752,13 @@ export async function ProductShelf({
                 openBlocked: tOpenBlocked,
                 noneHereTitle: tNoneHereTitle,
                 noneHereBody: tNoneHereBody,
+                phonesHereTitle: tPhonesHereTitle,
+                phonesHereBody: tPhonesHereBody,
                 seeEverything: tSeeEverything,
                 previousImage: tPreviousImage,
                 nextImage: tNextImage,
+                previousGroup: tPreviousGroup,
+                nextGroup: tNextGroup,
               }}
               supplyCta={emptyStateCta}
             />

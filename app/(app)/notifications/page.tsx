@@ -13,6 +13,8 @@ import { tServer, getLocale } from "@/lib/i18n-server";
 import { timeAgo } from "@/lib/time";
 import { notifHref, notifText, type NotifLike } from "@/lib/notifications";
 import { getBlockedIds } from "@/lib/blocking";
+import { isAdminUser } from "@/lib/admin";
+import { phoneOnlyNotifTargets } from "@/lib/notification-phone-only";
 import { Avatar } from "@/components/Avatar";
 import { markAllNotificationsRead } from "./actions";
 import { revalidatePath } from "next/cache";
@@ -80,6 +82,12 @@ export default async function NotificationsPage({
         .in("id", actorIds)
     : { data: [] };
   const actorById = new Map((actors ?? []).map((a) => [a.id as string, a]));
+  // A comment or a mention on a product a computer cannot open is shown
+  // unlinked there (lib/notification-phone-only.ts).
+  const phoneOnlyTargets = await phoneOnlyNotifTargets(supabase, notifs, {
+    id: user.id,
+    isAdmin: () => isAdminUser(supabase, user),
+  });
 
   const items = notifs.map((n) => {
     const actor = n.actor_id ? (actorById.get(n.actor_id as string) ?? null) : null;
@@ -101,6 +109,7 @@ export default async function NotificationsPage({
       readAt: (n.read_at as string | null) ?? null,
       createdAt: n.created_at as string,
       like,
+      phoneOnly: phoneOnlyTargets.has(n.entity_id as string),
     };
   });
   const unread = items.filter((i) => !i.readAt).length;
@@ -176,14 +185,18 @@ export default async function NotificationsPage({
         />
       ) : (
         <Card padding="none" className="divide-y divide-line overflow-hidden">
-          {items.map((i) => (
-            <Link
-              key={i.id}
-              href={notifHref(i.like)}
-              className={`flex items-center gap-3 p-4 transition-colors group ${
-                i.readAt ? "hover:bg-cream" : "bg-gold-soft/50 hover:bg-gold-soft"
-              }`}
-            >
+          {items.map((i) => {
+            const rowClass = `flex items-center gap-3 p-4 transition-colors group ${
+              i.phoneOnly
+                ? i.readAt
+                  ? ""
+                  : "bg-gold-soft/50"
+                : i.readAt
+                  ? "hover:bg-cream"
+                  : "bg-gold-soft/50 hover:bg-gold-soft"
+            }`;
+            const body = (
+              <>
               {i.like.actor ? (
                 <Avatar
                   name={i.like.actor.full_name}
@@ -205,6 +218,7 @@ export default async function NotificationsPage({
                 </span>
                 <span className="block text-xs text-ink-muted mt-0.5">
                   {timeAgo(i.createdAt, locale)}
+                  {i.phoneOnly && <> · {tr("Opens on a phone")}</>}
                 </span>
               </span>
               {!i.readAt && (
@@ -213,9 +227,23 @@ export default async function NotificationsPage({
                   aria-hidden="true"
                 />
               )}
-              <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-navy transition-colors" />
-            </Link>
-          ))}
+              {!i.phoneOnly && (
+                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-navy transition-colors" />
+              )}
+              </>
+            );
+            // A product this computer cannot open: the same row, not a link,
+            // saying where it opens instead (lib/notification-phone-only.ts).
+            return i.phoneOnly ? (
+              <div key={i.id} className={rowClass}>
+                {body}
+              </div>
+            ) : (
+              <Link key={i.id} href={notifHref(i.like)} className={rowClass}>
+                {body}
+              </Link>
+            );
+          })}
         </Card>
       )}
     </Section>

@@ -168,7 +168,8 @@ import {
 } from "@/components/ui";
 import { t, type Locale } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n-client";
-import type { ProductCategory, ProductRating } from "@/lib/post-types";
+import type { ProductRating } from "@/lib/post-types";
+import type { FilterBucket } from "./categories";
 import {
   productPageHref,
   readAfterFromAddress,
@@ -187,7 +188,7 @@ import type { PhonePlatform } from "./product-view";
 
 export type DeckProduct = PromptProduct & {
   /** Which category it is filed under, from productBucketOf() on the server. */
-  bucket: ProductCategory;
+  bucket: FilterBucket;
   /** NOT on the card face (see the header). Read by the live region, the
    *  popup-blocked notice's "Open {name}" and the prompts' titles. */
   name: string;
@@ -233,11 +234,18 @@ type ProductDeckLabels = {
   openBlocked: string;
   noneHereTitle: string;
   noneHereBody: string;
+  /** The same state when the category's products all run on phones and this
+   *  is a computer (`phoneOnlyBuckets`): not empty, just not here. */
+  phonesHereTitle: string;
+  phonesHereBody: string;
   /** Sets the filter back to "All". */
   seeEverything: string;
   /** The gallery's < and >, which have no visible text. */
   previousImage: string;
   nextImage: string;
+  /** The same < and > on a computer's card, which move four at a time. */
+  previousGroup: string;
+  nextGroup: string;
 };
 
 /** The top card and the two behind it. */
@@ -401,6 +409,8 @@ export function ProductDeck({
   route,
   resumeAfter,
   viewer,
+  computer,
+  phoneOnlyBuckets,
 }: {
   /** Never empty: the shelf renders its own empty state instead. */
   products: readonly DeckProduct[];
@@ -422,8 +432,18 @@ export function ProductDeck({
   resumeAfter: string | null;
   /** Who is reading, for the prompts: see ./DeckPrompts.tsx. */
   viewer: DeckViewer;
+  /** The server read the reader as a computer (lib/device.ts): its cards show
+   *  the screenshots four at a time, as a grid, from `md` up. A phone or a
+   *  tablet keeps the one-at-a-time gallery, whose tall phone screenshots a
+   *  grid's crop would cut to pieces. */
+  computer: boolean;
+  /** The categories that have products this computer is not shown
+   *  (./shelf-data.ts getShelfProducts). A filter on one of them that matches
+   *  nothing says so, rather than that the category is empty. */
+  phoneOnlyBuckets: readonly FilterBucket[];
 }) {
   const { selected, matches, select } = useProductFilter();
+  const phonesHere = selected !== null && phoneOnlyBuckets.includes(selected);
   const matching = useMemo(
     () => products.filter((p) => matches(p.bucket)),
     [products, matches],
@@ -443,7 +463,11 @@ export function ProductDeck({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <p aria-live="polite" className="sr-only">
-        {matching.length > 0 ? announced : labels.noneHereTitle}
+        {matching.length > 0
+          ? announced
+          : phonesHere
+            ? labels.phonesHereTitle
+            : labels.noneHereTitle}
       </p>
       {matching.length > 0 ? (
         <Stack
@@ -457,6 +481,7 @@ export function ProductDeck({
           rootRef={deckRef}
           locked={prompts.locked}
           onTried={prompts.tried}
+          computer={computer}
         />
       ) : (
         <div className="relative min-h-0 flex-1">
@@ -469,8 +494,8 @@ export function ProductDeck({
           <div className="absolute inset-0 pb-5">
             <EmptyState
               icon={SearchX}
-              title={labels.noneHereTitle}
-              description={labels.noneHereBody}
+              title={phonesHere ? labels.phonesHereTitle : labels.noneHereTitle}
+              description={phonesHere ? labels.phonesHereBody : labels.noneHereBody}
               padding="lg"
               className="grid h-full place-content-center"
               action={
@@ -510,18 +535,21 @@ function Stack({
   rootRef,
   locked: promptLocked,
   onTried,
+  computer,
 }: {
   products: readonly DeckProduct[];
   labels: ProductDeckLabels;
   onAnnounce: (text: string) => void;
   route: DeckRoute;
-  category: ProductCategory | null;
+  category: FilterBucket | null;
   resumeAfter: string | null;
   rootRef: RefObject<HTMLDivElement | null>;
   /** A prompt's modal is open: the deck takes no input. */
   locked: boolean;
   /** The product whose tab just opened. Not called for a blocked one. */
   onTried: (product: DeckProduct) => void;
+  /** See ProductDeck. */
+  computer: boolean;
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -1040,6 +1068,13 @@ function Stack({
             </span>
 
             <div className="relative min-h-0 min-w-0 flex-1">
+              {/* One picture at a time, uncropped, on a phone or a tablet.
+                  On a COMPUTER (the server's read, see ProductDeck), from `md`
+                  up, four at a time as a grid, moving four at a time (the
+                  founder's call, 2026-11-18; ProductGallery `perView`). A
+                  narrow computer window keeps the single gallery: CSS picks
+                  between the two, so the first paint is right at every width.
+                  They share URLs, so the hidden one costs no extra request. */}
               <ProductGallery
                 images={product.images}
                 labels={labels}
@@ -1049,8 +1084,24 @@ function Stack({
                 fit="contain"
                 backdrop
                 sizes="(min-aspect-ratio: 4/3) 70vw, 100vw"
-                className="rounded-t-3xl deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
+                className={`rounded-t-3xl deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl${computer ? " md:hidden" : ""}`}
               />
+              {computer && (
+                <ProductGallery
+                  images={product.images}
+                  labels={{
+                    previousImage: labels.previousGroup,
+                    nextImage: labels.nextGroup,
+                  }}
+                  inactive={depth > 0}
+                  preload={depth === 1}
+                  perView={4}
+                  shape="fill"
+                  fit="contain"
+                  sizes="(min-width: 768px) 35vw, 100vw"
+                  className="hidden rounded-t-3xl md:block deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
+                />
+              )}
             </div>
 
             <div className={CARD_BODY}>

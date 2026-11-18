@@ -123,6 +123,7 @@ export type PhonePlatform = "ios" | "android";
  * already resolved `apps.apple.com@evil.example` to its real host).
  */
 export function storePlatformOf(link: URL): PhonePlatform | null {
+  if (isMacAppStore(link)) return null;
   const host = link.hostname.toLowerCase();
   if (
     host === "apps.apple.com" ||
@@ -133,6 +134,16 @@ export function storePlatformOf(link: URL): PhonePlatform | null {
   }
   if (host === "play.google.com") return "android";
   return null;
+}
+
+/** A MAC App Store page: apps.apple.com, or the older itunes.apple.com, with
+ *  `mt=12`. A Mac app, so a computer can open it: never a phone's store. */
+function isMacAppStore(link: URL): boolean {
+  const host = link.hostname.toLowerCase();
+  return (
+    (host === "apps.apple.com" || host === "itunes.apple.com") &&
+    link.searchParams.get("mt") === "12"
+  );
 }
 
 /**
@@ -148,6 +159,9 @@ export function phonePlatformsOf(
   link: URL,
   platforms: readonly string[] | null | undefined,
 ): PhonePlatform[] {
+  // "Try" on a Mac App Store link opens a page a Mac can use, whatever the
+  // maker ticked: no code to scan (and phoneOnly() keeps it on the shelf).
+  if (isMacAppStore(link)) return [];
   const declared = productPlatformsOf(platforms);
   const store = storePlatformOf(link);
   const declaredPhoneOnly =
@@ -160,6 +174,36 @@ export function phonePlatformsOf(
   }
   // iPhone first, the way the dialog says them.
   return (["ios", "android"] as const).filter((p) => phones.has(p));
+}
+
+/**
+ * Whether a product only runs on a phone: the products a COMPUTER never sees
+ * (the founder's call, 2026-11-18; lib/device.ts decides who is a computer).
+ * phonePlatformsOf, with two ways out of it, because hiding a product from the
+ * only devices that can run it is the worst mistake this rule can make:
+ *   · the maker says it also runs on the web, Windows or a Mac;
+ *   · the link is the MAC App Store (isMacAppStore), even when the maker
+ *     ticked only iOS: that is where "Try" goes, and a Mac opens it.
+ */
+export function phoneOnly(
+  link: URL,
+  platforms: readonly string[] | null | undefined,
+): boolean {
+  if (productPlatformsOf(platforms).some((p) => p === "web" || p === "windows" || p === "mac")) {
+    return false;
+  }
+  if (isMacAppStore(link)) return false;
+  return phonePlatformsOf(link, platforms).length > 0;
+}
+
+/** phoneOnly() from the raw row. A row with no usable link is not a shelf
+ *  product at all, so it is not "phone-only" either. */
+export function isPhoneOnly(
+  linkUrl: string | null | undefined,
+  platforms: readonly string[] | null | undefined,
+): boolean {
+  const link = webUrl(linkUrl ?? null);
+  return link ? phoneOnly(link, platforms) : false;
 }
 
 /** The product's screenshots that survive the parse, in order, at most

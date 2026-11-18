@@ -30,6 +30,7 @@ import {
   CATEGORY_LABEL,
   MAX_PRODUCT_BLURB,
   MAX_PRODUCT_NAME,
+  MIN_PRODUCT_IMAGES,
   PLATFORM_LABEL,
   PRODUCT_CATEGORIES,
   PRODUCT_PLATFORMS,
@@ -140,6 +141,7 @@ export function ProductForm({
   const blocked =
     isPending ||
     shots.preparing ||
+    shots.shots.length < MIN_PRODUCT_IMAGES ||
     !category ||
     platforms.length === 0 ||
     !name.trim() ||

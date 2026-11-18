@@ -58,6 +58,7 @@ import {
 } from "@/lib/rewards";
 import { productPath } from "@/lib/post-types";
 import { getLocale, tServer } from "@/lib/i18n-server";
+import { viewerKind } from "@/lib/device";
 import { Card, EmptyState, Section } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -86,6 +87,10 @@ export default async function RewardsPage() {
   const now = new Date();
   const month = monthOf(now);
   const today = bangkokDay(now.toISOString());
+  // A computer cannot open a product that only runs on a phone (lib/device.ts),
+  // so those rows below are named but not linked there. Display only: a
+  // comment counts the same from every device.
+  const computer = (await viewerKind()) === "computer";
 
   const last = previousMonth(month);
   const [comments, lastComments, { data: wins }, staff, blocked, makers, lastDraw] =
@@ -217,6 +222,7 @@ export default async function RewardsPage() {
     tLastSpunBody,
     tLastMissed,
     tLastMissedBody,
+    tOnPhone,
   ] = await Promise.all([
     t("Monthly draw"),
     t(
@@ -268,6 +274,7 @@ export default async function RewardsPage() {
     t("Not you this time. This month is a fresh start."),
     t("You weren’t in the draw for {month}."),
     t("Your best streak was {n} of {total} days. This month is a fresh start."),
+    t("Opens on a phone"),
   ]);
   const verdictLabels = Object.fromEntries(
     await Promise.all(
@@ -450,6 +457,10 @@ export default async function RewardsPage() {
                 // moderated account, or by someone in a block — is not named
                 // or linked here either: its own page 404s for them.
                 const unavailable = c.postHidden || blocked.has(c.postAuthorId);
+                // Its page 404s on a computer, except for its maker and an
+                // admin.
+                const phoneOnly =
+                  computer && !staff && c.postPhoneOnly && c.postAuthorId !== user.id;
                 const href =
                   c.postKind === "show_and_tell"
                     ? productPath(c.postId)
@@ -460,6 +471,13 @@ export default async function RewardsPage() {
                       {unavailable ? (
                         <span className="min-w-0 truncate text-sm text-ink-muted">
                           {tUnavailable}
+                        </span>
+                      ) : phoneOnly ? (
+                        <span className="flex min-w-0 items-baseline gap-2">
+                          <span className="min-w-0 truncate text-sm font-medium text-ink">
+                            {c.postTitle || c.postSnippet}
+                          </span>
+                          <span className="shrink-0 text-xs text-ink-muted">{tOnPhone}</span>
                         </span>
                       ) : (
                         <Link

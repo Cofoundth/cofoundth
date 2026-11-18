@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { getLocale } from "@/lib/i18n-server";
 import { LocaleProvider } from "@/lib/i18n-client";
 import "./globals.css";
+import { TouchHint } from "@/components/TouchHint";
 
 // Variable font — deliberately NO pinned `weight` list. Asking for four static
 // weights made next/font emit one @font-face per weight × unicode-range
@@ -100,6 +101,11 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <LocaleProvider locale={locale}>{children}</LocaleProvider>
+        {/* A tablet asking for the desktop site looks like a computer to the
+            server; this tells it otherwise (components/TouchHint.tsx,
+            lib/device.ts). On every page, 404s included: a phone-only product
+            a computer cannot see is a 404 there. */}
+        <TouchHint />
         <Analytics />
       </body>
     </html>

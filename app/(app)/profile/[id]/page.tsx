@@ -56,6 +56,8 @@ import { IncomingInterestBanner } from "./IncomingInterestBanner";
 import { ReportForm } from "./ReportForm";
 import { BlockButton } from "./BlockButton";
 import { isBlockedEitherWay } from "@/lib/blocking";
+import { viewerKind } from "@/lib/device";
+import { isPhoneOnly } from "@/app/(marketing)/products/product-view";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -240,16 +242,28 @@ export default async function ProfileDetailPage({
         .limit(4),
       supabase
         .from("forum_posts")
-        .select("id, title, content, image_url, image_urls, tags")
+        .select("id, title, content, image_url, image_urls, tags, link_url, platforms")
         .eq("author_id", profile.id)
         .eq("hidden", false)
         .eq("kind", "show_and_tell")
         .not("link_url", "is", null)
         .order("created_at", { ascending: false })
-        .limit(6),
+        // More than the 6 shown: a computer drops the phone-only ones below,
+        // and must still get six when the maker has them.
+        .limit(24),
     ],
   );
-  const products = productRows ?? [];
+  // A computer never sees a product that only runs on a phone (the founder's
+  // call, 2026-11-18; lib/device.ts) — the owner on their own profile still
+  // does, as on their own product's page.
+  const computer = !isOwnProfile && (await viewerKind()) === "computer";
+  const products = (productRows ?? [])
+    .filter(
+      (p) =>
+        !computer ||
+        !isPhoneOnly(p.link_url as string | null, p.platforms as string[] | null),
+    )
+    .slice(0, 6);
   // The public average and count, through the service role like every product
   // page (lib/product-ratings.ts); degrades to unrated, never throws.
   const productRatings = await getProductRatings(
