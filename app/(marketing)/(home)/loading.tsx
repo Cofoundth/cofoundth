@@ -7,7 +7,8 @@
 // before the deck on one arm and the deck's skeleton (../products/loading.tsx)
 // before a hero on the other. Drawing nothing is the one face that is right on
 // both. (Which arm production serves depends on FRONT_DOOR_MIN_PRODUCTS: the
-// shelf, today.)
+// pitch until the shelf has three real products, then the shelf — and that
+// flip needs no deploy.)
 //
 // Drawing nothing is not the same as taking no room. This used to return null,
 // on the theory that <main className="flex-1"> would hold the footer at the
@@ -37,11 +38,15 @@
 // to the other marketing routes.
 //
 // [data-deck-page]: while it shows, the logged-out header and footer are not
-// drawn (app/globals.css), because the shelf arm — the one / serves while the
-// shelf has FRONT_DOOR_MIN_PRODUCTS — draws neither, and a header painted here
-// would vanish when the deck arrived and pull it up the screen. The pitch arm
-// pays instead: its header appears with it. If / goes back to serving the pitch
-// for real (the threshold back at 3 with fewer products), drop the attribute.
+// drawn (app/globals.css), because the shelf arm draws neither, and a header
+// painted here would vanish when the deck arrived and pull it up the screen.
+// The pitch arm pays instead: its header appears with it, onto a screen that
+// was blank, which moves nothing. IT STAYS EVEN WHILE / SERVES THE PITCH
+// (decided 2026-11-18, when the threshold went back to 3 with two products):
+// the third product flips / to the deck with no deploy and nobody watching,
+// and an attribute that has to be re-added by hand at that moment would
+// instead ship the jump to every visitor. A blank first paint on the pitch
+// arm is the cheaper side of that trade.
 //
 // aria-hidden and empty: nothing to read, nothing to translate.
 export default function Loading() {

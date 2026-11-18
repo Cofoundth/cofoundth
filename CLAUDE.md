@@ -493,7 +493,7 @@ rule. Which of the two:
 | Single column — forms, editors, settings, onboarding, propose | `max-w-[640px]` |
 | Grid or main+aside — directories, feeds, profile and org detail | `max-w-[1120px]`, with the intro block `max-w-[640px]` inside it |
 | Reading/article, chat | exempt, per the two rules above |
-| The product deck (`/`, `/products`) | exempt: one screen tall, up to `max-w-[1440px]`, the card sized by the viewport (founder's call, 2026-11-11) |
+| The product deck (`/products`, and `/` once the shelf has 3 products — `FRONT_DOOR_MIN_PRODUCTS`) | exempt: one screen tall, up to `max-w-[1440px]`, the card sized by the viewport (founder's call, 2026-11-11) |
 
 640 is not arbitrary for forms: it puts a full-width field at 560px and a
 two-column row at 272px each, and the insight editor's body textarea lands at
