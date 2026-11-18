@@ -73,11 +73,11 @@ export default async function CommunityPage({
     role === "explorer" ? "Try what the community built" : "Browse founders",
   );
   return (
-    // One column of posts, the system's single-column width (CLAUDE.md,
-    // Layout). The "What's happening" ticker beside it is gone (the
-    // founder's call, 2026-11-18), and with it the 5/4 split: the feed keeps
-    // the reading width it had in that split, centred.
-    <Section width="narrow">
+    // One column of posts across the full content width (the founder's call,
+    // 2026-11-18, after the "What's happening" ticker beside it was dropped).
+    // Chosen over the 640 reading column knowingly: long Thai posts run to
+    // long lines at this width.
+    <Section>
       <h1 className="text-d2 mb-8">{await tServer("Community")}</h1>
 
       <RealtimeRefresh

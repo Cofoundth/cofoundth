@@ -90,8 +90,10 @@ export default async function MyProfilePage() {
       "flex items-center justify-between gap-3 p-4 text-sm text-ink hover:bg-cream transition-colors";
     const draw = await drawStatus(supabase, user);
     return (
-      <Section width="narrow">
-        <div className="mb-8">
+      // The full width (the founder's call, 2026-11-18), two columns from
+      // `lg`: who you are, and where to go. See the founder hub below.
+      <Section>
+        <div className="mb-8 max-w-[640px]">
           <h1 className="text-d2 mb-2">{await tServer("My Profile")}</h1>
           <p className="text-sm text-ink-muted">
             {await tServer(
@@ -100,7 +102,7 @@ export default async function MyProfilePage() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
           <Card className="flex items-center gap-4">
             <Avatar
               name={profile.full_name as string}
@@ -244,16 +246,22 @@ export default async function MyProfilePage() {
   const row =
     "flex items-center justify-between gap-3 p-4 text-sm text-ink hover:bg-cream transition-colors";
 
+  // THE FULL WIDTH, IN TWO COLUMNS (the founder's call, 2026-11-18: the 640
+  // column left the page empty either side). One column of these rows at
+  // 1120px would stretch them into long thin bars, so from `lg` the hub
+  // splits: you and your account on the left, your numbers and your saved
+  // list on the right. A phone keeps the one column, in the same order.
   return (
-    <Section width="narrow">
-      <div className="mb-8">
+    <Section>
+      <div className="mb-8 max-w-[640px]">
         <h1 className="text-d2 mb-2">{await tServer("My Profile")}</h1>
         <p className="text-sm text-ink-muted">
           {await tServer("This is how other founders see you")}
         </p>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="flex min-w-0 flex-col gap-4">
         {/* Identity */}
         <Card className="flex items-center gap-4">
           <Avatar
@@ -301,10 +309,29 @@ export default async function MyProfilePage() {
           <DrawRow className={row} label={await tServer("Monthly draw")} status={draw} />
         </Card>
 
+        {/* Public view */}
+        <Card padding="none" className="divide-y divide-line overflow-hidden">
+          <Link href={publicHref} className={row}>
+            <span className="inline-flex items-center gap-2 min-w-0">
+              <UserRound
+                className="w-4 h-4 text-gold-ink shrink-0"
+                strokeWidth={1.5}
+              />
+              {await tServer("View public profile")}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted shrink-0">
+              <Eye className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          </Link>
+        </Card>
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-4">
         {/* Stats. The Link wraps the Card rather than the other way round —
             Card is a plain div with no `as`/`href`, and the whole tile has to
             be the hit target. */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-4">
           {stats.map((s) => (
             <Link key={s.label} href={s.href}>
               <Card hoverable padding="sm" className="text-center">
@@ -336,23 +363,7 @@ export default async function MyProfilePage() {
             <ChevronRight className="w-4 h-4" />
           </Link>
         </Card>
-
-        {/* Public view */}
-        <Card padding="none" className="divide-y divide-line overflow-hidden">
-          <Link href={publicHref} className={row}>
-            <span className="inline-flex items-center gap-2 min-w-0">
-              <UserRound
-                className="w-4 h-4 text-gold-ink shrink-0"
-                strokeWidth={1.5}
-              />
-              {await tServer("View public profile")}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted shrink-0">
-              <Eye className="w-3.5 h-3.5" strokeWidth={1.5} />
-              <ChevronRight className="w-4 h-4" />
-            </span>
-          </Link>
-        </Card>
+      </div>
       </div>
     </Section>
   );
