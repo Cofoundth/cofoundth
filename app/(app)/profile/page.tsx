@@ -10,6 +10,7 @@ import {
   Bookmark,
   ChevronRight,
   Eye,
+  Gift,
   Pencil,
   Rocket,
   Settings as SettingsIcon,
@@ -26,6 +27,32 @@ import { provinceLabel } from "@/lib/provinces";
 import { msAgoISO, DAY_MS } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
 import { Card, Section, StageEmblem } from "@/components/ui";
+import { drawStatus } from "./draw-status";
+
+/** The monthly draw's one line (./draw-status.ts): this hub is the member's
+ *  own and nobody else's, which is the only reason it may show a streak. */
+function DrawRow({
+  className,
+  label,
+  status,
+}: {
+  className: string;
+  label: string;
+  status: string | null;
+}) {
+  return (
+    <Link href="/rewards" className={className}>
+      <span className="inline-flex items-center gap-2 min-w-0">
+        <Gift className="w-4 h-4 text-gold-ink shrink-0" strokeWidth={1.5} />
+        <span className="truncate">{label}</span>
+      </span>
+      <span className="inline-flex items-center gap-1.5 text-ink-muted shrink-0">
+        {status && <span className="whitespace-nowrap">{status}</span>}
+        <ChevronRight className="w-4 h-4" />
+      </span>
+    </Link>
+  );
+}
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +88,7 @@ export default async function MyProfilePage() {
   if (role === "explorer") {
     const explorerRow =
       "flex items-center justify-between gap-3 p-4 text-sm text-ink hover:bg-cream transition-colors";
+    const draw = await drawStatus(supabase, user);
     return (
       <Section width="narrow">
         <div className="mb-8">
@@ -111,6 +139,11 @@ export default async function MyProfilePage() {
               </span>
               <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
             </Link>
+            <DrawRow
+              className={explorerRow}
+              label={await tServer("Monthly draw")}
+              status={draw}
+            />
             <Link href="/products" className={explorerRow}>
               <span className="inline-flex items-center gap-2 min-w-0">
                 <Rocket
@@ -141,6 +174,7 @@ export default async function MyProfilePage() {
     { data: viewRows },
     { data: matchRows },
     { count: savedCount },
+    draw,
   ] = await Promise.all([
     supabase
       .from("meetups")
@@ -164,6 +198,7 @@ export default async function MyProfilePage() {
       .from("profile_saves")
       .select("profile_id", { count: "exact", head: true })
       .eq("user_id", user.id),
+    drawStatus(supabase, user),
   ]);
   const viewerCount = new Set(
     (viewRows ?? [])
@@ -263,6 +298,7 @@ export default async function MyProfilePage() {
             </span>
             <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
           </Link>
+          <DrawRow className={row} label={await tServer("Monthly draw")} status={draw} />
         </Card>
 
         {/* Stats. The Link wraps the Card rather than the other way round —
