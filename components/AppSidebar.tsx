@@ -275,9 +275,11 @@ export async function AppSidebar() {
           // keeps its marker — that one IS news to them.
           { href: "/products", label: await tServer("Products") },
           { href: "/community", label: await tServer("Community") },
-          // The monthly draw is earned by commenting — the explorer's one
-          // write — so it sits right under the two places they comment.
-          { href: "/rewards", label: await tServer("Monthly draw") },
+          // NOT the monthly draw (/rewards), for anyone (the founder's call,
+          // 2026-11-18): a menu item beside Products and Community says the
+          // prize is a reason to be here, and the reason is trying what
+          // members built. Its one door is the row on the member's own
+          // /profile hub.
           ...insightsItem,
           {
             href: "/meetups",
@@ -303,9 +305,7 @@ export async function AppSidebar() {
             ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
           },
           { href: "/community", label: await tServer("Community") },
-          // Next to Community: the draw is earned by commenting there and on
-          // products.
-          { href: "/rewards", label: await tServer("Monthly draw") },
+          // No monthly draw here either: see the explorer rail above.
           ...insightsItem,
           { href: "/browse", label: await tServer("Founders") },
           {

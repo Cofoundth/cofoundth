@@ -1928,7 +1928,7 @@
   "Couldn’t load this month. Try again.": "โหลดข้อมูลเดือนนี้ไม่สำเร็จ ลองอีกทีนะ",
   "Winner": "ผู้โชคดี",
   "Progress": "ความคืบหน้า",
-  "Comment on 3 different products a day, 5 days in a row, and your name goes on this month’s wheel. One spin picks one winner of a lottery ticket.": "คอมเมนต์ในโปรดักต์ที่ต่างกันวันละ 3 อัน ติดกัน 5 วัน ชื่อคุณก็จะได้ขึ้นวงล้อของเดือนนี้ หมุนครั้งเดียว ได้ผู้โชคดี 1 คนรับลอตเตอรี่ 1 ใบ",
+  "Try what other members built and tell them what you think: that is what makers need most. As a small thank-you, comment on 3 different products a day, 5 days in a row, and your name goes on this month’s wheel. One spin, one winner of a lottery ticket.": "ลองของที่สมาชิกคนอื่นทำ แล้วบอกเขาว่าคุณคิดยังไง ฟีดแบ็กแบบนี้คือสิ่งที่คนทำโปรดักต์อยากได้ที่สุด เป็นการขอบคุณเล็ก ๆ ถ้าคุณคอมเมนต์ในโปรดักต์ที่ต่างกันวันละ 3 อัน ติดกัน 5 วัน ชื่อคุณจะได้ขึ้นวงล้อของเดือนนี้ หมุนครั้งเดียว ได้ผู้โชคดี 1 คนรับลอตเตอรี่ 1 ใบ",
   "We check again before we spin at the end of the month: a comment that’s gone by then — deleted, or on a product that was removed or hidden — doesn’t count.": "ก่อนหมุนวงล้อตอนสิ้นเดือนจะเช็กอีกรอบ คอมเมนต์ที่หายไปแล้วตอนนั้น ไม่ว่าจะถูกลบ หรืออยู่ในโปรดักต์ที่ถูกลบหรือซ่อนไป จะไม่นับนะ",
   "Today: {n} of {total} products": "วันนี้ {n} จาก {total} โปรดักต์",
   "Comment on {n} different products a day. Only products count, not community posts, and several comments on the same product count once.": "คอมเมนต์ในโปรดักต์ที่ต่างกันวันละ {n} อัน นับเฉพาะโปรดักต์ ไม่นับโพสต์ในชุมชน และคอมเมนต์หลายครั้งในโปรดักต์เดียวกันนับเป็นครั้งเดียว",

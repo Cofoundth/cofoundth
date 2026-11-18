@@ -220,7 +220,7 @@ export default async function RewardsPage() {
   ] = await Promise.all([
     t("Monthly draw"),
     t(
-      "Comment on 3 different products a day, 5 days in a row, and your name goes on this month’s wheel. One spin picks one winner of a lottery ticket.",
+      "Try what other members built and tell them what you think: that is what makers need most. As a small thank-you, comment on 3 different products a day, 5 days in a row, and your name goes on this month’s wheel. One spin, one winner of a lottery ticket.",
     ),
     t("Your name is on this month’s wheel so far."),
     t(
