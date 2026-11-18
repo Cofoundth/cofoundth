@@ -36,7 +36,8 @@
 // shadow-xs); D1 converged them. `surface="card"` is kept so a migration can
 // land zero-diff first and flip in a second step.
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "./cn";
 
@@ -88,6 +89,25 @@ const FOCUSABLE_SELECTOR = [
 // product in the deck's product modal) would otherwise have BOTH answer one
 // Escape, and both trap Tab: only the one on top does.
 const openDialogs: object[] = [];
+
+// ── A DIALOG OPENED FROM INSIDE ANOTHER RENDERS AT <body> ─────────────────
+// Every scrim is `fixed inset-0`, and `fixed` is relative to the screen only
+// while no ancestor is a containing block for it. The scrim below carries
+// `backdrop-blur-sm`, and a backdrop-filter MAKES its element that containing
+// block; that same scrim is also what scrolls a tall dialog. So a dialog
+// opened from inside another (the phone code or the sign-in prompt from the
+// deck's product modal, a picture from its grid) was laid out against the
+// outer dialog's SCROLLED content: measured 2026-11-18, a `fixed; top: 0`
+// box inside the product modal, scrolled 50px, sat at -50px. Down a long
+// comment thread it would open off screen.
+//
+// Only a nested dialog moves. Whether it is one is decided ONCE, at mount,
+// from the stack: it opened while another was open. That keeps the tree
+// fixed for the dialog's whole life (the children are never remounted, see
+// the top of this file), and it keeps the one dialog rendered on the server
+// (the product modal, on a shared /?product= link) in place: on the server no
+// effect runs, so the stack is always empty there and it hydrates as it was
+// rendered.
 
 function focusables(panel: HTMLElement): HTMLElement[] {
   return Array.from(
@@ -148,6 +168,8 @@ export function Dialog({
   const panelRef = useRef<HTMLDivElement>(null);
   /** This dialog's place in openDialogs. */
   const token = useRef<object>({});
+  /** Opened over another dialog: rendered at <body> (see openDialogs). */
+  const [nested] = useState(() => openDialogs.length > 0);
 
   useEffect(() => {
     const me = token.current;
@@ -226,7 +248,7 @@ export function Dialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, onEscape, dismissible]);
 
-  return (
+  const tree = (
     <div
       // The shared scrim: bg-navy/40 + backdrop-blur-sm, and NO radius. A
       // full-viewport scrim has no corners to round — the rounded thing is the
@@ -283,4 +305,5 @@ export function Dialog({
       </div>
     </div>
   );
+  return nested ? createPortal(tree, document.body) : tree;
 }
