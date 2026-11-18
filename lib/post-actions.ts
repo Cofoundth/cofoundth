@@ -293,10 +293,9 @@ export async function createPostAction(
  *
  * QUIET BY DESIGN (CLAUDE.md, Language Rules): the row is the same forum_posts
  * row a Show & tell always was, and it appears on the deck and on its own page,
- * and nowhere it would be announced — the community feed, its search and the
- * landing's "Happening now" all exclude the kind (lib/posts.ts,
- * app/(marketing)/(home)/PitchLanding.tsx). A maker who wants to announce it
- * writes a normal post.
+ * and nowhere it would be announced — the community feed and its search
+ * exclude the kind (lib/posts.ts). A maker who wants to announce it writes a
+ * normal post.
  *
  * Every check the composer's product path had, in the same words, so the Thai
  * that already exists for each one keeps rendering: the name and description

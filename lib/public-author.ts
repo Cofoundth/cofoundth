@@ -1,15 +1,15 @@
 // Whose name and photo may be attached to a post on a PUBLIC page.
 //
-// One predicate, because three public surfaces ask the same question about a
-// post's author and must not answer it three ways:
+// One predicate, because every public surface that shows a post's author
+// asks the same question and must not answer it two ways:
 //
 //   · /p/<id>                — the post's own author, and every commenter in
 //                              its preview (app/(marketing)/p/[id]/page.tsx)
-//   · the landing's "Happening now" — the milestone authors it credits by name
-//                              (app/(marketing)/(home)/PitchLanding.tsx)
+//   · lib/public-post.ts     — the gated read behind it
 //
-// It lived inside the /p/<id> page until the landing needed it too; a second
-// hand-written copy would have been the drift this module exists to stop.
+// It lived inside the /p/<id> page until the landing page (retired
+// 2026-11-18) needed it too; a second hand-written copy would have been the
+// drift this module exists to stop.
 //
 // WHAT IT CHECKS, and what dropping each one costs:
 //   · not `suspended`, not `is_bot` — a moderated member's post stays public

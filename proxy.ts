@@ -153,8 +153,8 @@ export async function proxy(request: NextRequest) {
     };
 
     // ---- Signed-in visitors don't need the front door --------------------
-    // "/" is the logged-out front door, whichever arm it is on (the maker shelf,
-    // or the pitch until the shelf can carry it). Someone who is already a member
+    // "/" is the logged-out front door: the maker shelf (the pitch landing it
+    // used to fall back to was retired 2026-11-18). Someone who is already a member
     // asking for it is sent to their LANDING (landingOf above): the product deck
     // at its own address, /products, where the rail marks it, for a founder or
     // an explorer; an investor's own home; /onboarding first for a founder who

@@ -1,5 +1,5 @@
-// The shelf's rows and the shelf's metadata, shared by the two routes that can
-// render it: /products always, and / once the shelf can carry the front door.
+// The shelf's rows and the shelf's metadata, shared by the two routes that
+// render it: / (the front door, and the canonical address) and /products.
 
 import { cache } from "react";
 import type { Metadata, ResolvingMetadata } from "next";
@@ -24,25 +24,6 @@ import { viewerKind } from "@/lib/device";
 const PRODUCT_SHELF_LIMIT = 200;
 
 /**
- * How many products the shelf needs before / serves it instead of the pitch.
- *
- * 3 because a deck of fewer is over before it reads as a deck: the top card and
- * the two peeking behind it are what make it one, and with less the visitor's
- * first swipe is already the end state. The shelf is the requirement, but at
- * zero — the live database today — cofoundee.co's front door would say "0
- * products, nobody has put anything here" to every visitor. Compared against
- * what the page actually SHOWS, so dev with fixtures takes the same arm a
- * production shelf of that size would, and the third real product flips / with
- * no deploy. app/sitemap.ts reads this too, against real rows only.
- *
- * It was 1 from 2026-11-11 to 2026-11-18 (the founder's call both times): /
- * served the deck from the first real product. Back at 3, / serves the pitch
- * again until the shelf has three — ../(home)/loading.tsx says why its
- * `data-deck-page` stays either way.
- */
-export const FRONT_DOOR_MIN_PRODUCTS = 3;
-
-/**
  * The shelf for this request, read once however many callers ask. Every row
  * carries `link`, the outcome of webUrl(), and `rating`, the public
  * `{ average, count }` — getPublicProductsPage attaches it to real rows (and
@@ -50,8 +31,8 @@ export const FRONT_DOOR_MIN_PRODUCTS = 3;
  * own.
  *
  * THAT PARSE IS THE ONE DEFINITION OF A SHELF PRODUCT. It runs here, on the one
- * array everything else reads, so the deck, the category filter's chips,
- * FRONT_DOOR_MIN_PRODUCTS and generateMetadata cannot disagree: the filter
+ * array everything else reads, so the deck, the category filter's chips and
+ * generateMetadata cannot disagree: the filter
  * cannot offer a "Game" chip over an empty games deck. app/sitemap.ts applies
  * the same parse to its own rows.
  *
@@ -127,8 +108,8 @@ export const getShelfProductsAnyDevice = cache(async () => {
  * device cannot run. A COMPUTER never sees a product that only runs on a phone
  * (the founder's call, 2026-11-18; lib/device.ts says who is a computer) —
  * except the maker, on their own product. Dropped HERE, on the one array
- * everything reads, so the deck, the filter's chips, the front-door count and
- * the metadata all agree about what a computer is shown. The unfiltered list
+ * everything reads, so the deck, the filter's chips and the metadata all
+ * agree about what a computer is shown. The unfiltered list
  * is what tells ./ProductShelf.tsx that an empty deck on a computer is a shelf
  * of phone apps, not an empty shelf.
  */
@@ -137,11 +118,6 @@ export const getShelfProducts = cache(async () => {
   if ((await viewerKind()) !== "computer") return all;
   return all.filter((post) => post.isOwn || !phoneOnly(post.link, post.platforms));
 });
-
-/** The one decision about which arm / is on. Costs no read of its own. */
-export async function frontDoorServesShelf(): Promise<boolean> {
-  return (await getShelfProducts()).length >= FRONT_DOOR_MIN_PRODUCTS;
-}
 
 // The English source, not tServer: this is what a crawler and a link preview
 // should get regardless of which locale cookie happened to be on the request.
@@ -153,8 +129,8 @@ const SHELF_SHARE_DESCRIPTION =
   "Apps, games and tools made by founders in the Cofoundee community. Every card opens the real thing, one tap away.";
 
 /**
- * Metadata for either route the shelf renders on. `canonical` is "/" whenever
- * / is serving the shelf, so the two URLs do not compete for one page.
+ * Metadata for either route the shelf renders on. `canonical` is "/" on both,
+ * so the two URLs do not compete for one page.
  *
  * NEXT MERGES SHALLOWLY, and the root layout's blocks are the reason this is
  * longer than it looks. A page-level `openGraph` replaces the inherited one

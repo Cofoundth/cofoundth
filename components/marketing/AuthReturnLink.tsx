@@ -5,7 +5,7 @@
 // looking at.
 //
 // A product's page (/products/<id>), a public post (/p/<id>) and the deck
-// (/products) carry `?next=` back to
+// (/ and /products) carry `?next=` back to
 // themselves — the page with its deck context (`from`, `category`), the deck
 // with its category and position (`after`) — so signing in from the header of
 // a product page lands on that product, and from the deck on the same card.
@@ -55,13 +55,18 @@ function returnPathOf(pathname: string, search: URLSearchParams): string | null 
       category: search.getAll(PARAM),
     })}`;
   }
-  if (pathname === "/products") {
+  // The deck, at either of its addresses: back to the same category and card,
+  // at the shelf's own address. A bare / has nothing to come back to and gets
+  // no `next`, so signing in lands where a member's / does (proxy.ts):
+  // onboarding first for a founder who owes it.
+  if (pathname === "/products" || pathname === "/") {
     const query = new URLSearchParams();
     const category = parseCategoryParam(search.getAll(PARAM));
     const after = parseAfterParam(search.getAll(AFTER_PARAM));
     if (category) query.set(PARAM, category);
     if (after) query.set(AFTER_PARAM, after);
     const q = query.toString();
+    if (pathname === "/" && !q) return null;
     return q ? `/products?${q}` : "/products";
   }
   return null;

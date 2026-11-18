@@ -248,7 +248,6 @@ the landing pull-quote. Everything else inherits the pair.)
 |---|---|
 | App routes (`app/(app)/*`, onboarding) | **`text-d2` (33px), flat** |
 | Marketing pages | `text-d2 lg:text-d3` |
-| Landing hero | `text-d3 sm:text-d4 lg:text-d5` |
 
 Onfound's app title measures 28px; ours was 42px (`text-d3`) with 88px of
 padding above it, which is what made app pages read as marketing pages. 33 not
@@ -257,8 +256,9 @@ padding above it, which is what made app pages read as marketing pages. 33 not
 split the app was inconsistent without deciding to be: 24 titles at d3, 9 at
 d2, roughly along wide-page vs form-page lines. All 36 are now d2.
 
-`d1` is a section heading inside marketing prose. **`d4`/`d5` are the landing
-hero and error pages only** — never an app surface.
+`d1` is a section heading inside marketing prose. **`d4`/`d5` are error pages
+only** (the landing hero they were made for was retired 2026-11-18) — never an
+app surface.
 
 **2. UI register — off-ladder on purpose.** Section headings inside the app are
 `text-lg font-bold tracking-normal` (18px/700/normal). This is OUR size for
@@ -493,7 +493,7 @@ rule. Which of the two:
 | Single column — forms, editors, settings, onboarding, propose | `max-w-[640px]` |
 | Grid or main+aside — directories, feeds, profile and org detail | `max-w-[1120px]`, with the intro block `max-w-[640px]` inside it |
 | Reading/article, chat | exempt, per the two rules above |
-| The product deck (`/products`, and `/` once the shelf has 3 products — `FRONT_DOOR_MIN_PRODUCTS`) | exempt: one screen tall, up to `max-w-[1440px]`, the card sized by the viewport (founder's call, 2026-11-11) |
+| The product deck (`/`, the front door, and `/products`) | exempt: one screen tall, up to `max-w-[1440px]`, the card sized by the viewport (founder's call, 2026-11-11) |
 
 640 is not arbitrary for forms: it puts a full-width field at 560px and a
 two-column row at 272px each, and the insight editor's body textarea lands at
@@ -636,6 +636,8 @@ Products are added quietly on /products/new and are never announced in the commu
 - **A product that only runs on a phone is never shown to a computer.** That means an app-store link, or a maker who ticked only iOS/Android. It is off the deck, its page 404s, its name stays out of page titles, other members' profiles drop it, and notification and `/rewards` rows about it are unlinked with "Opens on a phone". Its maker and admins still see it; phones, tablets and link-preview bots always do. `lib/device.ts` reads who is a computer from the request; `components/TouchHint.tsx` corrects a tablet that asks for the desktop site (an iPad, Android's desktop mode) with a cookie and one reload. A Mac App Store link (`mt=12`) or a declared web/Windows/Mac platform is never phone-only.
 - **The deck filter has two shelves this phase: Games and Apps** (`app/(marketing)/products/categories.ts`). Every product that is not a game is an app; products still declare their finer category.
 - **Products carry 4 to 8 screenshots** (the minimum in the app, the maximum also a database check, migration 0089). On a computer the deck card shows them four at a time as a 2×2 grid, each picture whole on a cream mat and never cropped; phones and tablets keep one at a time.
+
+**Founder decision (2026-11-18): there is no pitch landing.** `/` is the product deck for every logged-out visitor, whatever is on the shelf, and `/products` canonicalises to it. The pitch page and its sections were deleted, not hidden; do not bring them back without the founder.
 
 **Founder-approved exception (2026-11-17): the monthly draw.** The one deliberate piece of gamification: a streak with a small prize (one lottery ticket a month). A member who comments on 3 different PRODUCTS a day (other members' products, still available, each comment 20+ characters; community posts never count, the founder's call) for 5 days in a row INSIDE the month, by Bangkok time, is in that month's draw. Everyone starts again from zero on the 1st (the founder's call, 2026-11-18): a day in one month never counts toward the next, so the last day a fresh streak can still make a month is its 5th-from-last, and a streak that got someone into one month's draw never buys the next month's after a single extra day. The bar stays at 3 even while the shelf has fewer live products than that (it had 2 when this was decided), so nobody qualifies until it grows. The rules live in ONE place, `lib/rewards.ts` (the member's page and the admin draw both run it). Eligibility is recomputed from the comments that exist, never stored, so a deleted or removed comment stops counting. **The draw is a thank-you, never the reason to come (the founder's call, 2026-11-18): `/rewards` is NOT in the sidebar or the phone menu — its one door is the row on the member's own `/profile` hub — and its copy leads with trying what members built, the prize second.** Members follow their progress at `/rewards` — a status (in / can still make it, with the next step and the last day to start / too late this month), every comment they made, counted or not and why, and after the 1st last month's result (waiting for the spin / not them / not in it; a win has its own card) — and it says plainly when the shelf has fewer products than a day needs, instead of a deadline nobody can meet. Their own `/profile` hub also carries one row, "Monthly draw · 2 of 5 days" (or "You're in", or "Team account"), linking to `/rewards` — owner-only by construction, since that hub is never anyone else's; never on the public `/profile/[id]`, where a streak others can see would be a badge (the founder's call, 2026-11-18). Admins see everyone taking part and where they stand on `/admin/rewards`; once a month is over, an admin spins a wheel of the qualifying names at `/admin/rewards`. Qualifying puts a name ON the wheel; it does not win a ticket — one spin, one winner. Spin picks the winner on the server first (a cryptographic random index, saved once in `monthly_draws` with the pool it drew from, 0087/0088) and the wheel then animates to land on that name, so the browser decides nothing, it can be screen-recorded, and a month can't be re-spun. The winner is announced by the team, with consent. Keep the prize small, and add no points, badges, leaderboards or streak notifications without the founder saying so.
 

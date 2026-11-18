@@ -1,4 +1,4 @@
-// The maker shelf, rendered at /products and — once it has enough on it — at /.
+// The maker shelf, rendered at / (the front door) and at /products.
 //
 // ── WHAT THIS SURFACE IS ──────────────────────────────────────────────────
 // A level BELOW "startup": people here are making an app, a game, a tool, and
@@ -289,11 +289,9 @@ export async function ProductShelf({
     tServer(
       "Built something? Add it with a name, a link and a few screenshots, and it lands here.",
     ),
-    // A SEPARATE empty body for an anonymous visitor, because the shelf holds
-    // zero real products today — so in production the empty state IS what a
-    // logged-out visitor gets at /products (/ serves the pitch below
-    // FRONT_DOOR_MIN_PRODUCTS, so it cannot land here), and the member copy
-    // above tells them to use a form they cannot reach yet.
+    // A SEPARATE empty body for an anonymous visitor: an empty shelf is what a
+    // logged-out visitor gets at / and /products, and the member copy above
+    // tells them to use a form they cannot reach yet.
     tServer(
       "Nobody has put anything on the shelf yet. Join the community and be the first — it is free.",
     ),
@@ -663,8 +661,7 @@ export async function ProductShelf({
             The body is audience-specific, decided HERE because this is the only
             layer that knows who is reading. The founder copy tells you to add
             your product on /products/new; nobody else can, and with an empty
-            shelf this IS public /products. (Not /: that serves the pitch until
-            the shelf reaches FRONT_DOOR_MIN_PRODUCTS.) */}
+            shelf this IS the public front door, / as well as /products. */}
         <EmptyState
           icon={PackageOpen}
           title={phonesTitle}

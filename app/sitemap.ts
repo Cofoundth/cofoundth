@@ -2,7 +2,6 @@ import type { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { publicProductAuthors } from "@/lib/posts";
 import { productPath } from "@/lib/post-types";
-import { FRONT_DOOR_MIN_PRODUCTS } from "@/app/(marketing)/products/shelf-data";
 import { webUrl } from "@/app/(marketing)/products/product-view";
 
 const SITE_URL =
@@ -29,8 +28,10 @@ export const revalidate = 3600; // refresh sitemap hourly
 // them call requireUser/getUser/redirect and none set a robots override.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
+    // "" IS the maker shelf. Not "/products": it is the same shelf and
+    // canonicalises to /, and a sitemap must not submit a URL that says it is
+    // not the real one.
     "",
-    "/products", // the public maker shelf; dropped below once / is serving it
     "/insights",
     "/about",
     "/contact",
@@ -43,9 +44,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: new Date(),
-    changeFrequency:
-      path === "" || path === "/products" ? "daily" : "weekly",
-    priority: path === "" ? 1 : path === "/products" ? 0.9 : 0.7,
+    changeFrequency: path === "" ? "daily" : "weekly",
+    priority: path === "" ? 1 : 0.7,
   }));
 
   // Published insights (best-effort — sitemap should never crash the build)
@@ -106,9 +106,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   //                             entry, so it is not a sitemap entry either.
   //
   // And in application code, webUrl(): the shelf's own definition of a product
-  // (getShelfProducts), so a row with an unusable link cannot count toward
-  // FRONT_DOOR_MIN_PRODUCTS below and flip /products out of this file while /
-  // is still short of a deck.
+  // (getShelfProducts), so a row with an unusable link, which is on no shelf,
+  // is in no sitemap either.
   //
   // Deliberately NOT getPublicProductsPage(): that returns a shelf PAGE
   // (limit, newest-first, shaped with author/like/comment joins). A sitemap
@@ -156,18 +155,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // above: this is the safe direction.
   }
 
-  // Once / is serving the shelf, /products canonicalises to / and listing it
-  // would submit a URL that says it is not the real one. Counts real rows only,
-  // never fixtures. A failed read leaves productRoutes empty, which keeps
-  // /products listed: the safe direction, since it is still a working page.
-  //
-  // This file is cached for an hour (`revalidate` above) and / is per-request,
-  // so the sitemap can trail the page by up to that long when the third product
-  // arrives. Harmless: the canonical tag is what is live.
-  const frontDoorIsShelf = productRoutes.length >= FRONT_DOOR_MIN_PRODUCTS;
-  const listedStaticRoutes = frontDoorIsShelf
-    ? staticRoutes.filter((r) => r.url !== `${SITE_URL}/products`)
-    : staticRoutes;
-
-  return [...listedStaticRoutes, ...insightRoutes, ...productRoutes];
+  return [...staticRoutes, ...insightRoutes, ...productRoutes];
 }
