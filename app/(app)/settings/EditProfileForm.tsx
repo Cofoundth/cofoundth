@@ -13,6 +13,7 @@ import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { Button, SectionHeading, ToggleChip } from "@/components/ui";
+import { SETTINGS_HEADING, SETTINGS_SECTION } from "./settings-layout";
 
 type SaveResult = { error?: string; ok?: boolean } | null;
 
@@ -725,11 +726,12 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-4">
-      {/* className="" keeps the primitive's default mb-5 OFF: the wrapper
-          already spaces its children with space-y-4. */}
-      <SectionHeading title={title} divider className="" />
-      {children}
+    // A row from `lg`: title left, fields right (./settings-layout.ts).
+    <section className={`space-y-4 lg:space-y-0 ${SETTINGS_SECTION}`}>
+      {/* SETTINGS_HEADING and no mb-*: the primitive's default mb-5 stays OFF,
+          because the wrapper spaces its children with space-y-4. */}
+      <SectionHeading title={title} divider className={SETTINGS_HEADING} />
+      <div className="min-w-0 space-y-4">{children}</div>
     </section>
   );
 }

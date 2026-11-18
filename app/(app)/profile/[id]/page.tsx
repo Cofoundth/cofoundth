@@ -510,8 +510,11 @@ export default async function ProfileDetailPage({
                 {t("What I'm building", locale)}
               </h2>
               {profile.pitch && (
+                // A pull-quote at card-title size at every width (2026-11-18).
+                // It was text-d1 (26px) from sm: a pitch of 300 Thai characters
+                // became a six-line wall louder than the page's own headings.
                 <div className="border-l-2 border-navy pl-5">
-                  <p className="font-serif text-xl sm:text-d1 text-navy leading-relaxed">
+                  <p className="font-serif text-xl text-navy leading-relaxed">
                     {profile.pitch}
                   </p>
                 </div>
@@ -850,7 +853,8 @@ export default async function ProfileDetailPage({
           )}
 
           {isOwnProfile && (
-            <Card className="text-center">
+            // Left-aligned, like every other card on the page.
+            <Card>
               <p className="text-sm text-ink mb-3">
                 {t(
                   profile.onboarded
