@@ -3,8 +3,7 @@
 // above that, app/(marketing)/loading.tsx, the landing hero.
 //
 // It mirrors the product page (../ProductDetail.tsx, "THE FORMAT"): the back
-// link, then the product card — the banner (16:9, 21:9 from `lg`), the chip,
-// the title, the maker line and the full-width "Try it" — and the About card
+// link, the product card with its title, maker and "Try it" button, then About
 // above the Screenshots card (four cells, the fewest a product has: two a row
 // on a phone, three from `sm`). The container is the page's own: Section's
 // 1120px with app rhythm and `pb-28`. Change them together.
@@ -23,29 +22,21 @@ export default function Loading() {
         {/* The back link: 28px tall, then its 20px margin. */}
         <div className={`mb-5 h-7 w-32 rounded-full ${BAR}`} />
         <div className="grid gap-4">
-          <Card padding="none" className="overflow-hidden">
-            <div className="aspect-video bg-line/50 lg:aspect-[21/9]" />
-            <div className="p-6 lg:p-8">
-              {/* The chip: 24px. */}
-              <div className="mb-3 h-6 w-14 rounded-full bg-line/70" />
-              {/* text-d2 is 33px at a 1.3 line: a 43px title line. */}
-              <div className="mb-2 h-[43px] w-2/3 bg-line/70" />
-              {/* The maker line: the 36px `sm` avatar and its name. */}
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-line/70" />
-                <div className={`h-4 w-48 ${BAR}`} />
-              </div>
-              {/* The rating / "Runs on" row: one 20px text-sm line. */}
-              <div className={`mt-3 h-5 w-56 ${BAR}`} />
-              {/* "Try it": the lg button, 52px, the card's full width; then
-                  the host under it, one 20px line. */}
-              <div className="mt-6 h-[52px] w-full rounded-full bg-line/70" />
-              <div className={`mx-auto mt-2 h-5 w-32 ${BAR}`} />
-              {/* The like / Share / Report row, under its hairline. */}
-              <div className="mt-6 flex items-center justify-between border-t border-line pt-5">
-                <div className={`h-6 w-24 ${BAR}`} />
-                <div className={`h-6 w-16 ${BAR}`} />
-              </div>
+          <Card padding="responsive">
+            <div className="mb-3 h-6 w-14 rounded-full bg-line/70" />
+            {/* text-d2 is 33px at a 1.3 line: a 43px title line. */}
+            <div className="mb-2 h-[43px] w-2/3 bg-line/70" />
+            {/* The maker line: the 36px avatar and its name. */}
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-line/70" />
+              <div className={`h-4 w-48 ${BAR}`} />
+            </div>
+            <div className={`mt-3 h-5 w-56 max-w-full ${BAR}`} />
+            <div className="mt-6 h-[52px] w-full rounded-full bg-line/70" />
+            <div className={`mx-auto mt-2 h-5 w-32 ${BAR}`} />
+            <div className="mt-6 flex items-center justify-between border-t border-line pt-5">
+              <div className={`h-6 w-24 ${BAR}`} />
+              <div className={`h-6 w-16 ${BAR}`} />
             </div>
           </Card>
           <Card padding="responsive">

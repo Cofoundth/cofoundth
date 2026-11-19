@@ -17,6 +17,7 @@ type Props = {
     category?: string | string[];
     after?: string | string[];
     product?: string | string[];
+    view?: string | string[];
   }>;
 };
 

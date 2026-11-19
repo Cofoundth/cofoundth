@@ -28,7 +28,7 @@ export type MemberDrawComment = DrawComment & {
   postKind: string;
   postTitle: string | null;
   postSnippet: string;
-  /** A product that only runs on a phone, whose page a computer cannot open
+  /** A product that only runs on a phone, so its link can be labeled
    *  (app/(marketing)/products/product-view.ts isPhoneOnly). Display only:
    *  the draw counts the comment the same on every device. */
   postPhoneOnly: boolean;

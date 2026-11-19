@@ -1,10 +1,8 @@
 // /products/mine — My products. A maker's own products in one place, each with
 // its public rating and the latest comments on it, the way to edit or delete
 // each one (./ProductManage.tsx), and the way to add another.
-// The deck's top-right corner links here for a founder who has added a product
-// (../../../(marketing)/products/ProductShelf.tsx, supplyCta); a founder who
-// has not gets "Add yours" there instead, so an empty list is rare — the empty
-// state below is for a typed URL.
+// The Products submenu links here for founders. The shelf also offers
+// "Add yours" to founders who haven't added a product yet.
 //
 // ── WHAT A MAKER SEES OF THEIR RATINGS ────────────────────────────────────
 // The average and the count: the same two numbers every reader sees, nothing

@@ -9,26 +9,10 @@
 // one only once it has LOADED and keeps the old one until then, so the box
 // never flashes empty. Dots say which image is showing.
 //
-//   a hovering pointer     `(hover: hover) and (pointer: fine)`. < and > appear
-//                          while the pointer is over the images. Real buttons,
-//                          in the tab order, shown on keyboard focus; on one,
-//                          ← and → change the image and stop there (they never
-//                          reach the deck's own ← skip / → open). No autoplay.
-//   anything else          No arrows. The images advance every AUTOPLAY_MS,
-//                          looping, and stop while a finger is down (including
-//                          one scrolling the page from it, until it lifts),
-//                          while the tab is hidden, while the images are off
-//                          screen, and always under prefers-reduced-motion.
-//   prefers-reduced-motion No autoplay on anything, so the arrows are SHOWN
-//                          on anything, always visible: on a touch screen they
-//                          are then the only way past the first image, and
-//                          without them every image after the first could
-//                          not be reached.
-//
-// "While a finger is down" means down anywhere in the gallery's SCOPE: the
-// nearest ancestor carrying `data-gallery-scope`, or the image box itself when
-// there is none. On the deck the scope is the whole card, because a press
-// anywhere on it may be the start of a swipe.
+// On a narrow screen or with a non-hovering pointer, tap the pictures to
+// advance. On larger screens with a fine, hovering pointer, the arrows
+// appear on hover or keyboard focus. On either control, Left and Right move
+// through screenshots without triggering the deck's own keyboard actions.
 //
 // TWO THINGS HERE ARE FOR THE DECK AND INERT ELSEWHERE, written down so nobody
 // strips them as dead:
@@ -41,7 +25,7 @@
 //     `group-hover/gallery` reveal does the work.
 //
 // `inactive` is the deck's card BEHIND the top one: first image only, no
-// controls, no clock. A gallery only ever goes from inactive to active (the
+// controls. A gallery only ever goes from inactive to active (the
 // deck's cards are keyed by product and the top one leaves the slice when it
 // flies out), so an active gallery always starts at its first image.
 //
@@ -49,16 +33,13 @@
 // which moves through the screenshots four at a time, each four as a grid —
 // 2 x 2 when full; a last group of 3 is one wide across the top and two
 // below, of 2 one above the other, of 1 the one filling the box. Everything
-// above then applies to GROUPS: the arrows, dots and clock move a group at a
-// time, a group shows once all of its pictures have loaded or failed, and a
-// group whose every picture failed is skipped. With the default 1 a group is
-// one image and nothing changes. On a touch screen the clock waits three
-// times as long, since there are four pictures to look at.
+// above then applies to groups: controls advance a group at a time, a group
+// shows once all of its pictures have loaded or failed, and a group whose
+// every picture failed is skipped. With the default 1 a group is one image.
 
 import Image from "next/image";
 import {
   useEffect,
-  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -67,20 +48,12 @@ import {
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { cn } from "@/components/ui";
 
-/** A pointer that can hover: it gets the arrows, and never the autoplay. */
-const HOVER_QUERY = "(hover: hover) and (pointer: fine)";
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-/** The owner's number: on a phone the pictures change once a second. */
-const AUTOPLAY_MS = 1000;
-
-/** The < and >. Hidden outright on a pointer that cannot hover; otherwise
- *  invisible until the pointer is over the pictures, or one has focus. Under
- *  reduced motion, shown and visible on every pointer (see the header). */
+/** The < and > replace the full-image tap target on larger, hoverable screens. */
 const ARROW =
-  "absolute top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-white text-navy shadow-lg opacity-0 transition-opacity duration-150 hover:bg-cream motion-reduce:transition-none focus-visible:opacity-100 group-hover/gallery:opacity-100 group-has-[[data-gallery-zone]:hover]/card:opacity-100 group-has-[:focus-visible]/gallery:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:grid motion-reduce:grid motion-reduce:opacity-100";
+  "absolute top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-white text-navy shadow-lg opacity-0 transition-opacity duration-150 hover:bg-cream motion-reduce:transition-none focus-visible:opacity-100 group-hover/gallery:opacity-100 group-has-[[data-gallery-zone]:hover]/card:opacity-100 group-has-[:focus-visible]/gallery:opacity-100 md:[@media(hover:hover)_and_(pointer:fine)]:grid";
 
 export type ProductGalleryLabels = {
-  /** The arrows, which have no visible text. */
+  /** Labels for the screenshot controls, which have no visible text. */
   previousImage: string;
   nextImage: string;
 };
@@ -131,8 +104,6 @@ export function ProductGallery({
     return out;
   }, [images, perView]);
   const several = groups.length > 1;
-  const clock = perView > 1 ? AUTOPLAY_MS * 3 : AUTOPLAY_MS;
-  const boxRef = useRef<HTMLDivElement>(null);
   /** The image asked for. The dots show this. */
   const [wanted, setWanted] = useState(0);
   /** The image painted: `wanted` once it has loaded, the one before until
@@ -188,7 +159,7 @@ export function ProductGallery({
     return wantedRef.current;
   }
 
-  // ← and → on an arrow move the IMAGE, and stop there. On the deck, left to
+  // ← and → on a gallery control move the image, and stop there. On the deck, left to
   // bubble they would reach its own ←/→ (skip, and try the product in a new
   // tab) from a control that only ever changes the picture. A modified key is not
   // ours: Alt+← is the browser's Back.
@@ -201,106 +172,6 @@ export function ProductGallery({
     event.stopPropagation();
     show(neighbour(event.key === "ArrowLeft" ? -1 : 1));
   }
-
-  // One autoplay step. An image that has not loaded yet is waited for (the
-  // next tick tries again) rather than shown as an empty box.
-  const autoplayStep = useEffectEvent(() => {
-    const next = neighbour(1);
-    if (loaded.current.has(next)) show(next);
-  });
-
-  useEffect(() => {
-    if (!active || groups.length < 2) return;
-    const box = boxRef.current;
-    if (!box) return;
-    const scope = box.closest<HTMLElement>("[data-gallery-scope]") ?? box;
-
-    const hover = window.matchMedia(HOVER_QUERY);
-    const reduced = window.matchMedia(REDUCED_MOTION_QUERY);
-    const listeners = new AbortController();
-    const options = { signal: listeners.signal };
-    /** Pointers down in the scope, by id, with their pointerType: a finger
-     *  resting, a swipe under way, or a finger scrolling the page. */
-    const held = new Map<number, string>();
-    /** Without touch events nothing would ever let a cancelled finger go. */
-    const touchEvents = "ontouchend" in window;
-    let onScreen = true;
-    let timer = 0;
-
-    // Every condition is re-read here, and every event that can change one
-    // calls it, so there is one place that decides whether the clock runs.
-    // Resuming always waits a whole AUTOPLAY_MS, so lifting a finger never
-    // changes the image under it at once.
-    const schedule = () => {
-      window.clearTimeout(timer);
-      timer = 0;
-      if (
-        hover.matches ||
-        reduced.matches ||
-        held.size > 0 ||
-        !onScreen ||
-        document.hidden
-      ) {
-        return;
-      }
-      timer = window.setTimeout(() => {
-        autoplayStep();
-        schedule();
-      }, clock);
-    };
-    const release = (e: PointerEvent) => {
-      if (held.delete(e.pointerId)) schedule();
-    };
-    // A finger that starts in the scope and then scrolls the page vertically
-    // gets pointercancel the moment the browser takes the pan, with the finger
-    // still on the glass, and no pointerup ever follows. So a cancelled TOUCH
-    // pointer stays held, and is let go by the touchend or touchcancel that
-    // leaves no finger on the screen. Touch events keep coming through a
-    // browser-run scroll; pointer events do not.
-    const cancel = (e: PointerEvent) => {
-      if (e.pointerType !== "touch" || !touchEvents) release(e);
-    };
-    const lift = (e: TouchEvent) => {
-      if (e.touches.length > 0) return;
-      let changed = false;
-      for (const [id, type] of held) {
-        if (type === "touch") changed = held.delete(id) || changed;
-      }
-      if (changed) schedule();
-    };
-
-    // Capture, so a press that lands on a link or a control inside the scope
-    // pauses it all the same, whatever those do with the event.
-    scope.addEventListener(
-      "pointerdown",
-      (e) => {
-        held.set(e.pointerId, e.pointerType);
-        schedule();
-      },
-      { ...options, capture: true },
-    );
-    // On the window: a finger can lift well outside the scope mid-swipe, or
-    // after scrolling it out from under the finger.
-    window.addEventListener("pointerup", release, options);
-    window.addEventListener("pointercancel", cancel, options);
-    window.addEventListener("touchend", lift, { ...options, passive: true });
-    window.addEventListener("touchcancel", lift, { ...options, passive: true });
-    document.addEventListener("visibilitychange", schedule, options);
-    hover.addEventListener("change", schedule, options);
-    reduced.addEventListener("change", schedule, options);
-    const io = new IntersectionObserver(([entry]) => {
-      onScreen = entry.isIntersecting;
-      schedule();
-    });
-    io.observe(box);
-    schedule();
-
-    return () => {
-      window.clearTimeout(timer);
-      listeners.abort();
-      io.disconnect();
-    };
-  }, [active, groups.length, clock]);
 
   const box = cn("absolute inset-0 overflow-hidden bg-cream", className);
 
@@ -326,7 +197,7 @@ export function ProductGallery({
   const visible = active ? shown : 0;
 
   return (
-    <div ref={boxRef} className={cn("group/gallery", box)}>
+    <div className={cn("group/gallery", box)}>
       {/* The picture on screen again, cropped to the box and blurred, under
           the letterboxed one. Same URL, so it costs no request. */}
       {backdrop && (
@@ -410,9 +281,7 @@ export function ProductGallery({
         ),
       )}
 
-      {/* Which image is showing. Decorative, as the images are. No z-index, so on the deck it
-          sits below the card's link and a press here still opens the
-          product. */}
+      {/* The dots show which screenshot is selected. */}
       {several && (
         <span
           aria-hidden="true"
@@ -430,11 +299,16 @@ export function ProductGallery({
         </span>
       )}
 
-      {/* The arrows, only on an active gallery, and only for a hovering
-          pointer or under reduced motion (ARROW). z-20, over the deck card's
-          link (z-10), and a click only ever changes the image. */}
       {active && several && (
         <>
+          {/* Taps advance while swipes still bubble to the deck's gesture handler. */}
+          <button
+            type="button"
+            aria-label={labels.nextImage}
+            onClick={() => show(neighbour(1))}
+            onKeyDown={onArrowKeyDown}
+            className="absolute inset-0 z-20 size-full cursor-pointer rounded-none focus-visible:inset-ring-2 focus-visible:inset-ring-white md:[@media(hover:hover)_and_(pointer:fine)]:hidden"
+          />
           <button
             type="button"
             data-deck-nodrag=""

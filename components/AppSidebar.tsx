@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
-import { phoneOnlyNotifTargets } from "@/lib/notification-phone-only";
 import { FEATURES } from "@/lib/features";
 import { tServer } from "@/lib/i18n-server";
 import { signOutAction } from "@/app/(auth)/actions";
@@ -18,14 +17,17 @@ import { OrgSwitcher } from "@/components/OrgSwitcher";
 import { getUserOrgs, getActiveOrgId } from "@/lib/active-org";
 import { SidebarNav } from "@/components/SidebarNav";
 import { SidebarToggle } from "@/components/SidebarState";
-import { LEGAL_LINKS, RAIL_ID, RAIL_TIP } from "@/lib/sidebar";
+import { LEGAL_LINKS, RAIL_ID, RAIL_TIP, type SidebarNavItem } from "@/lib/sidebar";
 import { LogOut } from "lucide-react";
 import {
   parseAccountRole,
   roleHome,
   landingFor,
   canRoleRead,
+  canPostProduct,
   isAppShellRoute,
+  LIKED_PRODUCTS_PATH,
+  MY_PRODUCTS_PATH,
 } from "@/lib/roles";
 
 // App chrome, Onfound-style: a left rail from 768px, a slim top bar below it.
@@ -154,12 +156,6 @@ export async function AppSidebar() {
         .in("id", actorIds)
     : { data: [] as { id: string }[] };
   const actorMap = new Map((actorRows ?? []).map((a) => [a.id as string, a]));
-  // A comment or a mention on a product a computer cannot open is shown
-  // unlinked there (lib/notification-phone-only.ts).
-  const phoneOnlyTargets = await phoneOnlyNotifTargets(supabase, notifRows ?? [], {
-    id: user.id,
-    isAdmin: () => isAdmin({ email: user.email, isAdminFlag: profile?.is_admin }),
-  });
   const notifItems: NotifItem[] = (notifRows ?? []).map((n) => {
     const actor = n.actor_id
       ? ((actorMap.get(n.actor_id as string) as
@@ -185,7 +181,6 @@ export async function AppSidebar() {
       readAt: (n.read_at as string | null) ?? null,
       createdAt: n.created_at as string,
       actor,
-      phoneOnly: phoneOnlyTargets.has(n.entity_id as string),
     };
   });
 
@@ -228,12 +223,19 @@ export async function AppSidebar() {
     (publishedInsights ?? 0) > 0
       ? [{ href: "/insights", label: await tServer("Insights") }]
       : [];
-  const navItems: {
-    href: string;
-    label: string;
-    badge?: number;
-    tag?: string;
-  }[] = role === "investor"
+  const productsItem: SidebarNavItem = {
+    href: "/products",
+    label: await tServer("Products"),
+    ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
+    submenu: [
+      { href: "/products", label: await tServer("All products") },
+      { href: LIKED_PRODUCTS_PATH, label: await tServer("Liked products") },
+      ...(canPostProduct(role)
+        ? [{ href: MY_PRODUCTS_PATH, label: await tServer("My products") }]
+        : []),
+    ],
+  };
+  const navItems: SidebarNavItem[] = role === "investor"
     ? [
         { href: "/funding", label: await tServer("Funding") },
         { href: "/community", label: await tServer("Community") },
@@ -265,27 +267,15 @@ export async function AppSidebar() {
         // transition to offer — so the shelf renders read-only for them, which
         // is the investor posture everywhere else too.
         //
-        // Next to Companies because both are "go and look at what else is
-        // here". Its "New" chip is the same launch marker as every rail's
-        // (lib/features.ts productsNew).
-        {
-          href: "/products",
-          label: await tServer("Products"),
-          ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
-        },
+        // Next to Companies for members exploring what founders have built.
+        productsItem,
         { href: "/orgs", label: await tServer("Companies") },
       ]
     : role === "explorer"
       ? [
           // Products LEADS: it is EXPLORER_HOME, so it is both the first thing
-          // they want and the place the gate returns them to. Its "New" chip
-          // is a launch marker with an end (lib/features.ts productsNew): on
-          // the page you land on every visit it is noise once it is not news.
-          {
-            href: "/products",
-            label: await tServer("Products"),
-            ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
-          },
+          // they want and the place the gate returns them to.
+          productsItem,
           { href: "/community", label: await tServer("Community") },
           // NOT the monthly draw (/rewards), for anyone (the founder's call,
           // 2026-11-18): a menu item beside Products and Community says the
@@ -298,21 +288,14 @@ export async function AppSidebar() {
             label: await tServer("Meetups"),
             ...(FEATURES.meetupsNew ? { tag: await tServer("New") } : {}),
           },
-          // Nothing below this line. An explorer may comment and may RSVP
-          // (lib/roles.ts), and both of those happen on the four surfaces
-          // above — there is no fifth place for them to go. In particular: no
-          // Connections badge, because they cannot receive an interest or a
-          // DM, which is why the two reads for it are skipped above.
+          // Explorers use these destinations to try products, comment, and
+          // RSVP. Connections is reserved for accounts that can receive
+          // interests and messages.
         ]
       : [
           // Products LEADS, where Dashboard used to be: there is no dashboard
           // any more (2026-11-12) and the deck is the page a founder lands on.
-          // Its "New" chip: see the explorer rail above.
-          {
-            href: "/products",
-            label: await tServer("Products"),
-            ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
-          },
+          productsItem,
           {
             href: "/meetups",
             label: await tServer("Meetups"),
@@ -356,7 +339,7 @@ export async function AppSidebar() {
   // independent of account_type (an admin on a gated role is a pre-existing
   // posture to settle in the route allowlist, not here).
   if (process.env.NODE_ENV !== "production") {
-    for (const item of navItems) {
+    for (const item of navItems.flatMap((item) => item.submenu ?? [item])) {
       if (isAppShellRoute(item.href) && !canRoleRead(role, item.href)) {
         console.error(
           `[AppSidebar] "${item.href}" is in the ${role} rail but canRoleRead ` +

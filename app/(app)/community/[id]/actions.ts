@@ -11,7 +11,7 @@ import {
   type ThreadComment,
 } from "@/lib/comment-thread";
 import { isRatingScore, productPath } from "@/lib/post-types";
-import { canRate } from "@/lib/roles";
+import { canRate, LIKED_PRODUCTS_PATH, MY_PRODUCTS_PATH } from "@/lib/roles";
 
 // --- Likes ----------------------------------------------------------
 
@@ -47,6 +47,7 @@ export async function toggleLikeAction(postId: string) {
   revalidatePath(`/community`);
   // A product's like lives on its own page.
   revalidatePath(productPath(postId));
+  revalidatePath(LIKED_PRODUCTS_PATH);
 }
 
 // --- Product ratings ------------------------------------------------
@@ -76,7 +77,8 @@ function revalidateProduct(postId: string) {
   revalidatePath("/");
   revalidatePath("/products");
   revalidatePath(productPath(postId));
-  revalidatePath("/products/mine");
+  revalidatePath(MY_PRODUCTS_PATH);
+  revalidatePath(LIKED_PRODUCTS_PATH);
 }
 
 export async function setProductRatingAction(

@@ -19,13 +19,24 @@
 // DOM, no network): nothing third-party is fetched and no HTML string is
 // injected. Navy on white with a quiet zone, so any phone camera reads it.
 
-import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import {
+  useContext,
+  useMemo,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { ExternalLink } from "lucide-react";
 import { encode } from "uqr";
 import { useT } from "@/lib/i18n-client";
-import { Dialog } from "@/components/ui";
+import { Button, Dialog } from "@/components/ui";
+import {
+  DeckProductTry,
+  useProductPrompts,
+  type DeckViewer,
+  type PromptProduct,
+} from "./DeckPrompts";
 import type { PhonePlatform } from "./product-view";
-import { announceTried } from "./product-tried";
 
 /** Every link out to a maker's site. ./product-view.ts says why each word. */
 const LINK_REL = "noopener noreferrer nofollow";
@@ -70,35 +81,87 @@ function isPlainClick(event: MouseEvent): boolean {
 }
 
 /**
- * The product page's "Try it" (./ProductDetail.tsx, a server component): the
- * same external link, plus the handoff for a phone app pressed on a computer.
- * Every other press is the link's own, so it still works before hydration.
+ * The product page's "Try it": an external link that works before hydration,
+ * with a phone handoff when needed and a review prompt on return.
  */
-export function TryItLink({
-  href,
-  host,
-  name,
-  phones,
-  productId,
-  describedBy,
-  className,
-  children,
-}: {
+type ExternalProductLinkProps = {
   href: string;
   host: string;
   name: string;
   phones: readonly PhonePlatform[];
-  /** Set: a tab that opens is a TRY (./product-tried.ts), so the deck's
-   *  prompts ask about it when the reader comes back to its modal. */
-  productId?: string;
   describedBy?: string;
   className?: string;
   children: ReactNode;
-}) {
+};
+
+type TryItLinkProps = Omit<ExternalProductLinkProps, "name"> & {
+  product: PromptProduct;
+  viewer: DeckViewer;
+  returnPath: string;
+};
+
+export function TryItLink({ product, viewer, returnPath, ...link }: TryItLinkProps) {
+  const triedFromDetails = useContext(DeckProductTry);
+  if (!triedFromDetails) {
+    return (
+      <StandaloneTryItLink
+        {...link}
+        product={product}
+        viewer={viewer}
+        returnPath={returnPath}
+      />
+    );
+  }
+  return (
+    <ExternalProductLink
+      {...link}
+      name={product.name}
+      onTry={() => triedFromDetails(product)}
+      onReview={
+        !viewer.signedIn || product.reviewable
+          ? () => triedFromDetails(product, { requestReview: true })
+          : undefined
+      }
+    />
+  );
+}
+
+function StandaloneTryItLink({
+  product,
+  viewer,
+  returnPath,
+  ...link
+}: TryItLinkProps) {
+  const prompts = useProductPrompts({ products: [product], viewer, returnPath });
+  return (
+    <>
+      <ExternalProductLink
+        {...link}
+        name={product.name}
+        onTry={() => prompts.tried(product)}
+        onReview={
+          !viewer.signedIn || product.reviewable
+            ? () => prompts.tried(product, { requestReview: true })
+            : undefined
+        }
+      />
+      {prompts.dialog}
+    </>
+  );
+}
+
+function ExternalProductLink({
+  href,
+  host,
+  name,
+  phones,
+  describedBy,
+  className,
+  children,
+  onTry,
+  onReview,
+}: ExternalProductLinkProps & { onTry: () => void; onReview?: () => void }) {
   const [open, setOpen] = useState(false);
-  const tried = () => {
-    if (productId) announceTried(productId);
-  };
   return (
     <>
       <a
@@ -111,13 +174,12 @@ export function TryItLink({
           if (isPlainClick(event) && needsPhone(phones)) {
             event.preventDefault();
             setOpen(true);
-            return;
+          } else {
+            onTry();
           }
-          tried();
         }}
-        // A middle click opens a tab too, and fires no click.
         onAuxClick={(event) => {
-          if (event.button === 1) tried();
+          if (event.button === 1) onTry();
         }}
       >
         {children}
@@ -129,7 +191,8 @@ export function TryItLink({
           host={host}
           phones={phones}
           onClose={() => setOpen(false)}
-          onOpenHere={tried}
+          onOpenHere={onTry}
+          onReview={onReview}
         />
       )}
     </>
@@ -172,6 +235,7 @@ export function PhoneHandoffDialog({
   phones,
   onClose,
   onOpenHere,
+  onReview,
 }: {
   name: string;
   /** Already through webUrl() on the server. */
@@ -181,6 +245,8 @@ export function PhoneHandoffDialog({
   onClose: () => void;
   /** The reader chose the link on this device after all. */
   onOpenHere?: () => void;
+  /** The reader confirms they tried it on another device. */
+  onReview?: () => void;
 }) {
   const tr = useT();
   const platforms =
@@ -189,6 +255,10 @@ export function PhoneHandoffDialog({
           .replace("{a}", PHONE_NAME[phones[0]])
           .replace("{b}", PHONE_NAME[phones[1]])
       : PHONE_NAME[phones[0]];
+  function openHere() {
+    onOpenHere?.();
+    onClose();
+  }
 
   return (
     <Dialog
@@ -213,13 +283,25 @@ export function PhoneHandoffDialog({
           label={tr("QR code to open {name}").replace("{name}", name)}
         />
       </div>
+      {onReview && (
+        <Button
+          fullWidth
+          className="mt-5"
+          onClick={() => {
+            onClose();
+            onReview();
+          }}
+        >
+          {tr("I've tried it")}
+        </Button>
+      )}
       <a
         href={href}
         target="_blank"
         rel={LINK_REL}
-        onClick={() => {
-          onOpenHere?.();
-          onClose();
+        onClick={openHere}
+        onAuxClick={(event) => {
+          if (event.button === 1) openHere();
         }}
         className="mt-5 inline-flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-navy"
       >

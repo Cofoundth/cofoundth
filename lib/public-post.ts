@@ -42,6 +42,7 @@ import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isPubliclyAttributable } from "@/lib/public-author";
 import { devTestAuthorIds } from "@/lib/test-accounts";
+import { PRODUCT_STORE_COLUMNS, queryWithProductStoreColumns } from "@/lib/product-store-data";
 
 // Named columns, never `select("*")`, on a table whose rows are about to be
 // handed to anonymous traffic. `author_id` is read to resolve the author and
@@ -64,6 +65,8 @@ export type PublicPostRow = {
   content: string;
   kind: string | null;
   link_url: string | null;
+  ios_store_url?: string | null;
+  android_store_url?: string | null;
   image_url: string | null;
   image_urls: string[] | null;
   tags: string[] | null;
@@ -86,12 +89,13 @@ export const getPublicPost = cache(
   ): Promise<{ post: PublicPostRow; author: PublicAuthor } | null> => {
     const admin = createAdminClient();
 
-    const { data: post, error } = await admin
-      .from("forum_posts")
-      .select(PUBLIC_POST_COLUMNS)
-      .eq("id", id)
-      .eq("hidden", false)
-      .maybeSingle();
+    const { data: post, error } = await queryWithProductStoreColumns((includeStores) => {
+      const table = admin.from("forum_posts");
+      const query = includeStores
+        ? table.select(`${PUBLIC_POST_COLUMNS}, ${PRODUCT_STORE_COLUMNS}`)
+        : table.select(PUBLIC_POST_COLUMNS);
+      return query.eq("id", id).eq("hidden", false).maybeSingle();
+    });
     if (error || !post) return null;
 
     const { data: author, error: authorError } = await admin

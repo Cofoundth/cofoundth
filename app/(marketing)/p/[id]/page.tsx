@@ -65,7 +65,6 @@ import {
   PRODUCT_KIND,
 } from "@/lib/public-post";
 import { webUrl } from "@/lib/web-url";
-import { viewerKind } from "@/lib/device";
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { PublicPostActions } from "@/components/PublicPostActions";
@@ -79,7 +78,6 @@ import { buttonClasses, Card, Eyebrow, Section } from "@/components/ui";
 import { deckContextQuery } from "../../products/deck-position";
 import { findFixture } from "../../products/fixtures";
 import { productMetadata } from "../../products/product-metadata";
-import { isPhoneOnly } from "../../products/product-view";
 
 export const dynamic = "force-dynamic";
 
@@ -113,16 +111,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // A product redirects to its own page — in the browser, because this page
   // streams (see the header) — so a link preview of an OLD product link reads
   // THIS response. It gets the product's own card, canonical and og:url on
-  // the new address (../../products/product-metadata.ts). Except on a
-  // computer, for a product that only runs on a phone: its page 404s there
-  // (../../products/[id]/page.tsx), so the tab does not get its name either.
-  // Link-preview bots are not computers, so a shared link keeps its card.
-  if (post.kind === PRODUCT_KIND) {
-    if (isPhoneOnly(post.link_url, post.platforms) && (await viewerKind()) === "computer") {
-      return { title: await tServer("Product") };
-    }
-    return productMetadata(post);
-  }
+  // the new address (../../products/product-metadata.ts).
+  if (post.kind === PRODUCT_KIND) return productMetadata(post);
 
   const title = post.title ?? post.content.slice(0, 70);
   const description = post.content.slice(0, 160);

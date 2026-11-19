@@ -76,10 +76,8 @@
 // A product the filter excludes is NOT RENDERED rather than hidden with a
 // class. A hidden card is still in the accessibility tree and still counts
 // toward the deck's "{n} of {total}" unless something remembers to subtract
-// it; an absent one cannot disagree with the total. `bucket` came from
-// productBucketOf() on the server, the same function that decides which
-// category chips the filter offers, so a chip is there exactly when its deck
-// has a card.
+// it; an absent one cannot disagree with the total. The server assigns each
+// card its `bucket` with productBucketOf().
 //
 // Each category is its own deck: the stack below is KEYED on it, so changing
 // the category is a remount. That is what restarts at the first match (the
@@ -123,34 +121,25 @@
 //                          clicks on the deck do nothing.
 //
 // ── WHAT THE CARD SHOWS ────────────────────────────────────────────────────
-// ONLY the images, the description, the rating and the comment count: CLAUDE.md,
-// Language Rules, "Founder decision (2026-11-10)". No visible product name, no
-// maker. The name is still in the card link's accessible name ("More about
-// {name}") and in the live region, so a screen reader still hears what it is.
+// Images, description, rating, comment count, and a Mobile only badge where
+// applicable. The product name is in the card link's accessible name and in
+// the live region.
 //
 // ── THE CARD'S TWO LINKS ───────────────────────────────────────────────────
 // The stretched-link pattern, because the card holds a second control (the
-// footer row), the ↑ and the gallery's arrows, and neither a link nor a
+// footer row), the ↑ and the gallery controls, and neither a link nor a
 // button can nest in <a>. ONE absolutely-positioned <a> to the product's page
-// covers the card at `z-10`; the footer link, the ↑ and the arrows sit at
-// `z-20`. They are SIBLINGS in
-// the DOM, not ancestor and descendant, so nothing needs to cancel an event: a
-// press lands on one or the other, decided by paint order. That z-20 is not
-// decoration. The stretched <a> is the topmost element over the rest of the
-// card (`document.elementsFromPoint()` returns it first at the images and the
-// description), so a control added without z-20 paints underneath it, and a
-// reader aiming for it opens the product's page instead.
+// covers the card at `z-10`. The footer link, the ↑ and desktop arrows sit at
+// `z-20`. On phones the gallery gets a tap target above the stretched link
+// and below the ↑. Keeping these controls outside the link lets each handle
+// its own click, and the card still handles swipes.
 //
 // The stretched <a> is the FIRST thing in the card on purpose: tab order is DOM
 // order, and the primary destination should not be the last stop.
 //
 // ── THE GALLERY ────────────────────────────────────────────────────────────
-// components/ProductGallery.tsx, the same component the product's page uses.
-// The top card's gallery is active (every image; the arrows on a hovering
-// pointer, the one-second autoplay on anything else); the cards behind paint
-// their first image only, and the one next in line fetches the rest while it
-// waits. The card is the gallery's `data-gallery-scope`, so a finger anywhere
-// on it — the start of a swipe, or of a scroll — pauses the autoplay.
+// The top card's screenshots advance on tap or with the desktop arrows. Cards
+// behind paint their first image only, and the next card preloads the rest.
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -175,14 +164,17 @@ import {
   Loader2,
   MessageCircle,
   SearchX,
+  Smartphone,
   Star,
   X,
 } from "lucide-react";
 import { ProductGallery } from "@/components/ProductGallery";
+import { ProductGridCard } from "@/components/ProductGridCard";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import {
   Button,
   Card,
+  CardChip,
   EmptyState,
   LinkButton,
   buttonClasses,
@@ -203,8 +195,10 @@ import {
   type DeckRoute,
 } from "./deck-position";
 import {
-  useDeckPrompts,
+  DeckProductTry,
+  useProductPrompts,
   type DeckViewer,
+  type ProductTry,
   type PromptProduct,
 } from "./DeckPrompts";
 import { useProductFilter } from "./filter-context";
@@ -213,6 +207,7 @@ import {
   markOpenedFromDeck,
 } from "./product-modal-state";
 import { PhoneHandoffDialog, needsPhone } from "./PhoneHandoff";
+import { useProductView } from "./ProductShelfView";
 import type { PhonePlatform } from "./product-view";
 
 export type DeckProduct = PromptProduct & {
@@ -230,6 +225,7 @@ export type DeckProduct = PromptProduct & {
    *  pressing "Try" on a phone app gets ./PhoneHandoff.tsx's code to scan
    *  instead of a store page (the owner's call, 2026-11-12). */
   phones: readonly PhonePlatform[];
+  mobileOnly: boolean;
   /** "Try {name} on {host}": the accessible name of the Try button. Starts
    *  with the button's visible word, because a voice-control user says what
    *  they see (WCAG 2.5.3). */
@@ -265,10 +261,7 @@ type ProductDeckLabels = {
   openBlocked: string;
   noneHereTitle: string;
   noneHereBody: string;
-  /** The same state when the category's products all run on phones and this
-   *  is a computer (`phoneOnlyBuckets`): not empty, just not here. */
-  phonesHereTitle: string;
-  phonesHereBody: string;
+  mobileOnly: string;
   /** Sets the filter back to "All". */
   seeEverything: string;
   /** The gallery's < and >, which have no visible text. */
@@ -297,22 +290,19 @@ const SPRING_MS = 200;
 const LINK_REL = "noopener noreferrer nofollow";
 
 /**
- * THE CARD IS AS BIG AS THE SCREEN ALLOWS (the owner's call, 2026-11-11): the
- * page is one viewport tall (./ProductShelf.tsx) and the stage takes whatever
+ * The shelf sizes itself to the viewport and the stage takes whatever
  * the filter and the buttons leave, so the card's size comes from the screen,
  * never from its content, and a card change never moves the page. Its pictures
  * are letterboxed over a blurred copy of themselves (ProductGallery `backdrop`),
  * because a box this size has no fixed shape to crop to.
  *
- * Its words keep a FIXED share: a 160px band under the pictures on a phone
- * (20px padding top and bottom, three lines of description, the footer row
- * pinned to the bottom), or a side panel on a wide screen (`deck-wide:`,
+ * Its words keep a fixed share under the pictures (three lines of description
+ * and a rating footer), or a side panel on a wide screen (`deck-wide:`,
  * app/globals.css).
  *
  * THE WIDE PANEL IS A PRODUCT SPOTLIGHT, not a review snippet (the owner's
  * call, 2026-11-12: "★ 4.0 (1) 💬 0" under a line of body text read like a
- * cheap game ad). Still only the four things the card may show (CLAUDE.md,
- * "Founder decision (2026-11-10)") — what changed is the voice:
+ * cheap game ad). On wider screens:
  *   - the description is the card's HEADLINE: the heading face, semibold, at a
  *     size picked from its length (blurbType below), so a short tagline is set
  *     big and a long one still fits;
@@ -323,7 +313,7 @@ const LINK_REL = "noopener noreferrer nofollow";
  * Thai is ragged on both edges. ./loading.tsx draws the same two shapes.
  */
 const CARD_BODY =
-  "flex h-40 shrink-0 flex-col p-5 deck-wide:h-auto deck-wide:w-[clamp(17rem,34%,26rem)] deck-wide:justify-center deck-wide:p-8";
+  "flex h-40 shrink-0 flex-col p-5 max-sm:h-36 max-sm:p-4 deck-wide:h-auto deck-wide:w-[clamp(17rem,34%,26rem)] deck-wide:justify-center deck-wide:p-8";
 
 /**
  * The description's type, by length, so the headline fills the wide panel
@@ -441,8 +431,8 @@ export function ProductDeck({
   resumeAfter,
   resumeAt,
   viewer,
+  productModal,
   computer,
-  phoneOnlyBuckets,
 }: {
   /** Never empty: the shelf renders its own empty state instead. */
   products: readonly DeckProduct[];
@@ -467,18 +457,21 @@ export function ProductDeck({
   resumeAt: string | null;
   /** Who is reading, for the prompts: see ./DeckPrompts.tsx. */
   viewer: DeckViewer;
+  /** The product details rendered by the shelf at `?product=`. */
+  productModal: ReactNode;
   /** The server read the reader as a computer (lib/device.ts): its cards show
    *  the screenshots four at a time, as a grid, from `md` up. A phone or a
    *  tablet keeps the one-at-a-time gallery, whose tall phone screenshots a
    *  grid's crop would cut to pieces. */
   computer: boolean;
-  /** The categories that have products this computer is not shown
-   *  (./shelf-data.ts getShelfProducts). A filter on one of them that matches
-   *  nothing says so, rather than that the category is empty. */
-  phoneOnlyBuckets: readonly FilterBucket[];
 }) {
   const { selected, matches, select } = useProductFilter();
-  const phonesHere = selected !== null && phoneOnlyBuckets.includes(selected);
+  const view = useProductView();
+  const locale = useLocale();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [opening, startOpening] = useTransition();
+  const modalOpen = parseProductParam(searchParams.getAll(PRODUCT_PARAM)) !== null;
   const matching = useMemo(
     () => products.filter((p) => matches(p.bucket)),
     [products, matches],
@@ -488,50 +481,93 @@ export function ProductDeck({
   );
   /** The stack's root: where focus goes back to when a prompt closes. */
   const deckRef = useRef<HTMLDivElement>(null);
-  const prompts = useDeckPrompts({
+  const prompts = useProductPrompts({
     products,
     viewer,
     category: selected,
     deckRef,
+    view,
   });
+  const locked = prompts.locked || modalOpen || opening;
+
+  useEffect(() => () => clearOpenedFromDeck(), []);
+
+  function openProduct(productId: string) {
+    if (locked) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set(PRODUCT_PARAM, productId);
+    markOpenedFromDeck(productId);
+    startOpening(() => {
+      router.push(`${url.pathname}${url.search}`, { scroll: false });
+    });
+  }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <p aria-live="polite" className="sr-only">
-        {matching.length > 0
-          ? announced
-          : phonesHere
-            ? labels.phonesHereTitle
-            : labels.noneHereTitle}
-      </p>
+    <div
+      ref={view === "grid" ? deckRef : undefined}
+      tabIndex={view === "grid" ? -1 : undefined}
+      className="flex min-h-0 min-w-0 flex-1 flex-col"
+    >
+      {view === "single" && (
+        <p aria-live="polite" className="sr-only">
+          {matching.length > 0 ? announced : labels.noneHereTitle}
+        </p>
+      )}
       {matching.length > 0 ? (
-        <Stack
-          key={selected ?? ""}
-          products={matching}
-          labels={labels}
-          onAnnounce={setAnnounced}
-          route={route}
-          category={selected}
-          resumeAfter={resumeAfter}
-          resumeAt={resumeAt}
-          rootRef={deckRef}
-          locked={prompts.locked}
-          onTried={prompts.tried}
-          computer={computer}
-        />
+        <>
+          <Stack
+            key={selected ?? ""}
+            products={matching}
+            labels={labels}
+            onAnnounce={setAnnounced}
+            route={route}
+            category={selected}
+            resumeAfter={resumeAfter}
+            resumeAt={resumeAt}
+            rootRef={deckRef}
+            visible={view === "single"}
+            locked={locked}
+            opening={opening && !modalOpen}
+            onOpenProduct={openProduct}
+            onTried={prompts.tried}
+            signedIn={viewer.signedIn}
+            computer={computer}
+          />
+          {view === "grid" && (
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {matching.map((product) => (
+                <li key={product.id}>
+                  <ProductGridCard
+                    href={productPageHref(product.id, route, selected, view)}
+                    name={product.name}
+                    cover={product.images[0]}
+                    rating={product.rating}
+                    mobileOnly={product.mobileOnly}
+                    locale={locale}
+                    onClick={(event) => {
+                      if (!isPlainClick(event)) return;
+                      event.preventDefault();
+                      openProduct(product.id);
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       ) : (
-        <div className="relative min-h-0 flex-1">
+        <div className={view === "single" ? "relative min-h-0 flex-1" : undefined}>
           {/* The shelf has products and the filter excludes them all, so this
               asks the reader to widen it. The shelf being EMPTY is a different
               message that needs a maker instead, and ./ProductShelf.tsx renders
               that one: "try another category" on a shelf with nothing on it
               would send someone hunting through categories that are not
               there. In the stage's place, at the stage's size. */}
-          <div className="absolute inset-0 pb-5">
+          <div className={view === "single" ? "absolute inset-0 pb-5" : undefined}>
             <EmptyState
               icon={SearchX}
-              title={phonesHere ? labels.phonesHereTitle : labels.noneHereTitle}
-              description={phonesHere ? labels.phonesHereBody : labels.noneHereBody}
+              title={labels.noneHereTitle}
+              description={labels.noneHereBody}
               padding="lg"
               className="grid h-full place-content-center"
               action={
@@ -556,7 +592,23 @@ export function ProductDeck({
       )}
       {/* OUTSIDE the stack's root, so a key pressed in a modal (an arrow in
           the comment box) never reaches the deck's own ← and →. */}
+      <DeckProductTry.Provider
+        value={(product, options) => prompts.tried(product, { ...options, fromDetails: true })}
+      >
+        {productModal}
+      </DeckProductTry.Provider>
       {prompts.dialog}
+      {opening && !modalOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-50 grid place-items-center bg-navy/40 backdrop-blur-sm"
+        >
+          <Loader2
+            className="h-7 w-7 animate-spin text-white motion-reduce:animate-none"
+            strokeWidth={1.5}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -570,8 +622,12 @@ function Stack({
   resumeAfter,
   resumeAt,
   rootRef,
-  locked: promptLocked,
+  visible,
+  locked: shelfLocked,
+  opening,
+  onOpenProduct,
   onTried,
+  signedIn,
   computer,
 }: {
   products: readonly DeckProduct[];
@@ -582,15 +638,17 @@ function Stack({
   resumeAfter: string | null;
   resumeAt: string | null;
   rootRef: RefObject<HTMLDivElement | null>;
-  /** A prompt's modal is open: the deck takes no input. */
+  /** Keep the current index while grid mode owns the visible content. */
+  visible: boolean;
   locked: boolean;
-  /** The product whose tab just opened. Not called for a blocked one. */
-  onTried: (product: DeckProduct) => void;
+  opening: boolean;
+  onOpenProduct: (id: string) => void;
+  onTried: ProductTry;
+  signedIn: boolean;
   /** See ProductDeck. */
   computer: boolean;
 }) {
   const locale = useLocale();
-  const router = useRouter();
   const searchParams = useSearchParams();
   // WHERE THE STACK STARTS: the server's read of `?after=` for the first paint,
   // then the ADDRESS, before the browser paints (below).
@@ -601,16 +659,7 @@ function Stack({
   const [blocked, setBlocked] = useState<DeckProduct | null>(null);
   /** The phone app this computer just tried: its code to scan is open. */
   const [handoff, setHandoff] = useState<DeckProduct | null>(null);
-  /** The product's page is on its way into the modal (./ProductModal.tsx). */
-  const [opening, startOpening] = useTransition();
-  /** It is up, over this deck: `?product=` on the address, read with the
-   *  SERVER's parser — a value it refuses renders no modal, and must not lock
-   *  a deck with nothing to close. */
-  const modalOpen =
-    parseProductParam(searchParams.getAll(PRODUCT_PARAM)) !== null;
-  /** A prompt's modal, the handoff's, or the product's is open, or opening:
-   *  the deck takes no input. */
-  const locked = promptLocked || handoff !== null || modalOpen || opening;
+  const locked = !visible || shelfLocked || handoff !== null;
 
   const stageRef = useRef<HTMLDivElement>(null);
   /** What the handlers read. `index` is only this, rendered. */
@@ -675,9 +724,6 @@ function Stack({
       gesture.current?.listeners.abort();
       cancelAnimationFrame(frame.current);
       clearTimeout(flyTimer.current);
-      // A modal met after the deck has gone was not opened by its push
-      // (./product-modal-state.ts).
-      clearOpenedFromDeck();
     },
     [],
   );
@@ -713,9 +759,18 @@ function Stack({
   // remove them: the card that mounts a swipe later asks for the same image.
   // Plain GETs of public images, which say nothing about the swipe's direction.
   useEffect(() => {
+    if (!visible) return;
     const next = products[index + MOUNTED]?.images[0];
     if (next) new window.Image().src = next;
-  }, [products, index]);
+  }, [products, index, visible]);
+
+  useEffect(() => {
+    if (visible) return;
+    gesture.current?.listeners.abort();
+    gesture.current = null;
+    cancelAnimationFrame(frame.current);
+    frame.current = 0;
+  }, [visible]);
 
   const current = products[index];
   const position = positionOf(products, index, labels);
@@ -813,6 +868,7 @@ function Stack({
   /** Right by a real link ("Try", the card): the browser opens the tab, and
    *  this only moves the deck on. */
   function onTryLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (event.button !== 0 && event.button !== 1) return;
     const product = actionableProduct();
     if (!product) {
       // A double click would otherwise open this product twice, and a press
@@ -836,6 +892,7 @@ function Stack({
   /** The popup-blocked notice's link: the reader activated it, so the tab
    *  opens, and that is the try. */
   function onBlockedLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (event.button !== 0 && event.button !== 1) return;
     if (locked || !blocked) {
       event.preventDefault();
       return;
@@ -854,13 +911,7 @@ function Stack({
     // prevented), and the stretched <a> would go to the page.
     event?.preventDefault();
     const product = actionableProduct();
-    if (!product) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set(PRODUCT_PARAM, product.id);
-    markOpenedFromDeck(product.id);
-    startOpening(() => {
-      router.push(`${url.pathname}${url.search}`, { scroll: false });
-    });
+    if (product) onOpenProduct(product.id);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -1063,6 +1114,8 @@ function Stack({
     event.preventDefault();
   }
 
+  if (!visible) return null;
+
   return (
     <div
       ref={rootRef}
@@ -1079,7 +1132,6 @@ function Stack({
             key={product.id}
             padding="none"
             data-deck-card=""
-            data-gallery-scope=""
             inert={depth > 0}
             onPointerDown={depth === 0 ? onPointerDown : undefined}
             onClickCapture={depth === 0 ? onClickCapture : undefined}
@@ -1108,6 +1160,9 @@ function Stack({
               draggable={false}
               onClick={openProduct}
               data-gallery-zone=""
+              aria-describedby={
+                product.mobileOnly ? `mobile-only-${product.id}` : undefined
+              }
               className="absolute inset-0 z-10 cursor-grab rounded-3xl active:cursor-grabbing"
             />
 
@@ -1154,7 +1209,7 @@ function Stack({
                   inactive={depth > 0}
                   preload={depth === 1}
                   perView={4}
-                    fit="contain"
+                  fit="contain"
                   sizes="(min-width: 768px) 35vw, 100vw"
                   className="hidden rounded-t-3xl md:block deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
                 />
@@ -1192,6 +1247,20 @@ function Stack({
             </div>
 
             <div className={CARD_BODY}>
+              {product.mobileOnly && (
+                <CardChip
+                  id={`mobile-only-${product.id}`}
+                  className="pointer-events-none absolute left-4 top-4 z-20 gap-1.5 bg-white shadow-xs deck-wide:static deck-wide:mb-5 deck-wide:shrink-0 deck-wide:justify-start deck-wide:gap-3 deck-wide:rounded-xl deck-wide:bg-navy deck-wide:px-4 deck-wide:py-3 deck-wide:text-2xl deck-wide:font-bold deck-wide:whitespace-normal deck-wide:text-white deck-wide:shadow-none"
+                >
+                  <Smartphone
+                    className="h-3.5 w-3.5 shrink-0 deck-wide:h-6 deck-wide:w-6"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                  {labels.mobileOnly}
+                </CardChip>
+              )}
+
               {/* The card's headline: the heading face, semibold, sized by
                   length (blurbType). A <p>, not a heading — the cards have no
                   heading of their own (see ./ProductShelf.tsx). No
@@ -1278,6 +1347,7 @@ function Stack({
               aria-label={current.tryAria}
               draggable={false}
               onClick={onTryLinkClick}
+              onAuxClick={onTryLinkClick}
               className={buttonClasses({
                 fullWidth: true,
                 className: "flex-1",
@@ -1322,6 +1392,7 @@ function Stack({
             rel={LINK_REL}
             aria-label={blocked.tryAria}
             onClick={onBlockedLinkClick}
+            onAuxClick={onBlockedLinkClick}
             className="mt-1 inline-block text-navy underline underline-offset-2"
           >
             {fill(labels.openBlocked, { name: blocked.name })}
@@ -1329,24 +1400,7 @@ function Stack({
         </div>
       )}
 
-      {/* The product's page is on its way into the modal: the modal's own
-          scrim (components/ui/Dialog.tsx) at once, so the tap is answered
-          before the page arrives, and the modal takes its place in the same
-          frame. */}
-      {opening && !modalOpen && (
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 z-50 grid place-items-center bg-navy/40 backdrop-blur-sm"
-        >
-          <Loader2
-            className="h-7 w-7 animate-spin text-white motion-reduce:animate-none"
-            strokeWidth={1.5}
-          />
-        </div>
-      )}
-
-      {/* A phone app tried from a computer: see ./PhoneHandoff.tsx. Opening
-          the link from it after all is a real try, so it gets the prompts. */}
+      {/* The reader can try the link here or request a review after scanning. */}
       {handoff && (
         <PhoneHandoffDialog
           name={handoff.name}
@@ -1355,6 +1409,11 @@ function Stack({
           phones={handoff.phones}
           onClose={() => setHandoff(null)}
           onOpenHere={() => onTried(handoff)}
+          onReview={
+            !signedIn || handoff.reviewable
+              ? () => onTried(handoff, { requestReview: true })
+              : undefined
+          }
         />
       )}
     </div>

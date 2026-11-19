@@ -23,15 +23,8 @@
 // this scale and wrong at some larger one, so the number is written down:
 //
 //   · shelf-data.ts fetches PRODUCT_SHELF_LIMIT (200) products, newest first.
-//   · While the shelf holds 200 or fewer products this is exact: the client
-//     has every row, so a category's chip is offered exactly when its deck
-//     has a card, and its deck IS that category.
-//   · Past 200 it silently becomes "the newest 200". A category whose products
-//     are all older than the 200th loses its chip, and a product older than
-//     the 200th is unreachable by any filter. THAT is the point at which
-//     server-side filtering or pagination has to come back — not before.
-//   · There are zero real products today (the ones on screen are dev fixtures),
-//     so the bet is a long way from losing.
+//   · Categories filter the same catalog slice as All. Past 200 products,
+//     older entries need server-side filtering or pagination to be reachable.
 //
 // ── WHERE THE SERVER-SIDE `category` LOGIC WENT ──────────────────────────
 // It is GONE. `getProductsPage(…, { category })` and the capped count scan
@@ -51,15 +44,13 @@
 // Client-side that subtlety costs nothing. Today there is no "other" chip at
 // all: `productBucketOf()` (./categories.ts) reads `productCategoryOf(tags)`
 // and puts everything that is not a game — those untagged rows included — on
-// the apps shelf. One function, so whether a chip is offered and the cards
-// behind it are derived from the same expression and cannot drift. The
-// negation query existed only because SQL had no way to say that.
+// the apps shelf.
 
 // PARAM and parseCategoryParam come from ./categories, which carries no "use
 // client" — the SERVER page parses the same query string with the same
 // function, and a shared parser must not drag a client module into the server
 // graph.
-import { FILTER_BUCKETS, PARAM, parseCategoryParam, type FilterBucket } from "./categories";
+import { PARAM, parseCategoryParam, type FilterBucket } from "./categories";
 import { writeAfterToAddress } from "./deck-position";
 import { useSearchParams } from "next/navigation";
 import {
@@ -87,11 +78,6 @@ function writeAddress(selected: FilterBucket | null) {
 type FilterValue = {
   /** null is "All": no category, the whole shelf. */
   selected: FilterBucket | null;
-  /** The categories with at least one product on the WHOLE fetched shelf, in
-   *  FILTER_BUCKETS order: the chips the filter offers. Never the
-   *  filtered view, or choosing one category would take every other chip
-   *  away. */
-  available: readonly FilterBucket[];
   select: (c: FilterBucket | null) => void;
   /** The one predicate the deck filters through. */
   matches: (bucket: FilterBucket) => boolean;
@@ -100,14 +86,9 @@ type FilterValue = {
 const FilterContext = createContext<FilterValue | null>(null);
 
 export function ProductFilterProvider({
-  items,
   initial,
   children,
 }: {
-  /** Every product on the shelf, bucketed. Only the bucket is read — the page
-   *  passes the same array it passes to the deck, so the two cannot disagree
-   *  about what is being counted. */
-  items: readonly { bucket: FilterBucket }[];
   /** From the server's own read of `?category=`, so the FIRST PAINT is already
    *  filtered rather than flashing the whole shelf and then narrowing. It can
    *  be STALE on a Back/Forward restore from the router cache; the address
@@ -121,11 +102,6 @@ export function ProductFilterProvider({
     (bucket: FilterBucket) => selected === null || selected === bucket,
     [selected],
   );
-
-  const available = useMemo(() => {
-    const present = new Set(items.map((i) => i.bucket));
-    return FILTER_BUCKETS.filter((c) => present.has(c));
-  }, [items]);
 
   // THE URL STAYS SHAREABLE: a choice the reader makes is written into it
   // here, in the handler, never from an effect watching the state (see BACK/
@@ -194,8 +170,8 @@ export function ProductFilterProvider({
   }, [searchParams]);
 
   const value = useMemo(
-    () => ({ selected, available, select, matches }),
-    [selected, available, select, matches],
+    () => ({ selected, select, matches }),
+    [selected, select, matches],
   );
 
   return (

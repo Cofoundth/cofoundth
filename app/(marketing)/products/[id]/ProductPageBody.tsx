@@ -11,8 +11,6 @@ import { CheckCircle2, MessageCircle, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
-import { viewerKind } from "@/lib/device";
-import { isPhoneOnly } from "../product-view";
 import { getAccountRole } from "@/lib/account";
 import { canComment, canRate } from "@/lib/roles";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
@@ -58,10 +56,13 @@ import { RatingControl } from "@/app/(app)/community/[id]/RatingControl";
 import { CommentComposer } from "@/app/(app)/community/[id]/CommentComposer";
 import { CommentThread } from "@/components/CommentThread";
 import { countComments, readCommentBatch } from "@/lib/comment-thread";
+import { PRODUCT_STORE_COLUMNS, productStoreColumnsOf, queryWithProductStoreColumns } from "@/lib/product-store-data";
 import {
   PRODUCT_PARAM,
+  VIEW_PARAM,
   deckContextQuery,
   deckReturnHref,
+  parseProductView,
 } from "../deck-position";
 import { PARAM, parseCategoryParam } from "../categories";
 import { findFixture } from "../fixtures";
@@ -70,6 +71,7 @@ import { ProductDetail, type ProductDetailPost } from "../ProductDetail";
 export type ProductSearch = {
   from?: string | string[];
   category?: string | string[];
+  view?: string | string[];
   added?: string | string[];
   saved?: string | string[];
 };
@@ -108,6 +110,7 @@ export async function ProductPageBody({
   // DEV ONLY: see "DEV FIXTURES" in the header. Null in a production build.
   const fixture = findFixture(id);
   if (fixture) {
+    const role = user ? await getAccountRole(supabase, user.id) : null;
     return (
       <PublicProduct
         post={fixture}
@@ -127,6 +130,7 @@ export async function ProductPageBody({
         }
         returnPath={returnPathOf(fixture.id, search, mode)}
         signedIn={user !== null}
+        sampleCanComment={role !== null && canComment(role)}
         locale={locale}
         mode={mode}
       />
@@ -147,15 +151,6 @@ export async function ProductPageBody({
 
   const found = await getPublicPost(id);
   if (!found || found.post.kind !== PRODUCT_KIND) return missing(mode, locale);
-  // A COMPUTER never sees a product that only runs on a phone (the founder's
-  // call, 2026-11-18; lib/device.ts): a 404 here, like a hidden one. Phones,
-  // tablets and link-preview bots still get the page.
-  if (
-    isPhoneOnly(found.post.link_url, found.post.platforms) &&
-    (await viewerKind()) === "computer"
-  ) {
-    return missing(mode, locale);
-  }
   const { post, author } = found;
   const [{ likeCount, comments, total }, rating] = await Promise.all([
     getPublicEngagement(id),
@@ -190,6 +185,7 @@ function returnPathOf(id: string, search: ProductSearch, mode: ProductMode): str
   const query = new URLSearchParams();
   const category = parseCategoryParam(search.category);
   if (category) query.set(PARAM, category);
+  if (parseProductView(search.view) === "grid") query.set(VIEW_PARAM, "grid");
   query.set(PRODUCT_PARAM, id);
   return `/products?${query}`;
 }
@@ -232,6 +228,7 @@ async function PublicProduct({
   backHref,
   returnPath,
   signedIn,
+  sampleCanComment = false,
   locale,
   mode,
 }: {
@@ -249,6 +246,7 @@ async function PublicProduct({
   /** Only ever true for a development sample: a real row renders the member
    *  view for a signed-in reader. A signed-in reader is not asked to sign in. */
   signedIn: boolean;
+  sampleCanComment?: boolean;
   locale: Locale;
   mode: ProductMode;
 }) {
@@ -265,6 +263,13 @@ async function PublicProduct({
         locale={locale}
         backHref={backHref}
         rating={rating}
+        feedback={{
+          reviewable: signedIn,
+          myScore: null,
+          sample: signedIn,
+          viewer: { signedIn, canComment: sampleCanComment },
+          returnPath,
+        }}
         rateSlot={signedIn ? null : <PublicRateButton next={returnPath} />}
         maker={
           <div className="flex items-center gap-3">
@@ -403,13 +408,14 @@ async function MemberProduct({
 
   // `maybeSingle`: a malformed id or a missing row is a plain 404, not a
   // thrown error.
-  const { data: post } = await supabase
-    .from("forum_posts")
-    .select(
-      "id, author_id, title, content, kind, link_url, image_url, image_urls, tags, platforms, created_at, hidden",
-    )
-    .eq("id", id)
-    .maybeSingle();
+  const columns = "id, author_id, title, content, kind, link_url, image_url, image_urls, tags, platforms, created_at, hidden";
+  const { data: post } = await queryWithProductStoreColumns((includeStores) => {
+    const table = supabase.from("forum_posts");
+    const query = includeStores
+      ? table.select(`${columns}, ${PRODUCT_STORE_COLUMNS}`)
+      : table.select(columns);
+    return query.eq("id", id).maybeSingle();
+  });
   if (!post || post.kind !== PRODUCT_KIND) return missing(mode, locale);
 
   const authorId = post.author_id as string;
@@ -446,17 +452,6 @@ async function MemberProduct({
   // from blocked members are dropped the same way the feed drops their posts.
   if (await isBlockedEitherWay(userId, authorId)) return missing(mode, locale);
 
-  // Phone-only on a computer: a 404, as signed out (ProductPage above) —
-  // except for its maker, who manages it from wherever they are, and an
-  // admin, who moderates it.
-  if (
-    !isAuthor &&
-    isPhoneOnly(post.link_url as string | null, post.platforms as string[] | null) &&
-    (await viewerKind()) === "computer" &&
-    !(await isAdminUser(supabase, viewer))
-  ) {
-    return missing(mode, locale);
-  }
   const blocked = await getBlockedIds(userId);
 
   // Commenting: founders AND explorers (canComment). Investors read only.
@@ -580,6 +575,7 @@ async function MemberProduct({
           title: (post.title as string | null) ?? null,
           content: post.content as string,
           link_url: (post.link_url as string | null) ?? null,
+          ...productStoreColumnsOf(post),
           image_url: (post.image_url as string | null) ?? null,
           image_urls: (post.image_urls as string[] | null) ?? null,
           platforms: (post.platforms as string[] | null) ?? null,
@@ -590,9 +586,20 @@ async function MemberProduct({
           mode === "page" ? deckReturnHref(search, post.id as string, true) : null
         }
         rating={rating}
+        feedback={{
+          reviewable: mayRate,
+          myScore,
+          sample: false,
+          viewer: { signedIn: true, canComment: mayComment },
+          returnPath: returnPathOf(id, search, mode),
+        }}
         rateSlot={
           mayRate ? (
-            <RatingControl postId={post.id as string} initialScore={myScore} />
+            <RatingControl postId={id} initialScore={myScore} />
+          ) : isAuthor && post.hidden === false ? (
+            <p className="text-sm text-ink-muted">
+              {t("Only other members can rate your product.", locale)}
+            </p>
           ) : null
         }
         maker={
@@ -709,7 +716,7 @@ async function MemberProduct({
           />
         )}
 
-        {mayComment && <CommentComposer postId={id} />}
+        {mayComment && <CommentComposer postId={id} centerText />}
       </section>
     </ProductFrame>
   );

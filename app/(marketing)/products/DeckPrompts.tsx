@@ -1,17 +1,17 @@
 "use client";
 
-// What the deck asks a reader once they come back from trying a product.
+// What we ask a reader once they come back from trying a product.
 //
 // ── WHEN, EXACTLY ──────────────────────────────────────────────────────────
 // CLAUDE.md, Language Rules: right on the deck opens the maker's product in a
 // new tab, and "when the visitor comes back from trying it, a signed-in member
 // is asked in a modal to rate and comment; a visitor who is not signed in is
-// offered sign-in, at most once per visit". So the deck tells useDeckPrompts()
-// which product was opened (`tried`), and the prompt waits for the deck's tab:
+// offered sign-in, at most once per visit". The deck and the product's page
+// tell useProductPrompts() which product was opened, and it waits for a return:
 //
 //   · it shows when the reader COMES BACK: the deck's tab was hidden or its
-//     window lost focus after the product opened, and now it is visible and
-//     focused again. Both signals are watched — `visibilitychange` and the
+//     window lost focus after the product opened, and now it is visible again
+//     or focus has returned. Both signals are watched — `visibilitychange` and the
 //     window's `blur`/`focus` — because a product that opens in a separate
 //     window leaves this tab "visible" the whole time, and only focus moves.
 //     There is no minimum time away: an earlier version waited for 5 seconds
@@ -25,6 +25,8 @@
 //   · ONE modal at a time. A return while one is open shows nothing new.
 //   · a product whose tab never opened (the popup was blocked, so there is a
 //     fallback link instead) is not "tried" until that link is followed.
+//   · scanning a QR code happens off-device. "I've tried it" in the handoff
+//     dialog explicitly requests the review without waiting for a tab return.
 //
 // Which modal:
 //   signed in, `reviewable`   the review modal: stars (required), a comment
@@ -33,10 +35,8 @@
 //                             that canRate, and not the reader's own product.
 //   signed in, not reviewable nothing, ever: their own product, or a role
 //                             that may not rate (none today; lib/roles.ts).
-//   not signed in             the sign-in modal, ONCE per page visit. The
-//                             "once" is a ref in this component's memory and
-//                             nowhere else — a reload or a fresh visit is a new
-//                             visit, and nothing about it is written down.
+//   not signed in             the sign-in modal, offered automatically once
+//                             per visit or when the reader requests a review.
 //
 // ── NOTHING HERE IS STORED, AND THE SWIPE STILL WRITES NOTHING ─────────────
 // The swipe is still a browse gesture: what is remembered between the swipe
@@ -67,7 +67,8 @@
 // goes back to the deck when one closes. The review modal does NOT close on a
 // click on the backdrop: a stray tap there would throw away a typed comment,
 // so only Escape and "Maybe later" close it. While either is open the deck's
-// keys and gestures do nothing (ProductDeck's `locked`).
+// keys and gestures do nothing (ProductDeck's `locked`). A try from the
+// product details opens the prompt over the details, using Dialog's stack.
 //
 // ── DEV SAMPLES ────────────────────────────────────────────────────────────
 // A fixture (./fixtures.ts) has no row, so nothing about it can be saved. In
@@ -76,6 +77,7 @@
 // and is false in a production build, where there are no fixtures at all.
 
 import {
+  createContext,
   useCallback,
   useEffect,
   useId,
@@ -98,9 +100,10 @@ import {
   PRODUCT_PARAM,
   deckReviewPath,
   parseProductParam,
+  productReviewPath,
   takeReviewFromAddress,
+  type ProductView,
 } from "./deck-position";
-import { PRODUCT_TRIED_EVENT } from "./product-tried";
 
 /** How long after a product opens the deck waits to see the reader leave
  *  (this tab hidden, or this window blurred). If they have not left by then,
@@ -124,9 +127,22 @@ export type DeckViewer = {
   canComment: boolean;
 };
 
+type TryOptions = { fromDetails?: boolean; requestReview?: boolean };
+
+export type ProductTry = (product: PromptProduct, options?: TryOptions) => void;
+
+/** Share the deck's prompt with Try it inside the product details dialog. */
+export const DeckProductTry = createContext<ProductTry | null>(null);
+
 type Prompt =
   | { kind: "review"; product: PromptProduct }
   | { kind: "signin"; product: PromptProduct };
+
+type Try = { product: PromptProduct } & TryOptions;
+
+function readerIsAway(): boolean {
+  return document.visibilityState === "hidden" || !document.hasFocus();
+}
 
 const STARS = Array.from({ length: MAX_RATING }, (_, i) => i + 1);
 
@@ -135,24 +151,28 @@ const STARS = Array.from({ length: MAX_RATING }, (_, i) => i + 1);
 const UNREACHABLE = "Something went wrong. Try again.";
 
 /**
- * The deck's prompts. Returns `tried` for the deck to call the moment a
- * product's tab opens, `locked` while a modal is open, and the modal itself.
+ * Returns `tried` to call when a tab opens or the reader requests a review
+ * from the QR handoff, `locked` while a prompt is open, and the prompt itself.
  */
-export function useDeckPrompts({
+export function useProductPrompts({
   products,
   viewer,
-  category,
+  category = null,
+  view = "single",
   deckRef,
+  returnPath,
 }: {
   /** The WHOLE shelf, not the filtered deck: `?review=` can name any of it. */
   products: readonly PromptProduct[];
   viewer: DeckViewer;
-  category: FilterBucket | null;
+  category?: FilterBucket | null;
+  view?: ProductView;
   /** Where focus goes when a modal closes, unless it is already inside. */
-  deckRef: RefObject<HTMLElement | null>;
+  deckRef?: RefObject<HTMLElement | null>;
+  /** Standalone product page to return to after sign-in. */
+  returnPath?: string;
 }): {
-  /** The product whose tab just opened. A blocked popup is not a try. */
-  tried: (product: PromptProduct) => void;
+  tried: ProductTry;
   locked: boolean;
   dialog: ReactNode;
 } {
@@ -161,40 +181,40 @@ export function useDeckPrompts({
    *  same product (after Start over) shows what was just given. */
   const [saved, setSaved] = useState<Record<string, number>>({});
   const promptRef = useRef<Prompt | null>(null);
-  const pending = useRef<PromptProduct | null>(null);
+  const pending = useRef<Try | null>(null);
   /** The reader left after `pending` opened: this tab hidden or window blurred. */
   const away = useRef(false);
   const graceTimer = useRef<number | undefined>(undefined);
   const signInOffered = useRef(false);
   const wasOpen = useRef(false);
 
-  // The product's own page open over the deck (./ProductModal.tsx). A prompt
-  // for THAT product (its "Try it" was pressed in the modal, ./product-tried.ts)
-  // opens over the modal on the way back, as it would over the deck. A prompt
-  // for ANOTHER product — a try opened in a background tab, whose grace timer
-  // ends while the reader is reading a different one — waits for the modal to
-  // close rather than interrupting it.
+  // The product's own page open over the deck (./ProductModal.tsx): a prompt
+  // that comes due then — a try opened in a background tab, whose grace timer
+  // ends while the reader is reading another product — waits for it to close
+  // rather than opening on top of it.
   const searchParams = useSearchParams();
-  const productModalId = parseProductParam(searchParams.getAll(PRODUCT_PARAM));
-  const productModalOpen = productModalId !== null;
+  const productModalId = deckRef
+    ? parseProductParam(searchParams.getAll(PRODUCT_PARAM))
+    : null;
   const productModalRef = useRef(productModalId);
-  const deferred = useRef<PromptProduct | null>(null);
+  const deferred = useRef<Try | null>(null);
   useEffect(() => {
     productModalRef.current = productModalId;
   }, [productModalId]);
 
   const show = useCallback(
-    (product: PromptProduct) => {
+    (attempt: Try) => {
       if (promptRef.current) return; // never two at once
       const modalId = productModalRef.current;
-      if (modalId !== null && modalId !== product.id) {
-        deferred.current = product;
+      const { product } = attempt;
+      if (modalId && (!attempt.fromDetails || modalId !== product.id)) {
+        deferred.current = attempt;
         return;
       }
       let next: Prompt | null = null;
       if (viewer.signedIn) {
         if (product.reviewable) next = { kind: "review", product };
-      } else if (!signInOffered.current) {
+      } else if (attempt.requestReview || !signInOffered.current) {
         signInOffered.current = true;
         next = { kind: "signin", product };
       }
@@ -212,36 +232,39 @@ export function useDeckPrompts({
 
   // ...and is asked once the product's modal has closed.
   useEffect(() => {
-    if (productModalOpen || !deferred.current) return;
-    const product = deferred.current;
+    if (productModalId || !deferred.current) return;
+    const attempt = deferred.current;
     deferred.current = null;
-    show(product);
-  }, [productModalOpen, show]);
+    show(attempt);
+  }, [productModalId, show]);
 
-  const tried = useCallback(
-    (product: PromptProduct) => {
-      pending.current = product;
-      away.current = false;
+  const tried = useCallback<ProductTry>(
+    (product, options) => {
+      const attempt = { product, ...options };
+      deferred.current = null;
       window.clearTimeout(graceTimer.current);
-      graceTimer.current = window.setTimeout(() => {
-        if (away.current || pending.current !== product) return;
+      if (attempt.requestReview) {
         pending.current = null;
-        show(product);
+        away.current = false;
+        show(attempt);
+        return;
+      }
+      pending.current = attempt;
+      // window.open can move focus before its caller has registered the try.
+      away.current = readerIsAway();
+      graceTimer.current = window.setTimeout(() => {
+        if (pending.current !== attempt) return;
+        if (readerIsAway()) {
+          away.current = true;
+          return;
+        }
+        pending.current = null;
+        away.current = false;
+        show(attempt);
       }, AWAY_GRACE_MS);
     },
     [show],
   );
-
-  // "Try it" inside the product modal: the same try as the deck card's.
-  useEffect(() => {
-    function onTried(event: Event) {
-      const id = (event as CustomEvent<string>).detail;
-      const product = products.find((p) => p.id === id);
-      if (product) tried(product);
-    }
-    window.addEventListener(PRODUCT_TRIED_EVENT, onTried);
-    return () => window.removeEventListener(PRODUCT_TRIED_EVENT, onTried);
-  }, [products, tried]);
 
   useEffect(() => {
     function leave() {
@@ -249,13 +272,13 @@ export function useDeckPrompts({
     }
     function back() {
       if (document.visibilityState === "hidden") return;
-      const product = pending.current;
-      if (!product || !away.current) return;
+      const attempt = pending.current;
+      if (!attempt || !away.current) return;
       // Answered: a second return is not a second try.
       pending.current = null;
       away.current = false;
       window.clearTimeout(graceTimer.current);
-      show(product);
+      show(attempt);
     }
     function onVisibility() {
       if (document.visibilityState === "hidden") leave();
@@ -272,13 +295,12 @@ export function useDeckPrompts({
     };
   }, [show]);
 
-  // `?review=` — the way back from the sign-in modal. Read and removed once,
-  // on mount; see the header.
+  // `?review=` — the way back from sign-in. Read and removed once on mount.
   useEffect(() => {
     const id = takeReviewFromAddress();
     if (!id || !viewer.signedIn) return;
     const product = products.find((p) => p.id === id);
-    if (product) show(product);
+    if (product) show({ product, fromDetails: productModalId === id });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount: the parameter is consumed by this read
   }, []);
 
@@ -292,14 +314,12 @@ export function useDeckPrompts({
     }
     if (!wasOpen.current) return;
     wasOpen.current = false;
-    // Over the product modal, Dialog has already put focus back on the
-    // modal's "Try it"; the deck is behind the modal's scrim.
-    if (productModalRef.current !== null) return;
-    const deck = deckRef.current;
+    if (productModalId) return;
+    const deck = deckRef?.current;
     if (deck && !deck.contains(document.activeElement)) {
       deck.focus({ preventScroll: true });
     }
-  }, [prompt, deckRef]);
+  }, [prompt, deckRef, productModalId]);
 
   const onSaved = useCallback((id: string, score: number) => {
     setSaved((s) => ({ ...s, [id]: score }));
@@ -324,7 +344,11 @@ export function useDeckPrompts({
     dialog = (
       <SignInDialog
         product={prompt.product}
-        next={deckReviewPath(prompt.product.id, category)}
+        next={
+          returnPath
+            ? productReviewPath(returnPath, prompt.product.id)
+            : deckReviewPath(prompt.product.id, category, view)
+        }
         onClose={close}
       />
     );

@@ -55,13 +55,8 @@
 // null before it looks, so this branch cannot be reached.
 
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
-import { isAdminUser } from "@/lib/admin";
-import { getUser } from "@/lib/auth";
-import { viewerKind } from "@/lib/device";
 import { tServer } from "@/lib/i18n-server";
 import { getPublicPost, PRODUCT_KIND } from "@/lib/public-post";
-import { isPhoneOnly } from "../product-view";
 import { findFixture } from "../fixtures";
 import { productMetadata } from "../product-metadata";
 import { ProductPageBody, type ProductSearch } from "./ProductPageBody";
@@ -93,28 +88,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!found || found.post.kind !== PRODUCT_KIND) {
     return { title: await tServer("Product") };
   }
-  // A computer does not see a phone-only product (see the page below), so
-  // it does not get its name in the tab either — unless the page opens for
-  // this reader after all: its maker, or an admin. Bots still get the card.
-  if (
-    isPhoneOnly(found.post.link_url, found.post.platforms) &&
-    (await viewerKind()) === "computer" &&
-    !(await opensPhoneOnlyAnyway(found.post.author_id))
-  ) {
-    return { title: await tServer("Product") };
-  }
   // Title, description, canonical and social card: ../product-metadata.ts,
   // shared with the old /p/<id> address.
   return productMetadata(found.post);
-}
-
-/** Whether the signed-in reader is the maker or an admin: the two a
- *  phone-only product's page still opens for on a computer (MemberProduct). */
-async function opensPhoneOnlyAnyway(authorId: string): Promise<boolean> {
-  const user = await getUser();
-  if (!user) return false;
-  if (user.id === authorId) return true;
-  return isAdminUser(await createClient(), user);
 }
 
 export default async function ProductPage({ params, searchParams }: Props) {

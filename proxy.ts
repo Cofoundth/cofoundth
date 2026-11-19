@@ -11,7 +11,7 @@ import {
   type AccountRole,
 } from "@/lib/roles";
 import { PARAM } from "@/app/(marketing)/products/categories";
-import { PRODUCT_PARAM } from "@/app/(marketing)/products/deck-position";
+import { PRODUCT_PARAM, VIEW_PARAM } from "@/app/(marketing)/products/deck-position";
 
 // Ship the CSP in report-only mode first to verify the policy + nonce
 // propagation against real prod without risking a blank app, then flip to
@@ -176,7 +176,8 @@ export async function proxy(request: NextRequest) {
       if (
         path === "/" &&
         (request.nextUrl.searchParams.has(PARAM) ||
-          request.nextUrl.searchParams.has(PRODUCT_PARAM))
+          request.nextUrl.searchParams.has(PRODUCT_PARAM) ||
+          request.nextUrl.searchParams.get(VIEW_PARAM) === "grid")
       ) {
         return bounce("/products", request.nextUrl.search);
       }

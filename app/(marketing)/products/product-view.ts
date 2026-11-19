@@ -45,14 +45,17 @@ import { productRatingLabel } from "@/components/ProductRatingSummary";
 import { t, type Locale } from "@/lib/i18n";
 import {
   MAX_PRODUCT_IMAGES,
+  isMobileProductPlatform,
   postImages,
   productPlatformsOf,
 } from "@/lib/post-types";
 import type { PostItem, ProductItem } from "@/lib/post-types";
+import { STORE_PLATFORMS, isMacAppStore, storePlatformOf, type PhonePlatform } from "@/lib/product-store-links";
 import { webUrl } from "@/lib/web-url";
 import { isFixture } from "./fixtures";
 
 export { webUrl };
+export type { PhonePlatform } from "@/lib/product-store-links";
 
 // The ONE narrow exception to that parse, and it is deliberately not inside
 // webUrl() — ./fixtures.ts asks for it by name and says why the fix must not
@@ -109,43 +112,6 @@ export function displayHost(link: URL): string {
   return link.hostname.replace(/^www\./, "");
 }
 
-/** A phone OS a product can be opened on. */
-export type PhonePlatform = "ios" | "android";
-
-/**
- * The phone an app-store link can only be used on, or null for any other link.
- *
- * WHY THE LINK DECIDES: a desktop visitor who presses "Try" on a phone app used
- * to land on its App Store page, where there is nothing to try (the owner's
- * call, 2026-11-12: "bad UX"). The store link itself says the product lives on
- * a phone, whatever else is known about it, so ./PhoneHandoff.tsx offers that
- * visitor a code to scan instead. Exact hostnames, from the parsed URL (webUrl
- * already resolved `apps.apple.com@evil.example` to its real host).
- */
-export function storePlatformOf(link: URL): PhonePlatform | null {
-  if (isMacAppStore(link)) return null;
-  const host = link.hostname.toLowerCase();
-  if (
-    host === "apps.apple.com" ||
-    host === "itunes.apple.com" ||
-    host === "testflight.apple.com"
-  ) {
-    return "ios";
-  }
-  if (host === "play.google.com") return "android";
-  return null;
-}
-
-/** A MAC App Store page: apps.apple.com, or the older itunes.apple.com, with
- *  `mt=12`. A Mac app, so a computer can open it: never a phone's store. */
-function isMacAppStore(link: URL): boolean {
-  const host = link.hostname.toLowerCase();
-  return (
-    (host === "apps.apple.com" || host === "itunes.apple.com") &&
-    link.searchParams.get("mt") === "12"
-  );
-}
-
 /**
  * The phones a product ONLY runs on — what ./PhoneHandoff.tsx needs — or []
  * when it opens anywhere. Phone-only means either signal says so:
@@ -160,36 +126,22 @@ export function phonePlatformsOf(
   platforms: readonly string[] | null | undefined,
 ): PhonePlatform[] {
   // "Try" on a Mac App Store link opens a page a Mac can use, whatever the
-  // maker ticked: no code to scan (and phoneOnly() keeps it on the shelf).
+  // maker ticked, so there is no code to scan.
   if (isMacAppStore(link)) return [];
-  const declared = productPlatformsOf(platforms);
   const store = storePlatformOf(link);
-  const declaredPhoneOnly =
-    declared.length > 0 &&
-    declared.every((p) => p === "ios" || p === "android");
-  if (!store && !declaredPhoneOnly) return [];
-  // A store link names its one phone: that is where "Try" goes, so the code
-  // to scan opens there, whatever the maker ticked. The form's "Mobile" writes
-  // both phone slugs (lib/post-types.ts PLATFORM_CHOICES), which would
-  // otherwise make an App Store link say "iPhone and Android".
-  const phones = new Set<PhonePlatform>(store ? [store] : []);
-  if (!store) {
-    for (const p of declared) {
-      if (p === "ios" || p === "android") phones.add(p);
-    }
-  }
-  // iPhone first, the way the dialog says them.
-  return (["ios", "android"] as const).filter((p) => phones.has(p));
+  // The QR code should name the phone that can open its store destination.
+  if (store) return [store];
+
+  const declared = productPlatformsOf(platforms);
+  if (!declared.length || !declared.every(isMobileProductPlatform)) return [];
+  const phones = STORE_PLATFORMS.filter((platform) => declared.includes(platform));
+  return phones.length ? phones : [...STORE_PLATFORMS];
 }
 
 /**
- * Whether a product only runs on a phone: the products a COMPUTER never sees
- * (the founder's call, 2026-11-18; lib/device.ts decides who is a computer).
- * phonePlatformsOf, with two ways out of it, because hiding a product from the
- * only devices that can run it is the worst mistake this rule can make:
- *   · the maker says it also runs on the web, Windows or a Mac;
- *   · the link is the MAC App Store (isMacAppStore), even when the maker
- *     ticked only iOS: that is where "Try" goes, and a Mac opens it.
+ * Whether to show the Mobile only label. A maker who declares a desktop or
+ * web platform can still use an app store link, which needs a QR handoff when
+ * tried from a computer.
  */
 export function phoneOnly(
   link: URL,

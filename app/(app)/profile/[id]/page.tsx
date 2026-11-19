@@ -41,11 +41,13 @@ import { getProductRatings } from "@/lib/product-ratings";
 import { Avatar } from "@/components/Avatar";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import {
+  isPhoneOnly,
   productImages,
   productName,
 } from "@/app/(marketing)/products/product-view";
 import {
   Card,
+  CardChip,
   LinkButton,
   Section,
   StageEmblem,
@@ -56,8 +58,6 @@ import { IncomingInterestBanner } from "./IncomingInterestBanner";
 import { ReportForm } from "./ReportForm";
 import { BlockButton } from "./BlockButton";
 import { isBlockedEitherWay } from "@/lib/blocking";
-import { viewerKind } from "@/lib/device";
-import { isPhoneOnly } from "@/app/(marketing)/products/product-view";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -248,22 +248,10 @@ export default async function ProfileDetailPage({
         .eq("kind", "show_and_tell")
         .not("link_url", "is", null)
         .order("created_at", { ascending: false })
-        // More than the 6 shown: a computer drops the phone-only ones below,
-        // and must still get six when the maker has them.
-        .limit(24),
+        .limit(6),
     ],
   );
-  // A computer never sees a product that only runs on a phone (the founder's
-  // call, 2026-11-18; lib/device.ts) — the owner on their own profile still
-  // does, as on their own product's page.
-  const computer = !isOwnProfile && (await viewerKind()) === "computer";
-  const products = (productRows ?? [])
-    .filter(
-      (p) =>
-        !computer ||
-        !isPhoneOnly(p.link_url as string | null, p.platforms as string[] | null),
-    )
-    .slice(0, 6);
+  const products = productRows ?? [];
   // The public average and count, through the service role like every product
   // page (lib/product-ratings.ts); degrades to unrated, never throws.
   const productRatings = await getProductRatings(
@@ -737,6 +725,9 @@ export default async function ProfileDetailPage({
                           <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
                             {category && (
                               <span>{t(CATEGORY_LABEL[category], locale)}</span>
+                            )}
+                            {isPhoneOnly(p.link_url, p.platforms) && (
+                              <CardChip>{t("Mobile only", locale)}</CardChip>
                             )}
                             <ProductRatingSummary
                               rating={productRatings.get(id) ?? UNRATED}

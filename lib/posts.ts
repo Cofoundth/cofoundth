@@ -430,6 +430,15 @@ const PUBLIC_AUTHOR_COLS = "id, full_name, photo_url, slug";
  *  so nothing from it reaches a page. */
 const AUTHOR_GATE_EMBED = "gate:profiles!forum_posts_author_id_fkey!inner(id)";
 
+const PUBLIC_PRODUCT_AUTHOR_FILTER =
+  "and(suspended.eq.false,is_bot.not.is.true,account_type.eq.founder)";
+
+function productAuthorFilter(): string {
+  if (!TEST_ACCOUNT_EMAILS.length) return PUBLIC_PRODUCT_AUTHOR_FILTER;
+  const testEmails = TEST_ACCOUNT_EMAILS.map((email) => `"${email}"`).join(",");
+  return `${PUBLIC_PRODUCT_AUTHOR_FILTER},email.in.(${testEmails})`;
+}
+
 /**
  * The authors whose products may be published, resolved as an ALLOWLIST: the
  * returned map contains only ids positively confirmed visible, so a row whose
@@ -522,15 +531,7 @@ export async function getPublicProductsPage({
     const q = productsQuery(admin, `${cols}, ${AUTHOR_GATE_EMBED}`, [])
       .order("created_at", { ascending: false })
       .limit(limit + Math.min(excluded.size, MAX_OVERFETCH));
-    return TEST_ACCOUNT_EMAILS.length
-      ? q.or(
-          `and(suspended.eq.false,is_bot.not.is.true,account_type.eq.founder),email.in.(${TEST_ACCOUNT_EMAILS.map((e) => `"${e}"`).join(",")})`,
-          { referencedTable: "gate" },
-        )
-      : q
-          .eq("gate.suspended", false)
-          .not("gate.is_bot", "is", true)
-          .eq("gate.account_type", "founder");
+    return q.or(productAuthorFilter(), { referencedTable: "gate" });
   });
 
   const unblocked = excluded.size
@@ -573,4 +574,60 @@ export async function getPublicProductsPage({
     getProductRatings(visible.map((p) => p.id as string)),
   ]);
   return shaped.map((p) => ({ ...p, rating: ratings.get(p.id) ?? UNRATED }));
+}
+
+/** Look up only the current member's likes. The author and visibility filters
+ *  run before pagination so unavailable products never take up a grid slot. */
+export async function getLikedProductsPage(
+  viewerId: string,
+  blockedAuthors: ReadonlySet<string>,
+  offset: number,
+  limit: number,
+) {
+  // The embedded author gate reads moderation flags and dev test-account
+  // email addresses. Use the same service client and gate as the shelf.
+  const admin = createAdminClient();
+  const query = admin
+    .from("forum_likes")
+    .select(
+      `product:forum_posts!inner(id, title, content, link_url, image_url, image_urls, tags, platforms, ${AUTHOR_GATE_EMBED})`,
+      { count: "exact" },
+    )
+    .eq("user_id", viewerId)
+    .eq("product.kind", "show_and_tell")
+    .eq("product.hidden", false)
+    .or(productAuthorFilter(), { referencedTable: "product.gate" })
+    .order("created_at", { ascending: false })
+    .order("post_id");
+
+  if (blockedAuthors.size) {
+    query.not("product.author_id", "in", `(${[...blockedAuthors].join(",")})`);
+  }
+
+  const { data, count, error } = await query.range(offset, offset + limit - 1);
+  if (offset > 0 && error?.code === "PGRST103") {
+    return { products: [], count: count ?? 0 };
+  }
+  if (error || count === null) {
+    console.error("[products.liked] query failed", error?.message);
+    return null;
+  }
+
+  // PostgREST returns one embedded post per like because post_id is a foreign
+  // key into forum_posts. The columns above match the grid's input exactly.
+  const products = (data ?? []).map((row) => row.product) as unknown as {
+    id: string;
+    title: string | null;
+    content: string;
+    link_url: string | null;
+    image_url: string | null;
+    image_urls: string[];
+    platforms: string[];
+    tags: string[];
+  }[];
+  const ratings = await getProductRatings(products.map((p) => p.id));
+  return {
+    products: products.map((p) => ({ ...p, rating: ratings.get(p.id) ?? UNRATED })),
+    count,
+  };
 }

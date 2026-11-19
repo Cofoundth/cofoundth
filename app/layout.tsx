@@ -101,10 +101,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <LocaleProvider locale={locale}>{children}</LocaleProvider>
-        {/* A tablet asking for the desktop site looks like a computer to the
-            server; this tells it otherwise (components/TouchHint.tsx,
-            lib/device.ts). On every page, 404s included: a phone-only product
-            a computer cannot see is a 404 there. */}
+        {/* Keep the deck's touch gallery on tablets requesting desktop sites. */}
         <TouchHint />
         <Analytics />
       </body>

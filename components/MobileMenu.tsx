@@ -4,19 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-
-export type MobileLink = {
-  href: string;
-  label: string;
-  badge?: number;
-  /**
-   * A word-shaped marker ("New") rather than a count — ALREADY translated, the
-   * same as `label`. Mirrors SidebarNavItem; this menu is what the app
-   * shell's phone top bar renders below 768px, so anything the rail shows has
-   * to show here too.
-   */
-  tag?: string;
-};
+import type { SidebarNavItem } from "@/lib/sidebar";
+import { ProductNavGroup } from "./ProductNavGroup";
 
 // Hamburger + drop-down panel for small screens: the app shell's phone top bar
 // renders it below 768px, where the rail does not exist. Pass the breakpoint
@@ -28,7 +17,7 @@ export function MobileMenu({
   legal,
   legalLabel,
 }: {
-  links: MobileLink[];
+  links: SidebarNavItem[];
   className?: string;
   footer?: React.ReactNode;
   /** Small text links under everything else — the app shell's legal trio,
@@ -103,7 +92,17 @@ export function MobileMenu({
             className="absolute left-0 right-0 top-full z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain bg-white border-y border-line shadow-lg"
           >
             <nav className="px-6 py-1 flex flex-col">
-              {links.map((l) => (
+              {links.map((l) => l.submenu ? (
+                <ProductNavGroup
+                  key={l.href}
+                  label={l.label}
+                  tag={l.tag}
+                  links={l.submenu}
+                  pathname={pathname}
+                  mobile
+                  onNavigate={() => setOpen(false)}
+                />
+              ) : (
                 <Link
                   key={l.href}
                   href={l.href}

@@ -2,19 +2,11 @@
 
 // A tablet asking for the desktop site — an iPad's Safari always does, and an
 // Android tablet's Chrome does by default — sends a computer's user agent
-// ("Macintosh", or "X11; Linux"), so the server cannot tell it from a
-// computer (lib/device.ts) and hides the phone-only products it can in fact
-// run. The browser can tell: its main pointer is a finger. So on such a
-// device this sets the cookie lib/device.ts reads, and reloads the page once.
+// ("Macintosh", or "X11; Linux"). The browser can tell from the main pointer,
+// so it sets the device cookie and reloads once to use the deck's touch gallery.
 //
 // RE-WRITTEN ON EVERY VISIT, not just the first: Safari caps a cookie set
 // from script at seven days, so one written once would lapse every week.
-//
-// A FULL RELOAD, not router.refresh(): when the server's first answer was a
-// 404 — a phone-only product's page, read as a computer — a refresh does fetch
-// the product, but Next keeps the not-found screen up (its boundary resets only
-// when the path changes) and the visitor is left on an error. Measured,
-// 2026-11-18.
 //
 // Reloads at most once: only when the cookie was missing AND it stuck, since a
 // browser refusing cookies would otherwise reload forever. Renders nothing.

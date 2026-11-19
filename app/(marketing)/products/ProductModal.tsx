@@ -103,7 +103,7 @@ export function ProductModal({
 export function ProductModalSkeleton() {
   return (
     <div aria-hidden="true" className="px-4 pt-14 pb-8 sm:px-6 lg:px-8">
-      <div className="h-[min(36rem,70dvh)] animate-pulse rounded-3xl bg-white/70 motion-reduce:animate-none" />
+      <div className="h-[min(22rem,70dvh)] animate-pulse rounded-3xl bg-white/70 motion-reduce:animate-none" />
     </div>
   );
 }

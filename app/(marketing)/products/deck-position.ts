@@ -70,6 +70,9 @@ export const FROM_PARAM = "from";
 /** On the deck, once: `?review=<product id>`, the review modal to open. */
 export const REVIEW_PARAM = "review";
 
+export const VIEW_PARAM = "view";
+export type ProductView = "single" | "grid";
+
 /** The two routes that render the deck. */
 export type DeckRoute = "/" | "/products";
 
@@ -85,6 +88,10 @@ function routeOf(from: string | undefined): DeckRoute | null {
 
 function first(raw: string | readonly string[] | undefined): string | undefined {
   return typeof raw === "string" ? raw : raw?.[0];
+}
+
+export function parseProductView(raw: string | readonly string[] | undefined): ProductView {
+  return first(raw) === "grid" ? "grid" : "single";
 }
 
 /** `?product=<id>`: the product open in the deck's modal (./ProductModal.tsx),
@@ -160,9 +167,11 @@ export function productPageHref(
   id: string,
   route: DeckRoute,
   category: FilterBucket | null,
+  view: ProductView = "single",
 ): string {
   const query = new URLSearchParams({ [FROM_PARAM]: fromValue(route) });
   if (category) query.set(PARAM, category);
+  if (view === "grid") query.set(VIEW_PARAM, view);
   return `${productPath(id)}?${query}`;
 }
 
@@ -174,7 +183,7 @@ export function productPageHref(
  * for them.
  */
 export function deckReturnHref(
-  search: { from?: string | string[]; category?: string | string[] },
+  search: { from?: string | string[]; category?: string | string[]; view?: string | string[] },
   productId: string,
   signedIn: boolean,
 ): string {
@@ -183,7 +192,8 @@ export function deckReturnHref(
   const query = new URLSearchParams();
   const category = parseCategoryParam(search.category);
   if (category) query.set(PARAM, category);
-  query.set(AFTER_PARAM, productId);
+  if (parseProductView(search.view) === "grid") query.set(VIEW_PARAM, "grid");
+  else query.set(AFTER_PARAM, productId);
   return `${signedIn ? "/products" : route}?${query}`;
 }
 
@@ -195,12 +205,22 @@ export function deckReturnHref(
 export function deckReviewPath(
   productId: string,
   category: FilterBucket | null,
+  view: ProductView = "single",
 ): string {
   const query = new URLSearchParams();
   if (category) query.set(PARAM, category);
-  query.set(AFTER_PARAM, productId);
+  if (view === "grid") query.set(VIEW_PARAM, view);
+  else query.set(AFTER_PARAM, productId);
   query.set(REVIEW_PARAM, productId);
   return `/products?${query}`;
+}
+
+/** Return to the standalone product page and resume its review after sign-in. */
+export function productReviewPath(returnPath: string, productId: string): string {
+  const [pathname, search] = returnPath.split("?", 2);
+  const query = new URLSearchParams(search);
+  query.set(REVIEW_PARAM, productId);
+  return `${pathname}?${query}`;
 }
 
 /** The deck-context part of a product page's address, rebuilt from parsed
@@ -210,12 +230,14 @@ export function deckReviewPath(
 export function deckContextQuery(search: {
   from?: string | string[];
   category?: string | string[];
+  view?: string | string[];
 }): string {
   const route = routeOf(first(search.from));
   if (!route) return "";
   const query = new URLSearchParams({ [FROM_PARAM]: fromValue(route) });
   const category = parseCategoryParam(search.category);
   if (category) query.set(PARAM, category);
+  if (parseProductView(search.view) === "grid") query.set(VIEW_PARAM, "grid");
   return `?${query}`;
 }
 

@@ -28,6 +28,18 @@ export const SIDEBAR_COLLAPSED = "collapsed";
 // boundary the overlay's outside-click / focus-leave checks test against.
 export const RAIL_ID = "app-rail";
 
+export type SidebarLink = {
+  href: string;
+  label: string;
+};
+
+/** Translated destinations shared by the desktop rail and the mobile menu. */
+export type SidebarNavItem = SidebarLink & {
+  badge?: number;
+  tag?: string;
+  submenu?: SidebarLink[];
+};
+
 // The label of a rail control while the rail is an icon rail: hidden until its
 // trigger (the nearest `group/rail`) is hovered or keyboard-focused, then shown
 // as a small overlay just beside the 64px rail.

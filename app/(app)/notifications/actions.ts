@@ -2,8 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getBlockedIds } from "@/lib/blocking";
-import { isAdminUser } from "@/lib/admin";
-import { phoneOnlyNotifTargets } from "@/lib/notification-phone-only";
 
 export type PolledNotif = {
   id: string;
@@ -13,9 +11,6 @@ export type PolledNotif = {
   readAt: string | null;
   createdAt: string;
   actorId: string | null;
-  /** A product a computer cannot open: shown unlinked (see
-   *  lib/notification-phone-only.ts). */
-  phoneOnly: boolean;
 };
 
 // Server-side poll for the notification bell. Replaces the old client-side
@@ -41,10 +36,6 @@ export async function fetchNotificationsAction(): Promise<{
   // Same actor filter the /notifications page applies — the bell and the page
   // read the same history and must not disagree about who is in it.
   const blocked = await getBlockedIds(user.id);
-  const phoneOnlyTargets = await phoneOnlyNotifTargets(supabase, data ?? [], {
-    id: user.id,
-    isAdmin: () => isAdminUser(supabase, user),
-  });
   const items: PolledNotif[] = (data ?? [])
     .filter((n) => !n.actor_id || !blocked.has(n.actor_id as string))
     .map((n) => ({
@@ -56,7 +47,6 @@ export async function fetchNotificationsAction(): Promise<{
       readAt: (n.read_at as string | null) ?? null,
       createdAt: n.created_at as string,
       actorId: (n.actor_id as string | null) ?? null,
-      phoneOnly: phoneOnlyTargets.has(n.entity_id as string),
     }));
   return { items, unread: items.filter((i) => !i.readAt).length };
 }

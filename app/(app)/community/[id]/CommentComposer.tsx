@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Send } from "lucide-react";
 import { createPostCommentAction, type PostFormState } from "@/lib/post-actions";
 import { useT } from "@/lib/i18n-client";
-import { Button } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 
 const INITIAL: PostFormState = null;
 
@@ -16,7 +16,13 @@ const INITIAL: PostFormState = null;
 // try again", migration 0083) took what the member had typed with it. A
 // controlled value survives the reset; the action below clears it only when
 // the comment really posted.
-export function CommentComposer({ postId }: { postId: string }) {
+export function CommentComposer({
+  postId,
+  centerText = false,
+}: {
+  postId: string;
+  centerText?: boolean;
+}) {
   const tr = useT();
   const [draft, setDraft] = useState("");
   const [state, formAction, isPending] = useActionState<PostFormState, FormData>(
@@ -46,7 +52,11 @@ export function CommentComposer({ postId }: { postId: string }) {
         onChange={(e) => setDraft(e.target.value)}
         aria-label={tr("Add your comment…")}
         placeholder={tr("Add your comment…")}
-        className="w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y rounded-xl"
+        className={cn(
+          "w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y rounded-xl",
+          // Keep the three-row height while centering the one-line placeholder.
+          centerText && "h-[calc(3lh+1.5rem+2px)] text-center placeholder-shown:py-[calc(1lh+0.75rem)]",
+        )}
       />
       {state?.error && (
         // Server actions return English literals; the client translates them.

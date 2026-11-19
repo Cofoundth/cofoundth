@@ -137,6 +137,8 @@ export const ADD_PRODUCT_PATH = "/products/new";
  */
 export const MY_PRODUCTS_PATH = "/products/mine";
 
+export const LIKED_PRODUCTS_PATH = "/products/liked";
+
 /**
  * A product's edit page, app/(app)/products/[id]/edit (editProductPath in
  * lib/post-types.ts): its maker changes the name, description, link,
@@ -249,6 +251,7 @@ export const ROLE_ACCESS: Record<
       pathname === "/profile" ||
       // Their own notifications are their own data.
       pathname === "/notifications" ||
+      pathname === LIKED_PRODUCTS_PATH ||
       pathname === "/settings",
   },
 };
@@ -325,8 +328,8 @@ export function canRoleRead(role: AccountRole, pathname: string): boolean {
  * app/(app) (app/(app)/products/new), so by the same rule it is listed — as
  * itself, never as "/products", which would re-gate the public shelf. It is
  * what makes proxy.ts look up the role there and bounce an investor to
- * /funding on a soft navigation too. MY_PRODUCTS_PATH (/products/mine) is the
- * second page.tsx under app/(app)/products and is listed the same way.
+ * /funding on a soft navigation too. The My products and Liked products
+ * pages are listed individually for the same reason.
  */
 export function isAppShellRoute(pathname: string): boolean {
   return (
@@ -348,6 +351,7 @@ export function isAppShellRoute(pathname: string): boolean {
     "/orgs",
     ADD_PRODUCT_PATH,
     MY_PRODUCTS_PATH,
+    LIKED_PRODUCTS_PATH,
     "/profile",
     "/rewards",
     "/settings",

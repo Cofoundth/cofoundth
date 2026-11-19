@@ -31,15 +31,24 @@ import {
   MAX_PRODUCT_BLURB,
   MAX_PRODUCT_NAME,
   MIN_PRODUCT_IMAGES,
-  PLATFORM_CHOICES,
+  PLATFORM_LABEL,
   PRODUCT_CATEGORIES,
-  PRODUCT_PLATFORMS,
+  PRODUCT_FORM_PLATFORMS,
+  isMobileProductPlatform,
   productPath,
   type ProductCategory,
-  hasPlatformChoice,
-  type PlatformChoice,
+  type ProductFormPlatform,
   type ProductPlatform,
 } from "@/lib/post-types";
+import {
+  STORE_LINK_LABEL,
+  STORE_LINK_REQUIRED,
+  STORE_PLATFORMS,
+  productStoreLink,
+  storePlatformOf,
+  validateProductLinks,
+  type PhonePlatform,
+} from "@/lib/product-store-links";
 import { webUrl } from "@/lib/web-url";
 import { useT } from "@/lib/i18n-client";
 import { ScreenshotPicker, useScreenshots } from "@/components/ScreenshotPicker";
@@ -59,6 +68,8 @@ export type EditableProduct = {
   title: string;
   content: string;
   link: string;
+  iosStoreUrl?: string | null;
+  androidStoreUrl?: string | null;
   category: ProductCategory | null;
   platforms: ProductPlatform[];
   /** Its screenshots, cover first. */
@@ -67,10 +78,32 @@ export type EditableProduct = {
   hidden: boolean;
 };
 
-/** The same two tests createProductAction runs, so the field can say so first. */
-function linkProblem(raw: string): boolean {
-  const value = raw.trim();
-  return value.length > 0 && (!/^https?:\/\/.+/.test(value) || !webUrl(value));
+function availabilityOf(product?: EditableProduct) {
+  const platforms = product?.platforms ?? [];
+  const primary = webUrl(product?.link);
+  const mobileOnly = platforms.every(isMobileProductPlatform);
+  const storeLinks = { ios: product?.iosStoreUrl ?? "", android: product?.androidStoreUrl ?? "" };
+
+  // Older mobile products stored the only app store link as their Try link.
+  if (mobileOnly && primary && !storeLinks.ios && !storeLinks.android) {
+    const store = storePlatformOf(primary);
+    if (store) {
+      primary.protocol = "https:";
+      const link = productStoreLink(primary.href, store);
+      if (link) {
+        return {
+          platforms: platforms.length ? platforms : [store],
+          storeLinks: { ...storeLinks, [store]: link.href },
+          link: "",
+        };
+      }
+    }
+  }
+
+  const usesStoreAsPrimary = mobileOnly && !!primary && STORE_PLATFORMS.some(
+    (store) => primary.href === storeLinks[store],
+  );
+  return { platforms, storeLinks, link: usesStoreAsPrimary ? "" : product?.link ?? "" };
 }
 
 export function ProductForm({
@@ -96,39 +129,37 @@ export function ProductForm({
   // would be wiped exactly when the maker has to fix one of them.
   const [name, setName] = useState(product?.title ?? "");
   const [description, setDescription] = useState(product?.content ?? "");
-  const [link, setLink] = useState(product?.link ?? "");
+  const initialAvailability = availabilityOf(product);
+  const [link, setLink] = useState(initialAvailability.link);
   // Shown once the maker has left the field, not on the first keystroke of
   // "https://".
   const [linkTouched, setLinkTouched] = useState(false);
   const [category, setCategory] = useState<ProductCategory | null>(
     product?.category ?? null,
   );
-  // "Runs on" (0080): Web and/or Mobile (lib/post-types.ts PLATFORM_CHOICES),
-  // held as the slugs they write, in PRODUCT_PLATFORMS order. An older row's
-  // Windows / Mac, which no choice offers any more, is dropped on edit.
-  const [platforms, setPlatforms] = useState<ProductPlatform[]>(() => {
-    const offered = new Set<ProductPlatform>(
-      PLATFORM_CHOICES.flatMap((c) => [...c.slugs]),
-    );
-    return (product?.platforms ?? []).filter((p) => offered.has(p));
-  });
+  const [platforms, setPlatforms] = useState<ProductPlatform[]>(
+    initialAvailability.platforms,
+  );
+  const [storeLinks, setStoreLinks] = useState(initialAvailability.storeLinks);
+  const [storeTouched, setStoreTouched] = useState<Partial<Record<PhonePlatform, boolean>>>({});
+  const [inStores, setInStores] = useState(!!(storeLinks.ios || storeLinks.android));
   const shots = useScreenshots(product?.images);
+  const mobileSelected = platforms.some(isMobileProductPlatform);
+  const showStoreFields = mobileSelected && inStores;
+  const needsPrimaryLink = platforms.some((platform) => !isMobileProductPlatform(platform));
 
-  function togglePlatform(choice: PlatformChoice) {
-    setPlatforms((prev) => {
-      const on = !hasPlatformChoice(prev, choice);
-      const slugs = new Set<ProductPlatform>(choice.slugs);
-      return PRODUCT_PLATFORMS.filter((x) =>
-        slugs.has(x) ? on : prev.includes(x),
-      );
-    });
+  function togglePlatform(platform: ProductFormPlatform) {
+    const matches = platform === "mobile" ? isMobileProductPlatform : (p: ProductPlatform) => p === "web";
+    setPlatforms((prev) => prev.some(matches) ? prev.filter((p) => !matches(p)) : [...prev, platform]);
   }
 
-  const badLink = linkProblem(link);
-  const linkError =
-    badLink && linkTouched
-      ? tr("Link must start with http:// or https://")
-      : undefined;
+  const linkValidation = validateProductLinks({
+    link,
+    requiresTryLink: needsPrimaryLink,
+    inStores: showStoreFields,
+    ...storeLinks,
+  });
+  const linkError = linkTouched && linkValidation.field === "link" ? tr(linkValidation.error) : undefined;
 
   // The form's own action. The actions read the screenshots with
   // getAll("images"), so they go in as repeated entries, in the strip's order;
@@ -155,8 +186,7 @@ export function ProductForm({
     platforms.length === 0 ||
     !name.trim() ||
     !description.trim() ||
-    !link.trim() ||
-    badLink;
+    "error" in linkValidation;
 
   return (
     <form action={submit} className="space-y-6">
@@ -234,12 +264,7 @@ export function ProductForm({
         <input type="hidden" name="category" value={category ?? ""} />
       </div>
 
-      {/* WHERE IT RUNS (0080, the owner's call 2026-11-12). Chips like the
-          category, but several may be on: plenty of products are a website AND
-          an app. Required for the same reason the category is gated on the
-          button (a hidden input cannot be `required`): a phone-only answer is
-          what lets the deck give a computer a code to scan instead of a store
-          page. Slugs ship as repeated `platforms` entries. */}
+      {/* Web and Mobile can both apply. Older platform declarations survive an edit. */}
       <div>
         <div className="mb-2 flex items-center justify-between">
           <span
@@ -259,20 +284,55 @@ export function ProductForm({
           aria-labelledby="product-platforms-label"
           className="flex flex-wrap items-center gap-2"
         >
-          {PLATFORM_CHOICES.map((c) => (
+          {PRODUCT_FORM_PLATFORMS.map((p) => (
             <ToggleChip
-              key={c.key}
-              selected={hasPlatformChoice(platforms, c)}
+              key={p}
+              selected={p === "mobile" ? mobileSelected : platforms.includes(p)}
               size="sm"
-              onClick={() => togglePlatform(c)}
+              onClick={() => togglePlatform(p)}
             >
-              {tr(c.label)}
+              {tr(PLATFORM_LABEL[p])}
             </ToggleChip>
           ))}
         </div>
         {platforms.map((p) => (
           <input key={p} type="hidden" name="platforms" value={p} />
         ))}
+        {mobileSelected && (
+          <label className="mt-4 inline-flex cursor-pointer items-center gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              name="in_stores"
+              checked={inStores}
+              onChange={(event) => setInStores(event.target.checked)}
+              className="size-4 shrink-0 accent-navy"
+            />
+            {tr("In app stores")}
+          </label>
+        )}
+        {showStoreFields && (
+          <fieldset aria-describedby="product-store-hint" className="mt-3 grid gap-3">
+            <legend className="sr-only">{tr("App store links")}</legend>
+            <p id="product-store-hint" className="text-sm text-ink-muted">
+              {tr(STORE_LINK_REQUIRED)}
+            </p>
+            {STORE_PLATFORMS.map((store) => (
+              <Input
+                key={store}
+                id={`product-${store}-store-url`}
+                name={`${store}_store_url`}
+                type="url"
+                inputMode="url"
+                label={tr(STORE_LINK_LABEL[store])}
+                placeholder={store === "ios" ? "https://apps.apple.com/…" : "https://play.google.com/…"}
+                error={storeTouched[store] && linkValidation.field === store ? tr(linkValidation.error) : undefined}
+                value={storeLinks[store]}
+                onChange={(event) => setStoreLinks({ ...storeLinks, [store]: event.target.value })}
+                onBlur={() => setStoreTouched({ ...storeTouched, [store]: true })}
+              />
+            ))}
+          </fieldset>
+        )}
       </div>
 
       <Input
@@ -280,9 +340,10 @@ export function ProductForm({
         name="link_url"
         type="url"
         inputMode="url"
-        required
+        required={needsPrimaryLink || !showStoreFields}
         placeholder="https://"
         label={tr("Link to try it")}
+        hint={!needsPrimaryLink && showStoreFields ? tr("Optional") : undefined}
         error={linkError}
         value={link}
         onChange={(e) => setLink(e.target.value)}

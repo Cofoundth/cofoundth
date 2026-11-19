@@ -14,24 +14,17 @@
 //
 // So the chips WRAP, centred, onto as many lines as they need. Every choice is
 // visible, nothing scrolls, and it behaves the same under a mouse, a finger and
-// a keyboard. The cost is height on a phone (two lines for the dev shelf's
-// seven chips); measured at 375x812 the deck's Skip/Try buttons still sit
-// inside the first viewport.
+// a keyboard.
 //
-// ── NO COUNTS ─────────────────────────────────────────────────────────────
-// A chip says what a category is, not how many products it holds. "This
-// category is not empty" is said by the chip being there at all: a category
-// with nothing in it is not offered (`available` in ./filter-context.tsx),
-// except the one a shared ?category= link selected, so "ทั้งหมด" can clear it.
+// Keep All, Games and Apps in the same positions as the catalog changes.
+// An empty category opens the deck's empty state with a way back to All.
 //
 // ── WHERE IT SITS ─────────────────────────────────────────────────────────
 // ./ProductShelf.tsx renders this in the deck page's top line. From 640px it
 // is the middle `auto` column of a `1fr auto 1fr` grid, between the corners
 // (logged out: the mark, and the language with "Sign in"; signed in: the
 // supply CTA), and wraps there when that column is narrower than the chips'
-// one line. Below 640px the corners take the first row and the chips the whole
-// second, wrapping inside the page gutter. With no corners at all (an
-// investor) it is the line's only content.
+// one line. Below 640px the chips share a toolbar with the Card/Grid switch.
 //
 // ── KEYBOARD ──────────────────────────────────────────────────────────────
 // A group named "Filter by category"; each chip is a ToggleChip (a <button>
@@ -45,15 +38,7 @@ import { useProductFilter } from "./filter-context";
 
 export function ProductFilters({ className }: { className?: string }) {
   const tr = useT();
-  const { selected, available, select } = useProductFilter();
-
-  const selectedIsEmpty = selected !== null && !available.includes(selected);
-  const shown = FILTER_BUCKETS.filter(
-    (c) => c === selected || available.includes(c),
-  );
-
-  // Nothing to choose between.
-  if (available.length < 2 && !selectedIsEmpty) return null;
+  const { selected, select } = useProductFilter();
 
   return (
     <div
@@ -64,7 +49,7 @@ export function ProductFilters({ className }: { className?: string }) {
       <ToggleChip selected={selected === null} onClick={() => select(null)}>
         {tr("All")}
       </ToggleChip>
-      {shown.map((c) => (
+      {FILTER_BUCKETS.map((c) => (
         <ToggleChip
           key={c}
           selected={selected === c}

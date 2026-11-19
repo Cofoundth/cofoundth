@@ -39,6 +39,7 @@ import {
   productPlatformsOf,
 } from "@/lib/post-types";
 import { Card, Section } from "@/components/ui";
+import { PRODUCT_STORE_COLUMNS, productStoreColumnsOf, queryWithProductStoreColumns } from "@/lib/product-store-data";
 import { ProductForm } from "../../ProductForm";
 
 export const dynamic = "force-dynamic";
@@ -60,16 +61,18 @@ export default async function EditProductPage({
 
   // Through the maker's own client. `maybeSingle`: a malformed id is a plain
   // 404 rather than a thrown error.
-  const { data: post } = await supabase
-    .from("forum_posts")
-    .select(
-      "id, author_id, kind, title, content, link_url, image_url, image_urls, tags, platforms, hidden",
-    )
-    .eq("id", id)
-    .maybeSingle();
+  const columns = "id, author_id, kind, title, content, link_url, image_url, image_urls, tags, platforms, hidden";
+  const { data: post } = await queryWithProductStoreColumns((includeStores) => {
+    const table = supabase.from("forum_posts");
+    const query = includeStores
+      ? table.select(`${columns}, ${PRODUCT_STORE_COLUMNS}`)
+      : table.select(columns);
+    return query.eq("id", id).maybeSingle();
+  });
   if (!post || post.kind !== "show_and_tell" || post.author_id !== user.id) {
     notFound();
   }
+  const stores = productStoreColumnsOf(post);
 
   const [tBack, tTitle, tIntro, tHidden] = await Promise.all([
     tServer("Back to the product"),
@@ -111,6 +114,8 @@ export default async function EditProductPage({
             title: (post.title as string | null) ?? "",
             content: post.content as string,
             link: (post.link_url as string | null) ?? "",
+            iosStoreUrl: stores.ios_store_url,
+            androidStoreUrl: stores.android_store_url,
             category: productCategoryOf((post.tags as string[] | null) ?? []),
             platforms: productPlatformsOf(post.platforms as string[] | null),
             images: postImages({

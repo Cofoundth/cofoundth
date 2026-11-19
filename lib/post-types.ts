@@ -205,9 +205,10 @@ export const MAX_PRODUCT_NAME = 60;
 // (app/(marketing)/products/PhoneHandoff.tsx; the owner's call, 2026-11-12).
 // A COLUMN, not a tag: see "WHY a tag and not a column" below — `tags` is the
 // category's, and 0080 says why this did not go in there. The database checks
-// the same five slugs (forum_posts_platforms_known): change the two together.
+// the same slugs (forum_posts_platforms_known): change the two together.
 export const PRODUCT_PLATFORMS = [
   "web",
+  "mobile",
   "ios",
   "android",
   "windows",
@@ -215,9 +216,17 @@ export const PRODUCT_PLATFORMS = [
 ] as const;
 export type ProductPlatform = (typeof PRODUCT_PLATFORMS)[number];
 
+export const PRODUCT_FORM_PLATFORMS = ["web", "mobile"] as const;
+export type ProductFormPlatform = (typeof PRODUCT_FORM_PLATFORMS)[number];
+
+export function isMobileProductPlatform(platform: string): boolean {
+  return platform === "mobile" || platform === "ios" || platform === "android";
+}
+
 /** English source labels; every surface passes them through t(). */
 export const PLATFORM_LABEL: Record<ProductPlatform, string> = {
   web: "Web",
+  mobile: "Mobile",
   ios: "iOS",
   android: "Android",
   windows: "Windows",
@@ -236,33 +245,6 @@ export function productPlatformsOf(
   return PRODUCT_PLATFORMS.filter((p) => set.has(p));
 }
 
-// ---- What the form asks: Web or Mobile (the founder's call, 2026-11-19) ----
-// A maker answers "Runs on" with two choices, not five. MOBILE writes BOTH
-// phone slugs, so the column keeps the device-level slugs every rule reads:
-// the phone-only rule (a computer never sees a product that only runs on a
-// phone) and the phone handoff (a code to scan) work exactly as before, and
-// an app-store link still says which phone (storePlatformOf). Windows and Mac
-// stay valid in the column, with their labels, for a row that has them (none
-// in production when this changed); the form no longer offers them, and an
-// edit drops them.
-export const PLATFORM_CHOICES = [
-  { key: "web", label: "Web", slugs: ["web"] },
-  { key: "mobile", label: "Mobile", slugs: ["ios", "android"] },
-] as const satisfies readonly {
-  key: string;
-  label: string;
-  slugs: readonly ProductPlatform[];
-}[];
-export type PlatformChoice = (typeof PLATFORM_CHOICES)[number];
-
-/** Whether a row's platforms include a choice: any of its slugs. */
-export function hasPlatformChoice(
-  platforms: readonly ProductPlatform[],
-  choice: PlatformChoice,
-): boolean {
-  return choice.slugs.some((s) => platforms.includes(s));
-}
-
 /** "Runs on", as a reader sees it: Web, Mobile (for either phone), and the
  *  older Windows / Mac a row may still carry. English source labels, in
  *  that order; every surface passes them through t(). */
@@ -272,7 +254,7 @@ export function platformLabelsOf(
   const known = productPlatformsOf(platforms);
   const labels: string[] = [];
   if (known.includes("web")) labels.push("Web");
-  if (known.includes("ios") || known.includes("android")) labels.push("Mobile");
+  if (known.some(isMobileProductPlatform)) labels.push(PLATFORM_LABEL.mobile);
   if (known.includes("windows")) labels.push(PLATFORM_LABEL.windows);
   if (known.includes("mac")) labels.push(PLATFORM_LABEL.mac);
   return labels;

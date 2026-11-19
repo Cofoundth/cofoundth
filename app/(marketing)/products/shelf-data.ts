@@ -7,8 +7,7 @@ import { getUser } from "@/lib/auth";
 import { getBlockedIds } from "@/lib/blocking";
 import { getPublicProductsPage } from "@/lib/posts";
 import { productFixtures } from "./fixtures";
-import { phoneOnly, webUrl } from "./product-view";
-import { viewerKind } from "@/lib/device";
+import { webUrl } from "./product-view";
 
 /**
  * How much of the shelf one request fetches, and therefore how much the
@@ -30,17 +29,15 @@ const PRODUCT_SHELF_LIMIT = 200;
  * makes them UNRATED if the ratings read fails), and each fixture carries its
  * own.
  *
- * THAT PARSE IS THE ONE DEFINITION OF A SHELF PRODUCT. It runs here, on the one
- * array everything else reads, so the deck, the category filter's chips and
- * generateMetadata cannot disagree: the filter
- * cannot offer a "Game" chip over an empty games deck. app/sitemap.ts applies
- * the same parse to its own rows.
+ * A shelf product needs a valid external link. This parse applies to the
+ * complete catalog before the deck filters it. app/sitemap.ts applies the
+ * same parse to its own rows.
  *
  * ZERO ARGUMENTS, and that is load-bearing: React's cache() keys on argument
  * identity, so accepting the blocked Set or an options object would give
  * generateMetadata and the page body one read each.
  */
-export const getShelfProductsAnyDevice = cache(async () => {
+export const getShelfProducts = cache(async () => {
   const user = await getUser();
 
   // Blocked pairs disappear from each other everywhere, and the feed already
@@ -101,22 +98,6 @@ export const getShelfProductsAnyDevice = cache(async () => {
     const link = webUrl(post.link_url);
     return link ? [{ ...post, link }] : [];
   });
-});
-
-/**
- * The shelf THIS reader is shown: getShelfProductsAnyDevice(), less what their
- * device cannot run. A COMPUTER never sees a product that only runs on a phone
- * (the founder's call, 2026-11-18; lib/device.ts says who is a computer) —
- * except the maker, on their own product. Dropped HERE, on the one array
- * everything reads, so the deck, the filter's chips and the metadata all
- * agree about what a computer is shown. The unfiltered list
- * is what tells ./ProductShelf.tsx that an empty deck on a computer is a shelf
- * of phone apps, not an empty shelf.
- */
-export const getShelfProducts = cache(async () => {
-  const all = await getShelfProductsAnyDevice();
-  if ((await viewerKind()) !== "computer") return all;
-  return all.filter((post) => post.isOwn || !phoneOnly(post.link, post.platforms));
 });
 
 // The English source, not tServer: this is what a crawler and a link preview

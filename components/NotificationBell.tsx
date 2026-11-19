@@ -34,9 +34,6 @@ export type NotifItem = {
     photo_url: string | null;
     full_name: string | null;
   } | null;
-  /** On a product a computer cannot open (lib/notification-phone-only.ts):
-   *  the row says so instead of linking to a page that 404s. */
-  phoneOnly?: boolean;
 };
 
 // Where the panel opens from. "down-right" suits a top bar (the phone app
@@ -118,7 +115,6 @@ export function NotificationBell({
         data: n.data,
         readAt: n.readAt,
         createdAt: n.createdAt,
-        phoneOnly: n.phoneOnly,
         actor: n.actorId
           ? {
               id: n.actorId,
@@ -254,9 +250,7 @@ export function NotificationBell({
           ) : (
             <ul>
               {items.map((n) => {
-                const rowClass = `flex items-start gap-3 px-4 py-3 pr-9 border-b border-line last:border-b-0 transition-colors ${
-                  n.phoneOnly ? "" : "hover:bg-cream"
-                } ${n.readAt ? "" : "bg-cream/60"}`;
+                const rowClass = `flex items-start gap-3 px-4 py-3 pr-9 border-b border-line last:border-b-0 transition-colors hover:bg-cream ${n.readAt ? "" : "bg-cream/60"}`;
                 const body = (
                   <>
                     {!n.readAt && (
@@ -282,41 +276,28 @@ export function NotificationBell({
                       ) : null}
                       <p className="text-xs text-ink-muted mt-0.5">
                         {timeAgo(n.createdAt, locale)}
-                        {n.phoneOnly && <> · {tr("Opens on a phone")}</>}
                       </p>
                     </div>
                   </>
                 );
                 return (
                   <li key={n.id} className="relative group/item">
-                    {/* A product this computer cannot open: the same row, not
-                        a link, saying where it opens instead
-                        (lib/notification-phone-only.ts). */}
-                    {n.phoneOnly ? (
-                      <div className={rowClass}>
-                        {!n.readAt && (
-                          <span className="sr-only">{tr("Unread")}: </span>
-                        )}
-                        {body}
-                      </div>
-                    ) : (
-                      <Link
-                        href={notifHref(n)}
-                        onClick={() => setOpen(false)}
-                        // Unread must not rest on the background tint alone — it
-                        // is a ~1% wash that low-vision users and anyone on a dim
-                        // screen will miss. The gold marker carries it visually,
-                        // the aria-label carries it for screen readers.
-                        aria-label={
-                          n.readAt
-                            ? undefined
-                            : `${tr("Unread")}: ${notifText(n, tr)}`
-                        }
-                        className={rowClass}
-                      >
-                        {body}
-                      </Link>
-                    )}
+                    <Link
+                      href={notifHref(n)}
+                      onClick={() => setOpen(false)}
+                      // Unread must not rest on the background tint alone — it
+                      // is a ~1% wash that low-vision users and anyone on a dim
+                      // screen will miss. The gold marker carries it visually,
+                      // the aria-label carries it for screen readers.
+                      aria-label={
+                        n.readAt
+                          ? undefined
+                          : `${tr("Unread")}: ${notifText(n, tr)}`
+                      }
+                      className={rowClass}
+                    >
+                      {body}
+                    </Link>
                     <button
                       type="button"
                       onClick={(e) => handleDismiss(e, n.id)}

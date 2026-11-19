@@ -229,9 +229,9 @@ function shotsOf(shade: Shade, layouts: readonly Layout[]): string[] {
 // not translated into officialese. Ladprao matches the app's other mock data.
 //
 // The image COUNTS span the shapes a real row can have, and the top card shows
-// all of them (arrows on a hovering pointer, a one-second autoplay on a phone;
-// the cards behind show the first): five (the cap), four, three, two, ONE (no
-// dots, no arrows, no autoplay), and ZERO (no cover, and the card still has to
+// all of them (desktop arrows or a tap on the screenshot;
+// the cards behind show the first): five, four, three, two, ONE (no dots or
+// controls), and ZERO (no cover, and the card still has to
 // look finished). The one-image samples are also the only ones whose picture
 // lives in the LEGACY `image_url` with an empty `image_urls` — that is the
 // shape of every real row written before 0076, and it is the regression that
@@ -471,8 +471,7 @@ export function productFixtures(): ProductItem[] {
       image_url: urls[0] ?? null,
       image_urls: legacy ? [] : urls,
       tags: [s.category],
-      // "Not said", like every product added before 0080: the samples link
-      // to ordinary sites, so none of them is a phone-only app.
+      // No declared platforms. Store links still identify mobile-only samples.
       platforms: [],
       created_at: new Date(base - i * 36e5).toISOString(),
       author: {

@@ -10,6 +10,7 @@ import {
   canComment,
   canPostProduct,
   canPostThread,
+  LIKED_PRODUCTS_PATH,
   MY_PRODUCTS_PATH,
 } from "@/lib/roles";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
@@ -23,9 +24,12 @@ import {
   MAX_PRODUCT_IMAGES,
   MIN_PRODUCT_IMAGES,
   PRODUCT_CATEGORIES,
+  isMobileProductPlatform,
   postImages,
   productPlatformsOf,
 } from "@/lib/post-types";
+import { validateProductLinks } from "@/lib/product-store-links";
+import { queryWithProductStoreColumns } from "@/lib/product-store-data";
 import { productPath, type PostComment, type PostItem } from "@/lib/post-types";
 import {
   cleanUpDeletedPost,
@@ -62,6 +66,7 @@ function revalidateFeeds(postId?: string) {
   // (deletePostAction) or moderating one has to drop the cache of both URLs
   // that can render the shelf.
   revalidatePath("/products");
+  revalidatePath(LIKED_PRODUCTS_PATH);
   revalidatePath("/");
   if (postId) {
     revalidatePath(`/community/${postId}`);
@@ -312,6 +317,8 @@ type ProductFields = {
   title: string;
   content: string;
   linkUrl: string;
+  iosStoreUrl: string | null;
+  androidStoreUrl: string | null;
   category: string;
   platforms: string[];
 };
@@ -325,7 +332,6 @@ type ProductFields = {
 function productFields(formData: FormData): ProductFields | { error: string } {
   const title = String(formData.get("title") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
-  const linkUrl = String(formData.get("link_url") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
 
   // Tighter than a post: the deck card is where a description is read (and
@@ -336,13 +342,6 @@ function productFields(formData: FormData): ProductFields | { error: string } {
   if (!content) return { error: "Say what it is." };
   if (content.length > MAX_PRODUCT_BLURB)
     return { error: "Keep the description short." };
-  // A product is the one row that has to be actionable — the deck exists to
-  // send someone to the real thing — so the link is required, and it has to
-  // survive the same parse the shelf runs before it will show a card at all.
-  if (!linkUrl) return { error: "Add a link so people can try it." };
-  if (linkUrl.length > MAX_LINK_LENGTH) return { error: LINK_TOO_LONG };
-  if (!HTTP_LINK.test(linkUrl) || !webUrl(linkUrl))
-    return { error: "Link must start with http:// or https://" };
   // Stored as the row's ONE tag (lib/post-types.ts says why a tag and not a
   // column). NOT a message that lists the slugs: the English string IS the
   // dictionary key (lib/i18n.ts), so enumerating them would change the key
@@ -358,8 +357,19 @@ function productFields(formData: FormData): ProductFields | { error: string } {
     formData.getAll("platforms").map((v) => String(v)),
   );
   if (!platforms.length) return { error: "Pick where it runs." };
+  const inStores = formData.get("in_stores") === "on";
+  if (inStores && !platforms.some(isMobileProductPlatform))
+    return { error: "Select Mobile to add app store links." };
+  const links = validateProductLinks({
+    link: String(formData.get("link_url") ?? ""),
+    requiresTryLink: platforms.some((platform) => !isMobileProductPlatform(platform)),
+    inStores,
+    ios: String(formData.get("ios_store_url") ?? ""),
+    android: String(formData.get("android_store_url") ?? ""),
+  });
+  if (links.error !== undefined) return { error: links.error };
 
-  return { title, content, linkUrl, category, platforms };
+  return { title, content, category, platforms, ...links };
 }
 
 export async function createProductAction(
@@ -368,7 +378,7 @@ export async function createProductAction(
 ): Promise<PostFormState> {
   const fields = productFields(formData);
   if ("error" in fields) return fields;
-  const { title, content, linkUrl, category, platforms } = fields;
+  const { title, content, linkUrl, iosStoreUrl, androidStoreUrl, category, platforms } = fields;
 
   const supabase = await createClient();
   const {
@@ -411,6 +421,8 @@ export async function createProductAction(
       title,
       kind: "show_and_tell",
       link_url: linkUrl,
+      ...(iosStoreUrl && { ios_store_url: iosStoreUrl }),
+      ...(androidStoreUrl && { android_store_url: androidStoreUrl }),
       // The first screenshot ALSO goes in the legacy single column, so
       // everything that still reads `image_url` on its own keeps a cover (the
       // /p/[id] OG image among them). Every renderer goes through postImages().
@@ -488,6 +500,7 @@ function revalidateProduct(productId: string) {
   revalidatePath("/");
   revalidatePath(productPath(productId));
   revalidatePath(MY_PRODUCTS_PATH);
+  revalidatePath(LIKED_PRODUCTS_PATH);
 }
 
 /**
@@ -520,7 +533,7 @@ export async function updateProductAction(
 ): Promise<PostFormState> {
   const fields = productFields(formData);
   if ("error" in fields) return fields;
-  const { title, content, linkUrl, category, platforms } = fields;
+  const { title, content, linkUrl, iosStoreUrl, androidStoreUrl, category, platforms } = fields;
 
   const supabase = await createClient();
   const {
@@ -558,22 +571,25 @@ export async function updateProductAction(
   // Scoped to the maker twice — `forum_posts_update_own` (RLS) and the
   // author_id filter here — and `.select()` so a row that matched nothing
   // reads as a failure rather than a silent success.
-  const { data: updated, error } = await supabase
-    .from("forum_posts")
-    .update({
-      title,
-      content,
-      link_url: linkUrl,
-      tags: [category],
-      platforms,
-      // The cover in the legacy single column too, as createProductAction
-      // writes it; every renderer goes through postImages().
-      image_url: imageUrls[0] ?? null,
-      image_urls: imageUrls,
-    })
-    .eq("id", product.id)
-    .eq("author_id", user.id)
-    .select("id");
+  const { data: updated, error } = await queryWithProductStoreColumns(
+    (includeStores) => supabase
+      .from("forum_posts")
+      .update({
+        title,
+        content,
+        link_url: linkUrl,
+        ...(includeStores && { ios_store_url: iosStoreUrl, android_store_url: androidStoreUrl }),
+        tags: [category],
+        platforms,
+        // Keep the first screenshot in the legacy cover column as well.
+        image_url: imageUrls[0] ?? null,
+        image_urls: imageUrls,
+      })
+      .eq("id", product.id)
+      .eq("author_id", user.id)
+      .select("id"),
+    !iosStoreUrl && !androidStoreUrl && !platforms.includes("mobile"),
+  );
 
   if (error || !updated?.length) {
     console.error("[product.update]", error);

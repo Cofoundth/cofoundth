@@ -104,13 +104,12 @@
 // visually hidden.
 //
 // ── ONE SCREEN, NO SITE HEADER OR FOOTER ──────────────────────────────────
-// The owner's call (2026-11-11): the deck uses the whole screen. The page is
-// exactly one viewport tall and marks itself [data-deck-page], which stops the
+// The deck marks itself [data-deck-page], which stops the
 // logged-out header and footer being drawn (app/globals.css). What a visitor
 // needed from that header comes with the page instead, in its top line: the
 // mark, the language and "Sign in" — without it, a member whose session has
 // lapsed has no way in from the front door. A signed-in reader keeps the app
-// shell, and the top line carries the supply CTA instead.
+// shell. The view switch lives in the shelf controls for both audiences.
 
 import Link from "next/link";
 import { Suspense } from "react";
@@ -138,24 +137,27 @@ import { BrandMark } from "@/components/Brand";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { AuthReturnLink } from "@/components/marketing/AuthReturnLink";
 import { productBucketOf } from "./categories";
-import { getShelfProducts, getShelfProductsAnyDevice } from "./shelf-data";
+import { getShelfProducts } from "./shelf-data";
 import { ProductFilters } from "./ProductFilters";
 import {
   cardFooterLabel,
   displayHost,
   productImages,
+  phoneOnly,
   phonePlatformsOf,
   productName,
 } from "./product-view";
 import {
   parseAfterParam,
   parseProductParam,
+  parseProductView,
   type DeckRoute,
 } from "./deck-position";
 import { ProductModal, ProductModalSkeleton } from "./ProductModal";
 import { ProductPageBody } from "./[id]/ProductPageBody";
 import { ProductDeck, type DeckProduct } from "./ProductDeck";
 import { ProductFilterProvider } from "./filter-context";
+import { ProductShelfFrame, ProductViewSwitch } from "./ProductShelfView";
 import { isFixture } from "./fixtures";
 import { SwitchToBuilding } from "./SwitchToBuilding";
 // parseCategoryParam lives in ./categories (no "use client"): the SERVER
@@ -173,13 +175,14 @@ export async function ProductShelf({
     category?: string | string[];
     after?: string | string[];
     product?: string | string[];
+    view?: string | string[];
   }>;
   /** Which page is rendering the shelf, so a product's page can link back to
    *  the same deck. */
   route: DeckRoute;
 }) {
   // Next 16: searchParams is a Promise.
-  const { category: raw, after: rawAfter, product: rawProduct } = await searchParams;
+  const { category: raw, after: rawAfter, product: rawProduct, view } = await searchParams;
 
   // `?product=<id>`: the product whose own page is open in the modal over
   // the deck (./ProductModal.tsx). Shape-checked before it reaches a query.
@@ -273,6 +276,7 @@ export async function ProductShelf({
     tEmptyCta,
     tNoneHereTitle,
     tNoneHereBody,
+    tMobileOnly,
     tSeeEverything,
     tTryAria,
     tAnonymous,
@@ -323,6 +327,7 @@ export async function ProductShelf({
     // both sides mean the same thing.
     tServer("Nothing in this category yet"),
     tServer("Try another category — or be the first to put something here."),
+    tServer("Mobile only"),
     tServer("See everything"),
     tServer("Try {name} on {host}"),
     tServer("A founder"),
@@ -362,10 +367,9 @@ export async function ProductShelf({
   // THE SUPPLY SIDE, and the page is now read by FOUR audiences, so this is a
   // four-way switch on `role` with an explicit `null` arm. Written as one
   // function because the deck and the empty states are different buttons (a
-  // quiet secondary in the top line's right corner, for signed-in readers
-  // only, and a primary inside an empty state) and nothing else about them
-  // differs. The quiet ones never wrap (whitespace-nowrap): the category chips
-  // share that line and can squeeze its corner columns.
+  // compact button in the top line for eligible signed-in readers and
+  // a primary inside an empty state). The corner buttons never wrap because
+  // they share the line with the category chips.
   //
   //   null (anonymous)  the EMPTY state's only — a logged-out reader's top
   //                     line carries "Sign in" instead. A plain LINK to
@@ -384,11 +388,8 @@ export async function ProductShelf({
   //                     the one place a product is added from, quietly (it is
   //                     never announced in the community feed). A founder who
   //                     has not onboarded is sent through /onboarding by
-  //                     app/(app)/layout.tsx and comes back to it. ONCE THEY
-  //                     HAVE ONE (hasOwnProducts), the deck's quiet button is
-  //                     My products instead (MY_PRODUCTS_PATH): their products
-  //                     with ratings and comments, and "Add another" there. The
-  //                     empty state keeps Add your product.
+  //                     app/(app)/layout.tsx and comes back to it. Makers
+  //                     with products use My products in the navigation.
   //   "explorer"        the one control that promotes them to a founder, and
   //                     it ends on ADD_PRODUCT_PATH after onboarding.
   //                     "Add yours" would point at a form they cannot use —
@@ -419,18 +420,7 @@ export async function ProductShelf({
         />
       );
     if (role === "investor") return undefined;
-    if (quiet && hasOwnProducts)
-      return (
-        <LinkButton
-          href={MY_PRODUCTS_PATH}
-          variant="secondary"
-          size="sm"
-          className="whitespace-nowrap"
-        >
-          <Package className="h-4 w-4" strokeWidth={1.5} />
-          {tMyProducts}
-        </LinkButton>
-      );
+    if (quiet && hasOwnProducts) return undefined;
     return quiet ? (
       <LinkButton
         href={ADD_PRODUCT_PATH}
@@ -477,21 +467,15 @@ export async function ProductShelf({
           ? undefined
           : tEmptyBody;
 
-  // ONE array, read by two client components: the provider works out which
-  // category chips to offer from it, the deck filters it. From the rows
-  // getShelfProducts() returned and never a second query, so every hidden,
-  // suspended, bot, account_type and blocked-pair gate is inherited, and in
-  // server order: anything random here would make the server's first card and
-  // the client's disagree.
+  // The browser filters the rows from getShelfProducts() in server order,
+  // after the visibility and blocked-pair checks have been applied.
   //
   // `productBucketOf`, never `productCategoryOf`: an older show_and_tell has
   // no category tag, and a null must never reach a label lookup or a chip.
   //
-  // WHAT THE CARD SHOWS is only the images, the description, the rating and
-  // the comment count (CLAUDE.md, "Founder decision (2026-11-10)"), so nothing
-  // about the maker is sent. `name` is still sent: the card has no visible
-  // name, but its link's accessible name, the live region and the prompts'
-  // titles need one.
+  // The card shows images, description, rating, comment count, and the
+  // mobile-only label where applicable. The product name supplies the link's
+  // accessible name, the live region, and the review prompt's title.
   //
   // `href` is the maker's product, which "Try" opens in a new tab: the
   // `link` getShelfProducts() already ran through webUrl(), so it is http(s)
@@ -507,22 +491,6 @@ export async function ProductShelf({
   // `sample` marks a dev fixture for the review modal, which can show one but
   // not save it. NODE_ENV is a build-time constant and productFixtures() is []
   // in production, so this is false for every row a production build renders.
-  // The categories with products this computer is not shown
-  // (./shelf-data.ts): the deck says so when a filter on one comes up empty.
-  // Both lists are cached reads; on anything but a computer they are the same.
-  const shownIds = new Set(shown.map((p) => p.id));
-  const phoneOnlyBuckets = [
-    ...new Set(
-      (await getShelfProductsAnyDevice())
-        .filter((p) => !shownIds.has(p.id))
-        .map((p) => productBucketOf(p.tags)),
-    ),
-  ];
-  const [tPhonesHereTitle, tPhonesHereBody] = await Promise.all([
-    tServer("Everything in this category runs on phones"),
-    tServer("Open this page on your phone to try them."),
-  ]);
-
   const products: DeckProduct[] = shown.map((p) => {
     const name = productName(p, tAnonymous);
     const host = displayHost(p.link);
@@ -536,6 +504,7 @@ export async function ProductShelf({
       // A phone-only app (its store link, or the maker's "Runs on"): a
       // computer pressing "Try" gets a code to scan instead (./PhoneHandoff.tsx).
       phones: phonePlatformsOf(p.link, p.platforms),
+      mobileOnly: phoneOnly(p.link, p.platforms),
       // One pass, so a product named "{host}" cannot be substituted into.
       tryAria: tTryAria.replace(/\{(name|host)\}/g, (_, key) =>
         key === "name" ? name : host,
@@ -558,13 +527,8 @@ export async function ProductShelf({
   // while one is open.
   const pageTitle = <h1 className="sr-only">{tTitle}</h1>;
 
-  // THE TOP LINE'S CORNERS. Logged out they stand in for the site header the
-  // deck does not draw (see the top of this file): the mark home, the language,
-  // "Sign in". Signed in, the app shell already has all three, and the right
-  // corner is the supply CTA — the one thing that used to sit under the deck.
-  // A logged-out visitor gets no "Join to add yours" any more: joining is
-  // offered when they come back from trying a product (./DeckPrompts.tsx) and
-  // at the end of the deck.
+  // The view switch sits beside the filters on phones. On wider screens,
+  // members get it in the right corner and guests keep sign-in there.
   const leftCorner =
     user === null ? (
       <Link
@@ -574,8 +538,10 @@ export async function ProductShelf({
       >
         <BrandMark size="sm" />
       </Link>
+    ) : deckCta ? (
+      <div className="col-start-1 row-start-1 justify-self-start">{deckCta}</div>
     ) : null;
-  const rightCornerContent =
+  const guestControls =
     user === null ? (
       <>
         <LanguageSwitcher />
@@ -590,26 +556,6 @@ export async function ProductShelf({
           {tSignIn}
         </AuthReturnLink>
       </>
-    ) : (
-      deckCta
-    );
-  // DRAWN TWICE, each copy at one size only (display:none takes the other out
-  // of the tab order and the accessibility tree), so focus follows what is on
-  // screen: on a phone the corners share the first line and the chips take the
-  // second, so the right corner comes BEFORE the chips in the DOM; from 640px
-  // the three sit on one line and it comes after them. Grid placement alone
-  // cannot do this — it moves boxes, never focus.
-  const rightCorner = (at: "phone" | "wide") =>
-    rightCornerContent ? (
-      <div
-        className={
-          at === "phone"
-            ? "col-start-2 row-start-1 flex items-center gap-3 justify-self-end text-center sm:hidden"
-            : "hidden items-center gap-3 justify-self-end text-center sm:col-start-3 sm:row-start-1 sm:flex"
-        }
-      >
-        {rightCornerContent}
-      </div>
     ) : null;
 
   // THE LEGAL LINKS, logged out only (the owner's call, 2026-11-11). With the
@@ -661,23 +607,15 @@ export async function ProductShelf({
   const sectionClass = "pt-6 pb-12 lg:pt-8";
 
   if (products.length === 0) {
-    // Empty on a COMPUTER only because everything on the shelf runs on phones
-    // (./shelf-data.ts): saying the shelf is empty would be false, and "add
-    // yours" would be the wrong answer to it. Both lists are cached reads.
-    const phonesOnly = (await getShelfProductsAnyDevice()).length > 0;
-    const [phonesTitle, phonesBody] = phonesOnly
-      ? await Promise.all([
-          tServer("Everything on the shelf runs on phones"),
-          tServer("Open this page on your phone to try them."),
-        ])
-      : [tEmptyTitle, emptyBody];
     return (
       <Section rhythm={false} className={sectionClass}>
         {pageTitle}
+        <ProductFilterProvider initial={initialCategory}>
+          <ProductFilters className="mb-5" />
+        </ProductFilterProvider>
         {/* Whether the SHELF is empty is what separates this from the deck's
             own empty state: an empty shelf needs a maker, an empty filter needs
-            the reader to widen it. No category filter here: with nothing on
-            the shelf there is nothing to choose between.
+            the reader to widen it.
 
             The body is audience-specific, decided HERE because this is the only
             layer that knows who is reading. The founder copy tells you to add
@@ -685,21 +623,39 @@ export async function ProductShelf({
             shelf this IS the public front door, / as well as /products. */}
         <EmptyState
           icon={PackageOpen}
-          title={phonesTitle}
-          description={phonesBody}
+          title={tEmptyTitle}
+          description={emptyBody}
           action={emptyStateCta}
         />
       </Section>
     );
   }
 
-  // ONE VIEWPORT TALL, whatever chrome is around it: the whole screen logged
-  // out (no site header or footer, see the top of this file), the screen less
-  // the app shell's phone bar for a signed-in member below md — 65px, because
-  // the bar measures 64.8 (its 4rem row and a hairline border), and 4rem left
-  // the page one pixel too tall to fit. Never
-  // shorter than 34rem: on a landscape phone the page scrolls rather than
-  // squeezing the card to a sliver.
+  // The deck owns the prompt for a try from either the cards or these details.
+  const productModal = modalId && (
+    <ProductModal
+      productId={modalId}
+      name={products.find((p) => p.id === modalId)?.name ?? tProduct}
+      closeLabel={tClose}
+      discardLabel={tDiscard}
+    >
+      <Suspense fallback={<ProductModalSkeleton />}>
+        <ProductPageBody
+          id={modalId}
+          mode="modal"
+          search={{
+            from: route === "/" ? "home" : "products",
+            category: initialCategory ?? undefined,
+            view: parseProductView(view),
+          }}
+        />
+      </Suspense>
+    </ProductModal>
+  );
+
+  // Card view fills the available height on larger screens. On phones it
+  // reserves room below Skip/Try, and the signed-in shell also deducts its
+  // 65px top bar. A minimum height keeps the deck usable in short windows.
   //
   // A card flying off must not widen the page, and a tilting one must not make
   // it scroll: both are clipped at this root, which is the viewport's edge.
@@ -721,30 +677,26 @@ export async function ProductShelf({
   // 2026-11-12 the bottom was lg:pb-5 under a top of lg:pt-4: 20px against 16,
   // which nothing asked for.
   return (
-    <div
-      data-deck-page=""
-      className="flex h-dvh min-h-[34rem] flex-col overflow-clip in-data-[shell=public]:h-[calc(100dvh-4.0625rem)] md:in-data-[shell=public]:h-dvh"
-    >
+    <ProductShelfFrame>
       {pageTitle}
-      <ProductFilterProvider items={products} initial={initialCategory}>
+      <ProductFilterProvider initial={initialCategory}>
         <div className="relative mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-4">
-          {/* THE TOP LINE: the corners (leftCorner, rightCorner) and the
-              category chips between them, on one line from 640px. On a phone
-              the corners take the first line and the chips the whole second,
-              where they wrap (./ProductFilters.tsx says why they wrap instead
-              of scrolling). The chips render nothing when there is nothing to
-              choose between, and their line goes with them. The right corner
-              is in the DOM twice, for the focus order: see rightCorner. */}
-          {leftCorner || rightCornerContent ? (
-            <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 sm:grid-cols-[1fr_auto_1fr]">
-              {leftCorner}
-              {rightCorner("phone")}
-              <ProductFilters className="col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1" />
-              {rightCorner("wide")}
+          {/* Guest controls appear before the phone toolbar in tab order. */}
+          <div className="grid grid-cols-[1fr_auto] items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
+            {leftCorner}
+            {guestControls && (
+              <div className="col-start-2 row-start-1 flex items-center gap-3 justify-self-end sm:hidden">
+                {guestControls}
+              </div>
+            )}
+            <div className="col-span-2 flex flex-wrap items-center justify-between gap-2 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:justify-center sm:gap-3">
+              <ProductFilters className="max-sm:justify-start" />
+              <ProductViewSwitch className={user ? "sm:hidden" : undefined} />
             </div>
-          ) : (
-            <ProductFilters />
-          )}
+            <div className="hidden items-center gap-3 justify-self-end sm:col-start-3 sm:row-start-1 sm:flex">
+              {user ? <ProductViewSwitch /> : guestControls}
+            </div>
+          </div>
           {/* The deck takes the rest. Everything here stays server-rendered
               except the client islands that read the selection. */}
           <div className="mt-3 flex min-h-0 flex-1 flex-col lg:mt-4">
@@ -753,12 +705,12 @@ export async function ProductShelf({
               route={route}
               resumeAfter={resumeAfter}
               resumeAt={modalId}
+              productModal={productModal}
               viewer={{
                 signedIn: user !== null,
                 canComment: role !== null && canComment(role),
               }}
               computer={(await viewerKind()) === "computer"}
-              phoneOnlyBuckets={phoneOnlyBuckets}
               labels={{
                 deckName: tDeckName,
                 skip: tSkip,
@@ -771,8 +723,7 @@ export async function ProductShelf({
                 openBlocked: tOpenBlocked,
                 noneHereTitle: tNoneHereTitle,
                 noneHereBody: tNoneHereBody,
-                phonesHereTitle: tPhonesHereTitle,
-                phonesHereBody: tPhonesHereBody,
+                mobileOnly: tMobileOnly,
                 seeEverything: tSeeEverything,
                 previousImage: tPreviousImage,
                 nextImage: tNextImage,
@@ -785,29 +736,6 @@ export async function ProductShelf({
           {legalLinks}
         </div>
       </ProductFilterProvider>
-
-      {/* The product's own page over the deck, at `?product=<id>`: the same
-          ProductPageBody as /products/<id>, in its modal mode. Streamed: the
-          modal and its skeleton arrive with the deck, the product after. */}
-      {modalId && (
-        <ProductModal
-          productId={modalId}
-          name={products.find((p) => p.id === modalId)?.name ?? tProduct}
-          closeLabel={tClose}
-          discardLabel={tDiscard}
-        >
-          <Suspense fallback={<ProductModalSkeleton />}>
-            <ProductPageBody
-              id={modalId}
-              mode="modal"
-              search={{
-                from: route === "/" ? "home" : "products",
-                category: initialCategory ?? undefined,
-              }}
-            />
-          </Suspense>
-        </ProductModal>
-      )}
-    </div>
+    </ProductShelfFrame>
   );
 }

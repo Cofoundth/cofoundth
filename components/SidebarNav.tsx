@@ -11,25 +11,12 @@ import {
   Handshake,
   MessageCircle,
   Newspaper,
-  Package,
   ShieldCheck,
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { RAIL_TIP } from "@/lib/sidebar";
-
-export type SidebarNavItem = {
-  href: string;
-  /** ALREADY translated by the server component that renders this. */
-  label: string;
-  badge?: number;
-  /**
-   * A word-shaped marker ("New") rather than a count — ALREADY translated, the
-   * same as `label`. Nothing carries both `tag` and `badge` today, but the type
-   * does not forbid it; the render puts the tag first if it ever happens.
-   */
-  tag?: string;
-};
+import { RAIL_TIP, type SidebarNavItem } from "@/lib/sidebar";
+import { ProductNavGroup } from "./ProductNavGroup";
 
 // The rail's nav links, as a CLIENT component purely so the active item can
 // follow the route.
@@ -51,7 +38,6 @@ export type SidebarNavItem = {
 // neutral mark, so a new nav item can never render as an empty square.
 const ICONS: Record<string, LucideIcon> = {
   "/meetups": Calendar,
-  "/products": Package,
   "/community": MessageCircle,
   "/insights": Newspaper,
   "/browse": Users,
@@ -89,6 +75,17 @@ export function SidebarNav({ items }: { items: SidebarNavItem[] }) {
       className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-1"
     >
       {items.map((i) => {
+        if (i.submenu) {
+          return (
+            <ProductNavGroup
+              key={i.href}
+              label={i.label}
+              tag={i.tag}
+              links={i.submenu}
+              pathname={pathname}
+            />
+          );
+        }
         const Icon = ICONS[i.href] ?? Circle;
         return (
           <Link
