@@ -9,6 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { type createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
 import { devTestAuthorIds } from "@/lib/test-accounts";
+import { productAvailabilityOf, queryWithProductAvailability } from "@/lib/product-store-data";
 import { isPhoneOnly } from "@/app/(marketing)/products/product-view";
 import {
   bangkokDay,
@@ -37,9 +38,8 @@ export type MemberDrawComment = DrawComment & {
 /** comments → their post → its author's moderation flags. The FKs are named
  *  because forum_likes and forum_comments give PostgREST other paths between
  *  these tables. */
-const POST_EMBED =
-  "post:forum_posts!forum_comments_post_id_fkey(id, author_id, hidden, kind, title, content, link_url, platforms, author:profiles!forum_posts_author_id_fkey(suspended, is_bot))";
-const COLUMNS = `id, author_id, content, created_at, ${POST_EMBED}`;
+const commentColumns = (availability: string) =>
+  `id, author_id, content, created_at, post:forum_posts!forum_comments_post_id_fkey(id, author_id, hidden, kind, title, content, link_url, ${availability}, author:profiles!forum_posts_author_id_fkey(suspended, is_bot))`;
 
 /** PostgREST's ceiling on one response. */
 const PAGE = 1000;
@@ -57,7 +57,8 @@ type Row = {
     title: string | null;
     content: string | null;
     link_url: string | null;
-    platforms: string[] | null;
+    platforms?: string[] | null;
+    availability?: { platforms: string[] } | null;
     author: { suspended: boolean | null; is_bot: boolean | null } | null;
   } | null;
 };
@@ -88,7 +89,8 @@ function toDrawComment(r: Row, devTest: Set<string>): MemberDrawComment | null {
     postKind: r.post.kind ?? "post",
     postTitle: r.post.title,
     postSnippet: (r.post.content ?? "").slice(0, 120),
-    postPhoneOnly: r.post.kind === "show_and_tell" && isPhoneOnly(r.post.link_url, r.post.platforms),
+    postPhoneOnly: r.post.kind === "show_and_tell" &&
+      isPhoneOnly(r.post.link_url, productAvailabilityOf(r.post).platforms),
   };
 }
 
@@ -138,16 +140,16 @@ export async function memberDrawComments(
   month: string,
 ): Promise<MemberDrawComment[] | null> {
   const { from, to } = readWindow(month);
-  const rows = await readAll((after) => {
+  const rows = await readAll((after) => queryWithProductAvailability((availability) => {
     let q = supabase
       .from("forum_comments")
-      .select(COLUMNS)
+      .select(commentColumns(availability))
       .eq("author_id", memberId)
       .gte("created_at", from)
       .lt("created_at", to);
     if (after) q = q.gt("id", after);
     return q.order("id").limit(PAGE);
-  }, "member comments");
+  }), "member comments");
   if (!rows) return null;
   const devTest = await devTestAuthorsOf(rows);
   return rows
@@ -246,15 +248,15 @@ export async function trackMonth(
   const admin = createAdminClient();
   const { from, to } = readWindow(month);
 
-  const rows = await readAll((after) => {
+  const rows = await readAll((after) => queryWithProductAvailability((availability) => {
     let q = admin
       .from("forum_comments")
-      .select(COLUMNS)
+      .select(commentColumns(availability))
       .gte("created_at", from)
       .lt("created_at", to);
     if (after) q = q.gt("id", after);
     return q.order("id").limit(PAGE);
-  }, "comments");
+  }), "comments");
   if (!rows) return null;
 
   const devTest = await devTestAuthorsOf(rows);

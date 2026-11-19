@@ -2,6 +2,7 @@ import { webUrl } from "./web-url";
 import { LINK_TOO_LONG, MAX_LINK_LENGTH } from "./write-limits";
 
 export type PhonePlatform = "ios" | "android";
+export type ProductStoreLinks = Partial<Record<PhonePlatform, string>>;
 
 export const STORE_PLATFORMS = ["ios", "android"] as const;
 
@@ -33,6 +34,15 @@ export function productStoreLink(raw: string | null | undefined, platform: Phone
   return link && link.href.length <= MAX_LINK_LENGTH && !link.username && !link.password && !link.port && storePlatformOf(link) === platform
     ? link
     : null;
+}
+
+export function productStoreLinksOf(row: { ios_store_url?: string | null; android_store_url?: string | null }): ProductStoreLinks {
+  const links: ProductStoreLinks = {};
+  for (const platform of STORE_PLATFORMS) {
+    const url = productStoreLink(row[`${platform}_store_url`], platform);
+    if (url) links[platform] = url.href;
+  }
+  return links;
 }
 
 export const STORE_LINK_REQUIRED = "Add at least one app store link.";

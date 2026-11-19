@@ -29,11 +29,13 @@ import {
 import { ExternalLink } from "lucide-react";
 import { encode } from "uqr";
 import { useT } from "@/lib/i18n-client";
-import { Button, Dialog } from "@/components/ui";
+import { Button, Dialog, ToggleChip, buttonClasses } from "@/components/ui";
+import { STORE_LABEL, STORE_PLATFORMS, type ProductStoreLinks } from "@/lib/product-store-links";
 import {
   DeckProductTry,
   useProductPrompts,
   type DeckViewer,
+  type ProductTry,
   type PromptProduct,
 } from "./DeckPrompts";
 import type { PhonePlatform } from "./product-view";
@@ -89,64 +91,84 @@ type ExternalProductLinkProps = {
   host: string;
   name: string;
   phones: readonly PhonePlatform[];
+  storeLinks: ProductStoreLinks;
   describedBy?: string;
   className?: string;
   children: ReactNode;
 };
 
-type TryItLinkProps = Omit<ExternalProductLinkProps, "name"> & {
+type TryDestination = { label: string; href: string; host: string; phones: readonly PhonePlatform[] };
+type ProductTryLinksProps = {
   product: PromptProduct;
   viewer: DeckViewer;
   returnPath: string;
+  main: TryDestination | null;
+  stores: readonly (TryDestination & { platform: PhonePlatform })[];
 };
 
-export function TryItLink({ product, viewer, returnPath, ...link }: TryItLinkProps) {
+export function ProductTryLinks(props: ProductTryLinksProps) {
   const triedFromDetails = useContext(DeckProductTry);
   if (!triedFromDetails) {
-    return (
-      <StandaloneTryItLink
-        {...link}
-        product={product}
-        viewer={viewer}
-        returnPath={returnPath}
-      />
-    );
+    return <StandaloneTryLinks {...props} />;
   }
   return (
-    <ExternalProductLink
-      {...link}
-      name={product.name}
-      onTry={() => triedFromDetails(product)}
-      onReview={
-        !viewer.signedIn || product.reviewable
-          ? () => triedFromDetails(product, { requestReview: true })
-          : undefined
-      }
-    />
+    <TryLinks {...props} tried={triedFromDetails} />
   );
 }
 
-function StandaloneTryItLink({
-  product,
-  viewer,
-  returnPath,
-  ...link
-}: TryItLinkProps) {
-  const prompts = useProductPrompts({ products: [product], viewer, returnPath });
+function StandaloneTryLinks(props: ProductTryLinksProps) {
+  const prompts = useProductPrompts({ products: [props.product], viewer: props.viewer, returnPath: props.returnPath });
   return (
     <>
-      <ExternalProductLink
-        {...link}
-        name={product.name}
-        onTry={() => prompts.tried(product)}
-        onReview={
-          !viewer.signedIn || product.reviewable
-            ? () => prompts.tried(product, { requestReview: true })
-            : undefined
-        }
-      />
+      <TryLinks {...props} tried={prompts.tried} />
       {prompts.dialog}
     </>
+  );
+}
+
+function TryLinks({ product, viewer, main, stores, tried }: ProductTryLinksProps & {
+  tried: ProductTry;
+}) {
+  const storeLinks: ProductStoreLinks = Object.fromEntries(stores.map(({ platform, href }) => [platform, href]));
+
+  function link(destination: TryDestination, key: string, variant: "primary" | "secondary") {
+    const hostId = `product-host-${product.id}-${key}`;
+    return (
+      <div key={key} className="min-w-0">
+        <ExternalProductLink
+          href={destination.href}
+          host={destination.host}
+          name={product.name}
+          phones={destination.phones}
+          storeLinks={storeLinks}
+          describedBy={hostId}
+          className={buttonClasses({ variant, size: "lg", className: "w-full px-3" })}
+          onTry={() => tried(product)}
+          onReview={
+            !viewer.signedIn || product.reviewable
+              ? () => tried(product, { requestReview: true })
+              : undefined
+          }
+        >
+          {destination.label}
+          <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+        </ExternalProductLink>
+        <p id={hostId} className="mt-2 text-center text-sm break-all text-ink-muted">
+          {destination.host}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6 grid gap-3">
+      {main && link(main, "main", "primary")}
+      {stores.length > 0 && (
+        <div className={stores.length > 1 ? "grid gap-2 min-[400px]:grid-cols-2" : undefined}>
+          {stores.map((store) => link(store, store.platform, main ? "secondary" : "primary"))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -155,6 +177,7 @@ function ExternalProductLink({
   host,
   name,
   phones,
+  storeLinks,
   describedBy,
   className,
   children,
@@ -190,6 +213,7 @@ function ExternalProductLink({
           href={href}
           host={host}
           phones={phones}
+          storeLinks={storeLinks}
           onClose={() => setOpen(false)}
           onOpenHere={onTry}
           onReview={onReview}
@@ -233,6 +257,7 @@ export function PhoneHandoffDialog({
   href,
   host,
   phones,
+  storeLinks,
   onClose,
   onOpenHere,
   onReview,
@@ -242,6 +267,7 @@ export function PhoneHandoffDialog({
   href: string;
   host: string;
   phones: readonly PhonePlatform[];
+  storeLinks?: ProductStoreLinks;
   onClose: () => void;
   /** The reader chose the link on this device after all. */
   onOpenHere?: () => void;
@@ -249,8 +275,12 @@ export function PhoneHandoffDialog({
   onReview?: () => void;
 }) {
   const tr = useT();
+  const canSwitchStore = !!(storeLinks?.ios && storeLinks.android);
+  const [store, setStore] = useState<PhonePlatform>(() => href === storeLinks?.android ? "android" : "ios");
+  const destination = canSwitchStore ? storeLinks?.[store] ?? href : href;
+  const destinationHost = destination === href ? host : new URL(destination).hostname;
   const platforms =
-    phones.length > 1
+    canSwitchStore ? PHONE_NAME[store] : phones.length > 1
       ? tr("{a} and {b}")
           .replace("{a}", PHONE_NAME[phones[0]])
           .replace("{b}", PHONE_NAME[phones[1]])
@@ -277,9 +307,18 @@ export function PhoneHandoffDialog({
           "It's an app for {platforms}. Scan this code with your phone's camera to open it.",
         ).replace("{platforms}", platforms)}
       </p>
+      {canSwitchStore && (
+        <div role="group" aria-label={tr("App store links")} className="mt-4 grid grid-cols-2 gap-2">
+          {STORE_PLATFORMS.map((platform) => (
+            <ToggleChip key={platform} selected={store === platform} onClick={() => setStore(platform)}>
+              {tr(STORE_LABEL[platform])}
+            </ToggleChip>
+          ))}
+        </div>
+      )}
       <div className="mt-5">
         <QrCode
-          value={href}
+          value={destination}
           label={tr("QR code to open {name}").replace("{name}", name)}
         />
       </div>
@@ -296,7 +335,7 @@ export function PhoneHandoffDialog({
         </Button>
       )}
       <a
-        href={href}
+        href={destination}
         target="_blank"
         rel={LINK_REL}
         onClick={openHere}
@@ -305,7 +344,7 @@ export function PhoneHandoffDialog({
         }}
         className="mt-5 inline-flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-navy"
       >
-        {tr("Open {host} here instead").replace("{host}", host)}
+        {tr("Open {host} here instead").replace("{host}", destinationHost)}
         <ExternalLink className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
       </a>
     </Dialog>

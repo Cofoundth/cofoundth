@@ -13,16 +13,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { UNRATED, type PostItem, type PostKind, type ProductItem } from "./post-types";
 import { getProductRatings } from "./product-ratings";
 import { devTestAuthorIds, TEST_ACCOUNT_EMAILS } from "./test-accounts";
+import {
+  productAvailabilityOf,
+  queryWithProductAvailability,
+  type ProductListingSummary,
+} from "./product-store-data";
 
 type DB = Awaited<ReturnType<typeof createClient>>;
 
 const BASE_POST_COLS =
   "id, author_id, title, content, kind, link_url, image_url, tags, created_at";
 
-// `image_urls` arrives in migration 0076 and `platforms` in 0080. This list is
-// NOT products-only — the community feed and search both select it — so each
-// column and this line landed together in the same change; both are applied.
-const POST_COLS = `${BASE_POST_COLS}, image_urls, platforms`;
+const POST_COLS = `${BASE_POST_COLS}, image_urls`;
 
 type PostRow = Record<string, unknown>;
 
@@ -148,7 +150,7 @@ async function shapePosts(
       // no such key at all. postImages() then falls back to image_url.
       image_urls: ((p.image_urls as string[] | null) ?? []) as string[],
       tags: ((p.tags as string[] | null) ?? []) as string[],
-      platforms: ((p.platforms as string[] | null) ?? []) as string[],
+      platforms: [],
       created_at: p.created_at as string,
       author: a
         ? {
@@ -527,12 +529,12 @@ export async function getPublicProductsPage({
   //
   // Over-fetch for blocked pairs only, as the feed does: a block cannot become
   // a query clause (the reverse direction of one is private to its owner).
-  const rows = await selectPosts((cols) => {
-    const q = productsQuery(admin, `${cols}, ${AUTHOR_GATE_EMBED}`, [])
+  const rows = await selectPosts((cols) => queryWithProductAvailability((availability) => {
+    const q = productsQuery(admin, `${cols}, ${availability}, ${AUTHOR_GATE_EMBED}`, [])
       .order("created_at", { ascending: false })
       .limit(limit + Math.min(excluded.size, MAX_OVERFETCH));
     return q.or(productAuthorFilter(), { referencedTable: "gate" });
-  });
+  }));
 
   const unblocked = excluded.size
     ? rows.filter((p) => !excluded.has(p.author_id as string))
@@ -573,7 +575,11 @@ export async function getPublicProductsPage({
     shapePosts(admin, visible, viewerId, authors),
     getProductRatings(visible.map((p) => p.id as string)),
   ]);
-  return shaped.map((p) => ({ ...p, rating: ratings.get(p.id) ?? UNRATED }));
+  return shaped.map((p, i) => ({
+    ...p,
+    ...productAvailabilityOf(visible[i]),
+    rating: ratings.get(p.id) ?? UNRATED,
+  }));
 }
 
 /** Look up only the current member's likes. The author and visibility filters
@@ -587,24 +593,27 @@ export async function getLikedProductsPage(
   // The embedded author gate reads moderation flags and dev test-account
   // email addresses. Use the same service client and gate as the shelf.
   const admin = createAdminClient();
-  const query = admin
-    .from("forum_likes")
-    .select(
-      `product:forum_posts!inner(id, title, content, link_url, image_url, image_urls, tags, platforms, ${AUTHOR_GATE_EMBED})`,
-      { count: "exact" },
-    )
-    .eq("user_id", viewerId)
-    .eq("product.kind", "show_and_tell")
-    .eq("product.hidden", false)
-    .or(productAuthorFilter(), { referencedTable: "product.gate" })
-    .order("created_at", { ascending: false })
-    .order("post_id");
+  const { data, count, error } = await queryWithProductAvailability((availability) => {
+    const query = admin
+      .from("forum_likes")
+      .select(
+        `product:forum_posts!inner(id, title, content, link_url, image_url, image_urls, tags, ${availability}, ${AUTHOR_GATE_EMBED})`,
+        { count: "exact" },
+      )
+      .eq("user_id", viewerId)
+      .eq("product.kind", "show_and_tell")
+      .eq("product.hidden", false)
+      .or(productAuthorFilter(), { referencedTable: "product.gate" })
+      .order("created_at", { ascending: false })
+      .order("post_id");
 
-  if (blockedAuthors.size) {
-    query.not("product.author_id", "in", `(${[...blockedAuthors].join(",")})`);
-  }
+    if (blockedAuthors.size) {
+      query.not("product.author_id", "in", `(${[...blockedAuthors].join(",")})`);
+    }
 
-  const { data, count, error } = await query.range(offset, offset + limit - 1);
+    return query.range(offset, offset + limit - 1)
+      .overrideTypes<{ product: ProductListingSummary }[], { merge: false }>();
+  });
   if (offset > 0 && error?.code === "PGRST103") {
     return { products: [], count: count ?? 0 };
   }
@@ -614,17 +623,11 @@ export async function getLikedProductsPage(
   }
 
   // PostgREST returns one embedded post per like because post_id is a foreign
-  // key into forum_posts. The columns above match the grid's input exactly.
-  const products = (data ?? []).map((row) => row.product) as unknown as {
-    id: string;
-    title: string | null;
-    content: string;
-    link_url: string | null;
-    image_url: string | null;
-    image_urls: string[];
-    platforms: string[];
-    tags: string[];
-  }[];
+  // key into forum_posts.
+  const products = (data ?? []).map(({ product }) => ({
+    ...product,
+    ...productAvailabilityOf(product),
+  }));
   const ratings = await getProductRatings(products.map((p) => p.id));
   return {
     products: products.map((p) => ({ ...p, rating: ratings.get(p.id) ?? UNRATED })),

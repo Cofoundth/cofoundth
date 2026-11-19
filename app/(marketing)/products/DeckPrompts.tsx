@@ -91,10 +91,12 @@ import { Star } from "lucide-react";
 import { Button, Dialog, LinkButton, Textarea } from "@/components/ui";
 import { authHref } from "@/lib/auth-href";
 import { useT } from "@/lib/i18n-client";
-import { createPostCommentAction } from "@/lib/post-actions";
+import { createPostCommentAction, recordProductTryAction } from "@/lib/post-actions";
+import { TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
 import { MAX_RATING } from "@/lib/post-types";
 import type { FilterBucket } from "./categories";
 import { setProductRatingAction } from "@/app/(app)/community/[id]/actions";
+import { useRouter } from "next/navigation";
 import {
   deckReviewPath,
   productReviewPath,
@@ -107,6 +109,7 @@ import {
  *  the product opened somewhere they are not looking, and the prompt shows
  *  now. Long enough for a foreground tab to take focus on a slow machine. */
 export const AWAY_GRACE_MS = 1500;
+const GUEST_TRY_KEY = "cofoundee:recent-product-try";
 
 /** What a prompt needs to know about a product. A subset of DeckProduct, so
  *  this file does not import the deck. */
@@ -132,10 +135,10 @@ export type ProductTry = (product: PromptProduct, options?: TryOptions) => void;
 export const DeckProductTry = createContext<ProductTry | null>(null);
 
 type Prompt =
-  | { kind: "review"; product: PromptProduct }
+  | { kind: "review"; product: PromptProduct; recording?: Promise<boolean> }
   | { kind: "signin"; product: PromptProduct };
 
-type Try = { product: PromptProduct } & TryOptions;
+type Try = { product: PromptProduct; recording?: Promise<boolean> } & TryOptions;
 
 function readerIsAway(): boolean {
   return document.visibilityState === "hidden" || !document.hasFocus();
@@ -176,6 +179,7 @@ export function useProductPrompts({
   locked: boolean;
   dialog: ReactNode;
 } {
+  const router = useRouter();
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   /** Scores saved from a modal during this visit, so reopening one for the
    *  same product (after Start over) shows what was just given. */
@@ -209,7 +213,7 @@ export function useProductPrompts({
       }
       let next: Prompt | null = null;
       if (viewer.signedIn) {
-        if (product.reviewable) next = { kind: "review", product };
+        if (product.reviewable) next = { kind: "review", product, recording: attempt.recording };
       } else if (attempt.requestReview || !signInOffered.current) {
         signInOffered.current = true;
         next = { kind: "signin", product };
@@ -234,9 +238,27 @@ export function useProductPrompts({
     show(attempt);
   }, [productModalId, show]);
 
+  const record = useCallback((product: PromptProduct, fromDetails = false) => {
+    if (!viewer.canComment) return undefined;
+    if (product.sample) return Promise.resolve(true);
+    return recordProductTryAction(product.id).then((ok) => {
+      if (ok && (returnPath || (fromDetails && productModalRef.current === product.id))) {
+        router.refresh();
+      }
+      return ok;
+    }).catch(() => false);
+  }, [returnPath, router, viewer.canComment]);
+
   const tried = useCallback<ProductTry>(
     (product, options) => {
-      const attempt = { product, ...options };
+      if (!viewer.signedIn) {
+        try {
+          sessionStorage.setItem(GUEST_TRY_KEY, product.id);
+        } catch {
+          // Storage can be disabled; the member can try again after sign-in.
+        }
+      }
+      const attempt = { product, ...options, recording: record(product, options?.fromDetails) };
       deferred.current = null;
       window.clearTimeout(graceTimer.current);
       if (attempt.requestReview) {
@@ -259,7 +281,7 @@ export function useProductPrompts({
         show(attempt);
       }, AWAY_GRACE_MS);
     },
-    [show],
+    [record, show, viewer.signedIn],
   );
 
   useEffect(() => {
@@ -296,7 +318,16 @@ export function useProductPrompts({
     const id = takeReviewFromAddress();
     if (!id || !viewer.signedIn) return;
     const product = products.find((p) => p.id === id);
-    if (product) show({ product, fromDetails: productModalId === id });
+    if (!product) return;
+    let triedAsGuest = false;
+    try {
+      triedAsGuest = sessionStorage.getItem(GUEST_TRY_KEY) === id;
+      if (triedAsGuest) sessionStorage.removeItem(GUEST_TRY_KEY);
+    } catch {
+      // A review link by itself does not establish a try.
+    }
+    const fromDetails = productModalId === id;
+    show({ product, fromDetails, recording: triedAsGuest ? record(product, fromDetails) : undefined });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount: the parameter is consumed by this read
   }, []);
 
@@ -331,7 +362,7 @@ export function useProductPrompts({
         key={product.id}
         product={product}
         initialScore={saved[product.id] ?? product.myScore}
-        canComment={viewer.canComment}
+        recording={prompt.recording}
         onSaved={onSaved}
         onClose={close}
       />
@@ -357,13 +388,13 @@ export function useProductPrompts({
 function ReviewDialog({
   product,
   initialScore,
-  canComment,
+  recording,
   onSaved,
   onClose,
 }: {
   product: PromptProduct;
   initialScore: number | null;
-  canComment: boolean;
+  recording?: Promise<boolean>;
   onSaved: (id: string, score: number) => void;
   onClose: () => void;
 }) {
@@ -414,12 +445,12 @@ function ReviewDialog({
       }
       // Independent of the rating: a comment is its own thing, and a rating
       // that failed is no reason not to post what they wrote.
-      if (canComment && text && !commentPosted) {
+      if (recording && text && !commentPosted) {
         const fd = new FormData();
         fd.set("content", text);
-        const res = await createPostCommentAction(product.id, null, fd).catch(
-          () => ({ error: UNREACHABLE }),
-        );
+        const res = (await recording)
+          ? await createPostCommentAction(product.id, null, fd).catch(() => ({ error: UNREACHABLE }))
+          : { error: TRY_BEFORE_COMMENTING };
         if (res?.error) {
           ok = false;
           setCommentError(res.error);
@@ -481,7 +512,7 @@ function ReviewDialog({
         </p>
       )}
 
-      {canComment && (
+      {recording && (
         <div className="mt-5">
           <p id={commentLabelId} className="mb-2 text-sm text-ink-muted">
             {tr("Add a comment (optional)")}

@@ -56,7 +56,8 @@ import { RatingControl } from "@/app/(app)/community/[id]/RatingControl";
 import { CommentComposer } from "@/app/(app)/community/[id]/CommentComposer";
 import { CommentThread } from "@/components/CommentThread";
 import { countComments, readCommentBatch } from "@/lib/comment-thread";
-import { PRODUCT_STORE_COLUMNS, productStoreColumnsOf, queryWithProductStoreColumns } from "@/lib/product-store-data";
+import { readListingWithAvailability } from "@/lib/product-store-data";
+import { hasTriedProduct, TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
 import {
   PRODUCT_PARAM,
   VIEW_PARAM,
@@ -400,14 +401,7 @@ async function MemberProduct({
 
   // `maybeSingle`: a malformed id or a missing row is a plain 404, not a
   // thrown error.
-  const columns = "id, author_id, title, content, kind, link_url, image_url, image_urls, tags, platforms, created_at, hidden";
-  const { data: post } = await queryWithProductStoreColumns((includeStores) => {
-    const table = supabase.from("forum_posts");
-    const query = includeStores
-      ? table.select(`${columns}, ${PRODUCT_STORE_COLUMNS}`)
-      : table.select(columns);
-    return query.eq("id", id).maybeSingle();
-  });
+  const { data: post } = await readListingWithAvailability(supabase, id);
   if (!post || post.kind !== PRODUCT_KIND) return missing(mode, locale);
 
   const authorId = post.author_id as string;
@@ -465,6 +459,7 @@ async function MemberProduct({
     { data: myLike },
     batch,
     commentTotal,
+    mayPostFeedback,
   ] = await Promise.all([
     getProductRating(id),
     mayRate
@@ -491,6 +486,7 @@ async function MemberProduct({
       () => ({ comments: [], hasEarlier: false, cursor: null }),
     ),
     countComments(supabase, id, blocked),
+    mayComment && (isAuthor || hasTriedProduct(supabase, userId, id)),
   ]);
 
   const [commentsLabel, tShipped, tEdit] = await Promise.all([
@@ -567,10 +563,11 @@ async function MemberProduct({
           title: (post.title as string | null) ?? null,
           content: post.content as string,
           link_url: (post.link_url as string | null) ?? null,
-          ...productStoreColumnsOf(post),
+          ios_store_url: post.ios_store_url,
+          android_store_url: post.android_store_url,
+          platforms: post.platforms,
           image_url: (post.image_url as string | null) ?? null,
           image_urls: (post.image_urls as string[] | null) ?? null,
-          platforms: (post.platforms as string[] | null) ?? null,
           tags: (post.tags as string[] | null) ?? null,
         }}
         locale={locale}
@@ -699,7 +696,7 @@ async function MemberProduct({
             dense
             className="mb-6"
             description={
-              mayComment
+              mayPostFeedback
                 ? await tServer(
                     "No comments yet. Ask a question or add what you know.",
                   )
@@ -708,7 +705,10 @@ async function MemberProduct({
           />
         )}
 
-        {mayComment && <CommentComposer postId={id} centerText />}
+        {mayPostFeedback && <CommentComposer postId={id} centerText />}
+        {mayComment && !mayPostFeedback && (
+          <p className="text-sm text-ink-muted">{t(TRY_BEFORE_COMMENTING, locale)}</p>
+        )}
       </section>
     </ProductFrame>
   );

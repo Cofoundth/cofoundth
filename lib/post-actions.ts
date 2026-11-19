@@ -30,6 +30,8 @@ import {
 } from "@/lib/post-types";
 import { validateProductLinks } from "@/lib/product-store-links";
 import { queryWithProductStoreColumns } from "@/lib/product-store-data";
+import { hasTriedProduct, TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
+import { getPublicPost, PRODUCT_KIND } from "@/lib/public-post";
 import { productPath, type PostComment, type PostItem } from "@/lib/post-types";
 import {
   cleanUpDeletedPost,
@@ -297,8 +299,9 @@ export async function createPostAction(
  * A PRODUCT, from /products/new (app/(app)/products/new). The ONE writer of a
  * kind='show_and_tell' row — the community composer cannot make one any more.
  *
- * QUIET BY DESIGN (CLAUDE.md, Language Rules): the row is the same forum_posts
- * row a Show & tell always was, and it appears on the deck and on its own page,
+ * The listing write also creates its dedicated product record in the same
+ * transaction (0092). The listing owns the comments and likes. It appears on
+ * the deck and on its own page,
  * and nowhere it would be announced — the community feed and its search
  * exclude the kind (lib/posts.ts). A maker who wants to announce it writes a
  * normal post.
@@ -571,6 +574,7 @@ export async function updateProductAction(
   // Scoped to the maker twice — `forum_posts_update_own` (RLS) and the
   // author_id filter here — and `.select()` so a row that matched nothing
   // reads as a failure rather than a silent success.
+  // The listing trigger saves the product's availability in the same write.
   const { data: updated, error } = await queryWithProductStoreColumns(
     (includeStores) => supabase
       .from("forum_posts")
@@ -587,6 +591,7 @@ export async function updateProductAction(
       })
       .eq("id", product.id)
       .eq("author_id", user.id)
+      .eq("kind", PRODUCT_KIND)
       .select("id"),
     !iosStoreUrl && !androidStoreUrl && !platforms.includes("mobile"),
   );
@@ -732,6 +737,26 @@ export async function togglePostLikeAction(postId: string) {
   revalidateFeeds(postId);
 }
 
+/** Records opening the product link or confirming a try after a phone handoff. */
+export async function recordProductTryAction(productId: string): Promise<boolean> {
+  if (typeof productId !== "string" || !UUID.test(productId)) return false;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !canComment(await getAccountRole(supabase, user.id))) return false;
+
+  const found = await getPublicPost(productId);
+  if (!found || found.post.kind !== PRODUCT_KIND || !webUrl(found.post.link_url)) return false;
+  if (await isBlockedEitherWay(user.id, found.post.author_id)) return false;
+  if (found.post.author_id === user.id) return true;
+
+  const { error } = await createAdminClient().from("product_tries").upsert(
+    { product_id: productId, user_id: user.id },
+    { onConflict: "user_id,product_id", ignoreDuplicates: true },
+  );
+  if (error) console.error("[product.try]", error);
+  return !error;
+}
+
 export async function createPostCommentAction(
   postId: string,
   _prev: PostFormState,
@@ -777,6 +802,14 @@ export async function createPostCommentAction(
           ? PRODUCT_UNAVAILABLE
           : "This post isn’t available.",
     };
+  }
+
+  if (
+    post.kind === PRODUCT_KIND &&
+    post.author_id !== user.id &&
+    !(await hasTriedProduct(supabase, user.id, postId))
+  ) {
+    return { error: TRY_BEFORE_COMMENTING };
   }
 
   const { error } = await supabase

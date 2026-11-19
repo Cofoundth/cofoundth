@@ -183,6 +183,7 @@ import {
 import { t, type Locale } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n-client";
 import type { ProductRating } from "@/lib/post-types";
+import type { ProductStoreLinks } from "@/lib/product-store-links";
 import type { FilterBucket } from "./categories";
 import {
   PRODUCT_PARAM,
@@ -229,6 +230,7 @@ export type DeckProduct = PromptProduct & {
    *  pressing "Try" on a phone app gets ./PhoneHandoff.tsx's code to scan
    *  instead of a store page (the owner's call, 2026-11-12). */
   phones: readonly PhonePlatform[];
+  storeLinks: ProductStoreLinks;
   mobileOnly: boolean;
   /** "Try {name} on {host}": the accessible name of the Try button. Starts
    *  with the button's visible word, because a voice-control user says what
@@ -1437,6 +1439,7 @@ function Stack({
           href={handoff.href}
           host={handoff.host}
           phones={handoff.phones}
+          storeLinks={handoff.storeLinks}
           onClose={() => setHandoff(null)}
           onOpenHere={() => onTried(handoff)}
           onReview={

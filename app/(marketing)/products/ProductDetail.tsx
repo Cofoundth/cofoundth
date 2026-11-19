@@ -37,12 +37,12 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { ProductImageGrid } from "@/components/ProductImageGrid";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
-import { Card, CardChip, SectionHeading, buttonClasses } from "@/components/ui";
+import { Card, CardChip, SectionHeading } from "@/components/ui";
 import { t, type Locale } from "@/lib/i18n";
-import { STORE_LABEL, STORE_PLATFORMS, productStoreLink } from "@/lib/product-store-links";
+import { STORE_LABEL, STORE_PLATFORMS, productStoreLinksOf } from "@/lib/product-store-links";
 import {
   CATEGORY_LABEL,
   platformLabelsOf,
@@ -58,7 +58,7 @@ import {
   webUrl,
 } from "./product-view";
 import type { DeckViewer, PromptProduct } from "./DeckPrompts";
-import { TryItLink } from "./PhoneHandoff";
+import { ProductTryLinks } from "./PhoneHandoff";
 
 /** The columns this reads. Both pages' own selects carry them. */
 export type ProductDetailPost = {
@@ -118,14 +118,21 @@ export function ProductDetail({
   // The name as the shelf resolves it: an older row with no title is named by
   // its description's first line, which About then repeats in full.
   const name = productName(post, host ?? t("Product", locale));
-  const hostId = `product-host-${post.id}`;
   const description = post.content.trim();
-  const storeLinks = STORE_PLATFORMS.flatMap((platform) => {
-    const url = productStoreLink(post[`${platform}_store_url`], platform);
-    return url ? [{ platform, url }] : [];
+  const storeLinks = productStoreLinksOf(post);
+  const stores = STORE_PLATFORMS.flatMap((platform) => {
+    const href = storeLinks[platform];
+    return href ? [{
+      platform,
+      href,
+      host: displayHost(new URL(href)),
+      label: t(STORE_LABEL[platform], locale),
+      phones: [platform],
+    }] : [];
   });
-  const primaryStore = storeLinks.find(({ url }) => url.href === link?.href);
-  const otherStores = storeLinks.filter((store) => store !== primaryStore);
+  const main = link && host && !stores.some(({ href }) => href === link.href)
+    ? { href: link.href, host, label: t("Try it", locale), phones: phonePlatformsOf(link, post.platforms) }
+    : null;
 
   return (
     <div>
@@ -184,57 +191,20 @@ export function ProductDetail({
             <div className="mt-3">{rateSlot}</div>
           )}
 
-          {link && host && (
-            <div className="mt-6">
-              {/* The external link works before hydration. Its client
-                  handlers also manage the phone handoff and review prompt. */}
-              <TryItLink
-                href={link.toString()}
-                host={host}
-                product={{
-                  id: post.id,
-                  name,
-                  reviewable: feedback.reviewable,
-                  myScore: feedback.myScore,
-                  sample: feedback.sample,
-                }}
-                viewer={feedback.viewer}
-                returnPath={feedback.returnPath}
-                phones={phonePlatformsOf(link, post.platforms)}
-                describedBy={hostId}
-                className={buttonClasses({ size: "lg", className: "w-full" })}
-              >
-                {t(primaryStore ? STORE_LABEL[primaryStore.platform] : "Try it", locale)}
-                <ExternalLink
-                  className="h-4 w-4"
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
-              </TryItLink>
-              <p
-                id={hostId}
-                className="mt-2 text-center text-sm break-all text-ink-muted"
-              >
-                {host}
-              </p>
-            </div>
-          )}
-
-          {otherStores.length > 0 && (
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              {otherStores.map(({ platform, url }) => (
-                <a
-                  key={platform}
-                  href={url.href}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className={buttonClasses({ variant: "secondary", size: "sm" })}
-                >
-                  {t(STORE_LABEL[platform], locale)}
-                  <ExternalLink className="size-4" strokeWidth={1.5} aria-hidden="true" />
-                </a>
-              ))}
-            </div>
+          {(main || stores.length > 0) && (
+            <ProductTryLinks
+              main={main}
+              stores={stores}
+              product={{
+                id: post.id,
+                name,
+                reviewable: feedback.reviewable,
+                myScore: feedback.myScore,
+                sample: feedback.sample,
+              }}
+              viewer={feedback.viewer}
+              returnPath={feedback.returnPath}
+            />
           )}
 
           {children}

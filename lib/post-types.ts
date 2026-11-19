@@ -5,9 +5,8 @@ export type PostKind = "post" | "milestone" | "show_and_tell";
 
 /**
  * A product's page: /products/<id>, for every reader
- * (app/(marketing)/products/[id]). A product is stored as a `show_and_tell`
- * forum_posts row, but it is not a post: it never links to /community/<id> or
- * /p/<id> (both of which send a product here anyway, for old links).
+ * (app/(marketing)/products/[id]). Its `show_and_tell` listing shares the
+ * product ID. Legacy /community/<id> and /p/<id> links redirect here.
  */
 export function productPath(id: string): string {
   return `/products/${encodeURIComponent(id)}`;
@@ -88,7 +87,11 @@ export type ProductRating = {
 export const UNRATED: ProductRating = { average: null, count: 0 };
 
 /** A product row as the shelf and the product pages carry it. */
-export type ProductItem = PostItem & { rating: ProductRating };
+export type ProductItem = PostItem & {
+  rating: ProductRating;
+  ios_store_url?: string | null;
+  android_store_url?: string | null;
+};
 
 /**
  * The public rating from the two integers the database aggregates
@@ -205,7 +208,7 @@ export const MAX_PRODUCT_NAME = 60;
 // (app/(marketing)/products/PhoneHandoff.tsx; the owner's call, 2026-11-12).
 // A COLUMN, not a tag: see "WHY a tag and not a column" below — `tags` is the
 // category's, and 0080 says why this did not go in there. The database checks
-// the same slugs (forum_posts_platforms_known): change the two together.
+// the same slugs (products_platforms_known and the legacy listing constraint).
 export const PRODUCT_PLATFORMS = [
   "web",
   "mobile",

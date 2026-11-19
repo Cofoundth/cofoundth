@@ -42,14 +42,7 @@ import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isPubliclyAttributable } from "@/lib/public-author";
 import { devTestAuthorIds } from "@/lib/test-accounts";
-import { PRODUCT_STORE_COLUMNS, queryWithProductStoreColumns } from "@/lib/product-store-data";
-
-// Named columns, never `select("*")`, on a table whose rows are about to be
-// handed to anonymous traffic. `author_id` is read to resolve the author and
-// never rendered; `hidden` is not selected because the gate filters on it
-// rather than deciding in JS.
-const PUBLIC_POST_COLUMNS =
-  "id, author_id, title, content, kind, link_url, image_url, image_urls, tags, platforms, created_at";
+import { readListingWithAvailability } from "@/lib/product-store-data";
 
 // The author fields a public page may show, plus the three columns the gate
 // reads. `email`, `age` and the rest of profiles stay out (the
@@ -70,7 +63,7 @@ export type PublicPostRow = {
   image_url: string | null;
   image_urls: string[] | null;
   tags: string[] | null;
-  /** Where a product runs (0080). */
+  /** Where a product runs. */
   platforms: string[] | null;
   created_at: string;
 };
@@ -89,19 +82,13 @@ export const getPublicPost = cache(
   ): Promise<{ post: PublicPostRow; author: PublicAuthor } | null> => {
     const admin = createAdminClient();
 
-    const { data: post, error } = await queryWithProductStoreColumns((includeStores) => {
-      const table = admin.from("forum_posts");
-      const query = includeStores
-        ? table.select(`${PUBLIC_POST_COLUMNS}, ${PRODUCT_STORE_COLUMNS}`)
-        : table.select(PUBLIC_POST_COLUMNS);
-      return query.eq("id", id).eq("hidden", false).maybeSingle();
-    });
+    const { data: post, error } = await readListingWithAvailability(admin, id, true);
     if (error || !post) return null;
 
     const { data: author, error: authorError } = await admin
       .from("profiles")
       .select(PUBLIC_AUTHOR_COLUMNS)
-      .eq("id", (post as PublicPostRow).author_id)
+      .eq("id", post.author_id)
       .maybeSingle();
     // A post with no readable author is not publishable: the author's
     // moderation flags and role are part of the gate, so "could not read them"
@@ -114,15 +101,15 @@ export const getPublicPost = cache(
       // milestone stays a 404 — and `hidden = false` above still applies.
       // devTestAuthorIds() is the empty Set in a production build, before it
       // reads anything, so this arm always returns null there.
-      const authorId = (post as PublicPostRow).author_id;
+      const authorId = post.author_id;
       const devTestProduct =
-        (post as PublicPostRow).kind === "show_and_tell" &&
+        post.kind === "show_and_tell" &&
         (await devTestAuthorIds([authorId])).has(authorId);
       if (!devTestProduct) return null;
     }
 
     return {
-      post: post as PublicPostRow,
+      post,
       author: {
         full_name: author.full_name as string | null,
         photo_url: author.photo_url as string | null,

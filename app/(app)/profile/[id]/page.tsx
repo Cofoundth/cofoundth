@@ -38,6 +38,11 @@ import {
   productPath,
 } from "@/lib/post-types";
 import { getProductRatings } from "@/lib/product-ratings";
+import {
+  productAvailabilityOf,
+  queryWithProductAvailability,
+  type ProductListingSummary,
+} from "@/lib/product-store-data";
 import { Avatar } from "@/components/Avatar";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import {
@@ -240,15 +245,18 @@ export default async function ProfileDetailPage({
         .eq("kind", "milestone")
         .order("created_at", { ascending: false })
         .limit(4),
-      supabase
-        .from("forum_posts")
-        .select("id, title, content, image_url, image_urls, tags, link_url, platforms")
-        .eq("author_id", profile.id)
-        .eq("hidden", false)
-        .eq("kind", "show_and_tell")
-        .not("link_url", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(6),
+      queryWithProductAvailability((availability) =>
+        supabase
+          .from("forum_posts")
+          .select(`id, title, content, image_url, image_urls, tags, link_url, ${availability}`)
+          .eq("author_id", profile.id)
+          .eq("hidden", false)
+          .eq("kind", "show_and_tell")
+          .not("link_url", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(6)
+          .overrideTypes<ProductListingSummary[], { merge: false }>(),
+      ),
     ],
   );
   const products = productRows ?? [];
@@ -726,7 +734,7 @@ export default async function ProfileDetailPage({
                             {category && (
                               <span>{t(CATEGORY_LABEL[category], locale)}</span>
                             )}
-                            {isPhoneOnly(p.link_url, p.platforms) && (
+                            {isPhoneOnly(p.link_url, productAvailabilityOf(p).platforms) && (
                               <CardChip>{t("Mobile only", locale)}</CardChip>
                             )}
                             <ProductRatingSummary

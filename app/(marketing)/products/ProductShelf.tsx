@@ -117,6 +117,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { getAccountRole } from "@/lib/account";
 import { getMyProductRatings } from "@/lib/product-ratings";
+import { productStoreLinksOf } from "@/lib/product-store-links";
 import {
   ADD_PRODUCT_PATH,
   MY_PRODUCTS_PATH,
@@ -503,6 +504,7 @@ export async function ProductShelf({
       // A phone-only app (its store link, or the maker's "Runs on"): a
       // computer pressing "Try" gets a code to scan instead (./PhoneHandoff.tsx).
       phones: phonePlatformsOf(p.link, p.platforms),
+      storeLinks: productStoreLinksOf(p),
       mobileOnly: phoneOnly(p.link, p.platforms),
       // One pass, so a product named "{host}" cannot be substituted into.
       tryAria: tTryAria.replace(/\{(name|host)\}/g, (_, key) =>
