@@ -25,6 +25,7 @@ import { encode } from "uqr";
 import { useT } from "@/lib/i18n-client";
 import { Dialog } from "@/components/ui";
 import type { PhonePlatform } from "./product-view";
+import { announceTried } from "./product-tried";
 
 /** Every link out to a maker's site. ./product-view.ts says why each word. */
 const LINK_REL = "noopener noreferrer nofollow";
@@ -78,6 +79,7 @@ export function TryItLink({
   host,
   name,
   phones,
+  productId,
   describedBy,
   className,
   children,
@@ -86,11 +88,17 @@ export function TryItLink({
   host: string;
   name: string;
   phones: readonly PhonePlatform[];
+  /** Set: a tab that opens is a TRY (./product-tried.ts), so the deck's
+   *  prompts ask about it when the reader comes back to its modal. */
+  productId?: string;
   describedBy?: string;
   className?: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const tried = () => {
+    if (productId) announceTried(productId);
+  };
   return (
     <>
       <a
@@ -103,7 +111,13 @@ export function TryItLink({
           if (isPlainClick(event) && needsPhone(phones)) {
             event.preventDefault();
             setOpen(true);
+            return;
           }
+          tried();
+        }}
+        // A middle click opens a tab too, and fires no click.
+        onAuxClick={(event) => {
+          if (event.button === 1) tried();
         }}
       >
         {children}
@@ -115,6 +129,7 @@ export function TryItLink({
           host={host}
           phones={phones}
           onClose={() => setOpen(false)}
+          onOpenHere={tried}
         />
       )}
     </>

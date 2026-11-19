@@ -100,6 +100,7 @@ import {
   parseProductParam,
   takeReviewFromAddress,
 } from "./deck-position";
+import { PRODUCT_TRIED_EVENT } from "./product-tried";
 
 /** How long after a product opens the deck waits to see the reader leave
  *  (this tab hidden, or this window blurred). If they have not left by then,
@@ -167,23 +168,26 @@ export function useDeckPrompts({
   const signInOffered = useRef(false);
   const wasOpen = useRef(false);
 
-  // The product's own page open over the deck (./ProductModal.tsx): a prompt
-  // that comes due then — a try opened in a background tab, whose grace timer
-  // ends while the reader is reading another product — waits for it to close
-  // rather than opening on top of it.
+  // The product's own page open over the deck (./ProductModal.tsx). A prompt
+  // for THAT product (its "Try it" was pressed in the modal, ./product-tried.ts)
+  // opens over the modal on the way back, as it would over the deck. A prompt
+  // for ANOTHER product — a try opened in a background tab, whose grace timer
+  // ends while the reader is reading a different one — waits for the modal to
+  // close rather than interrupting it.
   const searchParams = useSearchParams();
-  const productModalOpen =
-    parseProductParam(searchParams.getAll(PRODUCT_PARAM)) !== null;
-  const productModalRef = useRef(productModalOpen);
+  const productModalId = parseProductParam(searchParams.getAll(PRODUCT_PARAM));
+  const productModalOpen = productModalId !== null;
+  const productModalRef = useRef(productModalId);
   const deferred = useRef<PromptProduct | null>(null);
   useEffect(() => {
-    productModalRef.current = productModalOpen;
-  }, [productModalOpen]);
+    productModalRef.current = productModalId;
+  }, [productModalId]);
 
   const show = useCallback(
     (product: PromptProduct) => {
       if (promptRef.current) return; // never two at once
-      if (productModalRef.current) {
+      const modalId = productModalRef.current;
+      if (modalId !== null && modalId !== product.id) {
         deferred.current = product;
         return;
       }
@@ -227,6 +231,17 @@ export function useDeckPrompts({
     },
     [show],
   );
+
+  // "Try it" inside the product modal: the same try as the deck card's.
+  useEffect(() => {
+    function onTried(event: Event) {
+      const id = (event as CustomEvent<string>).detail;
+      const product = products.find((p) => p.id === id);
+      if (product) tried(product);
+    }
+    window.addEventListener(PRODUCT_TRIED_EVENT, onTried);
+    return () => window.removeEventListener(PRODUCT_TRIED_EVENT, onTried);
+  }, [products, tried]);
 
   useEffect(() => {
     function leave() {
@@ -277,6 +292,9 @@ export function useDeckPrompts({
     }
     if (!wasOpen.current) return;
     wasOpen.current = false;
+    // Over the product modal, Dialog has already put focus back on the
+    // modal's "Try it"; the deck is behind the modal's scrim.
+    if (productModalRef.current !== null) return;
     const deck = deckRef.current;
     if (deck && !deck.contains(document.activeElement)) {
       deck.focus({ preventScroll: true });

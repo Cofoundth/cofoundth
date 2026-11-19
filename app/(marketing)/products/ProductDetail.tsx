@@ -223,6 +223,7 @@ export function ProductDetail({
                   host={host}
                   name={name}
                   phones={phonePlatformsOf(link, post.platforms)}
+                  productId={post.id}
                   describedBy={hostId}
                   className={buttonClasses({ size: "lg", className: "w-full" })}
                 >
