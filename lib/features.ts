@@ -16,14 +16,16 @@
 // original position. That is the whole reason this is one imported module
 // rather than a boolean repeated in four files: the copies cannot drift.
 //
-// `meetupsNew` is the odd one out: a MARKER, not a surface. `companies` and
-// `funding` decide whether a nav item exists at all; this one only decorates an
-// item that is already there with a "New" chip for the soft launch. Nothing is
-// hidden when it is false — the Meetups link renders either way. Set it false
-// once Meetups has stopped being news (a few weeks after launch); a permanent
-// "New" badge is just noise that teaches people to ignore the chip. (Products
-// had the same marker until 2026-11-12, when the deck became the page every
-// member lands on — a chip on your own landing is that noise.)
+// `meetupsNew` and `productsNew` are the odd ones out: MARKERS, not surfaces.
+// `companies` and `funding` decide whether a nav item exists at all; these only
+// decorate an item that is already there with a "New" chip. Nothing is hidden
+// when one is false — the link renders either way. Set each false once its
+// surface has stopped being news (a few weeks after launch); a permanent "New"
+// badge is just noise that teaches people to ignore the chip. Products lost its
+// marker on 2026-11-12 (the deck became the page every member lands on, and a
+// chip on your own landing is that noise) and got it back on 2026-11-19, the
+// founder's call, for the relaunched shelf (the deck, Games/Apps, the product
+// page): turn it off when that stops being news.
 //
 // `investorSignup` is a third kind again: not a surface and not a marker, but a
 // DOORWAY ONTO A ROLE. False removes the "Investor" option from the signup
@@ -47,6 +49,7 @@ export const FEATURES: {
   companies: boolean;
   funding: boolean;
   meetupsNew: boolean;
+  productsNew: boolean;
   investorSignup: boolean;
 } = {
   /** /orgs — the multi-user company directory, B2B connect/chat/deals. */
@@ -55,6 +58,8 @@ export const FEATURES: {
   funding: false,
   /** "New" chip on the Meetups nav item — a launch marker, not a surface. */
   meetupsNew: true,
+  /** "New" chip on the Products nav item, every rail — a marker, not a surface. */
+  productsNew: true,
   /** The "Investor" option in the signup picker. Existing accounts unaffected. */
   investorSignup: false,
 };

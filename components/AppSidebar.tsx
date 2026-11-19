@@ -265,23 +265,27 @@ export async function AppSidebar() {
         // transition to offer — so the shelf renders read-only for them, which
         // is the investor posture everywhere else too.
         //
-        // No "New" chip: the founder rail's marker points at a surface that is
-        // news to a maker. Next to Companies because both are "go and look at
-        // what else is here".
-        { href: "/products", label: await tServer("Products") },
+        // Next to Companies because both are "go and look at what else is
+        // here". Its "New" chip is the same launch marker as every rail's
+        // (lib/features.ts productsNew).
+        {
+          href: "/products",
+          label: await tServer("Products"),
+          ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
+        },
         { href: "/orgs", label: await tServer("Companies") },
       ]
     : role === "explorer"
       ? [
           // Products LEADS: it is EXPLORER_HOME, so it is both the first thing
-          // they want and the place the gate returns them to.
-          //
-          // No "New" chip on it, unlike the founder rail. The chip points at a
-          // brand-new surface worth a detour; for an explorer this is the page
-          // they land on every single visit, and a permanent badge on your own
-          // home is the noise that teaches people to ignore the chip. Meetups
-          // keeps its marker — that one IS news to them.
-          { href: "/products", label: await tServer("Products") },
+          // they want and the place the gate returns them to. Its "New" chip
+          // is a launch marker with an end (lib/features.ts productsNew): on
+          // the page you land on every visit it is noise once it is not news.
+          {
+            href: "/products",
+            label: await tServer("Products"),
+            ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
+          },
           { href: "/community", label: await tServer("Community") },
           // NOT the monthly draw (/rewards), for anyone (the founder's call,
           // 2026-11-18): a menu item beside Products and Community says the
@@ -303,9 +307,12 @@ export async function AppSidebar() {
       : [
           // Products LEADS, where Dashboard used to be: there is no dashboard
           // any more (2026-11-12) and the deck is the page a founder lands on.
-          // No "New" chip on it for the explorer's reason: a permanent badge
-          // on your own landing is noise.
-          { href: "/products", label: await tServer("Products") },
+          // Its "New" chip: see the explorer rail above.
+          {
+            href: "/products",
+            label: await tServer("Products"),
+            ...(FEATURES.productsNew ? { tag: await tServer("New") } : {}),
+          },
           {
             href: "/meetups",
             label: await tServer("Meetups"),
