@@ -3,11 +3,9 @@
 // What we ask a reader once they come back from trying a product.
 //
 // ── WHEN, EXACTLY ──────────────────────────────────────────────────────────
-// CLAUDE.md, Language Rules: right on the deck opens the maker's product in a
-// new tab, and "when the visitor comes back from trying it, a signed-in member
-// is asked in a modal to rate and comment; a visitor who is not signed in is
-// offered sign-in, at most once per visit". The deck and the product's page
-// tell useProductPrompts() which product was opened, and it waits for a return:
+// The deck and product page tell useProductPrompts() which product was opened.
+// Members are offered feedback on return. Guests get one sign-in invite
+// after a right-swipe try:
 //
 //   · it shows when the reader COMES BACK: the deck's tab was hidden or its
 //     window lost focus after the product opened, and now it is visible again
@@ -35,27 +33,16 @@
 //                             that canRate, and not the reader's own product.
 //   signed in, not reviewable nothing, ever: their own product, or a role
 //                             that may not rate (none today; lib/roles.ts).
-//   not signed in             the sign-in modal, offered automatically once
-//                             per visit or when the reader requests a review.
+// Guests can try products and choose to sign in from the feedback controls
+// on the product page.
 //
 // ── SAVING FEEDBACK ──────────────────────────────────────────────────────
 // A rating is given by tapping a star and pressing send, in the modal —
 // deliberately, the same action (setProductRatingAction) as the stars on the
-// product's page, with the same server-side checks and 0079's RLS behind it.
-// Until 0079 is applied that action fails, and the modal says so in words
-// without losing what was typed.
+// product's page, with the same server-side checks and row-level security.
 //
-// ── COMING BACK FROM SIGNING IN ────────────────────────────────────────────
-// The sign-in modal's links carry `next=` deckReviewPath(): /products, the
-// category, `after=` this product and `review=` this product. Signed in, the
-// deck opens the review modal from `review=` on mount and removes it at once
-// (./deck-position.ts takeReviewFromAddress), so a reload does not reopen it.
-// A founder who has not onboarded meets /onboarding first, whichever way they
-// signed in: signupAction wraps `next` in it, and signInAction and the OAuth
-// callback do the same for an account that owes it (lib/roles.ts
-// owesOnboarding, lib/auth-href.ts throughOnboarding). Onboarding's finish
-// then follows `next` back here. /products itself has no onboarding gate, so
-// without those wraps a new Google sign-up landed straight in the review modal.
+// An anonymous try is remembered in this tab if the reader later signs in
+// from the same product.
 //
 // ── THE MODALS ─────────────────────────────────────────────────────────────
 // components/ui/Dialog.tsx, as the join dialog on /p/<id> uses it: focus moves
@@ -91,16 +78,10 @@ import { authHref } from "@/lib/auth-href";
 import { useT } from "@/lib/i18n-client";
 import { createPostCommentAction, recordProductTryAction } from "@/lib/post-actions";
 import { TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
-import { MAX_RATING, productPath } from "@/lib/post-types";
-import type { FilterBucket } from "./categories";
+import { MAX_RATING } from "@/lib/post-types";
 import { setProductRatingAction } from "@/app/(app)/community/[id]/actions";
 import { useRouter } from "next/navigation";
-import {
-  deckReviewPath,
-  productReviewPath,
-  takeReviewFromAddress,
-  type ProductView,
-} from "./deck-position";
+import { PRODUCT_PARAM, productCardHref, takeReviewFromAddress } from "./deck-position";
 
 /** How long after a product opens the deck waits to see the reader leave
  *  (this tab hidden, or this window blurred). If they have not left by then,
@@ -126,18 +107,23 @@ export type DeckViewer = {
   canComment: boolean;
 };
 
-type TryOptions = { fromDetails?: boolean; requestReview?: boolean };
+export type ProductTryOptions = {
+  fromDetails?: boolean;
+  fromSwipe?: boolean;
+  requestReview?: boolean;
+  /** A swipe may still be saving its like when the reader comes back. */
+  liking?: Promise<boolean>;
+};
 
-export type ProductTry = (product: PromptProduct, options?: TryOptions) => void;
+export type ProductTry = (product: PromptProduct, options?: ProductTryOptions) => void;
 
 /** Share the deck's prompt with Try it inside the product details dialog. */
 export const DeckProductTry = createContext<ProductTry | null>(null);
 
+type Try = { product: PromptProduct; recording?: Promise<boolean> } & ProductTryOptions;
 type Prompt =
   | { kind: "review"; product: PromptProduct; recording?: Promise<boolean> }
   | { kind: "signin"; product: PromptProduct };
-
-type Try = { product: PromptProduct; recording?: Promise<boolean> } & TryOptions;
 
 function readerIsAway(): boolean {
   return document.visibilityState === "hidden" || !document.hasFocus();
@@ -156,23 +142,19 @@ const UNREACHABLE = "Something went wrong. Try again.";
 export function useProductPrompts({
   products,
   viewer,
-  category = null,
-  view = "single",
   deckRef,
   productModalId = null,
-  returnPath,
+  standaloneProductId,
 }: {
   /** The WHOLE shelf, not the filtered deck: `?review=` can name any of it. */
   products: readonly PromptProduct[];
   viewer: DeckViewer;
-  category?: FilterBucket | null;
-  view?: ProductView;
   /** Where focus goes when a modal closes, unless it is already inside. */
   deckRef?: RefObject<HTMLElement | null>;
   /** The details currently open, including while they load. */
   productModalId?: string | null;
-  /** Standalone product page to return to after sign-in. */
-  returnPath?: string;
+  /** The product on a standalone detail route. */
+  standaloneProductId?: string;
 }): {
   tried: ProductTry;
   locked: boolean;
@@ -184,11 +166,12 @@ export function useProductPrompts({
    *  same product (after Start over) shows what was just given. */
   const [saved, setSaved] = useState<Record<string, number>>({});
   const promptRef = useRef<Prompt | null>(null);
+  const latestTry = useRef<Try | null>(null);
   const pending = useRef<Try | null>(null);
   /** The reader left after `pending` opened: this tab hidden or window blurred. */
   const away = useRef(false);
   const graceTimer = useRef<number | undefined>(undefined);
-  const signInOffered = useRef(false);
+  const guestInviteShown = useRef(false);
   const wasOpen = useRef(false);
 
   // The product's own page open over the deck (./ProductModal.tsx): a prompt
@@ -203,23 +186,32 @@ export function useProductPrompts({
 
   const show = useCallback(
     (attempt: Try) => {
-      if (promptRef.current) return; // never two at once
-      const modalId = productModalRef.current;
       const { product } = attempt;
-      if (modalId && (!attempt.fromDetails || modalId !== product.id)) {
-        deferred.current = attempt;
+      if (viewer.signedIn ? !product.reviewable : !attempt.fromSwipe || guestInviteShown.current)
         return;
+
+      function present(swipeLiked = false) {
+        if (promptRef.current) return;
+        if (attempt.liking && latestTry.current !== attempt) return;
+        const modalId = productModalRef.current;
+        if (modalId && (!attempt.fromDetails || modalId !== product.id)) {
+          deferred.current = attempt;
+          return;
+        }
+        const next: Prompt = viewer.signedIn
+          ? {
+              kind: "review",
+              product: swipeLiked ? { ...product, liked: true } : product,
+              recording: attempt.recording,
+            }
+          : { kind: "signin", product };
+        if (next.kind === "signin") guestInviteShown.current = true;
+        promptRef.current = next;
+        setPrompt(next);
       }
-      let next: Prompt | null = null;
-      if (viewer.signedIn) {
-        if (product.reviewable) next = { kind: "review", product, recording: attempt.recording };
-      } else if (attempt.requestReview || !signInOffered.current) {
-        signInOffered.current = true;
-        next = { kind: "signin", product };
-      }
-      if (!next) return;
-      promptRef.current = next;
-      setPrompt(next);
+
+      if (attempt.liking) void attempt.liking.then(present);
+      else present();
     },
     [viewer.signedIn],
   );
@@ -241,12 +233,12 @@ export function useProductPrompts({
     if (!viewer.canComment) return undefined;
     if (product.sample) return Promise.resolve(true);
     return recordProductTryAction(product.id).then((ok) => {
-      if (ok && (returnPath || (fromDetails && productModalRef.current === product.id))) {
+      if (ok && (standaloneProductId === product.id || (fromDetails && productModalRef.current === product.id))) {
         router.refresh();
       }
       return ok;
     }).catch(() => false);
-  }, [returnPath, router, viewer.canComment]);
+  }, [standaloneProductId, router, viewer.canComment]);
 
   const tried = useCallback<ProductTry>(
     (product, options) => {
@@ -256,8 +248,14 @@ export function useProductPrompts({
         } catch {
           // Storage can be disabled; the member can try again after sign-in.
         }
+        if (!options?.fromSwipe || guestInviteShown.current) return;
       }
-      const attempt = { product, ...options, recording: record(product, options?.fromDetails) };
+      const attempt = {
+        product,
+        ...options,
+        recording: viewer.signedIn ? record(product, options?.fromDetails) : undefined,
+      };
+      latestTry.current = attempt;
       deferred.current = null;
       window.clearTimeout(graceTimer.current);
       if (attempt.requestReview) {
@@ -312,10 +310,13 @@ export function useProductPrompts({
     };
   }, [show]);
 
-  // `?review=` — the way back from sign-in. Read and removed once on mount.
+  // A previous guest try counts after signing in on that same product.
+  // Older `?review=` links also open the review once.
   useEffect(() => {
-    const id = takeReviewFromAddress();
-    if (!id || !viewer.signedIn) return;
+    if (!viewer.signedIn) return;
+    const reviewId = takeReviewFromAddress();
+    const id = reviewId ?? productModalId ?? standaloneProductId;
+    if (!id) return;
     const product = products.find((p) => p.id === id);
     if (!product) return;
     let triedAsGuest = false;
@@ -326,9 +327,9 @@ export function useProductPrompts({
       // A review link by itself does not establish a try.
     }
     const fromDetails = productModalId === id;
-    show({ product, fromDetails, recording: triedAsGuest ? record(product, fromDetails) : undefined });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount: the parameter is consumed by this read
-  }, []);
+    const recording = triedAsGuest ? record(product, fromDetails) : undefined;
+    if (reviewId) show({ product, fromDetails, recording });
+  }, [products, viewer.signedIn, productModalId, standaloneProductId, record, show]);
 
   // Focus back to the deck once a modal has closed. Dialog hands focus back
   // to whatever had it when it opened (its own cleanup, which runs before
@@ -367,17 +368,7 @@ export function useProductPrompts({
       />
     );
   } else if (prompt?.kind === "signin") {
-    dialog = (
-      <SignInDialog
-        product={prompt.product}
-        next={
-          returnPath
-            ? productReviewPath(returnPath, prompt.product.id)
-            : deckReviewPath(prompt.product.id, category, view)
-        }
-        onClose={close}
-      />
-    );
+    dialog = <SignInDialog product={prompt.product} onClose={close} />;
   }
 
   return { tried, locked: prompt !== null, dialog };
@@ -515,9 +506,9 @@ function ReviewDialog({
         </>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-ink-muted">{tr("Like this product to rate or comment.")}</p>
-          <LinkButton href={`${productPath(product.id)}#product-like`} onClick={dismiss} variant="secondary" size="sm">
-            {tr("View product")}
+          <p className="text-sm text-ink-muted">{tr("Swipe right on the product card to like it.")}</p>
+          <LinkButton href={productCardHref(product.id)} onClick={dismiss} variant="secondary" size="sm">
+            {tr("Open product card")}
           </LinkButton>
         </div>
       )}
@@ -575,41 +566,26 @@ function ReviewDialog({
   );
 }
 
-/** "How was X?" for a visitor who is not signed in: the way in, once. */
-function SignInDialog({
-  product,
-  next,
-  onClose,
-}: {
-  product: PromptProduct;
-  /** deckReviewPath(): back to this deck, with this product's review open. */
-  next: string;
-  onClose: () => void;
-}) {
+function SignInDialog({ product, onClose }: { product: PromptProduct; onClose: () => void }) {
   const tr = useT();
   const titleId = useId();
+  const next = `/products?${new URLSearchParams({ [PRODUCT_PARAM]: product.id })}`;
+  const productName = () => product.name;
 
   return (
     <Dialog onClose={onClose} labelledBy={titleId} size="sm">
       <h3 id={titleId} className="mb-2 text-xl">
-        {tr("How was {name}?").replace("{name}", () => product.name)}
+        {tr("How was {name}?").replace("{name}", productName)}
       </h3>
       <p className="mb-6 text-sm text-ink-muted">
-        {tr("Sign in to rate {name} and comment on it.").replace(
-          "{name}",
-          () => product.name,
-        )}
+        {tr("Sign in to rate {name} and comment on it.").replace("{name}", productName)}
       </p>
       <div className="space-y-3">
-        <LinkButton href={authHref("/signup", next)} fullWidth>
-          {tr("Join Cofoundee")}
-        </LinkButton>
-        <LinkButton
-          href={authHref("/login", next)}
-          variant="secondary"
-          fullWidth
-        >
+        <LinkButton href={authHref("/login", next)} fullWidth>
           {tr("Sign in")}
+        </LinkButton>
+        <LinkButton href={authHref("/signup", next)} variant="secondary" fullWidth>
+          {tr("Join Cofoundee")}
         </LinkButton>
         <Button variant="ghost" fullWidth onClick={onClose}>
           {tr("Maybe later")}

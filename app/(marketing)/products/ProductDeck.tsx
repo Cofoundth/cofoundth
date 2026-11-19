@@ -1,8 +1,7 @@
 "use client";
 
-// In the product deck, left skips and right saves a like. Try opens the
-// product's validated external URL or offers its QR code. DeckPrompts
-// handles feedback after a try.
+// In the product deck, left skips. Right opens the product or offers its QR
+// handoff and saves a like for members. The Try button opens the same destination.
 //
 // ── THE PRODUCT'S PAGE, IN A MODAL ─────────────────────────────────────────
 // A tap on the card means "tell me more", not "take me there" (the founder's
@@ -125,7 +124,6 @@ import {
 import {
   ChevronUp,
   ExternalLink,
-  Heart,
   MessageCircle,
   SearchX,
   Smartphone,
@@ -144,7 +142,6 @@ import {
   LinkButton,
   buttonClasses,
 } from "@/components/ui";
-import { authHref } from "@/lib/auth-href";
 import { t, type Locale } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n-client";
 import type { ProductRating } from "@/lib/post-types";
@@ -154,8 +151,8 @@ import {
   PRODUCT_PARAM,
   productPageHref,
   readAfterFromAddress,
+  readCardFromAddress,
   readProductFromAddress,
-  resumeIndex,
   startIndex,
   writeAfterToAddress,
   type DeckRoute,
@@ -165,6 +162,7 @@ import {
   useProductPrompts,
   type DeckViewer,
   type ProductTry,
+  type ProductTryOptions,
   type PromptProduct,
 } from "./DeckPrompts";
 import { useProductFilter } from "./filter-context";
@@ -399,6 +397,7 @@ export function ProductDeck({
   route,
   resumeAfter,
   resumeAt,
+  cardId,
   viewer,
   productDetails,
   computer,
@@ -424,6 +423,7 @@ export function ProductDeck({
   /** `?product=` as the server read it: the deck starts AT that card when it
    *  is on it (deck-position.ts startIndex), under its open modal. */
   resumeAt: string | null;
+  cardId: string | null;
   /** Who is reading, for the prompts: see ./DeckPrompts.tsx. */
   viewer: DeckViewer;
   /** The product details rendered by the shelf at `?product=`. */
@@ -446,17 +446,15 @@ export function ProductDeck({
     [products, matches],
   );
   const [announced, setAnnounced] = useState(() =>
-    positionOf(matching, startIndex(matching, resumeAfter, resumeAt), labels),
+    positionOf(matching, startIndex(matching, resumeAfter, resumeAt ?? cardId), labels),
   );
   /** The stack's root: where focus goes back to when a prompt closes. */
   const deckRef = useRef<HTMLDivElement>(null);
   const prompts = useProductPrompts({
     products,
     viewer,
-    category: selected,
     deckRef,
     productModalId: modalId,
-    view,
   });
   const locked = prompts.locked || modalId !== null || navigating;
 
@@ -526,7 +524,7 @@ export function ProductDeck({
             route={route}
             category={selected}
             resumeAfter={resumeAfter}
-            resumeAt={resumeAt}
+            resumeAt={resumeAt ?? cardId}
             rootRef={deckRef}
             visible={view === "single"}
             locked={locked}
@@ -656,26 +654,28 @@ function Stack({
   const [index, setIndex] = useState(() =>
     startIndex(products, resumeAfter, resumeAt),
   );
-  const [likeNotice, setLikeNotice] = useState<{
-    message: string;
-    signInHref?: string;
-  } | null>(null);
-  const [savingLike, startSavingLike] = useTransition();
+  const [likeNotice, setLikeNotice] = useState<string | null>(null);
   /** The phone app this computer just tried: its code to scan is open. */
-  const [handoff, setHandoff] = useState<DeckProduct | null>(null);
-  const locked = !visible || shelfLocked || handoff !== null || savingLike;
+  const [handoff, setHandoff] = useState<{
+    product: DeckProduct;
+    options: ProductTryOptions;
+  } | null>(null);
+  const locked = !visible || shelfLocked || handoff !== null;
 
   const stageRef = useRef<HTMLDivElement>(null);
+  const tryLinkRef = useRef<HTMLAnchorElement>(null);
   /** What the handlers read. `index` is only this, rendered. */
   const indexRef = useRef(index);
   /** The `after` this deck last read from or wrote to the address. undefined
    *  until the first read, which always applies. */
   const knownAfter = useRef<string | null | undefined>(undefined);
+  const knownCard = useRef<string | null>(null);
   const gesture = useRef<Gesture | null>(null);
   const frame = useRef(0);
   const flyTimer = useRef(0);
   const flying = useRef(false);
-  const likeInFlight = useRef(false);
+  const fromRightSwipe = useRef(false);
+  const latestLike = useRef<Promise<boolean> | null>(null);
   const justDragged = useRef(false);
   const restoreFocus = useRef(false);
 
@@ -702,14 +702,14 @@ function Stack({
   // reasoning as ./filter-context.tsx's address effect.
   useLayoutEffect(() => {
     const after = readAfterFromAddress();
+    const card = readCardFromAddress();
     const first = knownAfter.current === undefined;
-    if (!first && after === knownAfter.current) return;
+    if (!first && after === knownAfter.current && card === knownCard.current) return;
     knownAfter.current = after;
+    knownCard.current = card;
     // The first read also honours `?product=`: a deck loaded with its modal
     // open starts AT that card. Later reads move only for `after`.
-    const start = first
-      ? startIndex(products, after, readProductFromAddress())
-      : resumeIndex(products, after);
+    const start = startIndex(products, after, first ? readProductFromAddress() ?? card : card);
     if (start === indexRef.current) return;
     if (!first) {
       // An outside navigation: whatever was in flight is moot.
@@ -717,6 +717,7 @@ function Stack({
       gesture.current = null;
       clearTimeout(flyTimer.current);
       flying.current = false;
+      latestLike.current = null;
       setLikeNotice(null);
     }
     indexRef.current = start;
@@ -779,7 +780,7 @@ function Stack({
 
   const current = products[index];
   const position = positionOf(products, index, labels);
-  const announcement = likeNotice ? `${likeNotice.message} ${position}` : position;
+  const announcement = likeNotice ? `${likeNotice} ${position}` : position;
 
   useEffect(() => {
     onAnnounce(announcement);
@@ -794,6 +795,7 @@ function Stack({
   /** `?after=` on this history entry, and the deck's note that it said so. */
   function writeAfter(productId: string | null) {
     knownAfter.current = productId;
+    knownCard.current = null;
     writeAfterToAddress(productId);
   }
 
@@ -801,7 +803,7 @@ function Stack({
    *  open: input then is lost rather than queued, so it can never skip a
    *  card. */
   function actionableProduct(): DeckProduct | undefined {
-    if (locked || flying.current || likeInFlight.current || gesture.current) return undefined;
+    if (locked || flying.current || gesture.current) return undefined;
     return products[indexRef.current];
   }
 
@@ -838,49 +840,33 @@ function Stack({
 
   function skip() {
     if (!actionableProduct()) return;
+    latestLike.current = null;
     setLikeNotice(null);
     flyOut(-1);
   }
 
-  function like() {
-    const product = actionableProduct();
-    if (!product) return;
-    if (!signedIn) {
-      springBack();
-      setLikeNotice({
-        message: t("Sign in to like products.", locale),
-        signInHref: authHref("/login", `${pageHrefOf(product)}#product-like`),
-      });
-      return;
-    }
-    if (product.sample) {
-      setLikeNotice({ message: t("This is a sample product, so nothing here is saved.", locale) });
-      writeAfter(product.id);
-      flyOut(1);
-      return;
-    }
-
-    const stage = stageRef.current;
-    likeInFlight.current = true;
-    setLikeNotice(null);
-    springBack();
-    startSavingLike(async () => {
-      const result = await likeProductAction(product.id).catch(() => ({
+  function saveSwipeLike(product: DeckProduct) {
+    const request = likeProductAction(product.id)
+      .catch(() => ({
         error: "Couldn’t save your like. Try again.",
-      }));
-      likeInFlight.current = false;
-      if (
-        stageRef.current !== stage ||
-        stage?.firstElementChild?.getAttribute("data-deck-card") !== product.id
-      ) return;
-      if (result) {
-        setLikeNotice({ message: t(result.error, locale) });
-        return;
-      }
-      setLikeNotice({ message: fill(t("Liked {name}", locale), { name: product.name }) });
-      writeAfter(product.id);
-      flyOut(1);
-    });
+      }))
+      .then((result) => {
+        if (latestLike.current === request) {
+          setLikeNotice(result
+            ? t(result.error, locale)
+            : fill(t("Liked {name}", locale), { name: product.name }));
+        }
+        return !result;
+      });
+    latestLike.current = request;
+    return request;
+  }
+
+  function swipeRight() {
+    // Activate the same link synchronously while the swipe can open a tab.
+    fromRightSwipe.current = true;
+    tryLinkRef.current?.click();
+    fromRightSwipe.current = false;
   }
 
   /** The browser opens Try's link unless the device needs a QR handoff. */
@@ -893,14 +879,20 @@ function Stack({
       event.preventDefault();
       return;
     }
+    latestLike.current = null;
     setLikeNotice(null);
+    const fromSwipe = fromRightSwipe.current;
+    const liking = fromSwipe && signedIn && !product.sample
+      ? saveSwipeLike(product)
+      : undefined;
+    const options = { fromSwipe, liking };
     writeAfter(product.id);
     // A middle-click or a modifier asks the browser for a tab.
     if (isPlainClick(event) && needsPhone(product.phones)) {
       event.preventDefault();
-      setHandoff(product);
+      setHandoff({ product, options });
     } else {
-      onTried(product);
+      onTried(product, options);
     }
     flyOut(1);
   }
@@ -935,7 +927,7 @@ function Stack({
       skip();
     } else if (event.key === "ArrowRight") {
       event.preventDefault();
-      like();
+      swipeRight();
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       openProduct(null);
@@ -946,6 +938,7 @@ function Stack({
     restoreFocus.current = true;
     indexRef.current = 0;
     setIndex(0);
+    latestLike.current = null;
     setLikeNotice(null);
     // Back at card 1, so the address must not resume anywhere else.
     writeAfter(null);
@@ -996,7 +989,7 @@ function Stack({
 
   function onPointerDown(event: ReactPointerEvent<HTMLElement>) {
     if (event.button !== 0 || !event.isPrimary) return;
-    if (locked || flying.current || likeInFlight.current || gesture.current) return;
+    if (locked || flying.current || gesture.current) return;
     if ((event.target as Element).closest("[data-deck-nodrag]")) return;
 
     justDragged.current = false;
@@ -1086,7 +1079,7 @@ function Stack({
           springBack();
           return;
         }
-        if (g.dx > 0) like();
+        if (g.dx > 0) swipeRight();
         else skip();
       },
       options,
@@ -1133,7 +1126,7 @@ function Stack({
           <Card
             key={product.id}
             padding="none"
-            data-deck-card={product.id}
+            data-deck-card=""
             inert={depth > 0}
             onPointerDown={depth === 0 ? onPointerDown : undefined}
             onClickCapture={depth === 0 ? onClickCapture : undefined}
@@ -1173,7 +1166,7 @@ function Stack({
               aria-hidden="true"
               className="pointer-events-none absolute top-4 left-4 z-30 rounded-full bg-navy px-3 py-1.5 text-sm font-medium text-white opacity-0"
             >
-              {labels.like}
+              {signedIn ? labels.like : labels.tryIt}
             </span>
             <span
               data-deck-hint="skip"
@@ -1326,36 +1319,19 @@ function Stack({
               variant="secondary"
               fullWidth
               onClick={skip}
-              aria-disabled={savingLike}
               className="min-w-0 flex-1 gap-1.5 px-2 sm:gap-2 sm:px-4"
             >
               <X className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
               {labels.skip}
             </Button>
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={like}
-              aria-busy={savingLike}
-              aria-disabled={savingLike}
-              className="min-w-0 flex-1 gap-1.5 px-2 sm:gap-2 sm:px-4"
-            >
-              <Heart
-                className="size-4 shrink-0"
-                fill={current.liked ? "currentColor" : "none"}
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-              {labels.like}
-            </Button>
             {/* An EXTERNAL, member-submitted href, so a plain <a> with
                 target/rel rather than a client-routed <LinkButton>. */}
             <a
+              ref={tryLinkRef}
               href={current.href}
               target="_blank"
               rel={LINK_REL}
               aria-label={current.tryAria}
-              aria-disabled={savingLike}
               draggable={false}
               onClick={onTryLinkClick}
               onAuxClick={onTryLinkClick}
@@ -1396,31 +1372,23 @@ function Stack({
           out of the first viewport. */}
       {likeNotice && (
         <div className="absolute top-3 left-1/2 z-30 w-max max-w-[calc(100%_-_1.5rem)] -translate-x-1/2 rounded-xl border border-line bg-white px-4 py-2 text-center text-sm shadow-lg">
-          <p>{likeNotice.message}</p>
-          {likeNotice.signInHref && (
-            <Link
-              href={likeNotice.signInHref}
-              className="mt-1 inline-block text-navy underline underline-offset-2"
-            >
-              {t("Sign in", locale)}
-            </Link>
-          )}
+          <p>{likeNotice}</p>
         </div>
       )}
 
       {/* The reader can try the link here or request a review after scanning. */}
       {handoff && (
         <PhoneHandoffDialog
-          name={handoff.name}
-          href={handoff.href}
-          host={handoff.host}
-          phones={handoff.phones}
-          storeLinks={handoff.storeLinks}
+          name={handoff.product.name}
+          href={handoff.product.href}
+          host={handoff.product.host}
+          phones={handoff.product.phones}
+          storeLinks={handoff.product.storeLinks}
           onClose={() => setHandoff(null)}
-          onOpenHere={() => onTried(handoff)}
+          onOpenHere={() => onTried(handoff.product, handoff.options)}
           onReview={
-            !signedIn || handoff.reviewable
-              ? () => onTried(handoff, { requestReview: true })
+            !signedIn || handoff.product.reviewable
+              ? () => onTried(handoff.product, { ...handoff.options, requestReview: true })
               : undefined
           }
         />

@@ -23,9 +23,8 @@
 // the same card. Opening /products/<id> as a page (a middle-click, a shared
 // link) still comes back through its own back link, below.
 //
-// A skip writes nothing. A left swipe changes the screen and nothing else; the
-// address learns a position only when a product is opened, which is the one
-// moment the reader will want to come back to.
+// A left swipe only advances the deck. Trying or liking a product saves its
+// position in the URL. A card link can also open the deck at a specific product.
 //
 // Decided, not discovered:
 //   * a fresh visit — a typed /products, a nav link, a shared /products link —
@@ -41,14 +40,7 @@
 //     under another category) is ignored, and the deck starts at card 1.
 //
 // ── `?review=` BRINGS A NEW MEMBER BACK TO THE PRODUCT THEY TRIED ──────────
-// A visitor who is not signed in, back from trying X, is offered sign-in once
-// (./DeckPrompts.tsx). Its links carry `next=` deckReviewPath(): this deck at
-// /products — never /, which sends a signed-in member to their own home —
-// with the category, `after=X` (the card they were looking at), and
-// `review=X`. Signed in, the deck opens X's review modal from that parameter
-// and removes it with replaceState at once, so a reload or a Back does not
-// open it a second time. Like `after`, it is only ever compared against the
-// ids already on the deck.
+// Older sign-in links open the review once, then remove the parameter.
 //
 // ── HOW THE PRODUCT PAGE KNOWS WHERE "BACK" IS ─────────────────────────────
 // The deck's row links to `/products/<id>?from=products&category=game` (or
@@ -63,6 +55,7 @@ import { PARAM, parseCategoryParam, type FilterBucket } from "./categories";
 
 /** On the deck: `?after=<product id>`, the last product the reader opened. */
 export const AFTER_PARAM = "after";
+export const CARD_PARAM = "card";
 
 /** On a product's page: `?from=products` or `?from=home`, the deck it came from. */
 export const FROM_PARAM = "from";
@@ -162,6 +155,15 @@ export function readProductFromAddress(): string | null {
   );
 }
 
+export function readCardFromAddress(): string | null {
+  return parseProductParam(new URLSearchParams(window.location.search).getAll(CARD_PARAM));
+}
+
+/** Open the swipe deck at this product, with no detail dialog over it. */
+export function productCardHref(id: string): string {
+  return `/products?${new URLSearchParams({ [CARD_PARAM]: id })}`;
+}
+
 /** A product's page as the deck links to it. */
 export function productPageHref(
   id: string,
@@ -195,32 +197,6 @@ export function deckReturnHref(
   if (parseProductView(search.view) === "grid") query.set(VIEW_PARAM, "grid");
   else query.set(AFTER_PARAM, productId);
   return `${signedIn ? "/products" : route}?${query}`;
-}
-
-/**
- * Where the sign-in prompt's links bring a reader back to: the deck at
- * /products, on the category they were browsing, at the card after `productId`,
- * with that product's review modal to open. Rebuilt from parsed values only.
- */
-export function deckReviewPath(
-  productId: string,
-  category: FilterBucket | null,
-  view: ProductView = "single",
-): string {
-  const query = new URLSearchParams();
-  if (category) query.set(PARAM, category);
-  if (view === "grid") query.set(VIEW_PARAM, view);
-  else query.set(AFTER_PARAM, productId);
-  query.set(REVIEW_PARAM, productId);
-  return `/products?${query}`;
-}
-
-/** Return to the standalone product page and resume its review after sign-in. */
-export function productReviewPath(returnPath: string, productId: string): string {
-  const [pathname, search] = returnPath.split("?", 2);
-  const query = new URLSearchParams(search);
-  query.set(REVIEW_PARAM, productId);
-  return `${pathname}?${query}`;
 }
 
 /** The deck-context part of a product page's address, rebuilt from parsed
@@ -269,14 +245,15 @@ export function takeReviewFromAddress(): string | null {
 }
 
 /**
- * Set `?after=` on THIS history entry (null removes it), leaving every other
- * parameter and the hash alone. replaceState, so it adds no entry, and Next
+ * Set or reset this history entry's deck position. replaceState adds no entry,
+ * and Next
  * documents the native history methods as integrating with its router
  * (linking-and-navigating.md, "Native History API"). A no-op when the address
  * already says it.
  */
 export function writeAfterToAddress(productId: string | null) {
   const url = new URL(window.location.href);
+  url.searchParams.delete(CARD_PARAM);
   if (productId) url.searchParams.set(AFTER_PARAM, productId);
   else url.searchParams.delete(AFTER_PARAM);
   const next = `${url.pathname}${url.search}${url.hash}`;

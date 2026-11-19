@@ -8,9 +8,11 @@
 // choices; aria-pressed marks the one that is yours.
 
 import { useId, useOptimistic, useState, useTransition } from "react";
+import Link from "next/link";
 import { Star } from "lucide-react";
+import { productCardHref } from "@/app/(marketing)/products/deck-position";
 import { useT } from "@/lib/i18n-client";
-import { LIKE_BEFORE_RATING, MAX_RATING } from "@/lib/post-types";
+import { MAX_RATING } from "@/lib/post-types";
 import { clearProductRatingAction, setProductRatingAction } from "./actions";
 
 const STARS = Array.from({ length: MAX_RATING }, (_, i) => i + 1);
@@ -93,7 +95,12 @@ export function RatingControl({
             </div>
           </>
         ) : (
-          <p className="text-sm text-ink-muted">{tr(LIKE_BEFORE_RATING)}</p>
+          <>
+            <p className="text-sm text-ink-muted">{tr("Swipe right on the product card to like it.")}</p>
+            <Link href={productCardHref(postId)} className="text-sm text-navy underline underline-offset-4">
+              {tr("Open product card")}
+            </Link>
+          </>
         )}
         {score !== null && (
           <button

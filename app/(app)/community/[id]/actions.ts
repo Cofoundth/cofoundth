@@ -60,7 +60,7 @@ export async function likeProductAction(postId: string): Promise<{ error: string
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Sign in to like products." };
+  if (!user) return { error: "Not authenticated." };
 
   const { data: product } = await supabase
     .from("forum_posts")
@@ -83,6 +83,25 @@ export async function likeProductAction(postId: string): Promise<{ error: string
 
   revalidateProduct(postId);
   return null;
+}
+
+export async function unlikeProductAction(postId: string): Promise<void> {
+  if (typeof postId !== "string" || !UUID.test(postId)) return;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { error } = await supabase
+    .from("forum_likes")
+    .delete()
+    .eq("post_id", postId)
+    .eq("user_id", user.id);
+  if (error) {
+    console.error("[product.unlike]", error.message);
+    return;
+  }
+  revalidateProduct(postId);
 }
 
 // --- Product ratings ------------------------------------------------

@@ -101,7 +101,6 @@ type TryDestination = { label: string; href: string; host: string; phones: reado
 type ProductTryLinksProps = {
   product: PromptProduct;
   viewer: DeckViewer;
-  returnPath: string;
   main: TryDestination | null;
   stores: readonly (TryDestination & { platform: PhonePlatform })[];
 };
@@ -117,7 +116,11 @@ export function ProductTryLinks(props: ProductTryLinksProps) {
 }
 
 function StandaloneTryLinks(props: ProductTryLinksProps) {
-  const prompts = useProductPrompts({ products: [props.product], viewer: props.viewer, returnPath: props.returnPath });
+  const prompts = useProductPrompts({
+    products: [props.product],
+    viewer: props.viewer,
+    standaloneProductId: props.product.id,
+  });
   return (
     <>
       <TryLinks {...props} tried={prompts.tried} />

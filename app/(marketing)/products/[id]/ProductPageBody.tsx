@@ -7,7 +7,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { CheckCircle2, MessageCircle, Pencil } from "lucide-react";
+import { CheckCircle2, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
@@ -22,7 +22,7 @@ import { authHref } from "@/lib/auth-href";
 import { t, type Locale } from "@/lib/i18n";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { timeAgo } from "@/lib/time";
-import { LIKE_BEFORE_COMMENTING, productPath, type ProductRating } from "@/lib/post-types";
+import { productPath, type ProductRating } from "@/lib/post-types";
 import {
   getPublicEngagement,
   getPublicPost,
@@ -33,16 +33,8 @@ import {
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { ReportButton } from "@/components/ReportButton";
-import {
-  PublicPostActions,
-  PublicRateButton,
-} from "@/components/PublicPostActions";
-import {
-  CommentPreview,
-  JoinCta,
-  StickySignIn,
-  publicTimeAgo,
-} from "@/components/PublicPostParts";
+import { PublicRateButton } from "@/components/PublicPostActions";
+import { CommentPreview, publicTimeAgo } from "@/components/PublicPostParts";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import {
   buttonClasses,
@@ -52,7 +44,6 @@ import {
   Section,
   SectionHeading,
 } from "@/components/ui";
-import { LikeButton } from "@/app/(app)/community/[id]/LikeButton";
 import { RatingControl } from "@/app/(app)/community/[id]/RatingControl";
 import { CommentComposer } from "@/app/(app)/community/[id]/CommentComposer";
 import { CommentThread } from "@/components/CommentThread";
@@ -65,6 +56,7 @@ import {
   deckContextQuery,
   deckReturnHref,
   parseProductView,
+  productCardHref,
 } from "../deck-position";
 import { PARAM, parseCategoryParam } from "../categories";
 import { findFixture } from "../fixtures";
@@ -122,7 +114,6 @@ export async function ProductPageBody({
           photo_url: fixture.author?.photo_url ?? null,
         }}
         rating={fixture.rating}
-        likeCount={0}
         comments={[]}
         total={0}
         backHref={
@@ -154,8 +145,8 @@ export async function ProductPageBody({
   const found = await getPublicPost(id);
   if (!found || found.post.kind !== PRODUCT_KIND) return missing(mode, locale);
   const { post, author } = found;
-  const [{ likeCount, comments, total }, rating] = await Promise.all([
-    getPublicEngagement(id),
+  const [{ comments, total }, rating] = await Promise.all([
+    getPublicEngagement(id, { includeLikes: false }),
     // Degrades to UNRATED on failure (lib/product-ratings.ts), so it can never
     // 500 this page.
     getProductRating(id),
@@ -167,7 +158,6 @@ export async function ProductPageBody({
       createdAt={post.created_at}
       author={author}
       rating={rating}
-      likeCount={likeCount}
       comments={comments}
       total={total}
       backHref={mode === "page" ? deckReturnHref(search, post.id, false) : null}
@@ -217,7 +207,6 @@ async function PublicProduct({
   createdAt,
   author,
   rating,
-  likeCount,
   comments,
   total,
   backHref,
@@ -231,7 +220,6 @@ async function PublicProduct({
   createdAt: string;
   author: PublicAuthor;
   rating: ProductRating | null;
-  likeCount: number;
   comments: PreviewComment[];
   total: number;
   /** null in the modal, which closes instead. */
@@ -252,7 +240,7 @@ async function PublicProduct({
   // One 1120px column of cards, the comments included (ProductDetail, "THE
   // FORMAT").
   return (
-    <ProductFrame mode={mode} className="pb-28">
+    <ProductFrame mode={mode}>
       <ProductDetail
         post={post}
         locale={locale}
@@ -264,7 +252,6 @@ async function PublicProduct({
           myScore: null,
           sample: signedIn,
           viewer: { signedIn, canComment: sampleCanComment },
-          returnPath,
         }}
         rateSlot={signedIn ? null : <PublicRateButton next={returnPath} />}
         maker={
@@ -280,16 +267,7 @@ async function PublicProduct({
           </div>
         }
       >
-        <div className="mt-6 flex items-center justify-between gap-4 border-t border-line pt-5">
-          {signedIn ? (
-            <span />
-          ) : (
-            <PublicPostActions
-              likeCount={likeCount}
-              commentCount={total}
-              next={returnPath}
-            />
-          )}
+        <div className="mt-6 flex items-center justify-end border-t border-line pt-5">
           <ShareButton
             path={productPath(post.id)}
             title={post.title ?? post.content.slice(0, 80)}
@@ -345,15 +323,6 @@ async function PublicProduct({
         )}
       </section>
 
-      {!signedIn && (
-        <>
-          <JoinCta next={returnPath} className="mt-14" />
-          {/* Pinned to the bottom of the SCREEN: a page's, not a modal's. */}
-          {mode === "page" && (
-            <StickySignIn next={returnPath} authorName={authorName} />
-          )}
-        </>
-      )}
     </ProductFrame>
   );
 }
@@ -361,22 +330,20 @@ async function PublicProduct({
 /** The modal provides its own padding for both the skeleton and the content. */
 function ProductFrame({
   mode,
-  className,
   children,
 }: {
   mode: ProductMode;
-  className?: string;
   children: ReactNode;
 }) {
   return mode === "page" ? (
-    <Section className={className}>{children}</Section>
+    <Section>{children}</Section>
   ) : (
     children
   );
 }
 
 /**
- * A product for a signed-in member: the member's own stars, the like, the
+ * A product for a signed-in member: the member's own stars, the
  * whole thread with the composer, Share, Edit for its maker and Report for
  * everyone else (the product, and each comment). Read through
  * the member's own client (forum_posts, forum_comments and profiles are all
@@ -454,7 +421,6 @@ async function MemberProduct({
     rating,
     myScore,
     { data: author },
-    { count: likeCount },
     { data: myLike },
     batch,
     commentTotal,
@@ -469,10 +435,6 @@ async function MemberProduct({
       .select("id, full_name, photo_url")
       .eq("id", authorId)
       .maybeSingle(),
-    supabase
-      .from("forum_likes")
-      .select("post_id", { count: "exact", head: true })
-      .eq("post_id", id),
     readProductLike(supabase, userId, id),
     // The thread's newest batch and how many there are in all
     // (lib/comment-thread.ts): never the whole thread at once.
@@ -576,7 +538,6 @@ async function MemberProduct({
           myScore,
           sample: false,
           viewer: { signedIn: true, canComment: mayComment },
-          returnPath: returnPathOf(id, search, mode),
         }}
         rateSlot={
           mayRate ? (
@@ -612,32 +573,8 @@ async function MemberProduct({
         }
       >
 
-        {/* The like control and the comment read-out on the left, one type
-            scale; Share and, for its maker, Edit on the right — and for
-            everyone else Report, the last and quietest item, as on the feed
-            card. Share sends the bare /products/<id>, which opens for anyone.
-            Report is a DIRECT child of this flex-wrap row on purpose: opening
-            it swaps the link for a full-width reason box, which wraps onto its
-            own line under the row (components/ReportButton.tsx). */}
+        {/* Report wraps its reason box onto its own line. */}
         <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-5 text-sm">
-          <div id="product-like" className="flex scroll-mt-24 items-center gap-4">
-            <LikeButton
-              postId={post.id as string}
-              initialCount={likeCount ?? 0}
-              initialLiked={!!myLike}
-            />
-            {/* Plain read-out, not a control: the composer below is how you
-                comment. */}
-            <span className="inline-flex items-center gap-2 text-ink-muted">
-              <MessageCircle
-                className="h-4 w-4"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-              <span className="tabular-nums">{commentTotal}</span>
-              <span className="sr-only">{commentsLabel}</span>
-            </span>
-          </div>
           <div className="ml-auto flex items-center gap-4">
             {isAuthor && (
               <Link href={`${productPath(id)}/edit`} className={ROW_LINK}>
@@ -704,7 +641,15 @@ async function MemberProduct({
         {mayPostFeedback && <CommentComposer postId={id} centerText />}
         {mayComment && !mayPostFeedback && (
           <p className="text-sm text-ink-muted">
-            {t(myLike ? TRY_BEFORE_COMMENTING : LIKE_BEFORE_COMMENTING, locale)}
+            {t(myLike ? TRY_BEFORE_COMMENTING : "Swipe right on the product card to like it.", locale)}
+            {!myLike && (
+              <>
+                {" "}
+                <Link href={productCardHref(id)} className="text-navy underline underline-offset-4">
+                  {t("Open product card", locale)}
+                </Link>
+              </>
+            )}
           </p>
         )}
       </section>

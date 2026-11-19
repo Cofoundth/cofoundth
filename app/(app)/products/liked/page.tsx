@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Heart } from "lucide-react";
+import { unlikeProductAction } from "@/app/(app)/community/[id]/actions";
 import { ProductGridCard } from "@/components/ProductGridCard";
-import { EmptyState, LinkButton, Section } from "@/components/ui";
+import { Button, EmptyState, LinkButton, Section } from "@/components/ui";
 import {
   isPhoneOnly,
   productImages,
@@ -64,7 +65,7 @@ export default async function LikedProductsPage({
         <EmptyState
           icon={Heart}
           title={tr("No liked products yet")}
-          description={tr("Tap the heart on a product to find it here later.")}
+          description={tr("Swipe right on a product card to save it here.")}
           action={<LinkButton href="/products">{tr("All products")}</LinkButton>}
         />
       ) : (
@@ -82,6 +83,16 @@ export default async function LikedProductsPage({
                   mobileOnly={isPhoneOnly(product.link_url, product.platforms)}
                   locale={locale}
                 />
+                <form action={unlikeProductAction.bind(null, product.id)} className="mt-1 flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={tr("Unlike {name}").replace("{name}", () => name)}
+                  >
+                    {tr("Unlike")}
+                  </Button>
+                </form>
               </li>
             );
           })}

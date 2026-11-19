@@ -170,7 +170,10 @@ export type PreviewComment = {
  * number is honest; it is the RENDERING of a moderated account the filter is
  * about.
  */
-export async function getPublicEngagement(id: string): Promise<{
+export async function getPublicEngagement(
+  id: string,
+  { includeLikes = true }: { includeLikes?: boolean } = {},
+): Promise<{
   likeCount: number;
   comments: PreviewComment[];
   total: number;
@@ -178,10 +181,12 @@ export async function getPublicEngagement(id: string): Promise<{
   const admin = createAdminClient();
   const [{ count: likeCount }, { data: commentRows, count: commentCount }] =
     await Promise.all([
-      admin
-        .from("forum_likes")
-        .select("post_id", { count: "exact", head: true })
-        .eq("post_id", id),
+      includeLikes
+        ? admin
+            .from("forum_likes")
+            .select("post_id", { count: "exact", head: true })
+            .eq("post_id", id)
+        : { count: null },
       // `count: "exact"` alongside `limit()` returns the FULL tally in the
       // Content-Range header while the body carries only the preview rows.
       admin

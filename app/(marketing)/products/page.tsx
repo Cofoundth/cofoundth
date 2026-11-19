@@ -16,6 +16,7 @@ type Props = {
   searchParams: Promise<{
     category?: string | string[];
     after?: string | string[];
+    card?: string | string[];
     product?: string | string[];
     view?: string | string[];
   }>;

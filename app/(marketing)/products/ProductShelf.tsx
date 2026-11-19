@@ -67,19 +67,10 @@
 // COMMENTS remain the place to say WHY, and they still require a login, which
 // is the conversion this page is built on.
 //
-// THE SWIPE HERE IS NOT A RATING. The whole shelf is ./ProductDeck.tsx, the
-// founder-approved exception in CLAUDE.md's Language Rules: left skips, right
-// opens the product itself in a new tab, and a tap on the card opens its own
-// page in a modal over the deck (./ProductModal.tsx). When the
-// reader comes back from it, ./DeckPrompts.tsx asks a member to rate and
-// comment, or offers a visitor sign-in, once per visit. There is no grid. The
-// swipe is a way of browsing, and it leaves nothing behind: no row, no
-// storage, no count. A "skip" reaches nobody. The one thing that remembers a
-// position is the address (./deck-position.ts), and only once they open a
-// product. A rating is a tap on a star and a press of send, in that modal or
-// on the product's page — the swipe must never write one, or anything: the
-// day a swipe is recorded anywhere, the deck has become a verdict, which is
-// what the exception rules out. Do not widen it to founders or companies.
+// The product deck skips left and tries the product on a right swipe.
+// A member's right swipe also saves a like. Ratings and comments are
+// deliberate feedback on the product page or in the member's review dialog.
+// A first right-swipe try offers guests an optional sign-in invite on return.
 //
 // ── NO NEW TABLE ──────────────────────────────────────────────────────────
 // A product IS a `forum_posts` row with `kind = 'show_and_tell'`; the category
@@ -173,6 +164,7 @@ export async function ProductShelf({
   searchParams: Promise<{
     category?: string | string[];
     after?: string | string[];
+    card?: string | string[];
     product?: string | string[];
     view?: string | string[];
   }>;
@@ -181,7 +173,7 @@ export async function ProductShelf({
   route: DeckRoute;
 }) {
   // Next 16: searchParams is a Promise.
-  const { category: raw, after: rawAfter, product: rawProduct, view } = await searchParams;
+  const { category: raw, after: rawAfter, card, product: rawProduct, view } = await searchParams;
 
   // `?product=<id>`: the product whose own page is open in the modal over
   // the deck (./ProductModal.tsx). Shape-checked before it reaches a query.
@@ -693,6 +685,7 @@ export async function ProductShelf({
               route={route}
               resumeAfter={resumeAfter}
               resumeAt={modalId}
+              cardId={parseProductParam(card)}
               productDetails={productDetails}
               viewer={{
                 signedIn: user !== null,

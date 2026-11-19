@@ -95,14 +95,13 @@ export function ProductDetail({
   rating: ProductRating | null;
   feedback: Omit<PromptProduct, "id" | "name"> & {
     viewer: DeckViewer;
-    returnPath: string;
   };
   /** Stars for an eligible member, a sign-in link for a visitor, or a note
    *  explaining rating eligibility to the maker. */
   rateSlot?: ReactNode;
   /** Who made it, under the name. */
   maker?: ReactNode;
-  /** The rest of the product card, under "Try it": likes, Share, Report. */
+  /** The product card's other actions, such as Share and Report. */
   children?: ReactNode;
   /** Above everything: the "added" / "saved" confirmation for the maker. */
   notice?: ReactNode;
@@ -204,7 +203,6 @@ export function ProductDetail({
                 sample: feedback.sample,
               }}
               viewer={feedback.viewer}
-              returnPath={feedback.returnPath}
             />
           )}
 
