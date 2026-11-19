@@ -31,44 +31,34 @@
 // revalidating action, which is this deck, modal included — so a new comment
 // appears here as it does on the page.
 
-import { useRouter } from "next/navigation";
 import { useCallback, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Dialog } from "@/components/ui";
-import { PRODUCT_PARAM } from "./deck-position";
-import { takeOpenedFromDeck } from "./product-modal-state";
 
 export function ProductModal({
-  productId,
   name,
   closeLabel,
   discardLabel,
+  onClose,
   children,
 }: {
-  productId: string;
   /** The dialog's accessible name: the product's. */
   name: string;
   /** The ✕, which has no visible text. Already translated. */
   closeLabel: string;
   /** Asked before closing over a half-written comment. Already translated. */
   discardLabel: string;
+  onClose: () => void;
   children: ReactNode;
 }) {
-  const router = useRouter();
   const bodyRef = useRef<HTMLDivElement>(null);
   const close = useCallback(() => {
     const draft = Array.from(
       bodyRef.current?.querySelectorAll("textarea") ?? [],
     ).some((t) => t.value.trim() !== "");
     if (draft && !window.confirm(discardLabel)) return;
-    if (takeOpenedFromDeck(productId)) {
-      router.back();
-      return;
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.delete(PRODUCT_PARAM);
-    router.replace(`${url.pathname}${url.search}`, { scroll: false });
-  }, [router, productId, discardLabel]);
+    onClose();
+  }, [discardLabel, onClose]);
 
   return (
     <Dialog
@@ -79,10 +69,9 @@ export function ProductModal({
       // The overlay surface every modal uses (components/ui/Dialog.tsx, D1),
       // at the product page's own width and on its ground: its cards are
       // white on the app's cream, as on /products/<id>.
-      panelClassName="max-w-[1120px] bg-cream"
+      panelClassName="h-[calc(100dvh-2rem)] max-w-[1120px] overflow-y-auto overscroll-contain bg-cream [scrollbar-gutter:stable]"
     >
-      {/* Sticky in the scrim, which is what scrolls, so the ✕ stays in reach
-          down a long thread. Zero height: it takes no room above the page. */}
+      {/* The panel scrolls at a fixed height while its content loads. */}
       <div className="sticky top-0 z-30 flex h-0 justify-end">
         <button
           type="button"
@@ -93,17 +82,9 @@ export function ProductModal({
           <X className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
         </button>
       </div>
-      <div ref={bodyRef}>{children}</div>
+      <div ref={bodyRef} className="px-4 pt-14 pb-8 sm:px-6 lg:px-8">
+        {children}
+      </div>
     </Dialog>
-  );
-}
-
-/** What the modal shows while the product streams in: one card's worth of
- *  quiet surface, at the body's own padding (ProductPageBody, MODAL_BODY). */
-export function ProductModalSkeleton() {
-  return (
-    <div aria-hidden="true" className="px-4 pt-14 pb-8 sm:px-6 lg:px-8">
-      <div className="h-[min(22rem,70dvh)] animate-pulse rounded-3xl bg-white/70 motion-reduce:animate-none" />
-    </div>
   );
 }

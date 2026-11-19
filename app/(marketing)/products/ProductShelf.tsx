@@ -112,7 +112,6 @@
 // shell. The view switch lives in the shelf controls for both audiences.
 
 import Link from "next/link";
-import { Suspense } from "react";
 import { Package, PackageOpen, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
@@ -153,7 +152,6 @@ import {
   parseProductView,
   type DeckRoute,
 } from "./deck-position";
-import { ProductModal, ProductModalSkeleton } from "./ProductModal";
 import { ProductPageBody } from "./[id]/ProductPageBody";
 import { ProductDeck, type DeckProduct } from "./ProductDeck";
 import { ProductFilterProvider } from "./filter-context";
@@ -499,6 +497,7 @@ export async function ProductShelf({
       bucket: productBucketOf(p.tags),
       name,
       blurb: p.content,
+      isOwn: p.isOwn,
       href: p.link.toString(),
       host,
       // A phone-only app (its store link, or the maker's "Runs on"): a
@@ -631,26 +630,17 @@ export async function ProductShelf({
     );
   }
 
-  // The deck owns the prompt for a try from either the cards or these details.
-  const productModal = modalId && (
-    <ProductModal
-      productId={modalId}
-      name={products.find((p) => p.id === modalId)?.name ?? tProduct}
-      closeLabel={tClose}
-      discardLabel={tDiscard}
-    >
-      <Suspense fallback={<ProductModalSkeleton />}>
-        <ProductPageBody
-          id={modalId}
-          mode="modal"
-          search={{
-            from: route === "/" ? "home" : "products",
-            category: initialCategory ?? undefined,
-            view: parseProductView(view),
-          }}
-        />
-      </Suspense>
-    </ProductModal>
+  // The deck owns the modal and its loading state. The details still render on the server.
+  const productDetails = modalId && (
+    <ProductPageBody
+      id={modalId}
+      mode="modal"
+      search={{
+        from: route === "/" ? "home" : "products",
+        category: initialCategory ?? undefined,
+        view: parseProductView(view),
+      }}
+    />
   );
 
   // Card view fills the available height on larger screens. On phones it
@@ -705,13 +695,16 @@ export async function ProductShelf({
               route={route}
               resumeAfter={resumeAfter}
               resumeAt={modalId}
-              productModal={productModal}
+              productDetails={productDetails}
               viewer={{
                 signedIn: user !== null,
                 canComment: role !== null && canComment(role),
               }}
               computer={(await viewerKind()) === "computer"}
               labels={{
+                productFallback: tProduct,
+                closeDetails: tClose,
+                discardComment: tDiscard,
                 deckName: tDeckName,
                 skip: tSkip,
                 tryIt: tTryIt,

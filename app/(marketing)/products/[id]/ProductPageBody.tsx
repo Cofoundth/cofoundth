@@ -196,19 +196,12 @@ function returnPathOf(id: string, search: ProductSearch, mode: ProductMode): str
 function missing(mode: ProductMode, locale: Locale) {
   if (mode === "page") notFound();
   return (
-    <div className={MODAL_BODY}>
-      <EmptyState
-        padding="lg"
-        description={t("The product isn’t available", locale)}
-      />
-    </div>
+    <EmptyState
+      padding="lg"
+      description={t("The product isn’t available", locale)}
+    />
   );
 }
-
-/** The modal's own padding, in place of the page's <Section>: the deck is
- *  still there behind it, so no page rhythm, and room at the top for the
- *  close button (../ProductModal.tsx). */
-const MODAL_BODY = "px-4 pt-14 pb-8 sm:px-6 lg:px-8";
 
 /**
  * A product for a logged-out visitor (or, in development, a sample for
@@ -362,8 +355,7 @@ async function PublicProduct({
   );
 }
 
-/** The page's <Section>, or the modal's padding (MODAL_BODY). `className`
- *  is the page's only: the room it keeps for the sticky sign-in bar. */
+/** The modal provides its own padding for both the skeleton and the content. */
 function ProductFrame({
   mode,
   className,
@@ -376,7 +368,7 @@ function ProductFrame({
   return mode === "page" ? (
     <Section className={className}>{children}</Section>
   ) : (
-    <div className={MODAL_BODY}>{children}</div>
+    children
   );
 }
 

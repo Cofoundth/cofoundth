@@ -95,11 +95,8 @@ import { createPostCommentAction } from "@/lib/post-actions";
 import { MAX_RATING } from "@/lib/post-types";
 import type { FilterBucket } from "./categories";
 import { setProductRatingAction } from "@/app/(app)/community/[id]/actions";
-import { useSearchParams } from "next/navigation";
 import {
-  PRODUCT_PARAM,
   deckReviewPath,
-  parseProductParam,
   productReviewPath,
   takeReviewFromAddress,
   type ProductView,
@@ -160,6 +157,7 @@ export function useProductPrompts({
   category = null,
   view = "single",
   deckRef,
+  productModalId = null,
   returnPath,
 }: {
   /** The WHOLE shelf, not the filtered deck: `?review=` can name any of it. */
@@ -169,6 +167,8 @@ export function useProductPrompts({
   view?: ProductView;
   /** Where focus goes when a modal closes, unless it is already inside. */
   deckRef?: RefObject<HTMLElement | null>;
+  /** The details currently open, including while they load. */
+  productModalId?: string | null;
   /** Standalone product page to return to after sign-in. */
   returnPath?: string;
 }): {
@@ -192,10 +192,6 @@ export function useProductPrompts({
   // that comes due then — a try opened in a background tab, whose grace timer
   // ends while the reader is reading another product — waits for it to close
   // rather than opening on top of it.
-  const searchParams = useSearchParams();
-  const productModalId = deckRef
-    ? parseProductParam(searchParams.getAll(PRODUCT_PARAM))
-    : null;
   const productModalRef = useRef(productModalId);
   const deferred = useRef<Try | null>(null);
   useEffect(() => {

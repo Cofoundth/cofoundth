@@ -144,9 +144,11 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  Suspense,
   useEffect,
   useLayoutEffect,
   useMemo,
+  useOptimistic,
   useRef,
   useState,
   useTransition,
@@ -161,7 +163,6 @@ import {
 import {
   ChevronUp,
   ExternalLink,
-  Loader2,
   MessageCircle,
   SearchX,
   Smartphone,
@@ -185,7 +186,6 @@ import type { ProductRating } from "@/lib/post-types";
 import type { FilterBucket } from "./categories";
 import {
   PRODUCT_PARAM,
-  parseProductParam,
   productPageHref,
   readAfterFromAddress,
   readProductFromAddress,
@@ -205,8 +205,11 @@ import { useProductFilter } from "./filter-context";
 import {
   clearOpenedFromDeck,
   markOpenedFromDeck,
+  takeOpenedFromDeck,
 } from "./product-modal-state";
 import { PhoneHandoffDialog, needsPhone } from "./PhoneHandoff";
+import { ProductDetailsSkeleton } from "./ProductDetailsSkeleton";
+import { ProductModal } from "./ProductModal";
 import { useProductView } from "./ProductShelfView";
 import type { PhonePlatform } from "./product-view";
 
@@ -217,6 +220,7 @@ export type DeckProduct = PromptProduct & {
    *  popup-blocked notice's "Open {name}" and the prompts' titles. */
   name: string;
   blurb: string;
+  isOwn: boolean;
   /** The maker's product, already through webUrl(). Never a raw link_url. */
   href: string;
   /** Where `href` goes, for the phone handoff's "Open {host} here instead". */
@@ -245,6 +249,9 @@ export type DeckProduct = PromptProduct & {
 };
 
 type ProductDeckLabels = {
+  productFallback: string;
+  closeDetails: string;
+  discardComment: string;
   deckName: string;
   skip: string;
   /** The right-hand button and the drag hint: "Try" (ลองเลย). Right opens the
@@ -431,7 +438,7 @@ export function ProductDeck({
   resumeAfter,
   resumeAt,
   viewer,
-  productModal,
+  productDetails,
   computer,
 }: {
   /** Never empty: the shelf renders its own empty state instead. */
@@ -458,7 +465,7 @@ export function ProductDeck({
   /** Who is reading, for the prompts: see ./DeckPrompts.tsx. */
   viewer: DeckViewer;
   /** The product details rendered by the shelf at `?product=`. */
-  productModal: ReactNode;
+  productDetails: ReactNode;
   /** The server read the reader as a computer (lib/device.ts): its cards show
    *  the screenshots four at a time, as a grid, from `md` up. A phone or a
    *  tablet keeps the one-at-a-time gallery, whose tall phone screenshots a
@@ -469,9 +476,9 @@ export function ProductDeck({
   const view = useProductView();
   const locale = useLocale();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [opening, startOpening] = useTransition();
-  const modalOpen = parseProductParam(searchParams.getAll(PRODUCT_PARAM)) !== null;
+  const [navigating, startNavigation] = useTransition();
+  const [modalId, showModal] = useOptimistic(resumeAt);
+  const modalProduct = modalId ? products.find((product) => product.id === modalId) : undefined;
   const matching = useMemo(
     () => products.filter((p) => matches(p.bucket)),
     [products, matches],
@@ -486,9 +493,10 @@ export function ProductDeck({
     viewer,
     category: selected,
     deckRef,
+    productModalId: modalId,
     view,
   });
-  const locked = prompts.locked || modalOpen || opening;
+  const locked = prompts.locked || modalId !== null || navigating;
 
   useEffect(() => () => clearOpenedFromDeck(), []);
 
@@ -497,10 +505,43 @@ export function ProductDeck({
     const url = new URL(window.location.href);
     url.searchParams.set(PRODUCT_PARAM, productId);
     markOpenedFromDeck(productId);
-    startOpening(() => {
+    startNavigation(() => {
+      showModal(productId);
       router.push(`${url.pathname}${url.search}`, { scroll: false });
     });
   }
+
+  function closeProduct() {
+    if (!modalId) return;
+    const url = new URL(window.location.href);
+    const openedHere = takeOpenedFromDeck(modalId);
+    if (openedHere && url.searchParams.get(PRODUCT_PARAM) === modalId) {
+      router.back();
+      return;
+    }
+    url.searchParams.delete(PRODUCT_PARAM);
+    startNavigation(() => {
+      showModal(null);
+      router.replace(`${url.pathname}${url.search}`, { scroll: false });
+    });
+  }
+
+  const ratingControlHeight = !viewer.signedIn
+    ? 36
+    : modalProduct?.reviewable && !modalProduct.sample
+      ? 40
+      : modalProduct?.isOwn ? 20 : 0;
+  const skeleton = modalId && (
+    <>
+      <span role="status" className="sr-only">{t("Loading…", locale)}</span>
+      <ProductDetailsSkeleton
+        name={modalProduct?.name}
+        description={modalProduct?.blurb}
+        screenshotCount={modalProduct?.images.length}
+        ratingControlHeight={ratingControlHeight}
+      />
+    </>
+  );
 
   return (
     <div
@@ -527,7 +568,6 @@ export function ProductDeck({
             rootRef={deckRef}
             visible={view === "single"}
             locked={locked}
-            opening={opening && !modalOpen}
             onOpenProduct={openProduct}
             onTried={prompts.tried}
             signedIn={viewer.signedIn}
@@ -595,20 +635,21 @@ export function ProductDeck({
       <DeckProductTry.Provider
         value={(product, options) => prompts.tried(product, { ...options, fromDetails: true })}
       >
-        {productModal}
+        {modalId && (
+          <ProductModal
+            key={modalId}
+            name={modalProduct?.name ?? labels.productFallback}
+            closeLabel={labels.closeDetails}
+            discardLabel={labels.discardComment}
+            onClose={closeProduct}
+          >
+            <Suspense fallback={skeleton}>
+              {modalId === resumeAt ? productDetails : skeleton}
+            </Suspense>
+          </ProductModal>
+        )}
       </DeckProductTry.Provider>
       {prompts.dialog}
-      {opening && !modalOpen && (
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 z-50 grid place-items-center bg-navy/40 backdrop-blur-sm"
-        >
-          <Loader2
-            className="h-7 w-7 animate-spin text-white motion-reduce:animate-none"
-            strokeWidth={1.5}
-          />
-        </div>
-      )}
     </div>
   );
 }
@@ -624,7 +665,6 @@ function Stack({
   rootRef,
   visible,
   locked: shelfLocked,
-  opening,
   onOpenProduct,
   onTried,
   signedIn,
@@ -641,7 +681,6 @@ function Stack({
   /** Keep the current index while grid mode owns the visible content. */
   visible: boolean;
   locked: boolean;
-  opening: boolean;
   onOpenProduct: (id: string) => void;
   onTried: ProductTry;
   signedIn: boolean;
@@ -1217,8 +1256,7 @@ function Stack({
               {/* "More about", where a dating app keeps its own: the
                   pictures' corner. Out of the tab order: the card's link above
                   is the same control for a keyboard. z-20, over that link; a
-                  press here is never a swipe. A spinner while the page is on
-                  its way. */}
+                  press here is never a swipe. */}
               {depth === 0 && (
                 <button
                   type="button"
@@ -1229,19 +1267,11 @@ function Stack({
                   onClick={openProduct}
                   className="absolute right-3 bottom-3 z-20 grid h-10 w-10 place-items-center rounded-full border border-line bg-white text-navy shadow-lg hover:bg-cream"
                 >
-                  {opening ? (
-                    <Loader2
-                      className="h-5 w-5 animate-spin motion-reduce:animate-none"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <ChevronUp
-                      className="h-5 w-5"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  )}
+                  <ChevronUp
+                    className="h-5 w-5"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
                 </button>
               )}
             </div>
