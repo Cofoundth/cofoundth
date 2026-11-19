@@ -168,9 +168,15 @@ export function phonePlatformsOf(
     declared.length > 0 &&
     declared.every((p) => p === "ios" || p === "android");
   if (!store && !declaredPhoneOnly) return [];
+  // A store link names its one phone: that is where "Try" goes, so the code
+  // to scan opens there, whatever the maker ticked. The form's "Mobile" writes
+  // both phone slugs (lib/post-types.ts PLATFORM_CHOICES), which would
+  // otherwise make an App Store link say "iPhone and Android".
   const phones = new Set<PhonePlatform>(store ? [store] : []);
-  for (const p of declared) {
-    if (p === "ios" || p === "android") phones.add(p);
+  if (!store) {
+    for (const p of declared) {
+      if (p === "ios" || p === "android") phones.add(p);
+    }
   }
   // iPhone first, the way the dialog says them.
   return (["ios", "android"] as const).filter((p) => phones.has(p));

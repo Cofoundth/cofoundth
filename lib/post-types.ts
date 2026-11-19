@@ -235,6 +235,48 @@ export function productPlatformsOf(
   const set = new Set(platforms ?? []);
   return PRODUCT_PLATFORMS.filter((p) => set.has(p));
 }
+
+// ---- What the form asks: Web or Mobile (the founder's call, 2026-11-19) ----
+// A maker answers "Runs on" with two choices, not five. MOBILE writes BOTH
+// phone slugs, so the column keeps the device-level slugs every rule reads:
+// the phone-only rule (a computer never sees a product that only runs on a
+// phone) and the phone handoff (a code to scan) work exactly as before, and
+// an app-store link still says which phone (storePlatformOf). Windows and Mac
+// stay valid in the column, with their labels, for a row that has them (none
+// in production when this changed); the form no longer offers them, and an
+// edit drops them.
+export const PLATFORM_CHOICES = [
+  { key: "web", label: "Web", slugs: ["web"] },
+  { key: "mobile", label: "Mobile", slugs: ["ios", "android"] },
+] as const satisfies readonly {
+  key: string;
+  label: string;
+  slugs: readonly ProductPlatform[];
+}[];
+export type PlatformChoice = (typeof PLATFORM_CHOICES)[number];
+
+/** Whether a row's platforms include a choice: any of its slugs. */
+export function hasPlatformChoice(
+  platforms: readonly ProductPlatform[],
+  choice: PlatformChoice,
+): boolean {
+  return choice.slugs.some((s) => platforms.includes(s));
+}
+
+/** "Runs on", as a reader sees it: Web, Mobile (for either phone), and the
+ *  older Windows / Mac a row may still carry. English source labels, in
+ *  that order; every surface passes them through t(). */
+export function platformLabelsOf(
+  platforms: readonly string[] | null | undefined,
+): string[] {
+  const known = productPlatformsOf(platforms);
+  const labels: string[] = [];
+  if (known.includes("web")) labels.push("Web");
+  if (known.includes("ios") || known.includes("android")) labels.push("Mobile");
+  if (known.includes("windows")) labels.push(PLATFORM_LABEL.windows);
+  if (known.includes("mac")) labels.push(PLATFORM_LABEL.mac);
+  return labels;
+}
 export const MAX_PRODUCT_BLURB = 160;
 
 /** Every image on a post, in order, as an array — `[]` when it has none.

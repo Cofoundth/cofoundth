@@ -31,11 +31,13 @@ import {
   MAX_PRODUCT_BLURB,
   MAX_PRODUCT_NAME,
   MIN_PRODUCT_IMAGES,
-  PLATFORM_LABEL,
+  PLATFORM_CHOICES,
   PRODUCT_CATEGORIES,
   PRODUCT_PLATFORMS,
   productPath,
   type ProductCategory,
+  hasPlatformChoice,
+  type PlatformChoice,
   type ProductPlatform,
 } from "@/lib/post-types";
 import { webUrl } from "@/lib/web-url";
@@ -101,18 +103,25 @@ export function ProductForm({
   const [category, setCategory] = useState<ProductCategory | null>(
     product?.category ?? null,
   );
-  // "Runs on" (0080): several at once, kept in PRODUCT_PLATFORMS order.
-  const [platforms, setPlatforms] = useState<ProductPlatform[]>(
-    product?.platforms ?? [],
-  );
+  // "Runs on" (0080): Web and/or Mobile (lib/post-types.ts PLATFORM_CHOICES),
+  // held as the slugs they write, in PRODUCT_PLATFORMS order. An older row's
+  // Windows / Mac, which no choice offers any more, is dropped on edit.
+  const [platforms, setPlatforms] = useState<ProductPlatform[]>(() => {
+    const offered = new Set<ProductPlatform>(
+      PLATFORM_CHOICES.flatMap((c) => [...c.slugs]),
+    );
+    return (product?.platforms ?? []).filter((p) => offered.has(p));
+  });
   const shots = useScreenshots(product?.images);
 
-  function togglePlatform(p: ProductPlatform) {
-    setPlatforms((prev) =>
-      PRODUCT_PLATFORMS.filter((x) =>
-        x === p ? !prev.includes(p) : prev.includes(x),
-      ),
-    );
+  function togglePlatform(choice: PlatformChoice) {
+    setPlatforms((prev) => {
+      const on = !hasPlatformChoice(prev, choice);
+      const slugs = new Set<ProductPlatform>(choice.slugs);
+      return PRODUCT_PLATFORMS.filter((x) =>
+        slugs.has(x) ? on : prev.includes(x),
+      );
+    });
   }
 
   const badLink = linkProblem(link);
@@ -250,14 +259,14 @@ export function ProductForm({
           aria-labelledby="product-platforms-label"
           className="flex flex-wrap items-center gap-2"
         >
-          {PRODUCT_PLATFORMS.map((p) => (
+          {PLATFORM_CHOICES.map((c) => (
             <ToggleChip
-              key={p}
-              selected={platforms.includes(p)}
+              key={c.key}
+              selected={hasPlatformChoice(platforms, c)}
               size="sm"
-              onClick={() => togglePlatform(p)}
+              onClick={() => togglePlatform(c)}
             >
-              {tr(PLATFORM_LABEL[p])}
+              {tr(c.label)}
             </ToggleChip>
           ))}
         </div>

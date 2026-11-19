@@ -55,9 +55,8 @@ import { Card, CardChip, SectionHeading, buttonClasses } from "@/components/ui";
 import { t, type Locale } from "@/lib/i18n";
 import {
   CATEGORY_LABEL,
-  PLATFORM_LABEL,
+  platformLabelsOf,
   productCategoryOf,
-  productPlatformsOf,
   type ProductRating,
 } from "@/lib/post-types";
 import {
@@ -115,7 +114,7 @@ export function ProductDetail({
   const category = productCategoryOf(post.tags ?? []);
   // "Runs on", when the maker said (0080), so a visitor knows before pressing
   // "Try it" where the thing works.
-  const platforms = productPlatformsOf(post.platforms);
+  const platforms = platformLabelsOf(post.platforms);
   // The name as the shelf resolves it: an older row with no title is named by
   // its description's first line, which About then repeats in full.
   const name = productName(post, host ?? t("Product", locale));
@@ -199,9 +198,7 @@ export function ProductDetail({
                   <span>
                     {t("Runs on {platforms}", locale).replace(
                       "{platforms}",
-                      platforms
-                        .map((p) => t(PLATFORM_LABEL[p], locale))
-                        .join(" · "),
+                      platforms.map((p) => t(p, locale)).join(" · "),
                     )}
                   </span>
                 )}
