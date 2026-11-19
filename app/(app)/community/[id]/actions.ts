@@ -10,8 +10,11 @@ import {
   type CommentCursor,
   type ThreadComment,
 } from "@/lib/comment-thread";
-import { isRatingScore, productPath } from "@/lib/post-types";
+import { isRatingScore, LIKE_BEFORE_RATING, productPath } from "@/lib/post-types";
+import { readProductLike } from "@/lib/product-likes";
 import { canRate, LIKED_PRODUCTS_PATH, MY_PRODUCTS_PATH } from "@/lib/roles";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // --- Likes ----------------------------------------------------------
 
@@ -50,6 +53,38 @@ export async function toggleLikeAction(postId: string) {
   revalidatePath(LIKED_PRODUCTS_PATH);
 }
 
+/** A deck like keeps the product liked when the gesture is repeated. */
+export async function likeProductAction(postId: string): Promise<{ error: string } | null> {
+  if (typeof postId !== "string" || !UUID.test(postId))
+    return { error: "The product isn’t available" };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sign in to like products." };
+
+  const { data: product } = await supabase
+    .from("forum_posts")
+    .select("author_id")
+    .eq("id", postId)
+    .eq("kind", "show_and_tell")
+    .eq("hidden", false)
+    .maybeSingle();
+  if (!product || (await isBlockedEitherWay(user.id, product.author_id)))
+    return { error: "The product isn’t available" };
+
+  const { error } = await supabase.from("forum_likes").upsert(
+    { post_id: postId, user_id: user.id },
+    { onConflict: "post_id,user_id", ignoreDuplicates: true },
+  );
+  if (error) {
+    console.error("[product.like]", error.message);
+    return { error: "Couldn’t save your like. Try again." };
+  }
+
+  revalidateProduct(postId);
+  return null;
+}
+
 // --- Product ratings ------------------------------------------------
 // CLAUDE.md, "Founder decision (2026-11-10)": 1–5 stars, given deliberately on
 // the product's page (./RatingControl.tsx) or in the deck's review modal after
@@ -67,8 +102,6 @@ export async function toggleLikeAction(postId: string) {
 // the same convention as the comment composer.
 
 export type RatingState = { error?: string } | null;
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Every path a product's rating is shown on. `/` and `/products` render the
  *  shelf, /products/<id> is the product's page and /products/mine lists the
@@ -119,6 +152,13 @@ export async function setProductRatingAction(
   // from you through a direct call to this action.
   if (await isBlockedEitherWay(user.id, post.author_id as string))
     return { error: "This can’t be rated." };
+
+  const { data: like, error: likeError } = await readProductLike(supabase, user.id, postId);
+  if (likeError) {
+    console.error("[product_ratings.like]", likeError.message);
+    return { error: "Couldn’t save your rating. Try again." };
+  }
+  if (!like) return { error: LIKE_BEFORE_RATING };
 
   // One row per (post_id, user_id): a first rating inserts, a changed one
   // overwrites. 0079 grants UPDATE on all three payload columns because this

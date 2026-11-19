@@ -1,44 +1,8 @@
 "use client";
 
-// The shelf itself: one product at a time, left skips, right tries it. There is
-// no grid behind this any more, so a product that is not in this deck is not on
-// the page.
-//
-// ── THE ONE SWIPE IN THE PRODUCT, AND WHAT KEEPS IT FROM BEING A RATING ────
-// CLAUDE.md's Language Rules allow exactly this and nothing wider: a deck over
-// products, never over a person or a company. Left skips; right opens the
-// maker's product itself in a NEW TAB, and this tab stays on the deck. A TAP on
-// the card is not a try: it opens the product's own page in a modal over the
-// deck (see THE PRODUCT'S PAGE, IN A MODAL). The swipe records nothing: no
-// database write, no browser
-// storage, no cookie, no analytics. A swipe left is "not now", said to nobody,
-// and it changes nothing but the screen. What happens when the reader comes
-// back from that tab — a review modal for a member, a sign-in offer for a
-// visitor — is ./DeckPrompts.tsx, and a rating there is given by tapping a
-// star and pressing send, never by the swipe.
-//
-// ── RIGHT OPENS THE PRODUCT, IN A NEW TAB, INSIDE THE GESTURE ──────────────
-// A right swipe, → on the deck and "Try" open `href` — already through
-// webUrl() on the server (./ProductShelf.tsx), so this file never sees a raw
-// link_url, and that parse is what stands between a member-supplied
-// `javascript:` URL and the tab.
-//   · "Try" is a REAL link, `target="_blank"` with
-//     `rel="noopener noreferrer nofollow"`: the browser opens the tab itself,
-//     before hydration too, and a link the reader activated is never
-//     popup-blocked. The click handler only moves the deck on.
-//   · a swipe and → have no link to activate, so they call window.open() —
-//     synchronously, in the pointerup or keydown handler, while the browser
-//     still counts the gesture as the user's (a timer or a fly-out's end
-//     would be blocked). WITHOUT the "noopener" feature, which would make
-//     window.open() return null even on success and leave a blocked popup
-//     undetectable; the opener is severed in the same tick instead, before
-//     the new page exists to read it. ("noreferrer" would do the same to the
-//     return value, so this tab sends a Referer the links do not: the site's
-//     strict-origin-when-cross-origin policy (next.config.ts) makes it the
-//     bare origin, never the deck's address.)
-//   · when that window.open() IS blocked, the card still moves on and a
-//     notice over the deck carries a real link to the same product — the
-//     fallback a reader can always activate.
+// In the product deck, left skips and right saves a like. Try opens the
+// product's validated external URL or offers its QR code. DeckPrompts
+// handles feedback after a try.
 //
 // ── THE PRODUCT'S PAGE, IN A MODAL ─────────────────────────────────────────
 // A tap on the card means "tell me more", not "take me there" (the founder's
@@ -59,8 +23,8 @@
 // ([data-deck-nodrag]).
 //
 // ── COMING BACK RESUMES THE DECK ───────────────────────────────────────────
-// Trying a product rewrites this page's own history entry to `?after=<id>`
-// first, so a reload lands on an address that says where the reader was, and
+// Trying or liking a product writes `?after=<id>` to this history entry,
+// so a reload lands on an address that says where the reader was, and
 // the stack starts at the card after it. The address is the only place the
 // position is kept; ./deck-position.ts has the whole argument, including what
 // a reload does. Opening the modal writes nothing (above).
@@ -115,8 +79,6 @@
 //   the click a drag       A drag ends with a click on the link under it;
 //   leaves behind          onClickCapture swallows that one click, so a swipe
 //                          is never also a tap, and never opens a second tab.
-//   window.open in the     The transient user activation is gone by the time a
-//   pointerup handler      fly-out ends, and the popup would be blocked.
 //   `locked`               While a prompt's modal is open, keys, presses and
 //                          clicks on the deck do nothing.
 //
@@ -163,12 +125,14 @@ import {
 import {
   ChevronUp,
   ExternalLink,
+  Heart,
   MessageCircle,
   SearchX,
   Smartphone,
   Star,
   X,
 } from "lucide-react";
+import { likeProductAction } from "@/app/(app)/community/[id]/actions";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductGridCard } from "@/components/ProductGridCard";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
@@ -180,6 +144,7 @@ import {
   LinkButton,
   buttonClasses,
 } from "@/components/ui";
+import { authHref } from "@/lib/auth-href";
 import { t, type Locale } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n-client";
 import type { ProductRating } from "@/lib/post-types";
@@ -217,8 +182,7 @@ import type { PhonePlatform } from "./product-view";
 export type DeckProduct = PromptProduct & {
   /** Which category it is filed under, from productBucketOf() on the server. */
   bucket: FilterBucket;
-  /** NOT on the card face (see the header). Read by the live region, the
-   *  popup-blocked notice's "Open {name}" and the prompts' titles. */
+  /** Used in the card link, announcements, and prompt titles. */
   name: string;
   blurb: string;
   isOwn: boolean;
@@ -256,8 +220,7 @@ type ProductDeckLabels = {
   discardComment: string;
   deckName: string;
   skip: string;
-  /** The right-hand button and the drag hint: "Try" (ลองเลย). Right opens the
-   *  product itself. */
+  like: string;
   tryIt: string;
   /** "{name}, {n} of {total}", announced to screen readers only. */
   position: string;
@@ -265,9 +228,6 @@ type ProductDeckLabels = {
   startOver: string;
   /** null unless the reader is logged out. */
   join: string | null;
-  /** The popup-blocked notice, and its "Open {name}". */
-  blocked: string;
-  openBlocked: string;
   noneHereTitle: string;
   noneHereBody: string;
   mobileOnly: string;
@@ -382,12 +342,12 @@ function stackOf(stage: HTMLElement | null): HTMLElement[] {
   );
 }
 
-function writeHints(card: HTMLElement, tryIt: number, skip: number) {
+function writeHints(card: HTMLElement, like: number, skip: number) {
   const hint = (name: string) =>
     card.querySelector<HTMLElement>(`[data-deck-hint="${name}"]`);
-  const tryHint = hint("try");
+  const likeHint = hint("like");
   const skipHint = hint("skip");
-  if (tryHint) tryHint.style.opacity = String(tryIt);
+  if (likeHint) likeHint.style.opacity = String(like);
   if (skipHint) skipHint.style.opacity = String(skip);
 }
 
@@ -531,7 +491,7 @@ export function ProductDeck({
   const ratingControlHeight = !viewer.signedIn
     ? 36
     : modalProduct?.reviewable && !modalProduct.sample
-      ? 40
+      ? modalProduct.liked ? 40 : 20
       : modalProduct?.isOwn ? 20 : 0;
   const skeleton = modalId && (
     <>
@@ -696,11 +656,14 @@ function Stack({
   const [index, setIndex] = useState(() =>
     startIndex(products, resumeAfter, resumeAt),
   );
-  /** The product whose window.open() was blocked: the notice's link. */
-  const [blocked, setBlocked] = useState<DeckProduct | null>(null);
+  const [likeNotice, setLikeNotice] = useState<{
+    message: string;
+    signInHref?: string;
+  } | null>(null);
+  const [savingLike, startSavingLike] = useTransition();
   /** The phone app this computer just tried: its code to scan is open. */
   const [handoff, setHandoff] = useState<DeckProduct | null>(null);
-  const locked = !visible || shelfLocked || handoff !== null;
+  const locked = !visible || shelfLocked || handoff !== null || savingLike;
 
   const stageRef = useRef<HTMLDivElement>(null);
   /** What the handlers read. `index` is only this, rendered. */
@@ -712,6 +675,7 @@ function Stack({
   const frame = useRef(0);
   const flyTimer = useRef(0);
   const flying = useRef(false);
+  const likeInFlight = useRef(false);
   const justDragged = useRef(false);
   const restoreFocus = useRef(false);
 
@@ -753,7 +717,7 @@ function Stack({
       gesture.current = null;
       clearTimeout(flyTimer.current);
       flying.current = false;
-      setBlocked(null);
+      setLikeNotice(null);
     }
     indexRef.current = start;
     setIndex(start);
@@ -815,7 +779,7 @@ function Stack({
 
   const current = products[index];
   const position = positionOf(products, index, labels);
-  const announcement = blocked ? `${labels.blocked} ${position}` : position;
+  const announcement = likeNotice ? `${likeNotice.message} ${position}` : position;
 
   useEffect(() => {
     onAnnounce(announcement);
@@ -837,14 +801,14 @@ function Stack({
    *  open: input then is lost rather than queued, so it can never skip a
    *  card. */
   function actionableProduct(): DeckProduct | undefined {
-    if (locked || flying.current || gesture.current) return undefined;
+    if (locked || flying.current || likeInFlight.current || gesture.current) return undefined;
     return products[indexRef.current];
   }
 
   function advance() {
     flying.current = false;
     // A card leaving the DOM takes its focused link with it, and the last
-    // card takes Skip and Try with it too.
+    // card takes the deck controls with it too.
     restoreFocus.current =
       rootRef.current?.contains(document.activeElement) ?? false;
     indexRef.current += 1;
@@ -874,40 +838,52 @@ function Stack({
 
   function skip() {
     if (!actionableProduct()) return;
-    setBlocked(null);
+    setLikeNotice(null);
     flyOut(-1);
   }
 
-  /** Right without a link to activate (a swipe, →): open the product's tab
-   *  here, inside the gesture. See the header. */
-  function tryProduct() {
+  function like() {
     const product = actionableProduct();
     if (!product) return;
-    // A phone app on a computer: the code to scan, not a store page. Still a
-    // try, so the card moves on and the address remembers it; not onTried,
-    // because no tab opened for this one to come back from.
-    if (needsPhone(product.phones)) {
-      setBlocked(null);
-      setHandoff(product);
+    if (!signedIn) {
+      springBack();
+      setLikeNotice({
+        message: t("Sign in to like products.", locale),
+        signInHref: authHref("/login", `${pageHrefOf(product)}#product-like`),
+      });
+      return;
+    }
+    if (product.sample) {
+      setLikeNotice({ message: t("This is a sample product, so nothing here is saved.", locale) });
       writeAfter(product.id);
       flyOut(1);
       return;
     }
-    const opened = window.open(product.href, "_blank");
-    // In the same task as the open: before the new page can run, and before
-    // the `visibilitychange` that hides this tab, which arrives in a later
-    // task.
-    if (opened) {
-      opened.opener = null;
-      onTried(product);
-    }
-    setBlocked(opened ? null : product);
-    writeAfter(product.id);
-    flyOut(1);
+
+    const stage = stageRef.current;
+    likeInFlight.current = true;
+    setLikeNotice(null);
+    springBack();
+    startSavingLike(async () => {
+      const result = await likeProductAction(product.id).catch(() => ({
+        error: "Couldn’t save your like. Try again.",
+      }));
+      likeInFlight.current = false;
+      if (
+        stageRef.current !== stage ||
+        stage?.firstElementChild?.getAttribute("data-deck-card") !== product.id
+      ) return;
+      if (result) {
+        setLikeNotice({ message: t(result.error, locale) });
+        return;
+      }
+      setLikeNotice({ message: fill(t("Liked {name}", locale), { name: product.name }) });
+      writeAfter(product.id);
+      flyOut(1);
+    });
   }
 
-  /** Right by a real link ("Try", the card): the browser opens the tab, and
-   *  this only moves the deck on. */
+  /** The browser opens Try's link unless the device needs a QR handoff. */
   function onTryLinkClick(event: MouseEvent<HTMLAnchorElement>) {
     if (event.button !== 0 && event.button !== 1) return;
     const product = actionableProduct();
@@ -917,10 +893,9 @@ function Stack({
       event.preventDefault();
       return;
     }
-    setBlocked(null);
+    setLikeNotice(null);
     writeAfter(product.id);
-    // The phone handoff, as in tryProduct. A middle-click or a modifier is the
-    // reader asking the browser for a tab, and gets one.
+    // A middle-click or a modifier asks the browser for a tab.
     if (isPlainClick(event) && needsPhone(product.phones)) {
       event.preventDefault();
       setHandoff(product);
@@ -928,18 +903,6 @@ function Stack({
       onTried(product);
     }
     flyOut(1);
-  }
-
-  /** The popup-blocked notice's link: the reader activated it, so the tab
-   *  opens, and that is the try. */
-  function onBlockedLinkClick(event: MouseEvent<HTMLAnchorElement>) {
-    if (event.button !== 0 && event.button !== 1) return;
-    if (locked || !blocked) {
-      event.preventDefault();
-      return;
-    }
-    onTried(blocked);
-    setBlocked(null);
   }
 
   /** The top card's own page, in the modal over this deck (see THE
@@ -956,7 +919,7 @@ function Stack({
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    // Alt+Left is the browser's Back, and a held key must not flood tabs.
+    // Alt+Left is browser Back. A held key acts on only one card.
     if (
       locked ||
       event.repeat ||
@@ -972,7 +935,7 @@ function Stack({
       skip();
     } else if (event.key === "ArrowRight") {
       event.preventDefault();
-      tryProduct();
+      like();
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       openProduct(null);
@@ -983,7 +946,7 @@ function Stack({
     restoreFocus.current = true;
     indexRef.current = 0;
     setIndex(0);
-    setBlocked(null);
+    setLikeNotice(null);
     // Back at card 1, so the address must not resume anywhere else.
     writeAfter(null);
   }
@@ -1033,7 +996,7 @@ function Stack({
 
   function onPointerDown(event: ReactPointerEvent<HTMLElement>) {
     if (event.button !== 0 || !event.isPrimary) return;
-    if (locked || flying.current || gesture.current) return;
+    if (locked || flying.current || likeInFlight.current || gesture.current) return;
     if ((event.target as Element).closest("[data-deck-nodrag]")) return;
 
     justDragged.current = false;
@@ -1123,9 +1086,7 @@ function Stack({
           springBack();
           return;
         }
-        // Still inside the pointerup: see "window.open in the pointerup
-        // handler" in the header.
-        if (g.dx > 0) tryProduct();
+        if (g.dx > 0) like();
         else skip();
       },
       options,
@@ -1172,7 +1133,7 @@ function Stack({
           <Card
             key={product.id}
             padding="none"
-            data-deck-card=""
+            data-deck-card={product.id}
             inert={depth > 0}
             onPointerDown={depth === 0 ? onPointerDown : undefined}
             onClickCapture={depth === 0 ? onClickCapture : undefined}
@@ -1208,11 +1169,11 @@ function Stack({
             />
 
             <span
-              data-deck-hint="try"
+              data-deck-hint="like"
               aria-hidden="true"
               className="pointer-events-none absolute top-4 left-4 z-30 rounded-full bg-navy px-3 py-1.5 text-sm font-medium text-white opacity-0"
             >
-              {labels.tryIt}
+              {labels.like}
             </span>
             <span
               data-deck-hint="skip"
@@ -1358,17 +1319,34 @@ function Stack({
           drag. The end state keeps this row's height, so the deck does not
           grow when it runs out. Phone-width at most, under a card of any
           size. */}
-      <div className="mx-auto mt-3 flex w-full max-w-md gap-3">
+      <div className="mx-auto mt-3 flex w-full max-w-md gap-2 sm:gap-3">
         {current ? (
           <>
             <Button
               variant="secondary"
               fullWidth
               onClick={skip}
-              className="flex-1"
+              aria-disabled={savingLike}
+              className="min-w-0 flex-1 gap-1.5 px-2 sm:gap-2 sm:px-4"
             >
-              <X className="h-4 w-4" strokeWidth={1.5} />
+              <X className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
               {labels.skip}
+            </Button>
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={like}
+              aria-busy={savingLike}
+              aria-disabled={savingLike}
+              className="min-w-0 flex-1 gap-1.5 px-2 sm:gap-2 sm:px-4"
+            >
+              <Heart
+                className="size-4 shrink-0"
+                fill={current.liked ? "currentColor" : "none"}
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+              {labels.like}
             </Button>
             {/* An EXTERNAL, member-submitted href, so a plain <a> with
                 target/rel rather than a client-routed <LinkButton>. */}
@@ -1377,16 +1355,17 @@ function Stack({
               target="_blank"
               rel={LINK_REL}
               aria-label={current.tryAria}
+              aria-disabled={savingLike}
               draggable={false}
               onClick={onTryLinkClick}
               onAuxClick={onTryLinkClick}
               className={buttonClasses({
                 fullWidth: true,
-                className: "flex-1",
+                className: "min-w-0 flex-1 gap-1.5 px-2 sm:gap-2 sm:px-4",
               })}
             >
               {labels.tryIt}
-              <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
+              <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
             </a>
           </>
         ) : (
@@ -1415,20 +1394,17 @@ function Stack({
 
       {/* Over the stage rather than in the flow, so it cannot push the buttons
           out of the first viewport. */}
-      {blocked && (
-        <div className="absolute top-3 left-1/2 z-10 w-[min(28rem,calc(100%-1.5rem))] -translate-x-1/2 rounded-xl border border-line bg-white p-3 text-sm shadow-lg">
-          <p className="text-ink-muted">{labels.blocked}</p>
-          <a
-            href={blocked.href}
-            target="_blank"
-            rel={LINK_REL}
-            aria-label={blocked.tryAria}
-            onClick={onBlockedLinkClick}
-            onAuxClick={onBlockedLinkClick}
-            className="mt-1 inline-block text-navy underline underline-offset-2"
-          >
-            {fill(labels.openBlocked, { name: blocked.name })}
-          </a>
+      {likeNotice && (
+        <div className="absolute top-3 left-1/2 z-30 w-max max-w-[calc(100%_-_1.5rem)] -translate-x-1/2 rounded-xl border border-line bg-white px-4 py-2 text-center text-sm shadow-lg">
+          <p>{likeNotice.message}</p>
+          {likeNotice.signInHref && (
+            <Link
+              href={likeNotice.signInHref}
+              className="mt-1 inline-block text-navy underline underline-offset-2"
+            >
+              {t("Sign in", locale)}
+            </Link>
+          )}
         </div>
       )}
 

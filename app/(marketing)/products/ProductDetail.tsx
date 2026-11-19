@@ -199,6 +199,7 @@ export function ProductDetail({
                 id: post.id,
                 name,
                 reviewable: feedback.reviewable,
+                liked: feedback.liked,
                 myScore: feedback.myScore,
                 sample: feedback.sample,
               }}

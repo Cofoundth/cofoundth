@@ -86,28 +86,19 @@ async function shapePosts(
     new Set(posts.map((p) => p.author_id as string)),
   );
 
-  // `user_id` answers exactly ONE question — "did I like this?" — so it is not
-  // requested when there is nobody to ask it about. On the PUBLIC shelf that
-  // column is the identity of every member who liked every product on the
-  // page, pulled through the service role into the render of an anonymous page
-  // and then thrown away: `myLike` is false for every row when userId is null.
-  //
-  // TWO LITERAL SELECTS, not one interpolated `select(cols)`. The typed client
-  // parses the column list from the string LITERAL, so a variable there
-  // resolves to ParserError and every field access on the result fails to
-  // compile.
-  const likesQuery = userId
-    ? supabase.from("forum_likes").select("post_id, user_id").in("post_id", ids)
-    : supabase.from("forum_likes").select("post_id").in("post_id", ids);
-
-  const [authorRes, likeRes, commentRes] = await Promise.all([
+  // Resolve the viewer's likes separately so the rating gate does not depend
+  // on whether their like fit in the page of rows used for display counts.
+  const [authorRes, likeRes, viewerLikeRes, commentRes] = await Promise.all([
     preResolvedAuthors
       ? null
       : supabase
           .from("profiles")
           .select("id, full_name, photo_url, slug")
           .in("id", authorIds),
-    likesQuery,
+    supabase.from("forum_likes").select("post_id").in("post_id", ids),
+    userId
+      ? supabase.from("forum_likes").select("post_id").eq("user_id", userId).in("post_id", ids)
+      : null,
     supabase.from("forum_comments").select("post_id").in("post_id", ids),
   ]);
 
@@ -121,13 +112,10 @@ async function shapePosts(
     );
 
   const likeCount = new Map<string, number>();
-  const myLikes = new Set<string>();
+  const myLikes = new Set((viewerLikeRes?.data ?? []).map((like) => like.post_id as string));
   ((likeRes.data ?? []) as unknown as PostRow[]).forEach((l) => {
     const k = l.post_id as string;
     likeCount.set(k, (likeCount.get(k) ?? 0) + 1);
-    // `user_id` is absent from the row when it was not selected, which is
-    // exactly the case where `userId` is null and this short-circuits.
-    if (userId && (l.user_id as string) === userId) myLikes.add(k);
   });
 
   const commentCount = new Map<string, number>();

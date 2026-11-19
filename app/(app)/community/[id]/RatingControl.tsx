@@ -1,18 +1,7 @@
 "use client";
 
-// YOUR rating of a product: five stars, and a way to take it back.
-//
-// Rendered by ./page.tsx only for a show_and_tell post, for a signed-in member
-// whose role canRate, who is not its author, on a post that is not hidden. The
-// server action re-checks every one of those (and 0079's RLS re-checks them
-// again), so this component deciding to render is a convenience, not the gate.
-//
-// It is the ONE place a rating is given, and it is deliberate on purpose: a tap
-// on a star, never a swipe (CLAUDE.md, "Founder decision (2026-11-10)"). The
-// public average beside it is <ProductRatingSummary>, rendered by the page from
-// the server's read, so it updates when the action's revalidatePath refreshes
-// the page — not optimistically here, because the average is everybody's
-// number and only the server has it.
+// A like unlocks the product's rating control. Members can take back their
+// own rating after unliking.
 //
 // Buttons, not radios: a radio group changes its value on every arrow key, and
 // each change here is a database write. Five buttons are five deliberate
@@ -21,7 +10,7 @@
 import { useId, useOptimistic, useState, useTransition } from "react";
 import { Star } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
-import { MAX_RATING } from "@/lib/post-types";
+import { LIKE_BEFORE_RATING, MAX_RATING } from "@/lib/post-types";
 import { clearProductRatingAction, setProductRatingAction } from "./actions";
 
 const STARS = Array.from({ length: MAX_RATING }, (_, i) => i + 1);
@@ -29,10 +18,12 @@ const STARS = Array.from({ length: MAX_RATING }, (_, i) => i + 1);
 export function RatingControl({
   postId,
   initialScore,
+  liked,
 }: {
   postId: string;
   /** The member's own current score, or null when they have not rated it. */
   initialScore: number | null;
+  liked: boolean;
 }) {
   const tr = useT();
   const labelId = useId();
@@ -50,7 +41,7 @@ export function RatingControl({
   // Ignored while a save is in flight rather than `disabled`: disabling the
   // focused button drops keyboard focus to <body> mid-interaction.
   const commit = (next: number | null) => {
-    if (isPending || next === score) return;
+    if (isPending || next === score || (next !== null && !liked)) return;
     startTransition(async () => {
       setError(null);
       setOptimisticScore(next);
@@ -67,37 +58,43 @@ export function RatingControl({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span id={labelId} className="text-sm text-ink-muted">
-          {tr("Your rating")}
-        </span>
-        <div
-          role="group"
-          aria-labelledby={labelId}
-          aria-busy={isPending}
-          className="-mx-1 flex items-center"
-          onPointerLeave={() => setHover(null)}
-        >
-          {STARS.map((n) => (
-            <button
-              key={n}
-              type="button"
-              aria-label={tr("Rate {n} out of 5").replace("{n}", String(n))}
-              aria-pressed={score === n}
-              onClick={() => commit(n)}
-              onPointerEnter={(e) => {
-                if (e.pointerType === "mouse") setHover(n);
-              }}
-              className="grid h-10 w-10 place-items-center text-navy transition-colors hover:bg-cream"
+        {liked ? (
+          <>
+            <span id={labelId} className="text-sm text-ink-muted">
+              {tr("Your rating")}
+            </span>
+            <div
+              role="group"
+              aria-labelledby={labelId}
+              aria-busy={isPending}
+              className="-mx-1 flex items-center"
+              onPointerLeave={() => setHover(null)}
             >
-              <Star
-                aria-hidden="true"
-                className="h-6 w-6"
-                fill={n <= shown ? "currentColor" : "none"}
-                strokeWidth={1.5}
-              />
-            </button>
-          ))}
-        </div>
+              {STARS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-label={tr("Rate {n} out of 5").replace("{n}", String(n))}
+                  aria-pressed={score === n}
+                  onClick={() => commit(n)}
+                  onPointerEnter={(e) => {
+                    if (e.pointerType === "mouse") setHover(n);
+                  }}
+                  className="grid h-10 w-10 place-items-center text-navy transition-colors hover:bg-cream"
+                >
+                  <Star
+                    aria-hidden="true"
+                    className="h-6 w-6"
+                    fill={n <= shown ? "currentColor" : "none"}
+                    strokeWidth={1.5}
+                  />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-ink-muted">{tr(LIKE_BEFORE_RATING)}</p>
+        )}
         {score !== null && (
           <button
             type="button"

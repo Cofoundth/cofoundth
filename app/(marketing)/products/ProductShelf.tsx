@@ -257,7 +257,7 @@ export async function ProductShelf({
     user && mayRate
       ? await getMyProductRatings(
           supabase,
-          shown.filter((p) => !isFixture(p.id) && !p.isOwn).map((p) => p.id),
+          shown.filter((p) => !isFixture(p.id) && !p.isOwn && p.myLike).map((p) => p.id),
           user.id,
         )
       : new Map<string, number>();
@@ -281,12 +281,11 @@ export async function ProductShelf({
     tAnonymous,
     tDeckName,
     tSkip,
+    tLike,
     tTryIt,
     tDeckPosition,
     tDeckEnd,
     tStartOver,
-    tPopupBlocked,
-    tOpenBlocked,
     tPreviousImage,
     tNextImage,
     tPreviousGroup,
@@ -332,15 +331,11 @@ export async function ProductShelf({
     tServer("A founder"),
     tServer("Products to try"),
     tServer("Skip"),
-    // "Try" (ลองเลย): right opens the product itself, so the button says what
-    // it does. Not "Interested" (สนใจ): "Express Interest" is the co-founder
-    // feature's word (CLAUDE.md).
+    tServer("Like"),
     tServer("Try"),
     tServer("{name}, {n} of {total}"),
     tServer("That's everything for now"),
     tServer("Start over"),
-    tServer("Your browser blocked the new tab."),
-    tServer("Open {name}"),
     tServer("Previous image"),
     tServer("Next image"),
     tServer("Previous screenshots"),
@@ -516,6 +511,7 @@ export async function ProductShelf({
       commentCount: p.commentCount,
       footerAria: cardFooterLabel(p, locale),
       reviewable: mayRate && !p.isOwn,
+      liked: p.myLike,
       myScore: myScores.get(p.id) ?? null,
       sample: process.env.NODE_ENV !== "production" && isFixture(p.id),
     };
@@ -709,13 +705,12 @@ export async function ProductShelf({
                 discardComment: tDiscard,
                 deckName: tDeckName,
                 skip: tSkip,
+                like: tLike,
                 tryIt: tTryIt,
                 position: tDeckPosition,
                 endTitle: tDeckEnd,
                 startOver: tStartOver,
                 join: role === null ? tJoinCofoundee : null,
-                blocked: tPopupBlocked,
-                openBlocked: tOpenBlocked,
                 noneHereTitle: tNoneHereTitle,
                 noneHereBody: tNoneHereBody,
                 mobileOnly: tMobileOnly,

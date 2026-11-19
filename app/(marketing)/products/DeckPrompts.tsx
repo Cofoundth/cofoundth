@@ -29,8 +29,8 @@
 //     dialog explicitly requests the review without waiting for a tab return.
 //
 // Which modal:
-//   signed in, `reviewable`   the review modal: stars (required), a comment
-//                             box if the role may comment (canComment), send.
+//   signed in, `reviewable`   stars and, after a try, a comment box for
+//                             eligible members who liked the product.
 //                             `reviewable` was decided on the server: a role
 //                             that canRate, and not the reader's own product.
 //   signed in, not reviewable nothing, ever: their own product, or a role
@@ -38,9 +38,7 @@
 //   not signed in             the sign-in modal, offered automatically once
 //                             per visit or when the reader requests a review.
 //
-// ── NOTHING HERE IS STORED, AND THE SWIPE STILL WRITES NOTHING ─────────────
-// The swipe is still a browse gesture: what is remembered between the swipe
-// and the return is one product id, in a ref, for as long as the page lives.
+// ── SAVING FEEDBACK ──────────────────────────────────────────────────────
 // A rating is given by tapping a star and pressing send, in the modal —
 // deliberately, the same action (setProductRatingAction) as the stars on the
 // product's page, with the same server-side checks and 0079's RLS behind it.
@@ -93,7 +91,7 @@ import { authHref } from "@/lib/auth-href";
 import { useT } from "@/lib/i18n-client";
 import { createPostCommentAction, recordProductTryAction } from "@/lib/post-actions";
 import { TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
-import { MAX_RATING } from "@/lib/post-types";
+import { MAX_RATING, productPath } from "@/lib/post-types";
 import type { FilterBucket } from "./categories";
 import { setProductRatingAction } from "@/app/(app)/community/[id]/actions";
 import { useRouter } from "next/navigation";
@@ -117,6 +115,7 @@ export type PromptProduct = {
   id: string;
   name: string;
   reviewable: boolean;
+  liked: boolean;
   myScore: number | null;
   sample: boolean;
 };
@@ -384,7 +383,7 @@ export function useProductPrompts({
   return { tried, locked: prompt !== null, dialog };
 }
 
-/** "How was X?", five stars, an optional comment, send. */
+/** Feedback after a try, with rating available to members who liked it. */
 function ReviewDialog({
   product,
   initialScore,
@@ -410,14 +409,19 @@ function ReviewDialog({
   const [comment, setComment] = useState("");
   /** What has already gone through, so a retry after a partial failure
    *  re-sends only what failed — above all, never the same comment twice. */
-  const [savedScore, setSavedScore] = useState<number | null>(null);
+  const [savedScore, setSavedScore] = useState<number | null>(initialScore);
   const [commentPosted, setCommentPosted] = useState(false);
   const [ratingError, setRatingError] = useState<string | null>(null);
   const [commentError, setCommentError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const shown = hover ?? score ?? 0;
   const text = comment.trim();
-  const canSend = score !== null && !product.sample && !isPending;
+  const canRate = product.liked || product.sample;
+  const canComment = canRate && recording !== undefined;
+  const canSendComment = canComment && !!text && !commentPosted;
+  const newScore = score !== savedScore ? score : null;
+  const canSend = product.liked && !product.sample && !isPending &&
+    (newScore !== null || canSendComment);
 
   // Not while a save is in flight: closing then would drop its answer, and
   // with it any error the reader needs to see.
@@ -426,26 +430,26 @@ function ReviewDialog({
   };
 
   const send = () => {
-    if (!canSend || score === null) return;
+    if (!canSend) return;
     startTransition(async () => {
       setRatingError(null);
       setCommentError(null);
       let ok = true;
-      if (score !== savedScore) {
-        const res = await setProductRatingAction(product.id, score).catch(
+      if (newScore !== null) {
+        const res = await setProductRatingAction(product.id, newScore).catch(
           () => ({ error: UNREACHABLE }),
         );
         if (res?.error) {
           ok = false;
           setRatingError(res.error);
         } else {
-          setSavedScore(score);
-          onSaved(product.id, score);
+          setSavedScore(newScore);
+          onSaved(product.id, newScore);
         }
       }
       // Independent of the rating: a comment is its own thing, and a rating
       // that failed is no reason not to post what they wrote.
-      if (recording && text && !commentPosted) {
+      if (canSendComment) {
         const fd = new FormData();
         fd.set("content", text);
         const res = (await recording)
@@ -474,45 +478,56 @@ function ReviewDialog({
         {tr("How was {name}?").replace("{name}", () => product.name)}
       </h3>
 
-      <p id={starsLabelId} className="mb-2 text-sm text-ink-muted">
-        {tr("Your rating")}
-      </p>
-      <div
-        role="group"
-        aria-labelledby={starsLabelId}
-        className="-mx-1.5 flex items-center"
-        onPointerLeave={() => setHover(null)}
-      >
-        {STARS.map((n) => (
-          <button
-            key={n}
-            type="button"
-            aria-label={tr("Rate {n} out of 5").replace("{n}", String(n))}
-            aria-pressed={score === n}
-            onClick={() => {
-              if (!isPending) setScore(n);
-            }}
-            onPointerEnter={(e) => {
-              if (e.pointerType === "mouse") setHover(n);
-            }}
-            className="grid h-12 w-12 place-items-center text-navy transition-colors hover:bg-cream"
+      {canRate ? (
+        <>
+          <p id={starsLabelId} className="mb-2 text-sm text-ink-muted">
+            {tr("Your rating")}
+          </p>
+          <div
+            role="group"
+            aria-labelledby={starsLabelId}
+            className="-mx-1.5 flex items-center"
+            onPointerLeave={() => setHover(null)}
           >
-            <Star
-              aria-hidden="true"
-              className="h-8 w-8"
-              fill={n <= shown ? "currentColor" : "none"}
-              strokeWidth={1.5}
-            />
-          </button>
-        ))}
-      </div>
+            {STARS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                aria-label={tr("Rate {n} out of 5").replace("{n}", String(n))}
+                aria-pressed={score === n}
+                onClick={() => {
+                  if (!isPending) setScore(n);
+                }}
+                onPointerEnter={(e) => {
+                  if (e.pointerType === "mouse") setHover(n);
+                }}
+                className="grid h-12 w-12 place-items-center text-navy transition-colors hover:bg-cream"
+              >
+                <Star
+                  aria-hidden="true"
+                  className="h-8 w-8"
+                  fill={n <= shown ? "currentColor" : "none"}
+                  strokeWidth={1.5}
+                />
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-ink-muted">{tr("Like this product to rate or comment.")}</p>
+          <LinkButton href={`${productPath(product.id)}#product-like`} onClick={dismiss} variant="secondary" size="sm">
+            {tr("View product")}
+          </LinkButton>
+        </div>
+      )}
       {ratingError && (
         <p role="alert" className="mt-2 text-sm text-danger-ink">
           {tr(ratingError)}
         </p>
       )}
 
-      {recording && (
+      {canComment && (
         <div className="mt-5">
           <p id={commentLabelId} className="mb-2 text-sm text-ink-muted">
             {tr("Add a comment (optional)")}
@@ -550,9 +565,11 @@ function ReviewDialog({
         <Button variant="secondary" onClick={dismiss} aria-disabled={isPending}>
           {tr("Maybe later")}
         </Button>
-        <Button onClick={send} disabled={!canSend}>
-          {isPending ? tr("Sending…") : tr("Send")}
-        </Button>
+        {canRate && (
+          <Button onClick={send} disabled={!canSend}>
+            {isPending ? tr("Sending…") : tr("Send")}
+          </Button>
+        )}
       </div>
     </Dialog>
   );

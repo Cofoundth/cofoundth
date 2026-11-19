@@ -63,6 +63,8 @@ export type PostItem = {
 
 export const MIN_RATING = 1;
 export const MAX_RATING = 5;
+export const LIKE_BEFORE_RATING = "Like this product before rating it.";
+export const LIKE_BEFORE_COMMENTING = "Like this product before commenting.";
 
 /** A whole number of stars, MIN_RATING..MAX_RATING. The ONE check, shared by
  *  the server action (which is invocable with any value at all) and the reads. */

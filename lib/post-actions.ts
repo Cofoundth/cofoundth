@@ -18,6 +18,7 @@ import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import { countComments, readCommentBatch } from "@/lib/comment-thread";
 import { webUrl } from "@/lib/web-url";
 import {
+  LIKE_BEFORE_COMMENTING,
   MAX_POST_IMAGE_BYTES,
   MAX_PRODUCT_BLURB,
   MAX_PRODUCT_NAME,
@@ -29,6 +30,7 @@ import {
   productPlatformsOf,
 } from "@/lib/post-types";
 import { validateProductLinks } from "@/lib/product-store-links";
+import { readProductLike } from "@/lib/product-likes";
 import { queryWithProductStoreColumns } from "@/lib/product-store-data";
 import { hasTriedProduct, TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
 import { getPublicPost, PRODUCT_KIND } from "@/lib/public-post";
@@ -804,12 +806,16 @@ export async function createPostCommentAction(
     };
   }
 
-  if (
-    post.kind === PRODUCT_KIND &&
-    post.author_id !== user.id &&
-    !(await hasTriedProduct(supabase, user.id, postId))
-  ) {
-    return { error: TRY_BEFORE_COMMENTING };
+  if (post.kind === PRODUCT_KIND) {
+    const { data: like, error } = await readProductLike(supabase, user.id, postId);
+    if (error) {
+      console.error("[comment.product_like]", error.message);
+      return { error: "Couldn't post comment. Try again." };
+    }
+    if (!like) return { error: LIKE_BEFORE_COMMENTING };
+    if (post.author_id !== user.id && !(await hasTriedProduct(supabase, user.id, postId))) {
+      return { error: TRY_BEFORE_COMMENTING };
+    }
   }
 
   const { error } = await supabase

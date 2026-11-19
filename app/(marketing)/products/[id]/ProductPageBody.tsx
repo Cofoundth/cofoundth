@@ -15,13 +15,14 @@ import { getAccountRole } from "@/lib/account";
 import { canComment, canRate } from "@/lib/roles";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import { getMyProductRating, getProductRating } from "@/lib/product-ratings";
+import { readProductLike } from "@/lib/product-likes";
 import { publicProductAuthors } from "@/lib/posts";
 import { devTestAuthorIds } from "@/lib/test-accounts";
 import { authHref } from "@/lib/auth-href";
 import { t, type Locale } from "@/lib/i18n";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { timeAgo } from "@/lib/time";
-import { productPath, type ProductRating } from "@/lib/post-types";
+import { LIKE_BEFORE_COMMENTING, productPath, type ProductRating } from "@/lib/post-types";
 import {
   getPublicEngagement,
   getPublicPost,
@@ -259,6 +260,7 @@ async function PublicProduct({
         rating={rating}
         feedback={{
           reviewable: signedIn,
+          liked: false,
           myScore: null,
           sample: signedIn,
           viewer: { signedIn, canComment: sampleCanComment },
@@ -444,11 +446,8 @@ async function MemberProduct({
   const role = await getAccountRole(supabase, userId);
   const mayComment = canComment(role);
 
-  // RATINGS (CLAUDE.md, "Founder decision (2026-11-10)"). The public average
-  // and count show to every reader; the five stars render only where
-  // setProductRatingAction would accept them: a role that canRate, not the
-  // maker, and not a hidden product. The action and 0079's RLS re-check all
-  // of it. Both reads degrade to "unrated" on failure (lib/product-ratings.ts).
+  // Eligible members need a current like to save a rating. Read their old
+  // score even after unliking so they can still remove it.
   const mayRate = canRate(role) && !isAuthor && post.hidden === false;
 
   const [
@@ -459,7 +458,7 @@ async function MemberProduct({
     { data: myLike },
     batch,
     commentTotal,
-    mayPostFeedback,
+    hasTriedOrOwnsProduct,
   ] = await Promise.all([
     getProductRating(id),
     mayRate
@@ -474,12 +473,7 @@ async function MemberProduct({
       .from("forum_likes")
       .select("post_id", { count: "exact", head: true })
       .eq("post_id", id),
-    supabase
-      .from("forum_likes")
-      .select("post_id")
-      .eq("post_id", id)
-      .eq("user_id", userId)
-      .maybeSingle(),
+    readProductLike(supabase, userId, id),
     // The thread's newest batch and how many there are in all
     // (lib/comment-thread.ts): never the whole thread at once.
     readCommentBatch(supabase, { postId: id, viewerId: userId, blocked }).catch(
@@ -488,6 +482,7 @@ async function MemberProduct({
     countComments(supabase, id, blocked),
     mayComment && (isAuthor || hasTriedProduct(supabase, userId, id)),
   ]);
+  const mayPostFeedback = !!myLike && hasTriedOrOwnsProduct;
 
   const [commentsLabel, tShipped, tEdit] = await Promise.all([
     tServer("Comments"),
@@ -577,6 +572,7 @@ async function MemberProduct({
         rating={rating}
         feedback={{
           reviewable: mayRate,
+          liked: !!myLike,
           myScore,
           sample: false,
           viewer: { signedIn: true, canComment: mayComment },
@@ -584,7 +580,7 @@ async function MemberProduct({
         }}
         rateSlot={
           mayRate ? (
-            <RatingControl postId={id} initialScore={myScore} />
+            <RatingControl postId={id} initialScore={myScore} liked={!!myLike} />
           ) : isAuthor && post.hidden === false ? (
             <p className="text-sm text-ink-muted">
               {t("Only other members can rate your product.", locale)}
@@ -624,7 +620,7 @@ async function MemberProduct({
             it swaps the link for a full-width reason box, which wraps onto its
             own line under the row (components/ReportButton.tsx). */}
         <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-5 text-sm">
-          <div className="flex items-center gap-4">
+          <div id="product-like" className="flex scroll-mt-24 items-center gap-4">
             <LikeButton
               postId={post.id as string}
               initialCount={likeCount ?? 0}
@@ -707,7 +703,9 @@ async function MemberProduct({
 
         {mayPostFeedback && <CommentComposer postId={id} centerText />}
         {mayComment && !mayPostFeedback && (
-          <p className="text-sm text-ink-muted">{t(TRY_BEFORE_COMMENTING, locale)}</p>
+          <p className="text-sm text-ink-muted">
+            {t(myLike ? TRY_BEFORE_COMMENTING : LIKE_BEFORE_COMMENTING, locale)}
+          </p>
         )}
       </section>
     </ProductFrame>
