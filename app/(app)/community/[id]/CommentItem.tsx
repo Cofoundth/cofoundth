@@ -20,6 +20,9 @@ type Props = {
     full_name: string | null;
     photo_url: string | null;
   } | null;
+  /** After the reader's own delete: components/CommentThread.tsx drops an
+   *  earlier comment it fetched itself, which no page refresh would. */
+  onDeleted?: (id: string) => void;
 };
 
 export function CommentItem({
@@ -29,6 +32,7 @@ export function CommentItem({
   createdAt,
   isOwn,
   author,
+  onDeleted,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const tr = useT();
@@ -58,6 +62,7 @@ export function CommentItem({
               onClick={() =>
                 startTransition(async () => {
                   await deleteCommentAction(id, postId);
+                  onDeleted?.(id);
                 })
               }
               className="text-ink-muted hover:text-danger-ink disabled:opacity-60"

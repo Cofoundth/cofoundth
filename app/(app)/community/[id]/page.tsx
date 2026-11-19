@@ -53,7 +53,8 @@ import { timeAgo } from "@/lib/time";
 import { deckContextQuery } from "@/app/(marketing)/products/deck-position";
 import { LikeButton } from "./LikeButton";
 import { CommentComposer } from "./CommentComposer";
-import { CommentItem } from "./CommentItem";
+import { CommentThread } from "@/components/CommentThread";
+import { countComments, readCommentBatch } from "@/lib/comment-thread";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { ReportButton } from "@/components/ReportButton";
 
@@ -163,28 +164,16 @@ export default async function PostPage({ params, searchParams }: Props) {
       : Promise.resolve({ data: null }),
   ]);
 
-  // Comments + authors
-  const { data: commentRows } = await supabase
-    .from("forum_comments")
-    .select("id, author_id, content, created_at")
-    .eq("post_id", id)
-    .order("created_at", { ascending: true });
-  const comments = (commentRows ?? []).filter(
-    (c) => !blocked.has(c.author_id as string),
-  );
-
-  const commentAuthorIds = Array.from(
-    new Set(comments.map((c) => c.author_id as string)),
-  );
-  const { data: commentAuthors } = commentAuthorIds.length
-    ? await supabase
-        .from("profiles")
-        .select("id, full_name, photo_url")
-        .in("id", commentAuthorIds)
-    : { data: [] };
-  const authorMap = new Map(
-    (commentAuthors ?? []).map((a) => [a.id as string, a]),
-  );
+  // The thread's newest batch and how many there are in all
+  // (lib/comment-thread.ts): never the whole thread at once.
+  const [batch, commentTotal] = await Promise.all([
+    readCommentBatch(supabase, {
+      postId: id,
+      viewerId: user?.id ?? null,
+      blocked,
+    }).catch(() => ({ comments: [], hasEarlier: false, cursor: null })),
+    countComments(supabase, id, blocked),
+  ]);
 
   const meta = KIND_META[(post.kind as string) ?? "post"];
   const KindIcon = meta?.icon;
@@ -206,31 +195,14 @@ export default async function PostPage({ params, searchParams }: Props) {
         kind="comments"
       />
 
-      {comments.length ? (
-        <Card padding="none" className="divide-y divide-line px-6 mb-6 overflow-hidden">
-          {comments.map((c) => {
-            const a = authorMap.get(c.author_id as string);
-            return (
-              <CommentItem
-                key={c.id as string}
-                id={c.id as string}
-                postId={post.id as string}
-                content={c.content as string}
-                createdAt={c.created_at as string}
-                isOwn={user?.id === c.author_id}
-                author={
-                  a
-                    ? {
-                        id: a.id as string,
-                        full_name: (a.full_name as string) ?? null,
-                        photo_url: (a.photo_url as string | null) ?? null,
-                      }
-                    : null
-                }
-              />
-            );
-          })}
-        </Card>
+      {batch.comments.length > 0 || batch.hasEarlier ? (
+        <CommentThread
+          postId={post.id as string}
+          initial={batch.comments}
+          total={commentTotal}
+          hasEarlier={batch.hasEarlier}
+          cursor={batch.cursor}
+        />
       ) : (
         // KIND A — no replies yet. The composer renders directly below for
         // anyone who may comment (founders and explorers), so the copy names
@@ -269,7 +241,7 @@ export default async function PostPage({ params, searchParams }: Props) {
           strokeWidth={1.5}
           aria-hidden="true"
         />
-        <span className="tabular-nums">{comments.length}</span>
+        <span className="tabular-nums">{commentTotal}</span>
         <span className="sr-only">{commentsLabel}</span>
       </span>
     </>

@@ -14,6 +14,7 @@ import {
 } from "@/lib/roles";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
+import { countComments, readCommentBatch } from "@/lib/comment-thread";
 import { webUrl } from "@/lib/web-url";
 import {
   MAX_POST_IMAGE_BYTES,
@@ -990,44 +991,36 @@ export async function moderateReportAction(
 
 export async function fetchPostCommentsAction(
   postId: string,
-): Promise<PostComment[]> {
+): Promise<{ comments: PostComment[]; total: number | null }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: comments } = await supabase
-    .from("forum_comments")
-    .select("id, author_id, content, created_at")
-    .eq("post_id", postId)
-    .order("created_at", { ascending: true });
-
-  if (!comments?.length) return [];
-
-  const authorIds = Array.from(
-    new Set(comments.map((c) => c.author_id as string)),
-  );
-  const { data: authors } = await supabase
-    .from("profiles")
-    .select("id, full_name, photo_url, slug")
-    .in("id", authorIds);
-  const am = new Map((authors ?? []).map((a) => [a.id as string, a]));
-
-  return comments.map((c) => {
-    const a = am.get(c.author_id as string);
-    return {
-      id: c.id as string,
-      content: c.content as string,
-      created_at: c.created_at as string,
-      author: a
-        ? {
-            id: a.id as string,
-            full_name: (a.full_name as string | null) ?? null,
-            photo_url: (a.photo_url as string | null) ?? null,
-            slug: (a.slug as string | null) ?? null,
-          }
-        : null,
-      isOwn: !!user && c.author_id === user.id,
-    };
+  // The newest batch and the count, under the same block rules as a post's
+  // own thread (lib/comment-thread.ts): no comment by anyone the reader
+  // blocked or who blocked them. This drawer used to load every comment and
+  // skip that filter.
+  // A failed read: no rows, and `total` null so the card keeps its count.
+  const blocked = user ? await getBlockedIds(user.id) : new Set<string>();
+  const read = await Promise.all([
+    readCommentBatch(supabase, { postId, viewerId: user?.id ?? null, blocked }),
+    countComments(supabase, postId, blocked),
+  ]).catch((e) => {
+    console.error("[comments.drawer]", e);
+    return null;
   });
+  if (!read) return { comments: [], total: null };
+  const [{ comments }, total] = read;
+
+  return {
+    total,
+    comments: comments.map((c) => ({
+      id: c.id,
+      content: c.content,
+      created_at: c.createdAt,
+      isOwn: c.isOwn,
+      author: c.author,
+    })),
+  };
 }

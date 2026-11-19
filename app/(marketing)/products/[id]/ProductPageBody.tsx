@@ -56,7 +56,8 @@ import {
 import { LikeButton } from "@/app/(app)/community/[id]/LikeButton";
 import { RatingControl } from "@/app/(app)/community/[id]/RatingControl";
 import { CommentComposer } from "@/app/(app)/community/[id]/CommentComposer";
-import { CommentItem } from "@/app/(app)/community/[id]/CommentItem";
+import { CommentThread } from "@/components/CommentThread";
+import { countComments, readCommentBatch } from "@/lib/comment-thread";
 import {
   PRODUCT_PARAM,
   deckContextQuery,
@@ -475,7 +476,8 @@ async function MemberProduct({
     { data: author },
     { count: likeCount },
     { data: myLike },
-    { data: commentRows },
+    batch,
+    commentTotal,
   ] = await Promise.all([
     getProductRating(id),
     mayRate
@@ -496,28 +498,13 @@ async function MemberProduct({
       .eq("post_id", id)
       .eq("user_id", userId)
       .maybeSingle(),
-    supabase
-      .from("forum_comments")
-      .select("id, author_id, content, created_at")
-      .eq("post_id", id)
-      .order("created_at", { ascending: true }),
+    // The thread's newest batch and how many there are in all
+    // (lib/comment-thread.ts): never the whole thread at once.
+    readCommentBatch(supabase, { postId: id, viewerId: userId, blocked }).catch(
+      () => ({ comments: [], hasEarlier: false, cursor: null }),
+    ),
+    countComments(supabase, id, blocked),
   ]);
-
-  const comments = (commentRows ?? []).filter(
-    (c) => !blocked.has(c.author_id as string),
-  );
-  const commentAuthorIds = Array.from(
-    new Set(comments.map((c) => c.author_id as string)),
-  );
-  const { data: commentAuthors } = commentAuthorIds.length
-    ? await supabase
-        .from("profiles")
-        .select("id, full_name, photo_url")
-        .in("id", commentAuthorIds)
-    : { data: [] };
-  const authorMap = new Map(
-    (commentAuthors ?? []).map((a) => [a.id as string, a]),
-  );
 
   const [commentsLabel, tShipped, tEdit] = await Promise.all([
     tServer("Comments"),
@@ -655,7 +642,7 @@ async function MemberProduct({
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
-              <span className="tabular-nums">{comments.length}</span>
+              <span className="tabular-nums">{commentTotal}</span>
               <span className="sr-only">{commentsLabel}</span>
             </span>
           </div>
@@ -696,34 +683,14 @@ async function MemberProduct({
           kind="comments"
         />
 
-        {comments.length ? (
-          <Card
-            padding="none"
-            className="mb-6 divide-y divide-line overflow-hidden px-6"
-          >
-            {comments.map((c) => {
-              const a = authorMap.get(c.author_id as string);
-              return (
-                <CommentItem
-                  key={c.id as string}
-                  id={c.id as string}
-                  postId={id}
-                  content={c.content as string}
-                  createdAt={c.created_at as string}
-                  isOwn={userId === c.author_id}
-                  author={
-                    a
-                      ? {
-                          id: a.id as string,
-                          full_name: (a.full_name as string) ?? null,
-                          photo_url: (a.photo_url as string | null) ?? null,
-                        }
-                      : null
-                  }
-                />
-              );
-            })}
-          </Card>
+        {batch.comments.length > 0 || batch.hasEarlier ? (
+          <CommentThread
+            postId={id}
+            initial={batch.comments}
+            total={commentTotal}
+            hasEarlier={batch.hasEarlier}
+            cursor={batch.cursor}
+          />
         ) : (
           // No comments yet. The composer renders directly below for anyone
           // who may comment, so the copy names two easy openings instead of

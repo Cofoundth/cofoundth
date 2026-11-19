@@ -121,9 +121,9 @@ export function PostCard({
 
   async function loadComments() {
     setLoading(true);
-    const c = await fetchPostCommentsAction(post.id);
+    const { comments: c, total } = await fetchPostCommentsAction(post.id);
     setComments(c);
-    setCommentCount(c.length);
+    if (total !== null) setCommentCount(total);
     setLoading(false);
   }
 
@@ -386,6 +386,22 @@ export function PostCard({
             <p className="text-xs text-ink-muted">{tr("Loading…")}</p>
           ) : comments && comments.length > 0 ? (
             <ul className="space-y-3">
+              {/* The drawer holds the newest batch only (lib/comment-thread.ts):
+                  said FIRST, where the earlier comments would be, and the
+                  whole thread is on the post's own page. */}
+              {commentCount > comments.length && (
+                <li>
+                  <Link
+                    href={`/community/${post.id}#comments`}
+                    className="text-xs text-navy hover:text-gold-ink tracking-wide"
+                  >
+                    {tr("See all {n} comments").replace(
+                      "{n}",
+                      String(commentCount),
+                    )}
+                  </Link>
+                </li>
+              )}
               {comments.slice(0, visibleComments).map((c) => {
                 const cHref = c.author
                   ? `/profile/${c.author.slug ?? c.author.id}`
@@ -454,6 +470,7 @@ export function PostCard({
                   </button>
                 </li>
               )}
+
             </ul>
           ) : (
             // KIND A, and deliberately NOT an <EmptyState>: this slot is a

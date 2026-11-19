@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountRole } from "@/lib/account";
-import { isBlockedEitherWay } from "@/lib/blocking";
+import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
+import {
+  isCommentCursor,
+  readCommentBatch,
+  type CommentCursor,
+  type ThreadComment,
+} from "@/lib/comment-thread";
 import { isRatingScore, productPath } from "@/lib/post-types";
 import { canRate } from "@/lib/roles";
 
@@ -170,6 +176,52 @@ export async function clearProductRatingAction(
 // surface (this page's composer, the feed card, the product page, the deck's
 // review modal). The twin that used to sit here had no caller and skipped the
 // block check, so it was removed rather than kept in step.
+
+// --- Comments: the earlier batches -----------------------------------
+
+const POST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** The batch before `before` in a post's thread (components/CommentThread.tsx
+ *  "Show earlier comments"). Signed in only: a visitor gets the preview, not
+ *  the thread. The same block rules as the pages: nothing on a post whose
+ *  author and reader have blocked each other, and no comment by anyone either
+ *  of them blocked. */
+export async function loadEarlierCommentsAction(
+  postId: string,
+  before: CommentCursor,
+): Promise<
+  | { comments: ThreadComment[]; hasEarlier: boolean; cursor: CommentCursor | null }
+  | { error: string }
+> {
+  if (typeof postId !== "string" || !POST_ID.test(postId) || !isCommentCursor(before)) {
+    return { error: "Something went wrong. Try again." };
+  }
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { comments: [], hasEarlier: false, cursor: null };
+
+  const { data: post } = await supabase
+    .from("forum_posts")
+    .select("author_id")
+    .eq("id", postId)
+    .maybeSingle();
+  if (!post || (await isBlockedEitherWay(user.id, post.author_id as string))) {
+    return { comments: [], hasEarlier: false, cursor: null };
+  }
+  try {
+    return await readCommentBatch(supabase, {
+      postId,
+      viewerId: user.id,
+      blocked: await getBlockedIds(user.id),
+      before: { createdAt: before.createdAt, id: before.id },
+    });
+  } catch (e) {
+    console.error("[comments.earlier]", e);
+    return { error: "Something went wrong. Try again." };
+  }
+}
 
 export async function deleteCommentAction(commentId: string, postId: string) {
   const supabase = await createClient();
