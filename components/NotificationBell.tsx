@@ -39,25 +39,23 @@ export type NotifItem = {
 // Where the panel opens from. "down-right" suits a top bar (the phone app
 // bar, below 768px).
 //
-// "rail" is the rail's top block (from 768px), in both of its widths:
+// "rail" positions the panel beside the sidebar (from 768px):
 //   - full (256px — expanded, or the overlay drawer), the bell sits near the
 //     rail's right edge, and the panel drops below it anchored on the bell's
 //     LEFT, so it runs into the page rather than off it (right-anchoring would
 //     push a 320px panel past x=0);
-//   - icon rail (64px), the bell is in the narrow column and the panel opens
-//     BESIDE the rail — left-18 = 72px, the rail plus 8px — top-aligned with
-//     the bell (-mt-9 lifts it by the bell's own 36px height).
+//   - icon rail (64px), the bell is in the footer. The panel opens 8px
+//     beside the rail and anchors to the bottom of the viewport.
 // It is `fixed`, not `absolute`, because the rail clips its contents
 // (overflow-clip, for the width animation) and an absolute panel would be cut
-// off at the rail's edge. top/left stay AUTO, so the box sits at its static
-// position — directly under the bell. The top block never scrolls, so unlike
-// the nav tooltips (lib/sidebar.ts RAIL_TIP) the static position stays right.
+// off at the rail's edge. In the expanded rail the panel uses its static
+// position directly under the bell.
 export type BellPlacement = "down-right" | "rail";
 
 const PANEL_PLACEMENT: Record<BellPlacement, string> = {
   "down-right":
     "sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:bottom-auto sm:mt-2 sm:w-96",
-  rail: "sm:inset-auto sm:mt-2 sm:w-80 rail-collapsed:left-18 rail-collapsed:-mt-9",
+  rail: "sm:inset-auto sm:mt-2 sm:w-80 rail-collapsed:left-18 rail-collapsed:bottom-3 rail-collapsed:mt-0 rail-collapsed:max-h-[min(28rem,calc(100dvh_-_1.5rem))]",
 };
 
 export function NotificationBell({
@@ -100,11 +98,12 @@ export function NotificationBell({
 
   // Poll the server every 15s for new notifications. The server reads the
   // HttpOnly session cookie, so the browser never needs a JS-readable token.
-  // Pauses when the tab is hidden.
+  // Only the bell visible in the current layout polls.
   useEffect(() => {
     let stopped = false;
     const interval = setInterval(async () => {
-      if (document.visibilityState !== "visible") return;
+      if (document.visibilityState !== "visible" || !ref.current?.getClientRects().length)
+        return;
       const { items: polled, unread: polledUnread } =
         await fetchNotificationsAction();
       if (stopped) return;
@@ -181,7 +180,7 @@ export function NotificationBell({
         onClick={toggle}
         aria-label={tr("Notifications")}
         className={`relative flex items-center justify-center w-9 h-9 text-ink-muted hover:text-navy transition-colors ${
-          placement === "rail" ? "group/rail" : ""
+          placement === "rail" ? "group/rail rail-collapsed:size-10 rail-collapsed:hover:bg-cream" : ""
         }`}
       >
         <svg

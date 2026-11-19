@@ -398,28 +398,30 @@ export async function AppSidebar() {
           {/* Brand left, then the collapse toggle and the bell — alerts belong
               where the eye lands, and it matches the mobile top bar. The rail's
               FOOTER is account territory: language, avatar, sign out.
-              Collapsed, the same three stack down the 64px column, in the same
-              DOM (and so tab) order: mark, toggle, bell. The mark does not move
-              at all: px-3.5 puts it at x=14, which is also where the 64px
-              column centres it, and py-3.5 puts it 14px down, exactly where h-16
-              centres it.
+              The icon rail puts the toggle beside the brand mark and moves
+              the bell to the footer beside the account controls.
 
               The row is FULL expanded — measured: mark + wordmark 151px, toggle
               and bell 36px each, inside 228px. Anything added here needs room
               taken from somewhere else first. */}
-          <div className="px-3.5 h-16 flex items-center justify-between gap-1 shrink-0 rail-collapsed:h-auto rail-collapsed:flex-col rail-collapsed:justify-start rail-collapsed:gap-1 rail-collapsed:px-0 rail-collapsed:py-3.5">
+          <div className="flex h-16 shrink-0 items-center justify-between gap-1 px-3.5 rail-collapsed:grid rail-collapsed:h-auto rail-collapsed:grid-cols-[minmax(0,1fr)_1.5rem] rail-collapsed:gap-x-0 rail-collapsed:px-0 rail-collapsed:py-3.5">
             {/* The role's landing — see homeHref above. */}
-            <Link href={homeHref} className="flex items-center gap-2.5">
+            <Link
+              href={homeHref}
+              className="flex items-center gap-2.5 rail-collapsed:justify-self-end rail-collapsed:[&>svg]:size-8"
+            >
               <BrandMark size="sm" />
               <Wordmark className="text-base rail-collapsed:hidden" />
             </Link>
-            <div className="flex items-center rail-collapsed:flex-col rail-collapsed:gap-1">
+            <div className="flex items-center rail-collapsed:contents">
               <SidebarToggle />
-              <NotificationBell
-                items={notifItems}
-                unreadCount={unreadNotifs ?? 0}
-                placement="rail"
-              />
+              <div className="rail-collapsed:hidden">
+                <NotificationBell
+                  items={notifItems}
+                  unreadCount={unreadNotifs ?? 0}
+                  placement="rail"
+                />
+              </div>
             </div>
           </div>
 
@@ -429,6 +431,13 @@ export async function AppSidebar() {
               column, and the text it showed becomes its hover/focus tooltip
               (RAIL_TIP) — still its accessible name. */}
           <div className="shrink-0 border-t border-line p-3 space-y-3 rail-collapsed:space-y-1 rail-collapsed:flex rail-collapsed:flex-col rail-collapsed:items-center">
+            <div className="hidden rail-collapsed:block">
+              <NotificationBell
+                items={notifItems}
+                unreadCount={unreadNotifs ?? 0}
+                placement="rail"
+              />
+            </div>
             {/* Hidden for the meetups soft launch — company chrome. The reads
                 above are gated on the same flag, so this is off, not just empty. */}
             {FEATURES.companies && activeOrgId && (

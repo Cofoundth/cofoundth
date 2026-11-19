@@ -356,11 +356,11 @@ export function SidebarToggle() {
     : tr("Expand sidebar");
   const railLabel = collapsed ? tr("Expand sidebar") : tr("Collapse sidebar");
   const base =
-    "group/rail shrink-0 items-center justify-center w-9 h-9 text-ink-muted hover:text-navy hover:bg-cream transition-colors";
+    "group/rail shrink-0 items-center justify-center w-9 h-9 text-ink-muted hover:text-navy hover:bg-cream transition-colors rail-collapsed:w-6";
   const chevron = (
     <ChevronsLeft
       aria-hidden="true"
-      className="w-5 h-5 rail-collapsed:rotate-180"
+      className="size-5 rail-collapsed:size-3.5 rail-collapsed:rotate-180"
       strokeWidth={1.5}
     />
   );
