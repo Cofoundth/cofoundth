@@ -45,7 +45,7 @@ export function ProductDetailsSkeleton({
               <div className={`h-4 w-3/4 ${BAR}`} />
             </div>
           ) : (
-            <p className="text-base leading-relaxed whitespace-pre-wrap text-ink">
+            <p className="text-base leading-relaxed text-ink">
               {description}
             </p>
           )}

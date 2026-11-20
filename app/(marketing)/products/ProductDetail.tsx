@@ -212,7 +212,7 @@ export function ProductDetail({
         {description && (
           <Card as="section" padding="responsive">
             <SectionHeading title={t("About this product", locale)} />
-            <p className="text-base leading-relaxed whitespace-pre-wrap text-ink">
+            <p className="text-base leading-relaxed text-ink">
               {post.content}
             </p>
           </Card>
