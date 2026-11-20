@@ -105,6 +105,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Suspense,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -148,6 +149,7 @@ import { t, type Locale } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n-client";
 import type { ProductRating } from "@/lib/post-types";
 import { STORE_LABEL, STORE_PLATFORMS, type ProductStoreLinks } from "@/lib/product-store-links";
+import { LIKED_PRODUCTS_PATH } from "@/lib/roles";
 import type { FilterBucket } from "./categories";
 import {
   PRODUCT_PARAM,
@@ -436,9 +438,7 @@ export function ProductDeck({
     if (sort === "likes") return b.likeCount - a.likeCount || newestFirst;
     return newestFirst;
   }) : matching;
-  const [announced, setAnnounced] = useState(() =>
-    positionOf(matching, startIndex(matching, resumeAfter, resumeAt ?? cardId), labels),
-  );
+  const [announced, setAnnounced] = useState("");
   /** The stack's root: where focus goes back to when a prompt closes. */
   const deckRef = useRef<HTMLDivElement>(null);
   const prompts = useProductPrompts({
@@ -696,7 +696,7 @@ function Stack({
   resumeAfter: string | null;
   resumeAt: string | null;
   rootRef: RefObject<HTMLDivElement | null>;
-  /** Keep the current index while grid mode owns the visible content. */
+  /** Keep the cursor while grid mode owns the visible content. */
   visible: boolean;
   locked: boolean;
   onOpenProduct: (id: string) => void;
@@ -709,9 +709,15 @@ function Stack({
   const searchParams = useSearchParams();
   // WHERE THE STACK STARTS: the server's read of `?after=` for the first paint,
   // then the ADDRESS, before the browser paints (below).
-  const [index, setIndex] = useState(() =>
-    startIndex(products, resumeAfter, resumeAt),
-  );
+  const [cursor, setCursor] = useState({ after: resumeAfter, at: resumeAt });
+  const cursorRef = useRef(cursor);
+  const moveCursor = useCallback((after: string | null, at: string | null = null) => {
+    const next = { after, at };
+    cursorRef.current = next;
+    setCursor(next);
+  }, []);
+  // A like can refresh the shelf before the card has finished flying out.
+  const [departingId, setDepartingId] = useState<string | null>(null);
   const [likeNotice, setLikeNotice] = useState<string | null>(null);
   /** The phone app this computer just tried: its code to scan is open. */
   const [handoff, setHandoff] = useState<{
@@ -723,8 +729,6 @@ function Stack({
   const stageRef = useRef<HTMLDivElement>(null);
   const compactTryLinkRef = useRef<HTMLAnchorElement>(null);
   const wideTryLinkRef = useRef<HTMLAnchorElement>(null);
-  /** What the handlers read. `index` is only this, rendered. */
-  const indexRef = useRef(index);
   /** The `after` this deck last read from or wrote to the address. undefined
    *  until the first read, which always applies. */
   const knownAfter = useRef<string | null | undefined>(undefined);
@@ -737,6 +741,17 @@ function Stack({
   const latestLike = useRef<Promise<boolean> | null>(null);
   const justDragged = useRef(false);
   const restoreFocus = useRef(false);
+
+  // Resolve the cursor against the full order so `?after=` still works when
+  // it names a liked card. Only the swipe stack excludes those products.
+  const canShow = (product: DeckProduct) =>
+    !signedIn || !product.liked || product.id === departingId;
+  const start = startIndex(products, cursor.after, cursor.at);
+  const deck = products.filter(canShow);
+  const index = products.slice(0, start).filter(canShow).length;
+  const current = deck[index];
+  const currentId = current?.id;
+  const nextImage = deck[index + MOUNTED]?.images[0];
 
   // THE ADDRESS WINS, in a LAYOUT effect because only by then is the address
   // the one this render is for. The server's prop is right on a full load, and
@@ -768,21 +783,20 @@ function Stack({
     knownCard.current = card;
     // The first read also honours `?product=`: a deck loaded with its modal
     // open starts AT that card. Later reads move only for `after`.
-    const start = startIndex(products, after, first ? readProductFromAddress() ?? card : card);
-    if (start === indexRef.current) return;
+    const at = first ? readProductFromAddress() ?? card : card;
+    if (after === cursorRef.current.after && at === cursorRef.current.at) return;
     if (!first) {
       // An outside navigation: whatever was in flight is moot.
       gesture.current?.listeners.abort();
       gesture.current = null;
       clearTimeout(flyTimer.current);
       flying.current = false;
+      setDepartingId(null);
       latestLike.current = null;
       setLikeNotice(null);
     }
-    indexRef.current = start;
-    setIndex(start);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the address is what moves the deck; a server refresh of `products` must not
-  }, [searchParams]);
+    moveCursor(after, at);
+  }, [searchParams, moveCursor]);
 
   useEffect(
     () => () => {
@@ -814,7 +828,7 @@ function Stack({
     if (root && !root.contains(document.activeElement)) {
       root.focus({ preventScroll: true });
     }
-  }, [index, rootRef]);
+  }, [currentId, cursor, rootRef]);
 
   // The three mounted first images are already loading (and the card next in
   // line fetches its others: ProductGallery's `preload`), so "next" is the
@@ -824,10 +838,8 @@ function Stack({
   // remove them: the card that mounts a swipe later asks for the same image.
   // Plain GETs of public images, which say nothing about the swipe's direction.
   useEffect(() => {
-    if (!visible) return;
-    const next = products[index + MOUNTED]?.images[0];
-    if (next) new window.Image().src = next;
-  }, [products, index, visible]);
+    if (visible && nextImage) new window.Image().src = nextImage;
+  }, [nextImage, visible]);
 
   useEffect(() => {
     if (visible) return;
@@ -837,8 +849,7 @@ function Stack({
     frame.current = 0;
   }, [visible]);
 
-  const current = products[index];
-  const position = positionOf(products, index, labels);
+  const position = positionOf(deck, index, labels);
   const announcement = likeNotice ? `${likeNotice} ${position}` : position;
 
   useEffect(() => {
@@ -863,25 +874,27 @@ function Stack({
    *  card. */
   function actionableProduct(): DeckProduct | undefined {
     if (locked || flying.current || gesture.current) return undefined;
-    return products[indexRef.current];
+    const { after, at } = cursorRef.current;
+    return products.slice(startIndex(products, after, at)).find(canShow);
   }
 
-  function advance() {
+  function advance(productId: string) {
     flying.current = false;
+    setDepartingId(null);
     // A card leaving the DOM takes its focused link with it, and the last
     // card takes the deck controls with it too.
     restoreFocus.current =
       rootRef.current?.contains(document.activeElement) ?? false;
-    indexRef.current += 1;
-    setIndex(indexRef.current);
+    moveCursor(productId);
   }
 
-  function flyOut(sign: 1 | -1) {
+  function flyOut(sign: 1 | -1, productId: string) {
     flying.current = true;
     if (prefersReducedMotion()) {
-      advance();
+      advance(productId);
       return;
     }
+    setDepartingId(productId);
     const [top, ...behind] = stackOf(stageRef.current);
     top.style.pointerEvents = "none";
     top.style.transition = `transform ${FLY_MS}ms cubic-bezier(0.2, 0.7, 0.3, 1), opacity ${FLY_MS}ms ease-in`;
@@ -894,14 +907,15 @@ function Stack({
     // A timer and not transitionend: trying a product backgrounds this tab,
     // where transitions stop progressing and the event would not come until
     // the reader is back.
-    flyTimer.current = window.setTimeout(advance, FLY_MS);
+    flyTimer.current = window.setTimeout(() => advance(productId), FLY_MS);
   }
 
   function skip() {
-    if (!actionableProduct()) return;
+    const product = actionableProduct();
+    if (!product) return;
     latestLike.current = null;
     setLikeNotice(null);
-    flyOut(-1);
+    flyOut(-1, product.id);
   }
 
   function saveSwipeLike(product: DeckProduct) {
@@ -955,7 +969,7 @@ function Stack({
     } else {
       onTried(product, options);
     }
-    flyOut(1);
+    flyOut(1, product.id);
   }
 
   /** The top card's own page, in the modal over this deck (see THE
@@ -997,8 +1011,7 @@ function Stack({
 
   function startOver() {
     restoreFocus.current = true;
-    indexRef.current = 0;
-    setIndex(0);
+    moveCursor(null);
     latestLike.current = null;
     setLikeNotice(null);
     // Back at card 1, so the address must not resume anywhere else.
@@ -1184,7 +1197,7 @@ function Stack({
       className="relative flex min-h-0 w-full flex-1 flex-col rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy deck-wide:my-auto deck-wide:max-h-[42rem] deck-wide:md:max-lg:max-h-[37rem] deck-wide:[--deck-panel-width:clamp(min(16rem,50%),38.2%,32.5rem)] deck-wide:[--deck-panel-inset:clamp(1.25rem,2.125vw,2rem)] deck-wide:short:[--deck-panel-inset:clamp(0.75rem,2.4dvh,1rem)]"
     >
       <div ref={stageRef} className="relative min-h-0 flex-1">
-        {products.slice(index, index + MOUNTED).map((product, depth) => (
+        {deck.slice(index, index + MOUNTED).map((product, depth) => (
           <Card
             key={product.id}
             padding="none"
@@ -1412,6 +1425,10 @@ function Stack({
             onSkip={skip}
             onTry={onTryLinkClick}
           />
+        ) : signedIn && deck.length === 0 ? (
+          <LinkButton href={LIKED_PRODUCTS_PATH} prefetch={false} fullWidth>
+            {t("Liked products", locale)}
+          </LinkButton>
         ) : (
           <>
             <Button
