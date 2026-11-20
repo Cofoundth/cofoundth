@@ -27,8 +27,8 @@
 //     dialog explicitly requests the review without waiting for a tab return.
 //
 // Which modal:
-//   signed in, `reviewable`   stars and, after a try, a comment box for
-//                             eligible members who liked the product.
+//   signed in, `reviewable`   stars and, after a try, a comment box. A
+//                             member can like the product and send in one step.
 //                             `reviewable` was decided on the server: a role
 //                             that canRate, and not the reader's own product.
 //   signed in, not reviewable nothing, ever: their own product, or a role
@@ -79,9 +79,9 @@ import { useT } from "@/lib/i18n-client";
 import { createPostCommentAction, recordProductTryAction } from "@/lib/post-actions";
 import { TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
 import { MAX_RATING } from "@/lib/post-types";
-import { setProductRatingAction } from "@/app/(app)/community/[id]/actions";
+import { likeProductAction, setProductRatingAction } from "@/app/(app)/community/[id]/actions";
 import { useRouter } from "next/navigation";
-import { PRODUCT_PARAM, productCardHref, takeReviewFromAddress } from "./deck-position";
+import { PRODUCT_PARAM, takeReviewFromAddress } from "./deck-position";
 
 /** How long after a product opens the deck waits to see the reader leave
  *  (this tab hidden, or this window blurred). If they have not left by then,
@@ -374,7 +374,7 @@ export function useProductPrompts({
   return { tried, locked: prompt !== null, dialog };
 }
 
-/** Feedback after a try, with rating available to members who liked it. */
+/** Feedback after a try. Save the like before sending either kind of feedback. */
 function ReviewDialog({
   product,
   initialScore,
@@ -402,16 +402,17 @@ function ReviewDialog({
    *  re-sends only what failed — above all, never the same comment twice. */
   const [savedScore, setSavedScore] = useState<number | null>(initialScore);
   const [commentPosted, setCommentPosted] = useState(false);
+  const [liked, setLiked] = useState(product.liked);
+  const [likeError, setLikeError] = useState<string | null>(null);
   const [ratingError, setRatingError] = useState<string | null>(null);
   const [commentError, setCommentError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const shown = hover ?? score ?? 0;
   const text = comment.trim();
-  const canRate = product.liked || product.sample;
-  const canComment = canRate && recording !== undefined;
+  const canComment = recording !== undefined;
   const canSendComment = canComment && !!text && !commentPosted;
   const newScore = score !== savedScore ? score : null;
-  const canSend = product.liked && !product.sample && !isPending &&
+  const canSend = !product.sample && !isPending &&
     (newScore !== null || canSendComment);
 
   // Not while a save is in flight: closing then would drop its answer, and
@@ -423,8 +424,17 @@ function ReviewDialog({
   const send = () => {
     if (!canSend) return;
     startTransition(async () => {
+      setLikeError(null);
       setRatingError(null);
       setCommentError(null);
+      if (!liked) {
+        const result = await likeProductAction(product.id).catch(() => ({ error: UNREACHABLE }));
+        if (result?.error) {
+          setLikeError(result.error);
+          return;
+        }
+        setLiked(true);
+      }
       let ok = true;
       if (newScore !== null) {
         const res = await setProductRatingAction(product.id, newScore).catch(
@@ -469,49 +479,38 @@ function ReviewDialog({
         {tr("How was {name}?").replace("{name}", () => product.name)}
       </h3>
 
-      {canRate ? (
-        <>
-          <p id={starsLabelId} className="mb-2 text-sm text-ink-muted">
-            {tr("Your rating")}
-          </p>
-          <div
-            role="group"
-            aria-labelledby={starsLabelId}
-            className="-mx-1.5 flex items-center"
-            onPointerLeave={() => setHover(null)}
+      <p id={starsLabelId} className="mb-2 text-sm text-ink-muted">
+        {tr("Your rating")}
+      </p>
+      <div
+        role="group"
+        aria-labelledby={starsLabelId}
+        className="-mx-1.5 flex items-center"
+        onPointerLeave={() => setHover(null)}
+      >
+        {STARS.map((n) => (
+          <button
+            key={n}
+            type="button"
+            aria-label={tr("Rate {n} out of 5").replace("{n}", String(n))}
+            aria-pressed={score === n}
+            onClick={() => {
+              if (!isPending) setScore(n);
+            }}
+            onPointerEnter={(e) => {
+              if (e.pointerType === "mouse") setHover(n);
+            }}
+            className="grid h-12 w-12 place-items-center text-navy transition-colors hover:bg-cream"
           >
-            {STARS.map((n) => (
-              <button
-                key={n}
-                type="button"
-                aria-label={tr("Rate {n} out of 5").replace("{n}", String(n))}
-                aria-pressed={score === n}
-                onClick={() => {
-                  if (!isPending) setScore(n);
-                }}
-                onPointerEnter={(e) => {
-                  if (e.pointerType === "mouse") setHover(n);
-                }}
-                className="grid h-12 w-12 place-items-center text-navy transition-colors hover:bg-cream"
-              >
-                <Star
-                  aria-hidden="true"
-                  className="h-8 w-8"
-                  fill={n <= shown ? "currentColor" : "none"}
-                  strokeWidth={1.5}
-                />
-              </button>
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-ink-muted">{tr("Swipe right on the product card to like it.")}</p>
-          <LinkButton href={productCardHref(product.id)} onClick={dismiss} variant="secondary" size="sm">
-            {tr("Open product card")}
-          </LinkButton>
-        </div>
-      )}
+            <Star
+              aria-hidden="true"
+              className="h-8 w-8"
+              fill={n <= shown ? "currentColor" : "none"}
+              strokeWidth={1.5}
+            />
+          </button>
+        ))}
+      </div>
       {ratingError && (
         <p role="alert" className="mt-2 text-sm text-danger-ink">
           {tr(ratingError)}
@@ -552,15 +551,18 @@ function ReviewDialog({
         </p>
       )}
 
+      {likeError && (
+        <p role="alert" className="mt-2 text-sm text-danger-ink">
+          {tr(likeError)}
+        </p>
+      )}
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={dismiss} aria-disabled={isPending}>
           {tr("Maybe later")}
         </Button>
-        {canRate && (
-          <Button onClick={send} disabled={!canSend}>
-            {isPending ? tr("Sending…") : tr("Send")}
-          </Button>
-        )}
+        <Button onClick={send} disabled={!canSend}>
+          {isPending ? tr("Sending…") : tr(liked ? "Send" : "Like and send")}
+        </Button>
       </div>
     </Dialog>
   );
