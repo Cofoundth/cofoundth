@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { tServer } from "@/lib/i18n-server";
-import { SIDEBAR_COLLAPSED, SIDEBAR_COOKIE } from "@/lib/sidebar";
+import { SIDEBAR_COOKIE, SIDEBAR_EXPANDED } from "@/lib/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarFrame } from "@/components/SidebarState";
 
@@ -44,7 +44,7 @@ export async function AppShell({
   surface?: "app" | "public";
 }) {
   const collapsed =
-    (await cookies()).get(SIDEBAR_COOKIE)?.value === SIDEBAR_COLLAPSED;
+    (await cookies()).get(SIDEBAR_COOKIE)?.value !== SIDEBAR_EXPANDED;
   return (
     <SidebarFrame initialCollapsed={collapsed} className="min-h-screen bg-cream">
       {/* First tab stop on every signed-in page: lets keyboard users jump the

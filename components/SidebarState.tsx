@@ -18,8 +18,8 @@ import { useT } from "@/lib/i18n-client";
 import {
   RAIL_ID,
   RAIL_TIP_ALWAYS,
-  SIDEBAR_COLLAPSED,
   SIDEBAR_COOKIE,
+  SIDEBAR_EXPANDED,
 } from "@/lib/sidebar";
 
 // The desktop rail's state, on the client. Two independent pieces:
@@ -54,17 +54,16 @@ function subscribe(listener: () => void) {
 }
 
 function readCollapsed(): boolean {
-  return document.cookie
+  return !document.cookie
     .split("; ")
-    .includes(`${SIDEBAR_COOKIE}=${SIDEBAR_COLLAPSED}`);
+    .includes(`${SIDEBAR_COOKIE}=${SIDEBAR_EXPANDED}`);
 }
 
 function writeCollapsed(collapsed: boolean) {
   const secure = location.protocol === "https:" ? "; Secure" : "";
-  // Expanded is the default and is stored as no cookie at all.
   document.cookie = collapsed
-    ? `${SIDEBAR_COOKIE}=${SIDEBAR_COLLAPSED}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`
-    : `${SIDEBAR_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+    ? `${SIDEBAR_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`
+    : `${SIDEBAR_COOKIE}=${SIDEBAR_EXPANDED}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
   for (const listener of listeners) listener();
 }
 
@@ -82,7 +81,7 @@ type SidebarContextValue = {
 };
 
 const SidebarContext = createContext<SidebarContextValue>({
-  collapsed: false,
+  collapsed: true,
   toggle: () => {},
   overlayOpen: false,
   toggleOverlay: () => {},

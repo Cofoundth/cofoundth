@@ -8,21 +8,19 @@
 //   768px - 1279px     the 64px ICON RAIL, always. Its toggle opens the full
 //                      256px rail as an OVERLAY drawer above the page — it
 //                      pushes nothing, and it is not remembered
-//   1280px (xl) and up the rail follows this cookie: 256px by default,
-//                      collapsible to the 64px icon rail
+//   1280px (xl) and up the 64px icon rail by default, expandable to 256px
+//                      with the member's choice kept in this cookie
 //
 // A cookie, not localStorage, because only a cookie reaches the server render.
-// With localStorage the server would have to guess, and every collapsed member
-// would see a 256px rail snap to 64px on each hard load. Expanded is the
-// default and is stored as NO cookie, so there is one spelling of "collapsed"
-// and nothing else to parse.
+// With localStorage the server would have to guess the preferred width on
+// each hard load. Only the expanded preference needs a cookie.
 //
 // NOT a "use client" module on purpose: AppSidebar and LanguageSwitcher are
 // server components and import the class strings below. An export from a
 // "use client" file reaches a server component as a client REFERENCE, not as
 // the string, so the classes would silently vanish.
 export const SIDEBAR_COOKIE = "cofoundee_sidebar";
-export const SIDEBAR_COLLAPSED = "collapsed";
+export const SIDEBAR_EXPANDED = "expanded";
 
 // The id of the rail's <aside>: both toggles' aria-controls target, and the
 // boundary the overlay's outside-click / focus-leave checks test against.

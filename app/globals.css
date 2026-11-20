@@ -6,9 +6,9 @@
 
      768px (md) - 1279px   always — UNLESS the overlay drawer is open, which
                            is the full 256px rail floating over the page
-     1280px (xl) and up    only when the member collapsed it (the
-                           cofoundee_sidebar cookie, read on the server, so
-                           the first paint is already right)
+     1280px (xl) and up    by default, unless the cofoundee_sidebar cookie
+                           records an expanded preference. The server reads
+                           the cookie before the first paint.
 
    The breakpoints are INSIDE the variant on purpose: below md there is no rail
    (the phone top bar replaces it), and a collapsed cookie must change nothing

@@ -521,7 +521,7 @@ their marketing site is a different domain; ours is one domain, so a member gets
   |---|---|---|
   | < 768 (`md`) | slim `sticky` top bar + hamburger (`MobileMenu`) | 0 |
   | 768–1279 | the **64px icon rail**, always. Its toggle (or Ctrl/Cmd+B) opens the full 256px rail as an **overlay drawer** over the page (scrim, `z-50`); Escape / click outside / focus leaving / the toggle close it, and so does ANY navigation — Back/Forward, or a click on any link in it, the page already showing included — and it stays closed when the member comes back; focus goes in and comes back to the toggle. Not remembered | 64 (the overlay adds none) |
-  | ≥ 1280 (`xl`) | the rail per the member's cookie `cofoundee_sidebar`: 256px by default, collapsible to the icon rail (Ctrl/Cmd+B too) | 256 or 64 |
+  | ≥ 1280 (`xl`) | the 64px icon rail by default, expandable to 256px (Ctrl/Cmd+B too). The `cofoundee_sidebar` cookie remembers the expanded preference. | 64 or 256 |
 
   768, not 1024: the owner's own laptop renders at ~929 CSS px (Windows display
   scaling) and was getting the phone layout. The cookie is read on the server and
