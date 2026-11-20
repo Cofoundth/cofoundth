@@ -12,6 +12,7 @@ export function ProductGridCard({
   name,
   cover,
   rating,
+  likeCount,
   mobileOnly,
   locale,
   onClick,
@@ -20,6 +21,7 @@ export function ProductGridCard({
   name: string;
   cover?: string;
   rating: ProductRating;
+  likeCount?: number;
   mobileOnly: boolean;
   locale: Locale;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
@@ -32,7 +34,10 @@ export function ProductGridCard({
       aria-haspopup={onClick ? "dialog" : undefined}
       className="group block h-full rounded-3xl"
     >
-      <Card padding="none" className="h-full overflow-hidden transition-shadow group-hover:shadow-md">
+      <Card
+        padding="none"
+        className="h-full overflow-hidden border border-ink-muted/40 transition-shadow group-hover:shadow-md"
+      >
         <div className="relative grid aspect-video place-items-center bg-cream">
           {cover ? (
             <Image
@@ -51,6 +56,11 @@ export function ProductGridCard({
           <h2 className="line-clamp-2 text-xl group-hover:underline">{name}</h2>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
             <ProductRatingSummary rating={rating} locale={locale} />
+            {likeCount !== undefined && (
+              <span className="text-ink-muted">
+                {t(likeCount === 1 ? "{n} like" : "{n} likes", locale).replace("{n}", likeCount.toLocaleString(locale))}
+              </span>
+            )}
             {mobileOnly && <CardChip>{t("Mobile only", locale)}</CardChip>}
           </div>
         </div>

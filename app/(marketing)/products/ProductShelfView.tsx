@@ -57,7 +57,7 @@ export function ProductShelfFrame({ children }: { children: ReactNode }) {
       className={
         view === "grid"
           ? "flex min-h-dvh flex-col in-data-[shell=public]:min-h-[calc(100dvh-4.0625rem)] md:in-data-[shell=public]:min-h-dvh"
-          : "flex h-dvh min-h-[30rem] flex-col overflow-clip max-sm:h-[calc(100dvh-4.5rem)] sm:min-h-[34rem] in-data-[shell=public]:h-[calc(100dvh-4.0625rem)] in-data-[shell=public]:max-sm:h-[calc(100dvh-8.5625rem)] md:in-data-[shell=public]:h-dvh"
+          : "flex h-dvh min-h-0 flex-col overflow-clip max-md:in-data-[shell=public]:h-[calc(100dvh-4.0625rem)]"
       }
     >
       {children}

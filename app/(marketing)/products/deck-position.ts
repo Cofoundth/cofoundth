@@ -65,6 +65,16 @@ export const REVIEW_PARAM = "review";
 
 export const VIEW_PARAM = "view";
 export type ProductView = "single" | "grid";
+export const SORT_PARAM = "sort";
+export type ProductSort = "newest" | "rating" | "likes";
+type QueryValue = string | readonly string[] | undefined;
+
+export type DeckSearch = {
+  from?: QueryValue;
+  category?: QueryValue;
+  view?: QueryValue;
+  sort?: QueryValue;
+};
 
 /** The two routes that render the deck. */
 export type DeckRoute = "/" | "/products";
@@ -79,12 +89,29 @@ function routeOf(from: string | undefined): DeckRoute | null {
   return null;
 }
 
-function first(raw: string | readonly string[] | undefined): string | undefined {
+function first(raw: QueryValue): string | undefined {
   return typeof raw === "string" ? raw : raw?.[0];
 }
 
 export function parseProductView(raw: string | readonly string[] | undefined): ProductView {
   return first(raw) === "grid" ? "grid" : "single";
+}
+
+export function parseProductSort(raw: QueryValue): ProductSort {
+  const value = first(raw);
+  return value === "rating" || value === "likes" ? value : "newest";
+}
+
+export function setProductGridParams(
+  query: URLSearchParams,
+  view: QueryValue,
+  sort: QueryValue,
+) {
+  if (parseProductView(view) !== "grid") return;
+  query.set(VIEW_PARAM, "grid");
+  const order = parseProductSort(sort);
+  if (order === "newest") query.delete(SORT_PARAM);
+  else query.set(SORT_PARAM, order);
 }
 
 /** `?product=<id>`: the product open in the deck's modal (./ProductModal.tsx),
@@ -170,10 +197,11 @@ export function productPageHref(
   route: DeckRoute,
   category: FilterBucket | null,
   view: ProductView = "single",
+  sort: ProductSort = "newest",
 ): string {
   const query = new URLSearchParams({ [FROM_PARAM]: fromValue(route) });
   if (category) query.set(PARAM, category);
-  if (view === "grid") query.set(VIEW_PARAM, view);
+  setProductGridParams(query, view, sort);
   return `${productPath(id)}?${query}`;
 }
 
@@ -185,7 +213,7 @@ export function productPageHref(
  * for them.
  */
 export function deckReturnHref(
-  search: { from?: string | string[]; category?: string | string[]; view?: string | string[] },
+  search: DeckSearch,
   productId: string,
   signedIn: boolean,
 ): string {
@@ -194,7 +222,7 @@ export function deckReturnHref(
   const query = new URLSearchParams();
   const category = parseCategoryParam(search.category);
   if (category) query.set(PARAM, category);
-  if (parseProductView(search.view) === "grid") query.set(VIEW_PARAM, "grid");
+  if (parseProductView(search.view) === "grid") setProductGridParams(query, search.view, search.sort);
   else query.set(AFTER_PARAM, productId);
   return `${signedIn ? "/products" : route}?${query}`;
 }
@@ -203,17 +231,13 @@ export function deckReturnHref(
  *  values, for a redirect that must keep it (an old /p/<id> or
  *  /community/<id> product link -> /products/<id>) and for the sign-in links
  *  on that page. */
-export function deckContextQuery(search: {
-  from?: string | string[];
-  category?: string | string[];
-  view?: string | string[];
-}): string {
+export function deckContextQuery(search: DeckSearch): string {
   const route = routeOf(first(search.from));
   if (!route) return "";
   const query = new URLSearchParams({ [FROM_PARAM]: fromValue(route) });
   const category = parseCategoryParam(search.category);
   if (category) query.set(PARAM, category);
-  if (parseProductView(search.view) === "grid") query.set(VIEW_PARAM, "grid");
+  setProductGridParams(query, search.view, search.sort);
   return `?${query}`;
 }
 

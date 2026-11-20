@@ -86,8 +86,8 @@ async function shapePosts(
     new Set(posts.map((p) => p.author_id as string)),
   );
 
-  // Resolve the viewer's likes separately so the rating gate does not depend
-  // on whether their like fit in the page of rows used for display counts.
+  // Count likes in Postgres so the response row limit cannot skew the totals.
+  // Resolve the viewer's likes separately for the feedback gate.
   const [authorRes, likeRes, viewerLikeRes, commentRes] = await Promise.all([
     preResolvedAuthors
       ? null
@@ -95,7 +95,7 @@ async function shapePosts(
           .from("profiles")
           .select("id, full_name, photo_url, slug")
           .in("id", authorIds),
-    supabase.from("forum_likes").select("post_id").in("post_id", ids),
+    supabase.from("forum_posts").select("id, forum_likes(count)").in("id", ids),
     userId
       ? supabase.from("forum_likes").select("post_id").eq("user_id", userId).in("post_id", ids)
       : null,
@@ -111,12 +111,10 @@ async function shapePosts(
       ]),
     );
 
-  const likeCount = new Map<string, number>();
+  const likeCount = new Map<string, number>(
+    (likeRes.data ?? []).map((post) => [post.id, post.forum_likes[0]?.count ?? 0]),
+  );
   const myLikes = new Set((viewerLikeRes?.data ?? []).map((like) => like.post_id as string));
-  ((likeRes.data ?? []) as unknown as PostRow[]).forEach((l) => {
-    const k = l.post_id as string;
-    likeCount.set(k, (likeCount.get(k) ?? 0) + 1);
-  });
 
   const commentCount = new Map<string, number>();
   ((commentRes.data ?? []) as unknown as PostRow[]).forEach((c) => {

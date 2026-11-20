@@ -109,6 +109,7 @@ import { getUser } from "@/lib/auth";
 import { getAccountRole } from "@/lib/account";
 import { getMyProductRatings } from "@/lib/product-ratings";
 import { productStoreLinksOf } from "@/lib/product-store-links";
+import { platformLabelsOf } from "@/lib/post-types";
 import {
   ADD_PRODUCT_PATH,
   MY_PRODUCTS_PATH,
@@ -116,6 +117,7 @@ import {
   canRate,
 } from "@/lib/roles";
 import { authHref } from "@/lib/auth-href";
+import { t } from "@/lib/i18n";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { LEGAL_LINKS } from "@/lib/sidebar";
 import {
@@ -167,13 +169,14 @@ export async function ProductShelf({
     card?: string | string[];
     product?: string | string[];
     view?: string | string[];
+    sort?: string | string[];
   }>;
   /** Which page is rendering the shelf, so a product's page can link back to
    *  the same deck. */
   route: DeckRoute;
 }) {
   // Next 16: searchParams is a Promise.
-  const { category: raw, after: rawAfter, card, product: rawProduct, view } = await searchParams;
+  const { category: raw, after: rawAfter, card, product: rawProduct, view, sort } = await searchParams;
 
   // `?product=<id>`: the product whose own page is open in the modal over
   // the deck (./ProductModal.tsx). Shape-checked before it reaches a query.
@@ -453,8 +456,8 @@ export async function ProductShelf({
           ? undefined
           : tEmptyBody;
 
-  // The browser filters the rows from getShelfProducts() in server order,
-  // after the visibility and blocked-pair checks have been applied.
+  // The browser filters the rows from getShelfProducts() after visibility and
+  // blocked-pair checks. The swipe deck keeps server order and the grid sorts.
   //
   // `productBucketOf`, never `productCategoryOf`: an older show_and_tell has
   // no category tag, and a null must never reach a label lookup or a chip.
@@ -480,10 +483,15 @@ export async function ProductShelf({
   const products: DeckProduct[] = shown.map((p) => {
     const name = productName(p, tAnonymous);
     const host = displayHost(p.link);
+    const mobileOnly = phoneOnly(p.link, p.platforms);
+    const platformLabels = mobileOnly ? [] : platformLabelsOf(p.platforms);
+    const makerName = p.author?.full_name?.trim();
     return {
       id: p.id,
       bucket: productBucketOf(p.tags),
       name,
+      maker: makerName ? { name: makerName, avatarUrl: p.author?.photo_url ?? null } : null,
+      platformLabels: platformLabels.map((label) => t(label, locale)),
       blurb: p.content,
       isOwn: p.isOwn,
       href: p.link.toString(),
@@ -492,7 +500,7 @@ export async function ProductShelf({
       // computer pressing "Try" gets a code to scan instead (./PhoneHandoff.tsx).
       phones: phonePlatformsOf(p.link, p.platforms),
       storeLinks: productStoreLinksOf(p),
-      mobileOnly: phoneOnly(p.link, p.platforms),
+      mobileOnly,
       // One pass, so a product named "{host}" cannot be substituted into.
       tryAria: tTryAria.replace(/\{(name|host)\}/g, (_, key) =>
         key === "name" ? name : host,
@@ -500,6 +508,8 @@ export async function ProductShelf({
       moreAria: tMoreAria.replace("{name}", () => name),
       images: productImages(p),
       rating: p.rating,
+      createdAt: Date.parse(p.created_at),
+      likeCount: p.likeCount,
       commentCount: p.commentCount,
       footerAria: cardFooterLabel(p, locale),
       reviewable: mayRate && !p.isOwn,
@@ -509,11 +519,8 @@ export async function ProductShelf({
     };
   });
 
-  // The page's ONE <h1>, visually hidden: see "NO VISIBLE PAGE HEADER" at the
-  // top of this file. Screen readers land on it and crawlers index it. The
-  // cards have no heading of their own (no visible name); the only other
-  // heading in the deck is the end-of-deck card's <h3>, and the prompts' titles
-  // while one is open.
+  // The shelf's page heading is visually hidden. Wide cards show their own
+  // product name below it in the document outline.
   const pageTitle = <h1 className="sr-only">{tTitle}</h1>;
 
   // The view switch sits beside the filters on phones. On wider screens,
@@ -629,13 +636,13 @@ export async function ProductShelf({
         from: route === "/" ? "home" : "products",
         category: initialCategory ?? undefined,
         view: parseProductView(view),
+        sort,
       }}
     />
   );
 
-  // Card view fills the available height on larger screens. On phones it
-  // reserves room below Skip/Try, and the signed-in shell also deducts its
-  // 65px top bar. A minimum height keeps the deck usable in short windows.
+  // Card view fits the viewport. The signed-in shell deducts its 65px phone
+  // top bar. The actions stay in view when the product summary scrolls.
   //
   // A card flying off must not widen the page, and a tilting one must not make
   // it scroll: both are clipped at this root, which is the viewport's edge.
@@ -648,19 +655,14 @@ export async function ProductShelf({
   // two together.
   //
   // THE EDGES MIRROR. The top line sits one edge padding below the top of the
-  // screen and one gap above the card; the foot repeats both: the legal line
-  // (logged out) one gap under the buttons, and it, or a member's buttons, one
-  // edge padding above the bottom. Edge padding and gap are one number, 12px
-  // and 16 from lg (pt-3 pb-3 lg:pt-4 lg:pb-4 here, mt-3 lg:mt-4 on the deck's
-  // wrapper and on the legal line). Only the buttons sit closer to the card,
-  // 12px at every width (./ProductDeck.tsx), because they act on it. Until
-  // 2026-11-12 the bottom was lg:pb-5 under a top of lg:pt-4: 20px against 16,
-  // which nothing asked for.
+  // screen and one gap above the card. The logged-out legal line uses the
+  // same gap under the deck. Edge padding and gap are 12px, and 16px from lg.
+  // On compact cards the buttons sit 12px under the stack (./ProductDeck.tsx).
   return (
     <ProductShelfFrame>
       {pageTitle}
       <ProductFilterProvider initial={initialCategory}>
-        <div className="relative mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-4">
+        <div className="relative mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-4 short:pt-2 short:pb-2 max-sm:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-sm:short:pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {/* Guest controls appear before the phone toolbar in tab order. */}
           <div className="grid grid-cols-[1fr_auto] items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
             {leftCorner}
@@ -679,7 +681,7 @@ export async function ProductShelf({
           </div>
           {/* The deck takes the rest. Everything here stays server-rendered
               except the client islands that read the selection. */}
-          <div className="mt-3 flex min-h-0 flex-1 flex-col lg:mt-4">
+          <div className="mt-3 flex min-h-0 flex-1 flex-col lg:mt-4 short:mt-2">
             <ProductDeck
               products={products}
               route={route}

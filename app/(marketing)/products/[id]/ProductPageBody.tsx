@@ -52,20 +52,17 @@ import { readListingWithAvailability } from "@/lib/product-store-data";
 import { hasTriedProduct, TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
 import {
   PRODUCT_PARAM,
-  VIEW_PARAM,
   deckContextQuery,
   deckReturnHref,
-  parseProductView,
   productCardHref,
+  setProductGridParams,
+  type DeckSearch,
 } from "../deck-position";
 import { PARAM, parseCategoryParam } from "../categories";
 import { findFixture } from "../fixtures";
 import { ProductDetail, type ProductDetailPost } from "../ProductDetail";
 
-export type ProductSearch = {
-  from?: string | string[];
-  category?: string | string[];
-  view?: string | string[];
+export type ProductSearch = DeckSearch & {
   added?: string | string[];
   saved?: string | string[];
 };
@@ -177,7 +174,7 @@ function returnPathOf(id: string, search: ProductSearch, mode: ProductMode): str
   const query = new URLSearchParams();
   const category = parseCategoryParam(search.category);
   if (category) query.set(PARAM, category);
-  if (parseProductView(search.view) === "grid") query.set(VIEW_PARAM, "grid");
+  setProductGridParams(query, search.view, search.sort);
   query.set(PRODUCT_PARAM, id);
   return `/products?${query}`;
 }

@@ -83,8 +83,7 @@
 //
 // ── WHAT THE CARD SHOWS ────────────────────────────────────────────────────
 // Images, description, rating, comment count, and a Mobile only badge where
-// applicable. The product name is in the card link's accessible name and in
-// the live region.
+// applicable. Wide cards add the product name, maker and Try destination.
 //
 // ── THE CARD'S TWO LINKS ───────────────────────────────────────────────────
 // The stretched-link pattern, because the card holds a second control (the
@@ -122,6 +121,7 @@ import {
   type RefObject,
 } from "react";
 import {
+  ChevronDown,
   ChevronUp,
   ExternalLink,
   MessageCircle,
@@ -132,6 +132,7 @@ import {
 } from "lucide-react";
 import { likeProductAction } from "@/app/(app)/community/[id]/actions";
 import { ProductGallery } from "@/components/ProductGallery";
+import { Avatar } from "@/components/Avatar";
 import { ProductGridCard } from "@/components/ProductGridCard";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import {
@@ -141,18 +142,22 @@ import {
   EmptyState,
   LinkButton,
   buttonClasses,
+  cn,
 } from "@/components/ui";
 import { t, type Locale } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n-client";
 import type { ProductRating } from "@/lib/post-types";
-import type { ProductStoreLinks } from "@/lib/product-store-links";
+import { STORE_LABEL, STORE_PLATFORMS, type ProductStoreLinks } from "@/lib/product-store-links";
 import type { FilterBucket } from "./categories";
 import {
   PRODUCT_PARAM,
+  SORT_PARAM,
+  parseProductSort,
   productPageHref,
   readAfterFromAddress,
   readCardFromAddress,
   readProductFromAddress,
+  setProductGridParams,
   startIndex,
   writeAfterToAddress,
   type DeckRoute,
@@ -182,6 +187,8 @@ export type DeckProduct = PromptProduct & {
   bucket: FilterBucket;
   /** Used in the card link, announcements, and prompt titles. */
   name: string;
+  maker: { name: string; avatarUrl: string | null } | null;
+  platformLabels: readonly string[];
   blurb: string;
   isOwn: boolean;
   /** The maker's product, already through webUrl(). Never a raw link_url. */
@@ -206,6 +213,8 @@ export type DeckProduct = PromptProduct & {
   images: readonly string[];
   /** The PUBLIC aggregate, the same for every audience. */
   rating: ProductRating;
+  createdAt: number;
+  likeCount: number;
   commentCount: number;
   /** The footer said as one sentence: "4.3 out of 5 from 12 ratings, 3
    *  comments". The footer link's accessible name. */
@@ -263,42 +272,13 @@ const LINK_REL = "noopener noreferrer nofollow";
  * are letterboxed over a blurred copy of themselves (ProductGallery `backdrop`),
  * because a box this size has no fixed shape to crop to.
  *
- * Its words keep a fixed share under the pictures (three lines of description
- * and a rating footer), or a side panel on a wide screen (`deck-wide:`,
- * app/globals.css).
- *
- * THE WIDE PANEL IS A PRODUCT SPOTLIGHT, not a review snippet (the owner's
- * call, 2026-11-12: "★ 4.0 (1) 💬 0" under a line of body text read like a
- * cheap game ad). On wider screens:
- *   - the description is the card's HEADLINE: the heading face, semibold, at a
- *     size picked from its length (blurbType below), so a short tagline is set
- *     big and a long one still fits;
- *   - under a hairline, the rating and the comment count are a STAT STRIP —
- *     numerals in the numeral register over small labels (CardStats) — in
- *     place of the inline icon row, which stays on the phone's narrow band.
- * The group sits in the panel's middle, left-aligned: a centred paragraph of
- * Thai is ragged on both edges. ./loading.tsx draws the same two shapes.
+ * The summary takes roughly 38% of the height below the gallery on phones,
+ * or 38% of the width beside it on wide screens. When space is tight, the
+ * details can scroll independently of the actions.
+ * ./loading.tsx draws the same panel and the compact band used on phones.
  */
 const CARD_BODY =
-  "flex h-40 shrink-0 flex-col p-5 max-sm:h-36 max-sm:p-4 deck-wide:h-auto deck-wide:w-[clamp(17rem,34%,26rem)] deck-wide:justify-center deck-wide:p-8";
-
-/**
- * The description's type, by length, so the headline fills the wide panel
- * without overflowing it. Length is UTF-16 units, so Thai's zero-width marks
- * count as characters and a Thai line lands a step smaller than a Latin one of
- * the same visible width — the safe direction. Each step's clamp keeps the
- * block inside the panel at its shortest (a 34rem-tall page). Phone: one size,
- * three lines, the band's fixed share.
- */
-function blurbType(blurb: string): string {
-  const wide =
-    blurb.length <= 36
-      ? "deck-wide:text-d2 deck-wide:line-clamp-4"
-      : blurb.length <= 80
-        ? "deck-wide:text-d1 deck-wide:line-clamp-6"
-        : "deck-wide:text-xl deck-wide:line-clamp-8";
-  return `line-clamp-3 text-lg leading-snug ${wide}`;
-}
+  "flex h-[clamp(min(9rem,55%),38.2%,14rem)] min-h-0 shrink-0 flex-col gap-2 p-3 sm:h-[clamp(min(16rem,55%),38.2%,17rem)] sm:gap-3 sm:p-5 deck-wide:h-auto deck-wide:w-(--deck-panel-width) deck-wide:justify-center deck-wide:gap-3 deck-wide:p-(--deck-panel-inset) deck-wide:short:gap-2";
 
 /** A big card would need a long drag to commit, and would swing its corners a
  *  long way at full tilt: both are measured against at most this width. */
@@ -429,13 +409,14 @@ export function ProductDeck({
   /** The product details rendered by the shelf at `?product=`. */
   productDetails: ReactNode;
   /** The server read the reader as a computer (lib/device.ts): its cards show
-   *  the screenshots four at a time, as a grid, from `md` up. A phone or a
+   *  the screenshots four at a time, as a grid, from `lg` up. A phone or a
    *  tablet keeps the one-at-a-time gallery, whose tall phone screenshots a
    *  grid's crop would cut to pieces. */
   computer: boolean;
 }) {
   const { selected, matches, select } = useProductFilter();
   const view = useProductView();
+  const sort = parseProductSort(useSearchParams().getAll(SORT_PARAM));
   const locale = useLocale();
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
@@ -445,6 +426,16 @@ export function ProductDeck({
     () => products.filter((p) => matches(p.bucket)),
     [products, matches],
   );
+  const gridProducts = view === "grid" ? [...matching].sort((a, b) => {
+    const newestFirst = b.createdAt - a.createdAt;
+    if (sort === "rating") {
+      return (b.rating.average ?? 0) - (a.rating.average ?? 0)
+        || b.rating.count - a.rating.count
+        || newestFirst;
+    }
+    if (sort === "likes") return b.likeCount - a.likeCount || newestFirst;
+    return newestFirst;
+  }) : matching;
   const [announced, setAnnounced] = useState(() =>
     positionOf(matching, startIndex(matching, resumeAfter, resumeAt ?? cardId), labels),
   );
@@ -534,25 +525,47 @@ export function ProductDeck({
             computer={computer}
           />
           {view === "grid" && (
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {matching.map((product) => (
-                <li key={product.id}>
-                  <ProductGridCard
-                    href={productPageHref(product.id, route, selected, view)}
-                    name={product.name}
-                    cover={product.images[0]}
-                    rating={product.rating}
-                    mobileOnly={product.mobileOnly}
-                    locale={locale}
-                    onClick={(event) => {
-                      if (!isPlainClick(event)) return;
-                      event.preventDefault();
-                      openProduct(product.id);
+            <>
+              <label className="mb-4 flex items-center gap-2 self-start text-sm sm:self-end">
+                <span className="text-ink-muted">{t("Sort by", locale)}</span>
+                <span className="relative">
+                  <select
+                    value={sort}
+                    onChange={(event) => {
+                      const url = new URL(window.location.href);
+                      setProductGridParams(url.searchParams, view, event.target.value);
+                      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
                     }}
-                  />
-                </li>
-              ))}
-            </ul>
+                    className="min-h-9 cursor-pointer appearance-none rounded-full border border-line bg-white py-2 pr-9 pl-3 text-ink"
+                  >
+                    <option value="newest">{t("Most recent", locale)}</option>
+                    <option value="rating">{t("Highest rated", locale)}</option>
+                    <option value="likes">{t("Most liked", locale)}</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
+                </span>
+              </label>
+              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {gridProducts.map((product) => (
+                  <li key={product.id}>
+                    <ProductGridCard
+                      href={productPageHref(product.id, route, selected, view, sort)}
+                      name={product.name}
+                      cover={product.images[0]}
+                      rating={product.rating}
+                      likeCount={sort === "likes" ? product.likeCount : undefined}
+                      mobileOnly={product.mobileOnly}
+                      locale={locale}
+                      onClick={(event) => {
+                        if (!isPlainClick(event)) return;
+                        event.preventDefault();
+                        openProduct(product.id);
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </>
       ) : (
@@ -614,6 +627,51 @@ export function ProductDeck({
   );
 }
 
+function DeckActions({
+  product,
+  labels,
+  onSkip,
+  onTry,
+  ref,
+}: {
+  product: DeckProduct;
+  labels: Pick<ProductDeckLabels, "skip" | "tryIt">;
+  onSkip: () => void;
+  onTry: (event: MouseEvent<HTMLAnchorElement>) => void;
+  ref?: RefObject<HTMLAnchorElement | null>;
+}) {
+  return (
+    <>
+      <Button
+        variant="secondary"
+        fullWidth
+        onClick={onSkip}
+        className="min-w-0 flex-1 gap-1.5 px-2 whitespace-nowrap sm:gap-2 sm:px-4 deck-wide:px-2.5 deck-wide:text-base deck-wide:lg:px-4 deck-wide:short:text-sm"
+      >
+        <X className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+        {labels.skip}
+      </Button>
+      <a
+        ref={ref}
+        href={product.href}
+        target="_blank"
+        rel={LINK_REL}
+        aria-label={product.tryAria}
+        draggable={false}
+        onClick={onTry}
+        onAuxClick={onTry}
+        className={buttonClasses({
+          fullWidth: true,
+          className: "min-w-0 flex-1 gap-1.5 px-2 whitespace-nowrap sm:gap-2 sm:px-4 deck-wide:px-2.5 deck-wide:text-base deck-wide:lg:px-4 deck-wide:short:text-sm",
+        })}
+      >
+        {labels.tryIt}
+        <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+      </a>
+    </>
+  );
+}
+
 function Stack({
   products,
   labels,
@@ -663,7 +721,8 @@ function Stack({
   const locked = !visible || shelfLocked || handoff !== null;
 
   const stageRef = useRef<HTMLDivElement>(null);
-  const tryLinkRef = useRef<HTMLAnchorElement>(null);
+  const compactTryLinkRef = useRef<HTMLAnchorElement>(null);
+  const wideTryLinkRef = useRef<HTMLAnchorElement>(null);
   /** What the handlers read. `index` is only this, rendered. */
   const indexRef = useRef(index);
   /** The `after` this deck last read from or wrote to the address. undefined
@@ -863,9 +922,11 @@ function Stack({
   }
 
   function swipeRight() {
-    // Activate the same link synchronously while the swipe can open a tab.
+    // Activate the visible layout's link while the swipe can open a tab.
+    const wideLink = wideTryLinkRef.current;
+    const link = wideLink?.getClientRects().length ? wideLink : compactTryLinkRef.current;
     fromRightSwipe.current = true;
-    tryLinkRef.current?.click();
+    link?.click();
     fromRightSwipe.current = false;
   }
 
@@ -1100,7 +1161,8 @@ function Stack({
   }
 
   function onClickCapture(event: MouseEvent<HTMLElement>) {
-    if (!justDragged.current) return;
+    // A committed right swipe dispatches Try before the native click.
+    if (!justDragged.current || fromRightSwipe.current) return;
     event.preventDefault();
     event.stopPropagation();
   }
@@ -1118,8 +1180,8 @@ function Stack({
       aria-label={labels.deckName}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      // Fills what the page leaves it: see CARD_BODY.
-      className="relative flex min-h-0 w-full flex-1 flex-col rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy"
+      // Center the capped stack in the space below the toolbar.
+      className="relative flex min-h-0 w-full flex-1 flex-col rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy deck-wide:my-auto deck-wide:max-h-[42rem] deck-wide:md:max-lg:max-h-[37rem] deck-wide:[--deck-panel-width:clamp(min(16rem,50%),38.2%,32.5rem)] deck-wide:[--deck-panel-inset:clamp(1.25rem,2.125vw,2rem)] deck-wide:short:[--deck-panel-inset:clamp(0.75rem,2.4dvh,1rem)]"
     >
       <div ref={stageRef} className="relative min-h-0 flex-1">
         {products.slice(index, index + MOUNTED).map((product, depth) => (
@@ -1140,7 +1202,7 @@ function Stack({
             // The clip lives on the image box, the only thing that needs it.
             // `group/card` is what the gallery's arrows read hover from.
             // A column on a phone, a row on a wide screen (CARD_BODY).
-            className="group/card absolute inset-x-0 top-0 bottom-5 flex origin-bottom cursor-grab touch-pan-y flex-col border border-line shadow-lg select-none active:cursor-grabbing deck-wide:flex-row [transform:translateY(calc(var(--depth)_*_10px))_scale(calc(1_-_var(--depth)_*_0.04))]"
+            className="group/card absolute inset-x-0 top-0 bottom-5 flex origin-bottom cursor-grab touch-pan-y flex-col border border-line shadow-lg select-none active:cursor-grabbing short:bottom-3 deck-wide:flex-row [transform:translateY(calc(var(--depth)_*_10px))_scale(calc(1_-_var(--depth)_*_0.04))]"
           >
             {/* Stretched, and a real link to the product's page, so a tap
                 before hydration, a middle-click and assistive tech all reach
@@ -1177,13 +1239,8 @@ function Stack({
             </span>
 
             <div className="relative min-h-0 min-w-0 flex-1">
-              {/* One picture at a time, uncropped, on a phone or a tablet.
-                  On a COMPUTER (the server's read, see ProductDeck), from `md`
-                  up, four at a time as a grid, moving four at a time (the
-                  founder's call, 2026-11-18; ProductGallery `perView`). A
-                  narrow computer window keeps the single gallery: CSS picks
-                  between the two, so the first paint is right at every width.
-                  They share URLs, so the hidden one costs no extra request. */}
+              {/* Roomy computer windows show four screenshots. Smaller
+                  windows and touch devices use the single-image gallery. */}
               <ProductGallery
                 images={product.images}
                 labels={labels}
@@ -1191,8 +1248,8 @@ function Stack({
                 preload={depth === 1}
                 fit="contain"
                 backdrop
-                sizes="(min-aspect-ratio: 4/3) 70vw, 100vw"
-                className={`rounded-t-3xl deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl${computer ? " md:hidden" : ""}`}
+                sizes="(min-width: 768px) 62vw, (min-aspect-ratio: 4/3) 62vw, 100vw"
+                className={`rounded-t-3xl deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl${computer ? " lg:hidden" : ""}`}
               />
               {computer && (
                 <ProductGallery
@@ -1205,8 +1262,8 @@ function Stack({
                   preload={depth === 1}
                   perView={4}
                   fit="contain"
-                  sizes="(min-width: 768px) 35vw, 100vw"
-                  className="hidden rounded-t-3xl md:block deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
+                  sizes="31vw"
+                  className="hidden rounded-t-3xl lg:block deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
                 />
               )}
               {/* "More about", where a dating app keeps its own: the
@@ -1233,36 +1290,66 @@ function Stack({
             </div>
 
             <div className={CARD_BODY}>
-              {product.mobileOnly && (
-                <CardChip
-                  id={`mobile-only-${product.id}`}
-                  className="pointer-events-none absolute left-4 top-4 z-20 gap-1.5 bg-white shadow-xs deck-wide:static deck-wide:mb-5 deck-wide:shrink-0 deck-wide:justify-start deck-wide:gap-3 deck-wide:rounded-xl deck-wide:bg-navy deck-wide:px-4 deck-wide:py-3 deck-wide:text-2xl deck-wide:font-bold deck-wide:whitespace-normal deck-wide:text-white deck-wide:shadow-none"
-                >
-                  <Smartphone
-                    className="h-3.5 w-3.5 shrink-0 deck-wide:h-6 deck-wide:w-6"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                  {labels.mobileOnly}
-                </CardChip>
-              )}
+              <div className="relative z-20 flex min-h-0 flex-col gap-2 overflow-y-auto overscroll-y-contain sm:grow sm:justify-between sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:grow-0 deck-wide:short:justify-start deck-wide:short:gap-2">
+                <div className="flex min-w-0 shrink-0 flex-col gap-1.5 sm:gap-3 deck-wide:gap-2.5 deck-wide:short:gap-1.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="line-clamp-1 min-w-0 text-2xl wrap-anywhere deck-wide:line-clamp-2 deck-wide:text-d2 deck-wide:lg:text-d3 deck-wide:short:line-clamp-1 deck-wide:short:text-d2">
+                      {product.name}
+                    </h2>
+                    <CardChip className="bg-cream px-3 py-1.5 text-sm">
+                      {t(product.bucket === "game" ? "Game" : "App", locale)}
+                    </CardChip>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 empty:hidden">
+                    {product.mobileOnly && (
+                      <CardChip
+                        id={`mobile-only-${product.id}`}
+                        className="w-full justify-start gap-2 rounded-xl bg-navy px-3 py-1.5 text-base font-bold whitespace-normal text-white deck-wide:gap-2.5 deck-wide:px-4 deck-wide:py-2.5 deck-wide:text-lg deck-wide:lg:text-xl deck-wide:short:py-2 deck-wide:short:text-base"
+                      >
+                        <Smartphone className="size-3.5 shrink-0 deck-wide:size-5" strokeWidth={1.5} aria-hidden="true" />
+                        {labels.mobileOnly}
+                      </CardChip>
+                    )}
+                    {product.platformLabels.map((label) => (
+                      <CardChip key={label} className="px-3 py-1.5 text-sm">
+                        {label}
+                      </CardChip>
+                    ))}
+                  </div>
+                </div>
 
-              {/* The card's headline: the heading face, semibold, sized by
-                  length (blurbType). A <p>, not a heading — the cards have no
-                  heading of their own (see ./ProductShelf.tsx). No
-                  leading-tight: user-written, mostly Thai, so each size keeps
-                  its own Thai-safe leading (the lang="th" guard in globals.css
-                  lifts d1/d2). Clamped rather than truncated server-side, so
-                  the whole description stays in the DOM for anyone who copies
-                  the card's text; min-h-0 lets the clamp give way before the
-                  footer is pushed off the card. */}
-              {product.blurb && (
-                <p
-                  className={`min-h-0 font-serif font-semibold whitespace-pre-wrap text-ink ${blurbType(product.blurb)}`}
-                >
-                  {product.blurb}
-                </p>
-              )}
+                <div className="flex shrink-0 flex-col deck-wide:gap-3 deck-wide:border-y deck-wide:border-line deck-wide:py-3 deck-wide:short:gap-1.5 deck-wide:short:py-1.5">
+                  {product.blurb && product.blurb.trim() !== product.name && (
+                    <p className="line-clamp-2 min-h-0 wrap-anywhere font-serif text-base leading-snug text-ink deck-wide:line-clamp-5 deck-wide:text-lg deck-wide:lg:text-xl deck-wide:short:line-clamp-3 deck-wide:short:text-lg">
+                      {product.blurb}
+                    </p>
+                  )}
+
+                  <Link
+                    href={pageHrefOf(product)}
+                    prefetch={false}
+                    aria-label={product.footerAria}
+                    aria-haspopup="dialog"
+                    data-deck-nodrag=""
+                    draggable={false}
+                    onClick={openProduct}
+                    className="group/stats relative z-20 hidden min-w-0 shrink-0 cursor-pointer grid-cols-2 gap-3 deck-wide:grid"
+                  >
+                    <CardStats product={product} locale={locale} />
+                  </Link>
+                </div>
+                <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm text-ink-muted deck-wide:flex-col deck-wide:items-stretch deck-wide:gap-2 deck-wide:text-base deck-wide:short:flex-row deck-wide:short:items-center deck-wide:short:gap-x-3 deck-wide:short:gap-y-1 deck-wide:short:text-sm">
+                  {product.maker && (
+                    <div className="flex min-w-0 max-w-full items-center gap-2 text-ink">
+                      <div aria-hidden="true">
+                        <Avatar name={product.maker.name} url={product.maker.avatarUrl} size="xs" />
+                      </div>
+                      <span className="truncate">{product.maker.name}</span>
+                    </div>
+                  )}
+                  <p className="max-w-full truncate">{cardDestination(product, locale)}</p>
+                </div>
+              </div>
 
               {/* The product's page, in the modal: see "THE PRODUCT'S
                   PAGE, IN A MODAL" in the header. Two faces of ONE control,
@@ -1271,7 +1358,7 @@ function Stack({
                   the stat strip in the wide panel. Not prefetched: each card
                   mounting would otherwise fetch its page, and a skip must not
                   cause a request of its own. */}
-              <div className="mt-auto flex min-w-0 items-center pt-3 deck-wide:hidden">
+              <div className="mt-auto flex min-w-0 shrink-0 items-center border-t border-line pt-2 sm:pt-3 deck-wide:hidden">
                 <Link
                   href={pageHrefOf(product)}
                   prefetch={false}
@@ -1285,65 +1372,46 @@ function Stack({
                   <CardFooterFace product={product} locale={locale} />
                 </Link>
               </div>
-              <Link
-                href={pageHrefOf(product)}
-                prefetch={false}
-                aria-label={product.footerAria}
-                aria-haspopup="dialog"
+              <div
                 data-deck-nodrag=""
-                draggable={false}
-                onClick={openProduct}
-                className="group/stats relative z-20 mt-8 hidden min-w-0 cursor-pointer grid-cols-2 gap-6 border-t border-line pt-6 deck-wide:grid"
+                className={cn("relative z-20 hidden shrink-0 grid-cols-2 gap-3 deck-wide:grid", depth > 0 && "invisible")}
               >
-                <CardStats product={product} locale={locale} />
-              </Link>
+                <DeckActions
+                  ref={depth === 0 ? wideTryLinkRef : undefined}
+                  product={product}
+                  labels={labels}
+                  onSkip={skip}
+                  onTry={onTryLinkClick}
+                />
+              </div>
             </div>
           </Card>
         ))}
 
         {!current && (
-          <Card className="absolute inset-x-0 top-0 bottom-5 grid place-items-center border border-line text-center shadow-lg">
+          <Card className="absolute inset-x-0 top-0 bottom-5 grid place-items-center border border-line text-center shadow-lg short:bottom-3">
             <h3 className="text-xl">{labels.endTitle}</h3>
           </Card>
         )}
       </div>
 
-      {/* WCAG 2.5.7: everything the drag does also has a control that is not a
-          drag. The end state keeps this row's height, so the deck does not
-          grow when it runs out. Phone-width at most, under a card of any
-          size. */}
-      <div className="mx-auto mt-3 flex w-full max-w-md gap-2 sm:gap-3">
+      {/* Compact cards keep their controls below the stack. */}
+      <div
+        className={cn(
+          "mx-auto mt-3 flex w-full max-w-md shrink-0 gap-2 sm:gap-3 short:mt-2",
+          current
+            ? "deck-wide:hidden"
+            : "deck-wide:absolute deck-wide:bottom-[calc(var(--deck-panel-inset)+1.25rem+1px)] deck-wide:left-1/2 deck-wide:z-10 deck-wide:m-0 deck-wide:w-[calc(100%_-_3rem)] deck-wide:-translate-x-1/2",
+        )}
+      >
         {current ? (
-          <>
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={skip}
-              className="min-w-0 flex-1 gap-1.5 px-2 sm:gap-2 sm:px-4"
-            >
-              <X className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-              {labels.skip}
-            </Button>
-            {/* An EXTERNAL, member-submitted href, so a plain <a> with
-                target/rel rather than a client-routed <LinkButton>. */}
-            <a
-              ref={tryLinkRef}
-              href={current.href}
-              target="_blank"
-              rel={LINK_REL}
-              aria-label={current.tryAria}
-              draggable={false}
-              onClick={onTryLinkClick}
-              onAuxClick={onTryLinkClick}
-              className={buttonClasses({
-                fullWidth: true,
-                className: "min-w-0 flex-1 gap-1.5 px-2 sm:gap-2 sm:px-4",
-              })}
-            >
-              {labels.tryIt}
-              <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-            </a>
-          </>
+          <DeckActions
+            ref={compactTryLinkRef}
+            product={current}
+            labels={labels}
+            onSkip={skip}
+            onTry={onTryLinkClick}
+          />
         ) : (
           <>
             <Button
@@ -1397,10 +1465,18 @@ function Stack({
   );
 }
 
+function cardDestination(product: DeckProduct, locale: Locale): string {
+  if (!product.mobileOnly) return product.host;
+  const stores = STORE_PLATFORMS
+    .filter((platform) => product.storeLinks[platform])
+    .map((platform) => t(STORE_LABEL[platform], locale));
+  return stores.join(" · ") || product.host;
+}
+
 /**
  * The wide panel's stat strip: the average over "{n} ratings", the comment
  * count over "Comments", numerals in the numeral register (CLAUDE.md,
- * Typography: 33px, line-height 1, digits only). A face only, like
+ * Typography). A face only, like
  * CardFooterFace: the words for a screen reader are the link's accessible name.
  *
  * The rating rules hold here too (components/ProductRatingSummary.tsx): the
@@ -1423,7 +1499,7 @@ function CardStats({
       <span aria-hidden="true" className="flex min-w-0 flex-col gap-1.5">
         {rated ? (
           <span className="flex items-center gap-1.5">
-            <span className="font-serif text-num1 tabular-nums text-ink">
+            <span className="font-serif text-num1 tabular-nums text-ink lg:text-num2 short:text-num1">
               {average.toFixed(1)}
             </span>
             <Star
@@ -1433,7 +1509,7 @@ function CardStats({
             />
           </span>
         ) : (
-          <span className="flex h-[33px] items-center">
+          <span className="flex h-[2.0625rem] items-center lg:h-[2.625rem] short:h-[2.0625rem]">
             <Star
               className="h-6 w-6 shrink-0 text-ink-muted"
               fill="none"
@@ -1441,7 +1517,7 @@ function CardStats({
             />
           </span>
         )}
-        <span className="truncate text-xs text-ink-muted group-hover/stats:text-navy">
+        <span className="truncate text-sm text-ink-muted group-hover/stats:text-navy short:text-xs">
           {rated
             ? t(count === 1 ? "{n} rating" : "{n} ratings", locale).replace(
                 "{n}",
@@ -1452,11 +1528,11 @@ function CardStats({
       </span>
       <span aria-hidden="true" className="flex min-w-0 flex-col gap-1.5">
         <span
-          className={`font-serif text-num1 tabular-nums ${comments > 0 ? "text-ink" : "text-ink-muted"}`}
+          className={`font-serif text-num1 tabular-nums lg:text-num2 short:text-num1 ${comments > 0 ? "text-ink" : "text-ink-muted"}`}
         >
           {comments.toLocaleString("en-US")}
         </span>
-        <span className="truncate text-xs text-ink-muted group-hover/stats:text-navy">
+        <span className="truncate text-sm text-ink-muted group-hover/stats:text-navy short:text-xs">
           {t("Comments", locale)}
         </span>
       </span>

@@ -41,12 +41,13 @@
   }
 }
 
-/* The product deck's card on a WIDE screen: a row (screenshots left, words in
-   a side panel) instead of a column, so the pictures get the width a landscape
-   screen has. Keyed to the viewport's SHAPE, not its width: the owner's laptop
-   at Windows display scaling is ~930px wide and landscape, and a column card
-   there was a wide, short strip. app/(marketing)/products/ProductDeck.tsx. */
-@custom-variant deck-wide (@media (width >= 40rem) and (min-aspect-ratio: 4/3));
+/* The product deck uses a side panel at tablet widths and on landscape
+   phones. Narrow portrait screens stack the gallery above the summary. */
+@custom-variant deck-wide {
+  @media (width >= 48rem), (width >= 35rem) and (min-aspect-ratio: 4/3) {
+    @slot;
+  }
+}
 
 /* A SHORT screen (under 720px tall: most laptops once the browser's own chrome
    is taken off). The auth pages must not scroll, and their budget has to hold

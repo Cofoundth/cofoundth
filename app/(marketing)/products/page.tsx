@@ -19,6 +19,7 @@ type Props = {
     card?: string | string[];
     product?: string | string[];
     view?: string | string[];
+    sort?: string | string[];
   }>;
 };
 
