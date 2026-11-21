@@ -1303,7 +1303,9 @@ function Stack({
             </div>
 
             <div className={CARD_BODY}>
-              <div className="relative z-20 flex min-h-0 flex-col gap-2 overflow-y-auto overscroll-y-contain sm:grow sm:justify-between sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:grow-0 deck-wide:short:justify-start deck-wide:short:gap-2">
+              {/* Touch panning is resolved up to the nearest scroll container,
+                  which can be this panel or a clamped or truncated descendant. */}
+              <div className="relative z-20 flex min-h-0 touch-pan-y flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-y-contain **:touch-pan-y sm:grow sm:justify-between sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:grow-0 deck-wide:short:justify-start deck-wide:short:gap-2">
                 <div className="flex min-w-0 shrink-0 flex-col gap-1.5 sm:gap-3 deck-wide:gap-2.5 deck-wide:short:gap-1.5">
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="line-clamp-1 min-w-0 text-2xl wrap-anywhere deck-wide:line-clamp-2 deck-wide:text-d2 deck-wide:lg:text-d3 deck-wide:short:line-clamp-1 deck-wide:short:text-d2">
