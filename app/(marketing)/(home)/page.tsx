@@ -7,10 +7,18 @@
 // /products canonicalises here.
 
 import type { Metadata, ResolvingMetadata } from "next";
+import { siteOrigin } from "@/lib/site-url";
 import { ProductShelf } from "../products/ProductShelf";
 import { shelfMetadata } from "../products/shelf-data";
 
 export const dynamic = "force-dynamic";
+
+const website = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Cofoundee",
+  url: `${siteOrigin}/`,
+};
 
 type Props = {
   searchParams: Promise<{
@@ -31,5 +39,13 @@ export async function generateMetadata(
 }
 
 export default function FrontDoorPage({ searchParams }: Props) {
-  return <ProductShelf searchParams={searchParams} route="/" />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(website).replace(/</g, "\\u003c") }}
+      />
+      <ProductShelf searchParams={searchParams} route="/" />
+    </>
+  );
 }

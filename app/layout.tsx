@@ -3,6 +3,7 @@ import { Noto_Sans_Thai, Inter, Rethink_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { getLocale } from "@/lib/i18n-server";
 import { LocaleProvider } from "@/lib/i18n-client";
+import { siteOrigin } from "@/lib/site-url";
 import "./globals.css";
 import { TouchHint } from "@/components/TouchHint";
 
@@ -40,11 +41,8 @@ const rethinkSans = Rethink_Sans({
   display: "swap",
 });
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: new URL(siteOrigin),
   title: {
     default: "Cofoundee — Where Thai startups build together",
     template: "%s · Cofoundee",
@@ -67,7 +65,7 @@ export const metadata: Metadata = {
     title: "Cofoundee — Where Thai startups build together",
     description:
       "Community, partners, capital, and co-founders for Thailand's startup ecosystem — in one place.",
-    url: SITE_URL,
+    url: siteOrigin,
     // images: supplied by app/opengraph-image.tsx (generated from live tokens)
     locale: "en_US",
     alternateLocale: ["th_TH"],

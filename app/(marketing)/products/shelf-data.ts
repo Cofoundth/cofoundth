@@ -100,14 +100,10 @@ export const getShelfProducts = cache(async () => {
   });
 });
 
-// The English source, not tServer: this is what a crawler and a link preview
-// should get regardless of which locale cookie happened to be on the request.
-// The page BODY is still translated normally.
-const SHELF_TITLE = "Products — try what the Thai startup community built";
+// Match the public shelf's default language and keep the brand in the title.
+const SHELF_TITLE = "Cofoundee — แอปและเกมจากชุมชนสตาร์ทอัพไทย";
 const SHELF_DESCRIPTION =
-  "Apps, games and tools made by founders in the Cofoundee community. Browse the shelf, open one and try the real thing — no signup needed.";
-const SHELF_SHARE_DESCRIPTION =
-  "Apps, games and tools made by founders in the Cofoundee community. Swipe through them and try the real thing in one tap.";
+  "ค้นพบและลองใช้แอป เกม และเครื่องมือที่สมาชิกชุมชน Cofoundee สร้างขึ้น เปิดลองได้เลยโดยไม่ต้องสมัครสมาชิก";
 
 /**
  * Metadata for either route the shelf renders on. `canonical` is "/" on both,
@@ -129,23 +125,23 @@ export async function shelfMetadata(
 ): Promise<Metadata> {
   const og = (await parent).openGraph;
   return {
-    title: SHELF_TITLE,
+    title: { absolute: SHELF_TITLE },
     description: SHELF_DESCRIPTION,
     alternates: { canonical },
     openGraph: {
       title: SHELF_TITLE,
-      description: SHELF_SHARE_DESCRIPTION,
+      description: SHELF_DESCRIPTION,
       url: canonical,
       type: "website",
       siteName: og?.siteName ?? undefined,
-      locale: og?.locale,
-      alternateLocale: og?.alternateLocale,
+      locale: "th_TH",
+      alternateLocale: ["en_US"],
       images: og?.images,
     },
     twitter: {
       card: "summary_large_image",
       title: SHELF_TITLE,
-      description: SHELF_SHARE_DESCRIPTION,
+      description: SHELF_DESCRIPTION,
     },
   };
 }

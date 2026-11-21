@@ -2,10 +2,8 @@ import type { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { publicProductAuthors } from "@/lib/posts";
 import { productPath } from "@/lib/post-types";
+import { siteOrigin } from "@/lib/site-url";
 import { webUrl } from "@/app/(marketing)/products/product-view";
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
 
 export const revalidate = 3600; // refresh sitemap hourly
 
@@ -42,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/privacy",
     "/terms",
   ].map((path) => ({
-    url: `${SITE_URL}${path}`,
+    url: `${siteOrigin}${path}`,
     lastModified: new Date(),
     changeFrequency: path === "" ? "daily" : "weekly",
     priority: path === "" ? 1 : 0.7,
@@ -65,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         return true;
       })
       .map((i) => ({
-        url: `${SITE_URL}/insights/${i.slug}`,
+        url: `${siteOrigin}/insights/${i.slug}`,
         lastModified: i.updated_at
           ? new Date(i.updated_at as string)
           : new Date(),
@@ -143,7 +141,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .map((p) => {
         const stamp = (p.updated_at ?? p.created_at) as string | null;
         return {
-          url: `${SITE_URL}${productPath(p.id as string)}`,
+          url: `${siteOrigin}${productPath(p.id as string)}`,
           lastModified: stamp ? new Date(stamp) : new Date(),
           changeFrequency: "weekly" as const,
           priority: 0.6,

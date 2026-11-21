@@ -19,6 +19,7 @@
 import type { Metadata } from "next";
 import { postImages, productPath } from "@/lib/post-types";
 import type { PublicPostRow } from "@/lib/public-post";
+import { siteOrigin } from "@/lib/site-url";
 import { productName } from "./product-view";
 
 export function productMetadata(
@@ -29,11 +30,9 @@ export function productMetadata(
 ): Metadata {
   const title = productName(post, post.content.slice(0, 70));
   const description = post.content.slice(0, 160);
-  const SITE_URL =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
   // Always an image, so the card is rich: the first screenshot, or the
   // branded site image.
-  const images = [postImages(post)[0] ?? `${SITE_URL}/og-image.png`];
+  const images = [postImages(post)[0] ?? `${siteOrigin}/og-image.png`];
   const path = productPath(post.id);
   return {
     // Bare title — the root layout's "%s · Cofoundee" template adds the suffix.
@@ -46,7 +45,7 @@ export function productMetadata(
       title,
       description,
       type: "article",
-      url: `${SITE_URL}${path}`,
+      url: `${siteOrigin}${path}`,
       images,
     },
     twitter: {

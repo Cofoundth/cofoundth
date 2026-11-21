@@ -65,6 +65,7 @@ import {
   PRODUCT_KIND,
 } from "@/lib/public-post";
 import { webUrl } from "@/lib/web-url";
+import { siteOrigin } from "@/lib/site-url";
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { PublicPostActions } from "@/components/PublicPostActions";
@@ -116,12 +117,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = post.title ?? post.content.slice(0, 70);
   const description = post.content.slice(0, 160);
-  const SITE_URL =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.cofoundee.co";
   // Always emit an image so the social card is rich — the post's first image
   // (postImages() covers both the legacy scalar and `image_urls`), or the
   // branded site image as a fallback.
-  const images = [postImages(post)[0] ?? `${SITE_URL}/og-image.png`];
+  const images = [postImages(post)[0] ?? `${siteOrigin}/og-image.png`];
   return {
     // Bare title — the root layout's "%s · Cofoundee" template adds the suffix.
     title,
@@ -131,7 +130,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: "article",
-      url: `${SITE_URL}/p/${id}`,
+      url: `${siteOrigin}/p/${id}`,
       images,
     },
     twitter: {
