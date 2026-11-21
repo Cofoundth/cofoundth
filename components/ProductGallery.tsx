@@ -24,8 +24,9 @@
 //     "the pointer is over the card". With no `group/card` ancestor the plain
 //     `group-hover/gallery` reveal does the work.
 //
-// `inactive` is the deck's card BEHIND the top one: first image only, no
-// controls. A gallery only ever goes from inactive to active (the
+// `inactive` is for cards behind the top one. The next card keeps its
+// screenshots mounted so it can become active without mounting new images.
+// Inactive cards have no controls. A gallery only ever goes from inactive to active (the
 // deck's cards are keyed by product and the top one leaves the slice when it
 // flies out), so an active gallery always starts at its first image.
 //
@@ -39,7 +40,6 @@
 
 import Image from "next/image";
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -121,11 +121,6 @@ export function ProductGallery({
    *  counts once, as loaded. */
   const settled = useRef(new Map<number, Map<number, boolean>>());
 
-  useEffect(() => {
-    if (!preload) return;
-    for (const src of images.slice(perView)) new window.Image().src = src;
-  }, [preload, images, perView]);
-
   /** Picture `i` of group `g` has loaded (`ok`) or failed. Once the whole
    *  group has, it is ready (or broken), and shown if it is the one wanted. */
   function settle(g: number, i: number, ok: boolean) {
@@ -173,7 +168,7 @@ export function ProductGallery({
     show(neighbour(event.key === "ArrowLeft" ? -1 : 1));
   }
 
-  const box = cn("absolute inset-0 overflow-hidden bg-cream", className);
+  const box = cn("absolute inset-0 touch-pan-y overflow-hidden bg-cream", className);
 
   if (images.length === 0) {
     return (
@@ -191,9 +186,8 @@ export function ProductGallery({
     );
   }
 
-  const mounted = active ? groups : groups.slice(0, 1);
-  /** The group painted. An inactive gallery mounts only the first, so it shows
-   *  the first, whatever `shown` was left at by an earlier turn on top. */
+  const mounted = active || preload ? groups : groups.slice(0, 1);
+  /** An inactive gallery always paints the first group. */
   const visible = active ? shown : 0;
 
   return (
@@ -307,7 +301,7 @@ export function ProductGallery({
             aria-label={labels.nextImage}
             onClick={() => show(neighbour(1))}
             onKeyDown={onArrowKeyDown}
-            className="absolute inset-0 z-20 size-full cursor-pointer rounded-none focus-visible:inset-ring-2 focus-visible:inset-ring-white md:[@media(hover:hover)_and_(pointer:fine)]:hidden"
+            className="absolute inset-0 z-20 size-full cursor-pointer touch-pan-y rounded-none focus-visible:inset-ring-2 focus-visible:inset-ring-white md:[@media(hover:hover)_and_(pointer:fine)]:hidden"
           />
           <button
             type="button"

@@ -36,9 +36,12 @@ import { ToggleChip, cn } from "@/components/ui";
 import { FILTER_BUCKETS, FILTER_LABEL } from "./categories";
 import { useProductFilter } from "./filter-context";
 
-export function ProductFilters({ className }: { className?: string }) {
+const MOBILE_TABS = "max-md:min-h-9 max-md:rounded-none max-md:border-0 max-md:border-b-2 max-md:border-transparent max-md:bg-transparent max-md:px-2 max-md:text-ink-muted max-md:aria-pressed:border-navy max-md:aria-pressed:font-medium max-md:aria-pressed:text-navy";
+
+export function ProductFilters({ className, toolbar = false }: { className?: string; toolbar?: boolean }) {
   const tr = useT();
   const { selected, select } = useProductFilter();
+  const chipClass = toolbar ? MOBILE_TABS : undefined;
 
   return (
     <div
@@ -46,12 +49,13 @@ export function ProductFilters({ className }: { className?: string }) {
       aria-label={tr("Filter by category")}
       className={cn("flex flex-wrap justify-center gap-2", className)}
     >
-      <ToggleChip selected={selected === null} onClick={() => select(null)}>
+      <ToggleChip className={chipClass} selected={selected === null} onClick={() => select(null)}>
         {tr("All")}
       </ToggleChip>
       {FILTER_BUCKETS.map((c) => (
         <ToggleChip
           key={c}
+          className={chipClass}
           selected={selected === c}
           // Tapping the selected chip again clears the filter.
           onClick={() => select(selected === c ? null : c)}

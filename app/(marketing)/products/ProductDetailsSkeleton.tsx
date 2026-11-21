@@ -29,7 +29,6 @@ export function ProductDetailsSkeleton({
           <div className={`mt-3 w-36 ${BAR}`} style={{ height: ratingControlHeight }} />
         )}
         <div className={`mt-6 h-[52px] rounded-full ${BAR}`} />
-        <div className={`mx-auto mt-2 h-5 w-32 ${BAR}`} />
         <div className="mt-6 flex items-center justify-between border-t border-line pt-5">
           <div className={`h-6 w-24 ${BAR}`} />
           <div className={`h-6 w-16 ${BAR}`} />

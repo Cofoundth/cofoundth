@@ -92,7 +92,6 @@ type ExternalProductLinkProps = {
   name: string;
   phones: readonly PhonePlatform[];
   storeLinks: ProductStoreLinks;
-  describedBy?: string;
   className?: string;
   children: ReactNode;
 };
@@ -135,31 +134,25 @@ function TryLinks({ product, viewer, main, stores, tried }: ProductTryLinksProps
   const storeLinks: ProductStoreLinks = Object.fromEntries(stores.map(({ platform, href }) => [platform, href]));
 
   function link(destination: TryDestination, key: string, variant: "primary" | "secondary") {
-    const hostId = `product-host-${product.id}-${key}`;
     return (
-      <div key={key} className="min-w-0">
-        <ExternalProductLink
-          href={destination.href}
-          host={destination.host}
-          name={product.name}
-          phones={destination.phones}
-          storeLinks={storeLinks}
-          describedBy={hostId}
-          className={buttonClasses({ variant, size: "lg", className: "w-full px-3" })}
-          onTry={() => tried(product)}
-          onReview={
-            !viewer.signedIn || product.reviewable
-              ? () => tried(product, { requestReview: true })
-              : undefined
-          }
-        >
-          {destination.label}
-          <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-        </ExternalProductLink>
-        <p id={hostId} className="mt-2 text-center text-sm break-all text-ink-muted">
-          {destination.host}
-        </p>
-      </div>
+      <ExternalProductLink
+        key={key}
+        href={destination.href}
+        host={destination.host}
+        name={product.name}
+        phones={destination.phones}
+        storeLinks={storeLinks}
+        className={buttonClasses({ variant, size: "lg", className: "w-full min-w-0 px-3" })}
+        onTry={() => tried(product)}
+        onReview={
+          !viewer.signedIn || product.reviewable
+            ? () => tried(product, { requestReview: true })
+            : undefined
+        }
+      >
+        {destination.label}
+        <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+      </ExternalProductLink>
     );
   }
 
@@ -181,7 +174,6 @@ function ExternalProductLink({
   name,
   phones,
   storeLinks,
-  describedBy,
   className,
   children,
   onTry,
@@ -194,7 +186,7 @@ function ExternalProductLink({
         href={href}
         target="_blank"
         rel={LINK_REL}
-        aria-describedby={describedBy}
+        aria-description={host}
         className={className}
         onClick={(event) => {
           if (isPlainClick(event) && needsPhone(phones)) {

@@ -217,9 +217,6 @@ export function ProductForm({
         rows={4}
         maxLength={MAX_PRODUCT_BLURB}
         label={tr("Description")}
-        // The deck card clamps it (three lines on a phone; MAX_PRODUCT_BLURB
-        // says what that means in characters), so the counter is the honest
-        // guide.
         hint={
           <span className="text-xs text-ink-muted tabular-nums">
             {description.length}/{MAX_PRODUCT_BLURB}

@@ -52,11 +52,9 @@
 // change of category, and "once per visit" is not reset by one.
 //
 // ── THE STACK IS WRITTEN IN TWO PLACES, ON PURPOSE ─────────────────────────
-// A card's place in the stack is `--depth`, set by React and read by one CSS
-// transform, so the first paint is right before hydration. A drag then writes
-// that element's style directly every frame, with no React state per frame: an
-// inline transform on the top card, a fractional --depth on the two behind it.
-// A commit ends with the DOM already where React is about to put it.
+// React sets the resting stack positions before hydration. During a drag we
+// write transforms directly to the mounted cards once per frame, so moving
+// the stack does not update an inherited CSS variable on every descendant.
 //
 // ── THE GESTURE ────────────────────────────────────────────────────────────
 //   touch-action: pan-y    A vertical swipe still scrolls the page. The browser
@@ -83,7 +81,7 @@
 //
 // ── WHAT THE CARD SHOWS ────────────────────────────────────────────────────
 // Images, description, rating, comment count, and a Mobile only badge where
-// applicable. Wide cards add the product name, maker and Try destination.
+// applicable. The title and maker are visible at every size.
 //
 // ── THE CARD'S TWO LINKS ───────────────────────────────────────────────────
 // The stretched-link pattern, because the card holds a second control (the
@@ -146,9 +144,10 @@ import {
   cn,
 } from "@/components/ui";
 import { t, type Locale } from "@/lib/i18n";
+import { FEATURES } from "@/lib/features";
 import { useLocale } from "@/lib/i18n-client";
 import type { ProductRating } from "@/lib/post-types";
-import { STORE_LABEL, STORE_PLATFORMS, type ProductStoreLinks } from "@/lib/product-store-links";
+import type { ProductStoreLinks } from "@/lib/product-store-links";
 import { LIKED_PRODUCTS_PATH } from "@/lib/roles";
 import type { FilterBucket } from "./categories";
 import {
@@ -253,14 +252,14 @@ type ProductDeckLabels = {
 /** The top card and the two behind it. */
 const MOUNTED = 3;
 /** Travel before a press is read as a horizontal or a vertical gesture. */
-const LOCK_PX = 10;
+const LOCK_PX = 8;
 /** Share of the card's width that commits a slow drag. */
 const COMMIT_RATIO = 0.3;
 const FLICK_PX_PER_MS = 0.5;
 /** A flick still has to move the card, or a twitch on release would commit. */
 const FLICK_MIN_PX = 24;
 const VELOCITY_WINDOW_MS = 100;
-const MAX_TILT_DEG = 12;
+const MAX_TILT_DEG = 8;
 const FLY_MS = 260;
 const SPRING_MS = 200;
 
@@ -274,13 +273,14 @@ const LINK_REL = "noopener noreferrer nofollow";
  * are letterboxed over a blurred copy of themselves (ProductGallery `backdrop`),
  * because a box this size has no fixed shape to crop to.
  *
- * The summary takes roughly 38% of the height below the gallery on phones,
- * or 38% of the width beside it on wide screens. When space is tight, the
- * details can scroll independently of the actions.
+ * On phones the summary takes its natural height and the gallery fills the
+ * remaining space. The 4rem reserve keeps the details button visible even
+ * when the summary needs to scroll on a very short screen. On wide screens
+ * the summary takes roughly 38% of the width beside the gallery.
  * ./loading.tsx draws the same panel and the compact band used on phones.
  */
 const CARD_BODY =
-  "flex h-[clamp(min(9rem,55%),38.2%,14rem)] min-h-0 shrink-0 flex-col gap-2 p-3 sm:h-[clamp(min(16rem,55%),38.2%,17rem)] sm:gap-3 sm:p-5 deck-wide:h-auto deck-wide:w-(--deck-panel-width) deck-wide:justify-center deck-wide:gap-3 deck-wide:p-(--deck-panel-inset) deck-wide:short:gap-2";
+  "flex max-h-[calc(100%_-_4rem)] min-h-0 shrink-0 flex-col gap-2 p-3 sm:gap-3 sm:p-5 deck-wide:max-h-none deck-wide:w-(--deck-panel-width) deck-wide:justify-center deck-wide:gap-3 deck-wide:p-(--deck-panel-inset) deck-wide:short:gap-2";
 
 /** A big card would need a long drag to commit, and would swing its corners a
  *  long way at full tilt: both are measured against at most this width. */
@@ -296,6 +296,9 @@ function maxTiltFor(width: number): number {
 type Gesture = {
   pointerId: number;
   element: HTMLElement;
+  cards: HTMLElement[];
+  likeHint: HTMLElement | null;
+  skipHint: HTMLElement | null;
   startX: number;
   startY: number;
   lock: "x" | "y" | null;
@@ -322,13 +325,14 @@ function stackOf(stage: HTMLElement | null): HTMLElement[] {
   );
 }
 
-function writeHints(card: HTMLElement, like: number, skip: number) {
-  const hint = (name: string) =>
-    card.querySelector<HTMLElement>(`[data-deck-hint="${name}"]`);
-  const likeHint = hint("like");
-  const skipHint = hint("skip");
-  if (likeHint) likeHint.style.opacity = String(like);
-  if (skipHint) skipHint.style.opacity = String(skip);
+function stackTransform(depth: number): string {
+  return `translate3d(0, ${depth * 10}px, 0) scale(${1 - depth * 0.04})`;
+}
+
+function clearHints(card: HTMLElement) {
+  for (const hint of card.querySelectorAll<HTMLElement>("[data-deck-hint]")) {
+    hint.style.opacity = "";
+  }
 }
 
 function releaseVelocity(samples: Gesture["samples"], now: number): number {
@@ -632,13 +636,11 @@ function DeckActions({
   labels,
   onSkip,
   onTry,
-  ref,
 }: {
   product: DeckProduct;
   labels: Pick<ProductDeckLabels, "skip" | "tryIt">;
   onSkip: () => void;
   onTry: (event: MouseEvent<HTMLAnchorElement>) => void;
-  ref?: RefObject<HTMLAnchorElement | null>;
 }) {
   return (
     <>
@@ -652,7 +654,6 @@ function DeckActions({
         {labels.skip}
       </Button>
       <a
-        ref={ref}
         href={product.href}
         target="_blank"
         rel={LINK_REL}
@@ -727,8 +728,6 @@ function Stack({
   const locked = !visible || shelfLocked || handoff !== null;
 
   const stageRef = useRef<HTMLDivElement>(null);
-  const compactTryLinkRef = useRef<HTMLAnchorElement>(null);
-  const wideTryLinkRef = useRef<HTMLAnchorElement>(null);
   /** The `after` this deck last read from or wrote to the address. undefined
    *  until the first read, which always applies. */
   const knownAfter = useRef<string | null | undefined>(undefined);
@@ -737,7 +736,6 @@ function Stack({
   const frame = useRef(0);
   const flyTimer = useRef(0);
   const flying = useRef(false);
-  const fromRightSwipe = useRef(false);
   const latestLike = useRef<Promise<boolean> | null>(null);
   const justDragged = useRef(false);
   const restoreFocus = useRef(false);
@@ -789,6 +787,8 @@ function Stack({
       // An outside navigation: whatever was in flight is moot.
       gesture.current?.listeners.abort();
       gesture.current = null;
+      cancelAnimationFrame(frame.current);
+      frame.current = 0;
       clearTimeout(flyTimer.current);
       flying.current = false;
       setDepartingId(null);
@@ -808,19 +808,15 @@ function Stack({
   );
 
   // The drag and fly-out styles have done their job once React has moved every
-  // card along. Before paint, so nothing animates between the two states. Every
-  // inline style a drag or a fly-out writes is cleared, and --depth set to the
-  // card's place, because a jump back (Start over, an outside navigation) can
-  // keep a card React does not re-style: its --depth prop did not change, but
-  // its inline one did.
+  // card along. Clear the transient styles before paint so the next card
+  // picks up its resting position from React without a jump.
   useLayoutEffect(() => {
-    stackOf(stageRef.current).forEach((card, depth) => {
+    stackOf(stageRef.current).forEach((card) => {
       card.style.transition = "";
       card.style.transform = "";
       card.style.opacity = "";
       card.style.pointerEvents = "";
-      card.style.setProperty("--depth", String(depth));
-      writeHints(card, 0, 0);
+      clearHints(card);
     });
     if (!restoreFocus.current) return;
     restoreFocus.current = false;
@@ -894,15 +890,19 @@ function Stack({
       advance(productId);
       return;
     }
-    setDepartingId(productId);
     const [top, ...behind] = stackOf(stageRef.current);
+    if (!top) {
+      advance(productId);
+      return;
+    }
+    setDepartingId(productId);
     top.style.pointerEvents = "none";
-    top.style.transition = `transform ${FLY_MS}ms cubic-bezier(0.2, 0.7, 0.3, 1), opacity ${FLY_MS}ms ease-in`;
+    top.style.transition = `transform ${FLY_MS}ms cubic-bezier(0.2, 0.65, 0.35, 1), opacity ${FLY_MS}ms ease-in`;
     top.style.transform = `translate3d(${sign * window.innerWidth}px, 0, 0) rotate(${sign * maxTiltFor(top.offsetWidth)}deg)`;
     top.style.opacity = "0";
     behind.forEach((card, i) => {
       card.style.transition = `transform ${FLY_MS}ms ease-out`;
-      card.style.setProperty("--depth", String(i));
+      card.style.transform = stackTransform(i);
     });
     // A timer and not transitionend: trying a product backgrounds this tab,
     // where transitions stop progressing and the event would not come until
@@ -936,12 +936,12 @@ function Stack({
   }
 
   function swipeRight() {
-    // Activate the visible layout's link while the swipe can open a tab.
-    const wideLink = wideTryLinkRef.current;
-    const link = wideLink?.getClientRects().length ? wideLink : compactTryLinkRef.current;
-    fromRightSwipe.current = true;
-    link?.click();
-    fromRightSwipe.current = false;
+    const product = actionableProduct();
+    if (!product) return;
+    const phoneHandoff = needsPhone(product.phones);
+    // Open within the pointerup or keyboard event to keep user activation.
+    if (!phoneHandoff) window.open(product.href, "_blank", "noopener,noreferrer");
+    tryProduct(product, true, phoneHandoff);
   }
 
   /** The browser opens Try's link unless the device needs a QR handoff. */
@@ -954,17 +954,21 @@ function Stack({
       event.preventDefault();
       return;
     }
+    // A middle-click or modifier uses the link's native browser behavior.
+    const phoneHandoff = isPlainClick(event) && needsPhone(product.phones);
+    if (phoneHandoff) event.preventDefault();
+    tryProduct(product, false, phoneHandoff);
+  }
+
+  function tryProduct(product: DeckProduct, fromSwipe: boolean, phoneHandoff: boolean) {
     latestLike.current = null;
     setLikeNotice(null);
-    const fromSwipe = fromRightSwipe.current;
     const liking = fromSwipe && signedIn && !product.sample
       ? saveSwipeLike(product)
       : undefined;
     const options = { fromSwipe, liking };
     writeAfter(product.id);
-    // A middle-click or a modifier asks the browser for a tab.
-    if (isPlainClick(event) && needsPhone(product.phones)) {
-      event.preventDefault();
+    if (phoneHandoff) {
       setHandoff({ product, options });
     } else {
       onTried(product, options);
@@ -1019,17 +1023,17 @@ function Stack({
   }
 
   function paint(g: Gesture) {
-    const [top, ...behind] = stackOf(stageRef.current);
-    if (!top) return;
+    const [top, ...behind] = g.cards;
     const pull = Math.min(Math.abs(g.dx) / (g.width * COMMIT_RATIO), 1);
     // Full tilt at twice the commit distance, so it reads well before release.
     const lean = g.dx / (g.width * 2 * COMMIT_RATIO);
     const tilt = g.reducedMotion ? 0 : Math.max(-1, Math.min(lean, 1)) * g.tilt;
     top.style.transform = `translate3d(${g.dx}px, 0, 0) rotate(${tilt}deg)`;
-    writeHints(top, g.dx > 0 ? pull : 0, g.dx < 0 ? pull : 0);
-    behind.forEach((card, i) =>
-      card.style.setProperty("--depth", String(i + 1 - pull)),
-    );
+    if (g.likeHint) g.likeHint.style.opacity = String(g.dx > 0 ? pull : 0);
+    if (g.skipHint) g.skipHint.style.opacity = String(g.dx < 0 ? pull : 0);
+    behind.forEach((card, i) => {
+      card.style.transform = stackTransform(i + 1 - pull);
+    });
   }
 
   function springBack() {
@@ -1040,10 +1044,10 @@ function Stack({
       : `transform ${SPRING_MS}ms cubic-bezier(0.2, 0.9, 0.3, 1.25)`;
     top.style.transition = transition;
     top.style.transform = "";
-    writeHints(top, 0, 0);
-    behind.forEach((card, i) => {
+    clearHints(top);
+    behind.forEach((card) => {
       card.style.transition = transition;
-      card.style.setProperty("--depth", String(i + 1));
+      card.style.transform = "";
     });
   }
 
@@ -1067,17 +1071,21 @@ function Stack({
     if ((event.target as Element).closest("[data-deck-nodrag]")) return;
 
     justDragged.current = false;
+    const card = event.currentTarget;
     const g: Gesture = {
       pointerId: event.pointerId,
-      element: event.currentTarget,
+      element: card,
+      cards: stackOf(stageRef.current),
+      likeHint: card.querySelector('[data-deck-hint="like"]'),
+      skipHint: card.querySelector('[data-deck-hint="skip"]'),
       startX: event.clientX,
       startY: event.clientY,
       lock: null,
       originX: event.clientX,
       dx: 0,
-      width: Math.min(event.currentTarget.offsetWidth, COMMIT_BASIS_MAX_PX),
-      tilt: maxTiltFor(event.currentTarget.offsetWidth),
-      samples: [],
+      width: Math.min(card.offsetWidth, COMMIT_BASIS_MAX_PX),
+      tilt: maxTiltFor(card.offsetWidth),
+      samples: [{ x: event.clientX, t: event.timeStamp }],
       reducedMotion: prefersReducedMotion(),
       listeners: new AbortController(),
     };
@@ -1114,7 +1122,7 @@ function Stack({
           // travel it took to get here.
           g.originX = g.startX + Math.sign(dx) * LOCK_PX;
           // Left over from a spring-back, it would make every frame lag.
-          for (const card of stackOf(stageRef.current)) {
+          for (const card of g.cards) {
             card.style.transition = "";
           }
           g.element.setPointerCapture(g.pointerId);
@@ -1138,8 +1146,21 @@ function Stack({
       "pointerup",
       (e) => {
         if (e.pointerId !== g.pointerId) return;
+        // A quick touch flick can end before a move event locks its axis.
+        if (g.lock === null) {
+          const dx = e.clientX - g.startX;
+          const dy = e.clientY - g.startY;
+          if (Math.abs(dx) >= LOCK_PX && Math.abs(dx) > Math.abs(dy)) {
+            g.lock = "x";
+            g.originX = g.startX + Math.sign(dx) * LOCK_PX;
+          }
+        }
         const dragging = g.lock === "x";
-        if (dragging) g.dx = e.clientX - g.originX;
+        if (dragging) {
+          justDragged.current = true;
+          g.dx = e.clientX - g.originX;
+          g.samples.push({ x: e.clientX, t: e.timeStamp });
+        }
         const velocity = releaseVelocity(g.samples, e.timeStamp);
         endGesture(g);
         if (!dragging) return;
@@ -1174,8 +1195,7 @@ function Stack({
   }
 
   function onClickCapture(event: MouseEvent<HTMLElement>) {
-    // A committed right swipe dispatches Try before the native click.
-    if (!justDragged.current || fromRightSwipe.current) return;
+    if (!justDragged.current) return;
     event.preventDefault();
     event.stopPropagation();
   }
@@ -1191,6 +1211,7 @@ function Stack({
       ref={rootRef}
       role="group"
       aria-label={labels.deckName}
+      aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp"
       tabIndex={0}
       onKeyDown={onKeyDown}
       // Center the capped stack in the space below the toolbar.
@@ -1215,7 +1236,10 @@ function Stack({
             // The clip lives on the image box, the only thing that needs it.
             // `group/card` is what the gallery's arrows read hover from.
             // A column on a phone, a row on a wide screen (CARD_BODY).
-            className="group/card absolute inset-x-0 top-0 bottom-5 flex origin-bottom cursor-grab touch-pan-y flex-col border border-line shadow-lg select-none active:cursor-grabbing short:bottom-3 deck-wide:flex-row [transform:translateY(calc(var(--depth)_*_10px))_scale(calc(1_-_var(--depth)_*_0.04))]"
+            className={cn(
+              "group/card absolute inset-x-0 top-0 bottom-5 flex origin-bottom cursor-grab touch-pan-y flex-col border border-line shadow-lg select-none active:cursor-grabbing short:bottom-3 deck-wide:flex-row [transform:translateY(calc(var(--depth)_*_10px))_scale(calc(1_-_var(--depth)_*_0.04))]",
+              depth < 2 && "motion-safe:will-change-transform",
+            )}
           >
             {/* Stretched, and a real link to the product's page, so a tap
                 before hydration, a middle-click and assistive tech all reach
@@ -1305,13 +1329,13 @@ function Stack({
             <div className={CARD_BODY}>
               {/* Touch panning is resolved up to the nearest scroll container,
                   which can be this panel or a clamped or truncated descendant. */}
-              <div className="relative z-20 flex min-h-0 touch-pan-y flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-y-contain **:touch-pan-y sm:grow sm:justify-between sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:grow-0 deck-wide:short:justify-start deck-wide:short:gap-2">
+              <div className="relative z-20 flex min-h-0 touch-pan-y flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-y-contain **:touch-pan-y sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:gap-2">
                 <div className="flex min-w-0 shrink-0 flex-col gap-1.5 sm:gap-3 deck-wide:gap-2.5 deck-wide:short:gap-1.5">
                   <div className="flex items-center justify-between gap-3">
-                    <h2 className="line-clamp-1 min-w-0 text-2xl wrap-anywhere deck-wide:line-clamp-2 deck-wide:text-d2 deck-wide:lg:text-d3 deck-wide:short:line-clamp-1 deck-wide:short:text-d2">
+                    <h2 className="line-clamp-1 min-w-0 text-xl wrap-anywhere sm:text-2xl deck-wide:line-clamp-2 deck-wide:text-d2 deck-wide:lg:text-d3 deck-wide:short:line-clamp-1 deck-wide:short:text-d2">
                       {product.name}
                     </h2>
-                    <CardChip className="bg-cream px-3 py-1.5 text-sm">
+                    <CardChip className="bg-cream px-3 py-1.5 text-xs sm:text-sm">
                       {t(product.bucket === "game" ? "Game" : "App", locale)}
                     </CardChip>
                   </div>
@@ -1319,14 +1343,14 @@ function Stack({
                     {product.mobileOnly && (
                       <CardChip
                         id={`mobile-only-${product.id}`}
-                        className="w-full justify-start gap-2 rounded-xl bg-navy px-3 py-1.5 text-base font-bold whitespace-normal text-white deck-wide:gap-2.5 deck-wide:px-4 deck-wide:py-2.5 deck-wide:text-lg deck-wide:lg:text-xl deck-wide:short:py-2 deck-wide:short:text-base"
+                        className="w-full justify-start gap-2 rounded-xl bg-navy px-3 py-1.5 text-sm font-bold whitespace-normal text-white sm:text-base deck-wide:gap-2.5 deck-wide:px-4 deck-wide:py-2.5 deck-wide:text-lg deck-wide:lg:text-xl deck-wide:short:py-2 deck-wide:short:text-base"
                       >
                         <Smartphone className="size-3.5 shrink-0 deck-wide:size-5" strokeWidth={1.5} aria-hidden="true" />
                         {labels.mobileOnly}
                       </CardChip>
                     )}
                     {product.platformLabels.map((label) => (
-                      <CardChip key={label} className="px-3 py-1.5 text-sm">
+                      <CardChip key={label} className="px-3 py-1.5 text-xs sm:text-sm">
                         {label}
                       </CardChip>
                     ))}
@@ -1335,7 +1359,7 @@ function Stack({
 
                 <div className="flex shrink-0 flex-col deck-wide:gap-3 deck-wide:border-y deck-wide:border-line deck-wide:py-3 deck-wide:short:gap-1.5 deck-wide:short:py-1.5">
                   {product.blurb && product.blurb.trim() !== product.name && (
-                    <p className="line-clamp-2 min-h-0 wrap-anywhere font-serif text-base leading-snug text-ink deck-wide:line-clamp-5 deck-wide:text-lg deck-wide:lg:text-xl deck-wide:short:line-clamp-3 deck-wide:short:text-lg">
+                    <p className="min-h-0 wrap-anywhere font-serif text-sm leading-snug text-ink sm:text-base deck-wide:line-clamp-5 deck-wide:text-lg deck-wide:lg:text-xl deck-wide:short:line-clamp-3 deck-wide:short:text-lg">
                       {product.blurb}
                     </p>
                   )}
@@ -1353,17 +1377,14 @@ function Stack({
                     <CardStats product={product} locale={locale} />
                   </Link>
                 </div>
-                <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm text-ink-muted deck-wide:flex-col deck-wide:items-stretch deck-wide:gap-2 deck-wide:text-base deck-wide:short:flex-row deck-wide:short:items-center deck-wide:short:gap-x-3 deck-wide:short:gap-y-1 deck-wide:short:text-sm">
-                  {product.maker && (
-                    <div className="flex min-w-0 max-w-full items-center gap-2 text-ink">
-                      <div aria-hidden="true">
-                        <Avatar name={product.maker.name} url={product.maker.avatarUrl} size="xs" />
-                      </div>
-                      <span className="truncate">{product.maker.name}</span>
+                {product.maker && (
+                  <div className="flex min-w-0 shrink-0 items-center gap-2 text-xs text-ink sm:text-sm deck-wide:text-base deck-wide:short:text-sm">
+                    <div aria-hidden="true">
+                      <Avatar name={product.maker.name} url={product.maker.avatarUrl} size="xs" />
                     </div>
-                  )}
-                  <p className="max-w-full truncate">{cardDestination(product, locale)}</p>
-                </div>
+                    <span className="truncate">{product.maker.name}</span>
+                  </div>
+                )}
               </div>
 
               {/* The product's page, in the modal: see "THE PRODUCT'S
@@ -1387,18 +1408,19 @@ function Stack({
                   <CardFooterFace product={product} locale={locale} />
                 </Link>
               </div>
-              <div
-                data-deck-nodrag=""
-                className={cn("relative z-20 hidden shrink-0 grid-cols-2 gap-3 deck-wide:grid", depth > 0 && "invisible")}
-              >
-                <DeckActions
-                  ref={depth === 0 ? wideTryLinkRef : undefined}
-                  product={product}
-                  labels={labels}
-                  onSkip={skip}
-                  onTry={onTryLinkClick}
-                />
-              </div>
+              {FEATURES.productDeckActions && (
+                <div
+                  data-deck-nodrag=""
+                  className={cn("relative z-20 hidden shrink-0 grid-cols-2 gap-3 deck-wide:grid", depth > 0 && "invisible")}
+                >
+                  <DeckActions
+                    product={product}
+                    labels={labels}
+                    onSkip={skip}
+                    onTry={onTryLinkClick}
+                  />
+                </div>
+              )}
             </div>
           </Card>
         ))}
@@ -1411,49 +1433,50 @@ function Stack({
       </div>
 
       {/* Compact cards keep their controls below the stack. */}
-      <div
-        className={cn(
-          "mx-auto mt-3 flex w-full max-w-md shrink-0 gap-2 sm:gap-3 short:mt-2",
-          current
-            ? "deck-wide:hidden"
-            : "deck-wide:absolute deck-wide:bottom-[calc(var(--deck-panel-inset)+1.25rem+1px)] deck-wide:left-1/2 deck-wide:z-10 deck-wide:m-0 deck-wide:w-[calc(100%_-_3rem)] deck-wide:-translate-x-1/2",
-        )}
-      >
-        {current ? (
-          <DeckActions
-            ref={compactTryLinkRef}
-            product={current}
-            labels={labels}
-            onSkip={skip}
-            onTry={onTryLinkClick}
-          />
-        ) : signedIn && deck.length === 0 ? (
-          <LinkButton href={LIKED_PRODUCTS_PATH} prefetch={false} fullWidth>
-            {t("Liked products", locale)}
-          </LinkButton>
-        ) : (
-          <>
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={startOver}
-              className="flex-1"
-            >
-              {labels.startOver}
-            </Button>
-            {labels.join && (
-              <LinkButton
-                href="/signup"
-                prefetch={false}
+      {(FEATURES.productDeckActions || !current) && (
+        <div
+          className={cn(
+            "mx-auto mt-3 flex w-full max-w-md shrink-0 gap-2 sm:gap-3 short:mt-2",
+            current
+              ? "deck-wide:hidden"
+              : "deck-wide:absolute deck-wide:bottom-[calc(var(--deck-panel-inset)+1.25rem+1px)] deck-wide:left-1/2 deck-wide:z-10 deck-wide:m-0 deck-wide:w-[calc(100%_-_3rem)] deck-wide:-translate-x-1/2",
+          )}
+        >
+          {current ? (
+            <DeckActions
+              product={current}
+              labels={labels}
+              onSkip={skip}
+              onTry={onTryLinkClick}
+            />
+          ) : signedIn && deck.length === 0 ? (
+            <LinkButton href={LIKED_PRODUCTS_PATH} prefetch={false} fullWidth>
+              {t("Liked products", locale)}
+            </LinkButton>
+          ) : (
+            <>
+              <Button
+                variant="secondary"
                 fullWidth
+                onClick={startOver}
                 className="flex-1"
               >
-                {labels.join}
-              </LinkButton>
-            )}
-          </>
-        )}
-      </div>
+                {labels.startOver}
+              </Button>
+              {labels.join && (
+                <LinkButton
+                  href="/signup"
+                  prefetch={false}
+                  fullWidth
+                  className="flex-1"
+                >
+                  {labels.join}
+                </LinkButton>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Over the stage rather than in the flow, so it cannot push the buttons
           out of the first viewport. */}
@@ -1482,14 +1505,6 @@ function Stack({
       )}
     </div>
   );
-}
-
-function cardDestination(product: DeckProduct, locale: Locale): string {
-  if (!product.mobileOnly) return product.host;
-  const stores = STORE_PLATFORMS
-    .filter((platform) => product.storeLinks[platform])
-    .map((platform) => t(STORE_LABEL[platform], locale));
-  return stores.join(" · ") || product.host;
 }
 
 /**

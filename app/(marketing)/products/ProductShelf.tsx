@@ -106,6 +106,7 @@ import Link from "next/link";
 import { Package, PackageOpen, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
+import { FEATURES } from "@/lib/features";
 import { getAccountRole } from "@/lib/account";
 import { getMyProductRatings } from "@/lib/product-ratings";
 import { productStoreLinksOf } from "@/lib/product-store-links";
@@ -125,6 +126,7 @@ import {
   LinkButton,
   Section,
   buttonClasses,
+  cn,
 } from "@/components/ui";
 import { BrandMark } from "@/components/Brand";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -149,7 +151,7 @@ import {
 import { ProductPageBody } from "./[id]/ProductPageBody";
 import { ProductDeck, type DeckProduct } from "./ProductDeck";
 import { ProductFilterProvider } from "./filter-context";
-import { ProductShelfFrame, ProductViewSwitch } from "./ProductShelfView";
+import { ProductShelfAccountMenu, ProductShelfFrame, ProductViewSwitch } from "./ProductShelfView";
 import { isFixture } from "./fixtures";
 import { SwitchToBuilding } from "./SwitchToBuilding";
 // parseCategoryParam lives in ./categories (no "use client"): the SERVER
@@ -290,7 +292,6 @@ export async function ProductShelf({
     tProduct,
     tDiscard,
     tSignIn,
-    tLegal,
     tMyProducts,
   ] = await Promise.all([
     tServer("Try what the community built"),
@@ -340,18 +341,8 @@ export async function ProductShelf({
     tServer("Product"),
     tServer("Discard the comment you were writing?"),
     tServer("Sign in"),
-    tServer("Legal"),
     tServer("My products"),
   ]);
-  // Exactly the legal trio the app shell shows (one definition, lib/sidebar.ts).
-  // Not Contact: the privacy notice carries the contact channel PDPA asks for,
-  // and a fourth link pushed the line onto two on a 390px phone.
-  const legalTargets = await Promise.all(
-    LEGAL_LINKS.map(async (l) => ({
-      href: l.href,
-      label: await tServer(l.label),
-    })),
-  );
 
   // THE SUPPLY SIDE, and the page is now read by FOUR audiences, so this is a
   // four-way switch on `role` with an explicit `null` arm. Written as one
@@ -523,8 +514,6 @@ export async function ProductShelf({
   // product name below it in the document outline.
   const pageTitle = <h1 className="sr-only">{tTitle}</h1>;
 
-  // The view switch sits beside the filters on phones. On wider screens,
-  // members get it in the right corner and guests keep sign-in there.
   const leftCorner =
     user === null ? (
       <Link
@@ -554,34 +543,17 @@ export async function ProductShelf({
       </>
     ) : null;
 
-  // THE LEGAL LINKS, logged out only (the owner's call, 2026-11-11). With the
-  // site footer gone this page had no way to the privacy notice (PDPA), the
-  // terms or the code of conduct. A signed-in reader has the same trio in the
-  // app shell's rail and phone menu (lib/sidebar.ts LEGAL_LINKS, the same
-  // list), so they get nothing here.
-  //
-  // A small centred line under the Skip/Try buttons, at every width: one line
-  // from ~355px wide (the Thai trio is ~322px at gap-x-3, measured against the
-  // shipped fonts); a narrower phone wraps it onto two. It used to float in the
-  // bottom-left corner beside the buttons from lg, taking no height, and the
-  // owner rejected it there (2026-11-12): beside the row it read as a stray
-  // element, not as the page's foot. It IS the page's foot now, spaced as the
-  // mirror of the top line (THE EDGES MIRROR, at the root below): one gap under
-  // the buttons (mt-3, lg:mt-4), the container's bottom padding under it. At
-  // mt-2 / lg:mt-3 it sat nearer the buttons than the screen's edge and read
-  // as their caption (the owner flagged it, 2026-11-12). It costs the card
-  // 28px (32 from lg). Last in the DOM, so it is last in the tab order too.
   const legalLinks =
-    user === null ? (
+    user === null && FEATURES.guestProductLegalLinks ? (
       <nav
-        aria-label={tLegal}
+        aria-label={await tServer("Legal")}
         className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-ink-muted lg:mt-4 lg:gap-x-4"
       >
-        {legalTargets.map((l) => (
-          <Link key={l.href} href={l.href} className="hover:text-navy">
-            {l.label}
+        {await Promise.all(LEGAL_LINKS.map(async ({ href, label }) => (
+          <Link key={href} href={href} className="hover:text-navy">
+            {await tServer(label)}
           </Link>
-        ))}
+        )))}
       </nav>
     ) : null;
 
@@ -654,31 +626,42 @@ export async function ProductShelf({
   // strings so the skeleton's deck lands where the real one does: change the
   // two together.
   //
-  // THE EDGES MIRROR. The top line sits one edge padding below the top of the
-  // screen and one gap above the card. The logged-out legal line uses the
-  // same gap under the deck. Edge padding and gap are 12px, and 16px from lg.
-  // On compact cards the buttons sit 12px under the stack (./ProductDeck.tsx).
   return (
     <ProductShelfFrame>
       {pageTitle}
       <ProductFilterProvider initial={initialCategory}>
         <div className="relative mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-4 short:pt-2 short:pb-2 max-sm:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-sm:short:pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-          {/* Guest controls appear before the phone toolbar in tab order. */}
-          <div className="grid grid-cols-[1fr_auto] items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
-            {leftCorner}
-            {guestControls && (
-              <div className="col-start-2 row-start-1 flex items-center gap-3 justify-self-end sm:hidden">
-                {guestControls}
-              </div>
+          <header
+            className={cn(
+              "grid items-center md:gap-x-3",
+              user
+                ? "grid-cols-[minmax(0,1fr)_auto] gap-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
+                : "grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-1 md:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)]",
             )}
-            <div className="col-span-2 flex flex-wrap items-center justify-between gap-2 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:justify-center sm:gap-3">
-              <ProductFilters className="max-sm:justify-start" />
-              <ProductViewSwitch className={user ? "sm:hidden" : undefined} />
-            </div>
-            <div className="hidden items-center gap-3 justify-self-end sm:col-start-3 sm:row-start-1 sm:flex">
-              {user ? <ProductViewSwitch /> : guestControls}
-            </div>
-          </div>
+          >
+            {leftCorner}
+            <ProductFilters toolbar className={cn(
+              "md:col-start-2 md:row-start-1 md:justify-center",
+              user ? "col-start-1 justify-start" : "col-start-2 row-start-1 max-md:flex-nowrap max-md:gap-0",
+              user && (leftCorner ? "row-start-2" : "row-start-1"),
+            )} />
+            <ProductViewSwitch
+              compact={!user}
+              className={cn(
+                "justify-self-end md:col-start-3 md:row-start-1",
+                user ? "col-start-2" : "col-start-3 row-start-1",
+                user && (leftCorner ? "row-start-2" : "row-start-1"),
+              )}
+            />
+            {guestControls && (
+              <>
+                <ProductShelfAccountMenu>{guestControls}</ProductShelfAccountMenu>
+                <div className="col-start-4 row-start-1 hidden items-center gap-3 justify-self-end md:flex">
+                  {guestControls}
+                </div>
+              </>
+            )}
+          </header>
           {/* The deck takes the rest. Everything here stays server-rendered
               except the client islands that read the selection. */}
           <div className="mt-3 flex min-h-0 flex-1 flex-col lg:mt-4 short:mt-2">

@@ -100,10 +100,8 @@ function imageSrc(raw: string, fixture: boolean): string | null {
  * the description, the rating and the comment count (CLAUDE.md, "Founder
  * decision (2026-11-10)"), so the host is in the Try button's accessible
  * name ("Try {name} on {host}"). On the product page's
- * "Try it" button (./ProductDetail.tsx) it is printed beside the button and is
- * the button's description. A visitor is about to leave for a stranger's
- * domain, `link_url` is SUBMITTED BY A MEMBER, and a phone has no status bar
- * to hover, so do not remove it from either. webUrl() is what resolves
+ * "Try it" button (./ProductDetail.tsx) it is the accessible description.
+ * webUrl() is what resolves
  * `https://apps.apple.com@evil.example.com/` to evil.example.com for it.
  */
 export function displayHost(link: URL): string {

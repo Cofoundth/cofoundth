@@ -50,6 +50,8 @@ export const FEATURES: {
   funding: boolean;
   meetupsNew: boolean;
   productsNew: boolean;
+  productDeckActions: boolean;
+  guestProductLegalLinks: boolean;
   investorSignup: boolean;
 } = {
   /** /orgs — the multi-user company directory, B2B connect/chat/deals. */
@@ -60,6 +62,10 @@ export const FEATURES: {
   meetupsNew: true,
   /** "New" chip on the Products nav item, every rail — a marker, not a surface. */
   productsNew: true,
+  /** Visible Skip and Try controls on the swipe deck. */
+  productDeckActions: false,
+  /** Legal links under the public product shelf. */
+  guestProductLegalLinks: false,
   /** The "Investor" option in the signup picker. Existing accounts unaffected. */
   investorSignup: false,
 };

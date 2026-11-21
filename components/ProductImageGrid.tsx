@@ -29,15 +29,10 @@
 // image hosts, so next/image cannot optimise these.
 
 import Image from "next/image";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent,
-} from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Dialog } from "@/components/ui";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from "lucide-react";
+import { Dialog, cn } from "@/components/ui";
+import { useT } from "@/lib/i18n-client";
 
 export type ProductImageGridLabels = {
   /** The viewer's ‹ and ›, and its ✕: icon-only. Already translated. */
@@ -69,13 +64,6 @@ export function ProductImageGrid({
 }) {
   /** The picture open in the viewer, or none. */
   const [open, setOpen] = useState<number | null>(null);
-  const count = images.length;
-  const step = useCallback(
-    (dir: 1 | -1) =>
-      setOpen((i) => (i === null ? i : (i + dir + count) % count)),
-    [count],
-  );
-  const close = useCallback(() => setOpen(null), []);
 
   return (
     <div>
@@ -108,11 +96,10 @@ export function ProductImageGrid({
       {open !== null && (
         <Viewer
           images={images}
-          index={open}
+          initialIndex={open}
           altPrefix={altPrefix}
           labels={labels}
-          onStep={step}
-          onClose={close}
+          onClose={() => setOpen(null)}
         />
       )}
     </div>
@@ -121,20 +108,24 @@ export function ProductImageGrid({
 
 function Viewer({
   images,
-  index,
+  initialIndex,
   altPrefix,
   labels,
-  onStep,
   onClose,
 }: {
   images: readonly string[];
-  index: number;
+  initialIndex: number;
   altPrefix: string;
   labels: ProductImageGridLabels;
-  onStep: (dir: 1 | -1) => void;
   onClose: () => void;
 }) {
-  const several = images.length > 1;
+  const tr = useT();
+  const [index, setIndex] = useState(initialIndex);
+  const [zoomWidth, setZoomWidth] = useState<number | null>(null);
+  const picture = useRef<HTMLImageElement>(null);
+  const count = images.length;
+  const several = count > 1;
+  const zoomed = zoomWidth !== null;
   const name = `${altPrefix} ${index + 1}`;
   /** The press a swipe is measured from. */
   const press = useRef<{ x: number; y: number } | null>(null);
@@ -143,31 +134,40 @@ function Viewer({
    *  pointerdown, below): a touch swipe leaves no click to clear it. */
   const swiped = useRef(false);
 
-  /** A finished drag of (dx, dy): a step when it was a sideways swipe on an
-   *  unzoomed page. Zoomed in, a sideways drag is the reader panning across
-   *  the picture, and the browser's own. */
+  const step = useCallback((dir: 1 | -1) => {
+    setIndex((i) => (i + dir + count) % count);
+    setZoomWidth(null);
+  }, [count]);
+
+  function toggleZoom() {
+    const image = picture.current;
+    if (zoomed) setZoomWidth(null);
+    else if (image?.naturalWidth) setZoomWidth(image.clientWidth * 2);
+  }
+
+  /** A drag steps through screenshots at fit size and pans when zoomed. */
   function endSwipe(dx: number, dy: number) {
-    if (!several) return;
+    if (!several || zoomed) return;
     if ((window.visualViewport?.scale ?? 1) > 1.01) return;
     if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) <= Math.abs(dy)) return;
     swiped.current = true;
-    onStep(dx < 0 ? 1 : -1);
+    step(dx < 0 ? 1 : -1);
   }
 
   // ← and → step. The viewer is the dialog on top (components/ui/Dialog.tsx
   // keeps Escape and Tab for the top one), and nothing opens over it. A
   // modified key is not ours: Alt+← is the browser's Back.
   useEffect(() => {
-    if (!several) return;
+    if (!several || zoomed) return;
     function onKey(e: KeyboardEvent) {
       if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
       e.preventDefault();
-      onStep(e.key === "ArrowLeft" ? -1 : 1);
+      step(e.key === "ArrowLeft" ? -1 : 1);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [several, onStep]);
+  }, [several, step, zoomed]);
 
   // A click on the space around the picture closes, as the scrim does: the
   // panel is transparent and fills most of the screen, so without this only
@@ -188,7 +188,7 @@ function Viewer({
       surface="card"
       // Transparent and as wide as the product modal: the picture is the
       // surface.
-      panelClassName="max-w-[1120px] rounded-none bg-transparent shadow-none"
+      panelClassName="min-w-0 max-w-[min(1120px,calc(100dvw-2rem))] rounded-none bg-transparent shadow-none"
     >
       <div
         onClick={onBackdropClick}
@@ -197,7 +197,17 @@ function Viewer({
         }}
         className="flex h-[calc(100dvh-2rem)] flex-col gap-3"
       >
-        <div onClick={onBackdropClick} className="flex justify-end">
+        <div onClick={onBackdropClick} className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={toggleZoom}
+            aria-label={tr(zoomed ? "Zoom out" : "Zoom in")}
+            className={CONTROL}
+          >
+            {zoomed
+              ? <ZoomOut className="size-5" strokeWidth={1.5} aria-hidden="true" />
+              : <ZoomIn className="size-5" strokeWidth={1.5} aria-hidden="true" />}
+          </button>
           <button
             type="button"
             onClick={onClose}
@@ -214,7 +224,10 @@ function Viewer({
             events stop at the browser's pan). A mouse or a pen drags through
             pointer events. One finger only: a second one is a pinch. */}
         <div
-          onClick={onBackdropClick}
+          onClick={zoomed ? undefined : onBackdropClick}
+          tabIndex={zoomed ? 0 : undefined}
+          role={zoomed ? "region" : undefined}
+          aria-label={zoomed ? name : undefined}
           onTouchStart={(e) => {
             const t = e.touches[0];
             press.current =
@@ -240,7 +253,7 @@ function Viewer({
             press.current = null;
             if (p) endSwipe(e.clientX - p.x, e.clientY - p.y);
           }}
-          className="relative min-h-0 flex-1"
+          className={cn("relative min-h-0 flex-1", zoomed && "overflow-auto overscroll-contain")}
         >
           {/* A plain <img>, centred by auto margins at its own shape and
               capped by the box: the element is exactly the picture, so a
@@ -251,10 +264,15 @@ function Viewer({
           {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
           <img
             key={index}
+            ref={picture}
             src={images[index]}
             alt={name}
             draggable={false}
-            className="absolute inset-0 m-auto max-h-full max-w-full rounded-2xl bg-white object-contain shadow-lg"
+            style={zoomed ? { width: zoomWidth } : undefined}
+            className={cn(
+              "rounded-2xl bg-white object-contain shadow-lg",
+              zoomed ? "mx-auto block max-w-none" : "absolute inset-0 m-auto max-h-full max-w-full",
+            )}
           />
         </div>
 
@@ -265,7 +283,7 @@ function Viewer({
           >
             <button
               type="button"
-              onClick={() => onStep(-1)}
+              onClick={() => step(-1)}
               aria-label={labels.previousImage}
               className={CONTROL}
             >
@@ -284,7 +302,7 @@ function Viewer({
             </span>
             <button
               type="button"
-              onClick={() => onStep(1)}
+              onClick={() => step(1)}
               aria-label={labels.nextImage}
               className={CONTROL}
             >

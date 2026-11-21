@@ -7,7 +7,7 @@
 //
 //   1. a way back to the deck (the page only; the modal closes instead)
 //   2. THE PRODUCT CARD: category, name, maker, rating summary and controls,
-//      "Try it" at the card's full width with the host it leads to, and whatever
+//      "Try it" at the card's full width, and whatever
 //      the page adds (`children`: the like, Share, Edit, Report row)
 //   3. About: the description
 //   4. Screenshots: every one at once, in a grid that never cycles; a click
@@ -28,9 +28,8 @@
 // `link_url` is member-submitted. The href goes through webUrl() (http/https
 // only, so a `javascript:` row renders no button at all), opens in a new tab,
 // and carries `rel="noopener noreferrer nofollow"` — the reasons are in
-// ./product-view.ts. The destination's host is printed under the button and
-// is the button's accessible description: a phone has no status bar, and a
-// reader is about to leave for a stranger's domain.
+// ./product-view.ts. The destination's host is the button's accessible
+// description.
 //
 // No "use client" and no hooks: both pages are server components. Strings go
 // through t() with the page's locale, as <ProductRatingSummary> does.

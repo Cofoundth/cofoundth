@@ -298,11 +298,15 @@ async function PublicProduct({
         {/* "Sign in to …" goes to sign-in, and both carry this product as
             `next`, so the reader comes back to it with the comment box. */}
         {!signedIn && (
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className={commentsGated ? "mt-5 grid max-w-xl auto-rows-fr gap-2 sm:grid-cols-2" : "mt-5 grid sm:w-fit"}>
             {commentsGated && (
               <Link
                 href={authHref("/login", returnPath)}
-                className={buttonClasses({ size: "sm", variant: "secondary" })}
+                className={buttonClasses({
+                  size: "sm",
+                  variant: "secondary",
+                  className: "min-h-11 text-center whitespace-normal",
+                })}
               >
                 {(await tServer("Sign in to see all {n} comments")).replace(
                   "{n}",
@@ -312,7 +316,7 @@ async function PublicProduct({
             )}
             <Link
               href={authHref("/login", returnPath)}
-              className={buttonClasses({ size: "sm" })}
+              className={buttonClasses({ size: "sm", className: "min-h-11 text-center whitespace-normal" })}
             >
               {await tServer("Sign in to comment")}
             </Link>
