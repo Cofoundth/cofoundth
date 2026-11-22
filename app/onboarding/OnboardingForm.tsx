@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useState, useTransition } from "react";
+import { Fragment, useLayoutEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { saveOnboardingAction } from "./actions";
 import { useT, useLocale } from "@/lib/i18n-client";
@@ -13,6 +14,7 @@ import { HELP_TOPICS } from "@/lib/help-topics";
 import { BUILDING_SINCE_LABELS } from "@/lib/matching";
 import { ProjectImagesField } from "@/components/ProjectImagesField";
 import { LONG_TEXT_MAX } from "@/lib/limits";
+import { SIGN_IN_LANDING } from "@/lib/auth-href";
 import { Button, ToggleChip } from "@/components/ui";
 
 // ---- Option lists ---------------------------------------------------
@@ -122,12 +124,26 @@ const STEPS = [
   { num: "III", title: "Conviction" },
   { num: "IV", title: "Info & ideas" },
 ];
+const BACK_CLASS =
+  "inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap text-sm text-ink-muted hover:text-navy";
 
 // ---- Component ------------------------------------------------------
 
 export function OnboardingForm({ initial, destination }: Props) {
   const tr = useT();
+  const productsHref = destination?.split(/[?#]/, 1)[0] === SIGN_IN_LANDING
+    ? destination
+    : SIGN_IN_LANDING;
   const [step, setStep] = useState(0);
+  const previousStep = useRef(step);
+  const stepContainer = useRef<HTMLDivElement>(null);
+  const stepHeading = useRef<HTMLHeadingElement>(null);
+  useLayoutEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    stepHeading.current?.focus({ preventScroll: true });
+    stepContainer.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [step]);
   const [data, setData] = useState<FormState>({
     first_name: "",
     last_name: "",
@@ -266,11 +282,11 @@ export function OnboardingForm({ initial, destination }: Props) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-10 pt-12 pb-14">
+    <div ref={stepContainer} className="max-w-3xl mx-auto scroll-mt-4 px-6 lg:px-10 pt-12 pb-14">
       <StepIndicator current={step} tr={tr} />
 
       <div className="bg-white border border-line p-8 lg:p-12 rounded-xl">
-        <h1 className="text-d2 mb-8">{tr(STEPS[step].title)}</h1>
+        <h1 ref={stepHeading} tabIndex={-1} className="text-d2 mb-8">{tr(STEPS[step].title)}</h1>
 
         {step === 0 && (
           <StepRole
@@ -314,17 +330,23 @@ export function OnboardingForm({ initial, destination }: Props) {
           </div>
         )}
 
-        <div className="mt-10 pt-8 border-t border-line flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={back}
-            disabled={step === 0 || isPending}
-            className="text-sm text-ink-muted hover:text-navy disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center gap-2 tracking-wide"
-          >
-            <ArrowLeft className="w-4 h-4" /> {tr("Back")}
-          </button>
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-line pt-8">
+          {step === 0 ? (
+            <Link href={productsHref} className={BACK_CLASS}>
+              <ArrowLeft className="size-4" aria-hidden="true" /> {tr("Back to products")}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={back}
+              disabled={isPending}
+              className={`${BACK_CLASS} disabled:cursor-not-allowed disabled:opacity-30`}
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" /> {tr("Back")}
+            </button>
+          )}
 
-          <div className="flex items-center gap-4">
+          <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-3">
             {!stepValid() && (
               <span className="text-xs text-ink-muted">
                 {tr(stepMissing(step, data))}
@@ -332,6 +354,7 @@ export function OnboardingForm({ initial, destination }: Props) {
             )}
             <Button
               size="lg"
+              className="whitespace-nowrap max-sm:px-4"
               onClick={next}
               disabled={!stepValid() || isPending}
             >
@@ -339,7 +362,7 @@ export function OnboardingForm({ initial, destination }: Props) {
                 ? isPending
                   ? tr("Saving…")
                   : tr("Complete profile")
-                : tr("Continue")}
+                : tr("Next")}
               {!isPending && <ArrowRight className="w-4 h-4" />}
             </Button>
           </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { SignupResendForm } from "@/components/auth/SignupResendForm";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { AUTH_CARD } from "@/components/auth/auth-card";
 // LinkedIn login disabled for now — provider not enabled in Supabase + no LinkedIn app yet.
@@ -15,15 +16,33 @@ import { safeNextPath } from "@/lib/safe-next";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
 }) {
-  const next = safeNextPath((await searchParams).next);
+  const params = await searchParams;
+  const next = safeNextPath(params.next);
+  const callbackFailed = params.error === "auth_callback_failed";
   const tr = (en: string) => tServer(en);
   return (
     <div className={AUTH_CARD}>
       <h1 className="text-d2 mb-6">{await tr("Sign in")}</h1>
 
-      <LoginForm next={next ?? undefined} />
+      {callbackFailed && (
+        <div className="mb-5 space-y-3 rounded-xl border border-danger-line bg-danger-surface p-4">
+          <p role="alert" className="text-sm text-danger-ink">
+            {await tr("We couldn't complete sign-in. If you were verifying your email, request a new link.")}
+          </p>
+          <details className="text-sm">
+            <summary className="cursor-pointer font-medium text-navy">
+              {await tr("Resend verification email")}
+            </summary>
+            <div className="mt-3">
+              <SignupResendForm next={next ?? undefined} />
+            </div>
+          </details>
+        </div>
+      )}
+
+      <LoginForm next={next ?? undefined} autoFocus={!callbackFailed} />
 
       <div className="flex items-center gap-4 my-5 short:my-4">
         <div className="flex-1 h-px bg-line" />
@@ -44,7 +63,7 @@ export default async function LoginPage({
           href={next ? authHref("/signup", next) : "/signup"}
           className="text-navy hover:text-gold-ink"
         >
-          {await tr("Create your profile")}
+          {await tr("Sign up")}
         </Link>
       </div>
     </div>

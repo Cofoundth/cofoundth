@@ -74,6 +74,44 @@ export type SignupState =
   | { step: "credentials"; error?: string }
   | { step: "check_email"; email: string };
 
+function signupCallbackUrl(origin: string, destination: string | null) {
+  const callback = new URL("/auth/callback", origin);
+  if (destination) callback.searchParams.set("next", destination);
+  return callback.toString();
+}
+
+export type ResendSignupState =
+  | { status: "sent" | "error"; message: string }
+  | null;
+
+export async function resendSignupLinkAction(
+  _prev: ResendSignupState,
+  formData: FormData,
+): Promise<ResendSignupState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const fieldError = validateEmail(email);
+  if (fieldError) return { status: "error", message: fieldError };
+
+  const next = safeNextPath(formData.get("next"));
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: signupCallbackUrl(await getRequestOrigin(), next) },
+  });
+
+  if (error?.status === 429) {
+    return { status: "error", message: "Too many tries. Wait a moment, then try again." };
+  }
+  if (error && error.code !== "user_not_found" && error.code !== "email_exists") {
+    return { status: "error", message: "We couldn't resend the link. Please try again." };
+  }
+  return {
+    status: "sent",
+    message: "If this address still needs verification, a new link is on its way.",
+  };
+}
+
 export async function signupAction(
   _prev: SignupState,
   formData: FormData,
@@ -141,7 +179,7 @@ export async function signupAction(
         : "/onboarding";
   // The confirmation link. `next` is encoded whole so a destination that has
   // its own query (/onboarding?next=…) arrives at the callback as ONE value.
-  const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  const emailRedirectTo = signupCallbackUrl(origin, next);
 
   if (!firstName || !email || !password) {
     return { step: "credentials", error: "All fields are required." };

@@ -3,6 +3,7 @@
 import { useActionState, useId, useState, type FormEvent } from "react";
 import { ArrowRight, Check, Eye, EyeOff, Mail, X } from "lucide-react";
 import { signupAction, type SignupState } from "@/app/(auth)/actions";
+import { SignupResendForm } from "@/components/auth/SignupResendForm";
 import { Button } from "@/components/ui";
 import { FEATURES } from "@/lib/features";
 import { useT } from "@/lib/i18n-client";
@@ -200,7 +201,7 @@ export function SignupForm({
             <div className="text-navy font-medium">{tr("Check your email")}</div>
             <div className="text-sm text-ink leading-relaxed">
               {tr("We sent a confirmation link to")}{" "}
-              <span className="text-navy font-medium">{state.email}</span>.{" "}
+              <span className="wrap-anywhere text-navy font-medium">{state.email}</span>.{" "}
               {tr("Click it to activate your account.")}
             </div>
           </div>
@@ -210,6 +211,7 @@ export function SignupForm({
             "Didn’t arrive? Check your spam folder. The link expires in 24 hours.",
           )}
         </div>
+        <SignupResendForm email={state.email} next={next} />
       </div>
     );
   }
@@ -252,7 +254,7 @@ export function SignupForm({
       msg
         ? "border-danger-line focus:border-danger-ink"
         : "border-line focus:border-navy"
-    }${f === "password" ? " pr-11" : ""}`;
+    }${f === "password" ? " pr-14" : ""}`;
   const a11y = (f: Field, msg: string | null) =>
     msg
       ? { "aria-invalid": true as const, "aria-describedby": `${f}-error` }
@@ -264,7 +266,7 @@ export function SignupForm({
   // Empty: only after a submit (shownEmpty). Typed but failing its rules:
   // once the field has been left, or after a submit, like the other fields.
   const passwordMsg = password ? shown("password") : shownEmpty("password");
-  const confirmMsg = shownEmpty("confirmPassword");
+  const confirmMsg = passwordsMismatch ? "Passwords don’t match" : shownEmpty("confirmPassword");
   // A Thai keyboard layout types Thai characters into the password, which
   // fail the letter rule and cannot be retyped at sign-in on another layout.
   // While the field is still being typed in (no error shown yet), or when the
@@ -397,10 +399,10 @@ export function SignupForm({
             />
             <button
               type="button"
-              tabIndex={-1}
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-navy"
+              className="absolute right-1 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-lg text-ink-muted hover:text-navy"
               aria-label={showPassword ? tr("Hide password") : tr("Show password")}
+              aria-controls="password confirmPassword"
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -435,7 +437,7 @@ export function SignupForm({
           <LabelRow
             htmlFor="confirmPassword"
             label={tr("Confirm password")}
-            error={confirmMsg && tr(confirmMsg)}
+            error={!passwordsMismatch && confirmMsg ? tr(confirmMsg) : null}
           />
           <input
             id="confirmPassword"
@@ -449,7 +451,7 @@ export function SignupForm({
             onBlur={touch("confirmPassword")}
             {...a11y("confirmPassword", confirmMsg)}
             className={`w-full px-4 py-3 border bg-white text-ink focus:outline-none ${
-              passwordsMismatch || confirmMsg
+              confirmMsg
                 ? "border-danger-line focus:border-danger-ink"
                 : passwordsMatch
                   ? "border-line focus:border-line"
@@ -462,8 +464,8 @@ export function SignupForm({
             </p>
           )}
           {passwordsMismatch && (
-            <p className="text-xs text-danger-ink mt-2 inline-flex items-center gap-1.5">
-              <X className="w-3 h-3" /> {tr("Passwords don’t match")}
+            <p id="confirmPassword-error" className="text-xs text-danger-ink mt-2 inline-flex items-center gap-1.5">
+              <X className="w-3 h-3" aria-hidden="true" /> {tr("Passwords don’t match")}
             </p>
           )}
         </div>

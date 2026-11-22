@@ -107,7 +107,7 @@ export default function SignupPage({
     <div className={cn(AUTH_CARD, "md:max-w-[50rem]")}>
       <div className="md:grid md:grid-cols-[15rem_1px_minmax(0,1fr)] md:gap-8">
         <div className="flex flex-col">
-          <h1 className="text-d2 mb-5">{tr("Create your profile")}</h1>
+          <h1 className="text-d2 mb-5">{tr("Sign up")}</h1>
           {!sent && (
             <SignupRolePicker value={accountType} onChange={setAccountType} />
           )}

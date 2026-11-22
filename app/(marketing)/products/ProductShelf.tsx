@@ -292,6 +292,7 @@ export async function ProductShelf({
     tProduct,
     tDiscard,
     tSignIn,
+    tSignUp,
     tMyProducts,
   ] = await Promise.all([
     tServer("Try what the community built"),
@@ -341,6 +342,7 @@ export async function ProductShelf({
     tServer("Product"),
     tServer("Discard the comment you were writing?"),
     tServer("Sign in"),
+    tServer("Sign up"),
     tServer("My products"),
   ]);
 
@@ -540,6 +542,16 @@ export async function ProductShelf({
         >
           {tSignIn}
         </AuthReturnLink>
+        <AuthReturnLink
+          base="/signup"
+          className={buttonClasses({
+            variant: "primary",
+            size: "sm",
+            className: "whitespace-nowrap",
+          })}
+        >
+          {tSignUp}
+        </AuthReturnLink>
       </>
     ) : null;
 
@@ -636,7 +648,7 @@ export async function ProductShelf({
               "grid items-center md:gap-x-3",
               user
                 ? "grid-cols-[minmax(0,1fr)_auto] gap-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
-                : "grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-1 md:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)]",
+                : "grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-1 md:grid-cols-[minmax(2.25rem,1fr)_auto_auto_minmax(max-content,1fr)]",
             )}
           >
             {leftCorner}

@@ -47,7 +47,7 @@ export default function Loading() {
       className="flex h-dvh min-h-0 flex-col overflow-clip max-md:in-data-[shell=public]:h-[calc(100dvh-4.0625rem)] animate-pulse motion-reduce:animate-none"
     >
       <div className="relative mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col px-4 pt-3 pb-3 sm:px-6 lg:px-10 lg:pt-4 lg:pb-4 short:pt-2 short:pb-2 max-sm:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-sm:short:pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-1 md:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)] md:gap-x-3 max-md:in-data-[shell=public]:grid-cols-[minmax(0,1fr)_auto] md:in-data-[shell=public]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-1 md:grid-cols-[minmax(2.25rem,1fr)_auto_auto_minmax(max-content,1fr)] md:gap-x-3 max-md:in-data-[shell=public]:grid-cols-[minmax(0,1fr)_auto] md:in-data-[shell=public]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
           <div className="col-start-1 row-start-1 size-9 justify-self-start rounded-[10px] bg-line/70 in-data-[shell=public]:hidden" />
           <div className="col-start-2 row-start-1 flex gap-0 md:gap-2 max-md:in-data-[shell=public]:col-start-1 max-md:in-data-[shell=public]:gap-2">
             {CHIP_WIDTHS.map((w, i) => (
@@ -62,7 +62,7 @@ export default function Loading() {
             <div className="size-9 rounded-lg bg-line/70 md:h-[34px] md:w-[70px] md:rounded-full" />
             <div className="size-9 rounded-lg bg-line/50 md:h-[34px] md:w-[70px] md:rounded-full" />
           </div>
-          <div className="col-start-4 row-start-1 size-11 justify-self-end rounded-lg bg-line/50 md:h-[38px] md:w-36 md:rounded-full in-data-[shell=public]:hidden" />
+          <div className="col-start-4 row-start-1 size-11 justify-self-end rounded-lg bg-line/50 md:h-[38px] md:w-56 md:rounded-full in-data-[shell=public]:hidden" />
         </div>
 
         <div className="mt-3 flex min-h-0 flex-1 flex-col lg:mt-4 short:mt-2">

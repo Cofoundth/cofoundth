@@ -15,7 +15,7 @@ import { SIGN_IN_LANDING, throughOnboarding } from "@/lib/auth-href";
 import { safeNextPath } from "@/lib/safe-next";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams, origin, protocol } = new URL(request.url);
   const code = searchParams.get("code");
   // Where to land: a sign-in or sign-up link from a product page or the deck
   // carries `next=` (lib/auth-href.ts) — /p/<id>, or the deck's
@@ -37,23 +37,36 @@ export async function GET(request: Request) {
   // session cookie was set for the public domain.
   const forwardedHost = request.headers.get("x-forwarded-host");
   const isLocalEnv = process.env.NODE_ENV === "development";
-  const publicOrigin =
-    isLocalEnv || !forwardedHost ? origin : `https://${forwardedHost}`;
+  const localHost = /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(forwardedHost ?? "");
+  const publicOrigin = localHost
+    ? `${protocol}//${forwardedHost}`
+    : isLocalEnv || !forwardedHost
+      ? origin
+      : `https://${forwardedHost}`;
 
-  if (!code) {
-    return NextResponse.redirect(
-      `${publicOrigin}/login?error=auth_callback_failed`,
-    );
+  function recoveryRedirect() {
+    const login = new URL("/login", publicOrigin);
+    login.searchParams.set("error", "auth_callback_failed");
+    // Older signup links carry an onboarding wrapper. Apply onboarding
+    // after authentication so already-onboarded members reach their page.
+    const destination = requested ? new URL(requested, publicOrigin) : null;
+    const next = destination?.pathname === "/onboarding"
+      ? safeNextPath(destination.searchParams.get("next"))
+      : requested;
+    if (next) login.searchParams.set("next", next);
+    return NextResponse.redirect(login);
   }
+
+  if (!code) return recoveryRedirect();
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  const flowId = searchParams.get("sb_flow_id");
+  const { data, error } = await supabase.auth.exchangeCodeForSession(
+    code,
+    flowId ? { flowId } : undefined,
+  );
 
-  if (error) {
-    return NextResponse.redirect(
-      `${publicOrigin}/login?error=auth_callback_failed`,
-    );
-  }
+  if (error) return recoveryRedirect();
 
   // If user authenticated via Google, verify the token's actual scope + TTL
   // via Google's tokeninfo endpoint before persisting. The OAuth exchange

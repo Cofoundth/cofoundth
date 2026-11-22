@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n-client";
 
 const INITIAL: SignInState = null;
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, autoFocus = true }: { next?: string; autoFocus?: boolean }) {
   const tr = useT();
   const [state, formAction, isPending] = useActionState<SignInState, FormData>(
     signInAction,
@@ -33,7 +33,7 @@ export function LoginForm({ next }: { next?: string }) {
           name="email"
           type="email"
           required
-          autoFocus
+          autoFocus={autoFocus}
           autoComplete="email"
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
