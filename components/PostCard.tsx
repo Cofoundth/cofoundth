@@ -16,17 +16,17 @@ import { webUrl } from "@/lib/web-url";
 import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { TagText } from "@/components/TagText";
-import { CommentText } from "@/components/CommentText";
+import { CommentList, withCommentParents } from "@/components/CommentList";
 import { ReportButton } from "@/components/ReportButton";
 import { useT } from "@/lib/i18n-client";
 import { t, type Locale } from "@/lib/i18n";
 import { isWithinMs } from "@/lib/time";
-import type { PostComment, PostItem, PostKind } from "@/lib/post-types";
+import type { ThreadComment } from "@/lib/comment-thread";
+import type { PostItem, PostKind } from "@/lib/post-types";
 import { Button, Card } from "@/components/ui";
 import {
   createPostCommentAction,
   deletePostAction,
-  deletePostCommentAction,
   fetchPostCommentsAction,
   togglePostLikeAction,
 } from "@/lib/post-actions";
@@ -82,8 +82,10 @@ export function PostCard({
   const [, startTransition] = useTransition();
 
   const [open, setOpen] = useState(false);
-  const [comments, setComments] = useState<PostComment[] | null>(null);
+  const [comments, setComments] = useState<ThreadComment[] | null>(null);
+  const [supportsReplies, setSupportsReplies] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [visibleComments, setVisibleComments] = useState(5);
   const [commentCount, setCommentCount] = useState(post.commentCount);
   const [draft, setDraft] = useState("");
@@ -91,13 +93,14 @@ export function PostCard({
   // and keeps the draft; it used to fail without a word.
   const [commentError, setCommentError] = useState<string | null>(null);
   const [submitting, startSubmit] = useTransition();
-  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const commentsRequest = useRef(0);
+  const shown = comments ? withCommentParents(comments, comments.slice(-visibleComments)) : [];
 
   // Map first-name → profile href for @mention links (thread participants:
   // the post author + everyone who commented).
   const mentionMap = useMemo(() => {
     const map: Record<string, string> = {};
-    const add = (a: PostItem["author"] | PostComment["author"]) => {
+    const add = (a: PostItem["author"] | ThreadComment["author"]) => {
       const first = (a?.full_name ?? "").trim().split(/\s+/)[0].toLowerCase();
       if (first && a && !map[first]) map[first] = `/profile/${a.slug ?? a.id}`;
     };
@@ -105,12 +108,6 @@ export function PostCard({
     (comments ?? []).forEach((c) => add(c.author));
     return map;
   }, [comments, post.author]);
-
-  function replyTo(name: string | null | undefined) {
-    const first = (name ?? "").trim().split(/\s+/)[0] || "founder";
-    setDraft(`@${first} `);
-    composerRef.current?.focus();
-  }
 
   const meta = KIND_META[post.kind];
   const KindIcon = meta?.icon;
@@ -120,11 +117,25 @@ export function PostCard({
   const fresh = isWithinMs(post.created_at, 3 * 3600_000);
 
   async function loadComments() {
+    const request = ++commentsRequest.current;
     setLoading(true);
-    const { comments: c, total } = await fetchPostCommentsAction(post.id);
-    setComments(c);
-    if (total !== null) setCommentCount(total);
+    setLoadFailed(false);
+    const result = await fetchPostCommentsAction(post.id).catch(() => null);
+    if (request !== commentsRequest.current) return;
     setLoading(false);
+    if (!result || result.total === null) {
+      setLoadFailed(true);
+      return;
+    }
+    setComments((previous) => {
+      if (!previous) return result.comments;
+      // A reply's parent may have slid out of the newest batch.
+      const ids = new Set(result.comments.map((comment) => comment.id));
+      const previousRows = previous.filter((comment) => !ids.has(comment.id));
+      return withCommentParents([...previousRows, ...result.comments], result.comments);
+    });
+    setCommentCount(result.total);
+    setSupportsReplies(result.supportsReplies);
   }
 
   function toggleComments() {
@@ -155,11 +166,10 @@ export function PostCard({
   }
 
   function removeComment(id: string) {
-    startSubmit(async () => {
-      await deletePostCommentAction(id, post.id);
-      setComments((prev) => (prev ? prev.filter((c) => c.id !== id) : prev));
-      setCommentCount((n) => Math.max(0, n - 1));
-    });
+    setComments((previous) => previous?.filter((comment) => comment.id !== id)
+      .map((comment) => comment.parentId === id ? { ...comment, parentId: null } : comment) ?? null);
+    setCommentCount((n) => Math.max(0, n - 1));
+    void loadComments();
   }
 
 
@@ -324,6 +334,8 @@ export function PostCard({
               <button
                 type="button"
                 onClick={toggleComments}
+                aria-label={`${tr("Comments")} (${commentCount})`}
+                aria-expanded={open}
                 className={`inline-flex items-center gap-1 transition-colors ${
                   open ? "text-navy" : "text-ink-muted hover:text-navy"
                 }`}
@@ -348,11 +360,11 @@ export function PostCard({
           {canComment && (
             <form onSubmit={submitComment} className="flex items-start gap-2 mb-4">
               <textarea
-                ref={composerRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 rows={1}
                 maxLength={2000}
+                aria-label={tr("Write a comment…")}
                 placeholder={tr("Write a comment…")}
                 onKeyDown={(e) => {
                   if (
@@ -364,11 +376,12 @@ export function PostCard({
                     doSubmitComment();
                   }
                 }}
-                className="flex-1 px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
+                className="min-w-0 flex-1 px-3 py-2 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
               />
               <Button
                 type="submit"
                 size="sm"
+                aria-label={tr("Comment")}
                 disabled={submitting || draft.trim().length === 0}
                 className="shrink-0 px-3"
               >
@@ -382,97 +395,48 @@ export function PostCard({
             </p>
           )}
 
+          {loadFailed && (
+            <div className="mb-3 flex flex-wrap items-center gap-x-3">
+              <p role="alert" className="text-xs text-danger-ink">
+                {tr("Something went wrong. Try again.")}
+              </p>
+              <Button variant="secondary" size="sm" onClick={() => void loadComments()}>
+                {tr("Try again")}
+              </Button>
+            </div>
+          )}
           {loading && comments === null ? (
             <p className="text-xs text-ink-muted">{tr("Loading…")}</p>
-          ) : comments && comments.length > 0 ? (
-            <ul className="space-y-3">
-              {/* The drawer holds the newest batch only (lib/comment-thread.ts):
-                  said FIRST, where the earlier comments would be, and the
-                  whole thread is on the post's own page. */}
+          ) : shown.length > 0 && comments ? (
+            <>
               {commentCount > comments.length && (
-                <li>
-                  <Link
-                    href={`/community/${post.id}#comments`}
-                    className="text-xs text-navy hover:text-gold-ink tracking-wide"
-                  >
-                    {tr("See all {n} comments").replace(
-                      "{n}",
-                      String(commentCount),
-                    )}
-                  </Link>
-                </li>
+                <Link
+                  href={`/community/${post.id}#comments`}
+                  className="mb-2 inline-block text-xs text-navy hover:text-gold-ink tracking-wide"
+                >
+                  {tr("See all {n} comments").replace("{n}", String(commentCount))}
+                </Link>
               )}
-              {comments.slice(0, visibleComments).map((c) => {
-                const cHref = c.author
-                  ? `/profile/${c.author.slug ?? c.author.id}`
-                  : "#";
-                return (
-                  <li key={c.id} className="flex items-start gap-2.5">
-                    <Link href={cHref} className="shrink-0 mt-0.5">
-                      <Avatar
-                        name={c.author?.full_name}
-                        url={c.author?.photo_url}
-                        size="sm"
-                      />
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="text-xs text-ink-muted">
-                          <Link
-                            href={cHref}
-                            className="text-navy font-medium hover:text-gold-ink"
-                          >
-                            {c.author?.full_name ?? tr("A founder")}
-                          </Link>
-                          {" · "}
-                          {timeAgo(c.created_at, locale)}
-                        </div>
-                        {c.isOwn && (
-                          <button
-                            type="button"
-                            onClick={() => removeComment(c.id)}
-                            className="text-ink-muted hover:text-danger-ink shrink-0"
-                            aria-label={tr("Delete")}
-                            title={tr("Delete")}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap mt-0.5">
-                        <CommentText text={c.content} mentions={mentionMap} />
-                      </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <button
-                          type="button"
-                          onClick={() => replyTo(c.author?.full_name)}
-                          className="text-xs text-ink-muted hover:text-navy tracking-wide"
-                        >
-                          {tr("Reply")}
-                        </button>
-                        {!c.isOwn && (
-                          <ReportButton kind="comment" targetId={c.id} />
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-              {comments.length > visibleComments && (
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => setVisibleComments((n) => n + 10)}
-                    className="text-xs text-navy hover:text-gold-ink tracking-wide"
-                  >
-                    {tr("Show more comments")} (
-                    {comments.length - visibleComments})
-                  </button>
-                </li>
+              <CommentList
+                postId={post.id}
+                comments={shown}
+                compact
+                canReply={canComment && supportsReplies}
+                mentions={mentionMap}
+                onDeleted={removeComment}
+                onReplyPosted={() => void loadComments()}
+              />
+              {comments.length > shown.length && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleComments((n) => n + 10)}
+                  className="mt-2 text-xs text-navy hover:text-gold-ink tracking-wide"
+                >
+                  {tr("Show more comments")} ({comments.length - shown.length})
+                </button>
               )}
-
-            </ul>
-          ) : (
+            </>
+          ) : loadFailed ? null : (
             // KIND A, and deliberately NOT an <EmptyState>: this slot is a
             // single line inside the card's own comment drawer, with the
             // composer already open above it. A white EmptyState card nested

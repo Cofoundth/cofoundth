@@ -171,7 +171,7 @@ export default async function PostPage({ params, searchParams }: Props) {
       postId: id,
       viewerId: user?.id ?? null,
       blocked,
-    }).catch(() => ({ comments: [], hasEarlier: false, cursor: null })),
+    }).catch(() => ({ comments: [], hasEarlier: false, cursor: null, supportsReplies: false })),
     countComments(supabase, id, blocked),
   ]);
 
@@ -202,6 +202,7 @@ export default async function PostPage({ params, searchParams }: Props) {
           total={commentTotal}
           hasEarlier={batch.hasEarlier}
           cursor={batch.cursor}
+          canReply={mayComment && batch.supportsReplies}
         />
       ) : (
         // KIND A — no replies yet. The composer renders directly below for

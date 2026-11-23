@@ -21,6 +21,7 @@ export type NotifLike = {
     post_title?: string;
     /** forum_posts.kind of the thread a comment / mention is on. */
     post_kind?: string;
+    is_reply?: boolean;
     slug?: string;
     title?: string;
   } | null;
@@ -45,7 +46,7 @@ export function notifHref(n: NotifLike): string {
     case "mention":
       if (onProduct(n))
         return n.entityId ? `/products/${n.entityId}#comments` : "/products";
-      return n.entityId ? `/community/${n.entityId}` : "/community";
+      return n.entityId ? `/community/${n.entityId}${n.data?.is_reply ? "#comments" : ""}` : "/community";
     case "message":
       return n.entityId ? `/messages/${n.entityId}` : "/matches";
     case "interest":
@@ -84,6 +85,9 @@ export function notifText(
     case "profile_view":
       return tr("{name} viewed your profile").replace("{name}", () => name);
     case "comment":
+      if (n.data?.is_reply) {
+        return tr("{name} replied to your comment").replace("{name}", () => name);
+      }
       return tr(
         onProduct(n)
           ? "{name} commented on your product"

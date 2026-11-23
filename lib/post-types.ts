@@ -114,14 +114,6 @@ export function ratingFromTotals(sum: number, count: number): ProductRating {
   return { average: Math.round((sum * 10) / count) / 10, count };
 }
 
-export type PostComment = {
-  id: string;
-  content: string;
-  created_at: string;
-  author: PostAuthor | null;
-  isOwn: boolean;
-};
-
 // ---- Images ---------------------------------------------------------------
 // A post has had a cover image since 0034 (`image_url`, one nullable text). A
 // product needs SCREENSHOTS — several, so /p/<id> can show them all — which is

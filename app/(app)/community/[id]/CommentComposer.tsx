@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { createPostCommentAction, type PostFormState } from "@/lib/post-actions";
 import { useT } from "@/lib/i18n-client";
@@ -19,12 +19,24 @@ const INITIAL: PostFormState = null;
 export function CommentComposer({
   postId,
   centerText = false,
+  reply,
 }: {
   postId: string;
   centerText?: boolean;
+  reply?: { id: string; name: string; onCancel: () => void; onPosted: () => void };
 }) {
   const tr = useT();
   const [draft, setDraft] = useState("");
+  const fieldRef = useRef<HTMLTextAreaElement>(null);
+  const replyingTo = reply?.id;
+  const label = reply
+    ? tr("Reply to {name}").replace("{name}", () => reply.name)
+    : tr("Add your comment…");
+
+  useEffect(() => {
+    if (replyingTo) fieldRef.current?.focus();
+  }, [replyingTo]);
+
   const [state, formAction, isPending] = useActionState<PostFormState, FormData>(
     async (prev, formData) => {
       // A request that fails IN TRANSIT (offline, a deploy mid-session)
@@ -32,7 +44,10 @@ export function CommentComposer({
       // the page and the draft gone. Said like any other refusal instead.
       try {
         const result = await createPostCommentAction(postId, prev, formData);
-        if (!result?.error) setDraft("");
+        if (!result?.error) {
+          setDraft("");
+          reply?.onPosted();
+        }
         return result;
       } catch {
         return { error: "Couldn't post comment. Try again." };
@@ -42,16 +57,29 @@ export function CommentComposer({
   );
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form
+      action={formAction}
+      className="space-y-3"
+      aria-label={reply ? label : undefined}
+      onKeyDown={(event) => {
+        if (reply && !isPending && event.key === "Escape" && !event.nativeEvent.isComposing) {
+          event.stopPropagation();
+          reply.onCancel();
+        }
+      }}
+    >
+      {reply && <input type="hidden" name="parent_comment_id" value={reply.id} />}
       <textarea
+        ref={fieldRef}
         name="content"
         rows={3}
         maxLength={2000}
         required
+        readOnly={isPending}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
-        aria-label={tr("Add your comment…")}
-        placeholder={tr("Add your comment…")}
+        aria-label={label}
+        placeholder={tr(reply ? "Write a reply…" : "Add your comment…")}
         className={cn(
           "w-full px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-y rounded-xl",
           // Keep the three-row height while centering the one-line placeholder.
@@ -64,14 +92,19 @@ export function CommentComposer({
           {tr(state.error)}
         </div>
       )}
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        {reply && (
+          <Button variant="ghost" className="min-h-11" disabled={isPending} onClick={reply.onCancel}>
+            {tr("Cancel")}
+          </Button>
+        )}
         <Button
           type="submit"
-          disabled={isPending}
-          className="px-5 py-2.5"
+          disabled={isPending || (reply !== undefined && draft.trim().length === 0)}
+          className="min-h-11 px-5 py-2.5"
         >
           <Send className="w-4 h-4" />
-          {isPending ? tr("Posting…") : tr("Comment")}
+          {isPending ? tr("Posting…") : tr(reply ? "Post reply" : "Comment")}
         </Button>
       </div>
     </form>

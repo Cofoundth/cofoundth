@@ -39,8 +39,8 @@ import { ChevronUp } from "lucide-react";
 import { Card } from "@/components/ui";
 import { useT } from "@/lib/i18n-client";
 import type { CommentCursor, ThreadComment } from "@/lib/comment-thread";
-import { CommentItem } from "@/app/(app)/community/[id]/CommentItem";
 import { loadEarlierCommentsAction } from "@/app/(app)/community/[id]/actions";
+import { CommentList, withCommentParents } from "./CommentList";
 
 /** A thread longer than this is shown from its newest SHOW_NEWEST. */
 const COLLAPSE_OVER = 15;
@@ -70,6 +70,7 @@ export function CommentThread({
   total,
   hasEarlier,
   cursor,
+  canReply,
 }: {
   postId: string;
   /** The newest batch, oldest first (lib/comment-thread.ts readCommentBatch). */
@@ -80,6 +81,7 @@ export function CommentThread({
   hasEarlier: boolean;
   /** Where the next batch starts: readCommentBatch's `cursor`. */
   cursor: CommentCursor | null;
+  canReply?: boolean;
 }) {
   const tr = useT();
   const [pending, startTransition] = useTransition();
@@ -120,9 +122,13 @@ export function CommentThread({
     }
   }
 
-  const all = merge(extra, initial).filter((c) => !gone.has(c.id));
+  const all = merge(extra, initial)
+    .filter((c) => !gone.has(c.id))
+    .map((c) => c.parentId && gone.has(c.parentId) ? { ...c, parentId: null } : c);
   const shown =
-    !expanded && all.length > COLLAPSE_OVER ? all.slice(-SHOW_NEWEST) : all;
+    !expanded && all.length > COLLAPSE_OVER
+      ? withCommentParents(all, all.slice(-SHOW_NEWEST))
+      : all;
   const serverHasMore = fetched ? fetched.hasEarlier : hasEarlier;
   const nextCursor = fetched ? fetched.cursor : cursor;
   const hiddenLoaded = all.length - shown.length;
@@ -183,18 +189,7 @@ export function CommentThread({
           )}
         </div>
       )}
-      {shown.map((c) => (
-        <CommentItem
-          key={c.id}
-          id={c.id}
-          postId={postId}
-          content={c.content}
-          createdAt={c.createdAt}
-          isOwn={c.isOwn}
-          author={c.author}
-          onDeleted={onDeleted}
-        />
-      ))}
+      <CommentList postId={postId} comments={shown} canReply={canReply} onDeleted={onDeleted} />
     </Card>
   );
 }

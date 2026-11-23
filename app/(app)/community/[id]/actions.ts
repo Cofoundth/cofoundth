@@ -283,21 +283,3 @@ export async function loadEarlierCommentsAction(
     return { error: "Something went wrong. Try again." };
   }
 }
-
-export async function deleteCommentAction(commentId: string, postId: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
-
-  await supabase
-    .from("forum_comments")
-    .delete()
-    .eq("id", commentId)
-    .eq("author_id", user.id);
-
-  revalidatePath(`/community/${postId}`);
-  revalidatePath(productPath(postId));
-  revalidatePath("/products/mine");
-}

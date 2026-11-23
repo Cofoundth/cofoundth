@@ -15,7 +15,7 @@ import {
 } from "@/lib/roles";
 import { getFeedPosts, searchPosts } from "@/lib/posts";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
-import { countComments, readCommentBatch } from "@/lib/comment-thread";
+import { countComments, readCommentBatch, type ThreadComment } from "@/lib/comment-thread";
 import { webUrl } from "@/lib/web-url";
 import {
   LIKE_BEFORE_COMMENTING,
@@ -35,7 +35,7 @@ import { readProductLike } from "@/lib/product-likes";
 import { queryWithProductStoreColumns } from "@/lib/product-store-data";
 import { hasTriedProduct, TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
 import { getPublicPost, PRODUCT_KIND } from "@/lib/public-post";
-import { productPath, type PostComment, type PostItem } from "@/lib/post-types";
+import { productPath, type PostItem } from "@/lib/post-types";
 import {
   cleanUpDeletedPost,
   DELETED_POST_COLUMNS,
@@ -650,9 +650,13 @@ export async function createPostCommentAction(
   formData: FormData,
 ): Promise<PostFormState> {
   const content = String(formData.get("content") ?? "").trim();
+  const parentId = formData.get("parent_comment_id");
   if (!content) return { error: "Comment can't be empty." };
   if (content.length > 2000)
     return { error: "Comment too long (max 2000 chars)." };
+  if (parentId !== null && (typeof parentId !== "string" || !UUID.test(parentId))) {
+    return { error: "This comment is no longer available." };
+  }
 
   const supabase = await createClient();
   const {
@@ -703,11 +707,33 @@ export async function createPostCommentAction(
     }
   }
 
+  let replyAuthorId: string | null = null;
+  if (parentId) {
+    const { data: parent } = await supabase
+      .from("forum_comments")
+      .select("author_id")
+      .eq("id", parentId)
+      .eq("post_id", postId)
+      .maybeSingle();
+    if (!parent || await isBlockedEitherWay(user.id, parent.author_id)) {
+      return { error: "This comment is no longer available." };
+    }
+    replyAuthorId = parent.author_id;
+  }
+
   const { error } = await supabase
     .from("forum_comments")
-    .insert({ post_id: postId, author_id: user.id, content });
+    .insert({
+      post_id: postId,
+      author_id: user.id,
+      content,
+      ...(parentId ? { parent_comment_id: parentId } : {}),
+    });
 
   if (error) {
+    if (parentId && error.code === "23503") {
+      return { error: "This comment is no longer available." };
+    }
     console.error("[comment.create]", error);
     return {
       error: isRateLimited(error)
@@ -715,7 +741,7 @@ export async function createPostCommentAction(
         : "Couldn't post comment. Try again.",
     };
   }
-  void notifyMentions(postId, user.id, content);
+  void notifyMentions(postId, user.id, content, replyAuthorId);
   revalidateFeeds(postId);
   return null;
 }
@@ -728,6 +754,7 @@ async function notifyMentions(
   postId: string,
   commenterId: string,
   content: string,
+  replyAuthorId: string | null,
 ) {
   try {
     const handles = Array.from(
@@ -750,6 +777,7 @@ async function notifyMentions(
     (commenters ?? []).forEach((c) => ids.add(c.author_id as string));
     ids.delete(commenterId);
     if (post?.author_id) ids.delete(post.author_id as string); // covered by comment trigger
+    if (replyAuthorId) ids.delete(replyAuthorId); // covered by the reply notification
     if (!ids.size) return;
 
     const { data: profs } = await admin
@@ -792,18 +820,22 @@ async function notifyMentions(
 export async function deletePostCommentAction(
   commentId: string,
   postId: string,
-) {
+): Promise<PostFormState> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase
+  if (!user) return { error: "Not authenticated." };
+  const { error } = await supabase
     .from("forum_comments")
     .delete()
     .eq("id", commentId)
+    .eq("post_id", postId)
     .eq("author_id", user.id);
+  if (error) return { error: "Something went wrong. Try again." };
   revalidateFeeds(postId);
+  revalidatePath(MY_PRODUCTS_PATH);
+  return null;
 }
 
 // ---- Reporting + moderation -----------------------------------------
@@ -931,7 +963,7 @@ export async function moderateReportAction(
 
 export async function fetchPostCommentsAction(
   postId: string,
-): Promise<{ comments: PostComment[]; total: number | null }> {
+): Promise<{ comments: ThreadComment[]; total: number | null; supportsReplies: boolean }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -950,17 +982,7 @@ export async function fetchPostCommentsAction(
     console.error("[comments.drawer]", e);
     return null;
   });
-  if (!read) return { comments: [], total: null };
-  const [{ comments }, total] = read;
-
-  return {
-    total,
-    comments: comments.map((c) => ({
-      id: c.id,
-      content: c.content,
-      created_at: c.createdAt,
-      isOwn: c.isOwn,
-      author: c.author,
-    })),
-  };
+  if (!read) return { comments: [], total: null, supportsReplies: false };
+  const [{ comments, supportsReplies }, total] = read;
+  return { total, comments, supportsReplies };
 }

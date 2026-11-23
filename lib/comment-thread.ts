@@ -36,6 +36,7 @@ const MAX_PAGES = 5;
 
 export type ThreadComment = {
   id: string;
+  parentId: string | null;
   content: string;
   createdAt: string;
   isOwn: boolean;
@@ -45,6 +46,14 @@ export type ThreadComment = {
     photo_url: string | null;
     slug: string | null;
   } | null;
+};
+
+type CommentRow = {
+  id: string;
+  author_id: string;
+  content: string;
+  created_at: string;
+  parent_comment_id?: string | null;
 };
 
 /** The oldest comment a reader holds: the next batch is everything before. */
@@ -86,14 +95,19 @@ export async function readCommentBatch(
   comments: ThreadComment[];
   hasEarlier: boolean;
   cursor: CommentCursor | null;
+  supportsReplies: boolean;
 }> {
   let cursor: CommentCursor | null = before ?? null;
   let hasEarlier = false;
-  let kept: { id: unknown; author_id: unknown; content: unknown; created_at: unknown }[] = [];
-  for (let page = 0; page < MAX_PAGES; page++) {
+  let supportsReplies = true;
+  let kept: CommentRow[] = [];
+
+  function readRows() {
     let query = supabase
       .from("forum_comments")
-      .select("id, author_id, content, created_at")
+      .select(supportsReplies
+        ? "id, author_id, content, created_at, parent_comment_id"
+        : "id, author_id, content, created_at")
       .eq("post_id", postId);
     if (cursor) {
       // Quoted: a timestamp carries `:` and `.`, which PostgREST's filter
@@ -103,10 +117,20 @@ export async function readCommentBatch(
         `created_at.lt."${cursor.createdAt}",and(created_at.eq."${cursor.createdAt}",id.lt.${cursor.id})`,
       );
     }
-    const { data, error } = await query
+    return query
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
-      .limit(COMMENT_BATCH + 1);
+      .limit(COMMENT_BATCH + 1)
+      .overrideTypes<CommentRow[], { merge: false }>();
+  }
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    let { data, error } = await readRows();
+    if (supportsReplies && error?.code === "42703" && error.message.includes("parent_comment_id")) {
+      // A deployment can still read comments while migration 0095 is pending.
+      supportsReplies = false;
+      ({ data, error } = await readRows());
+    }
     if (error) throw new Error(`comments: ${error.message}`);
 
     const rows = (data ?? []).slice(0, COMMENT_BATCH);
@@ -114,15 +138,15 @@ export async function readCommentBatch(
     const oldest = rows[rows.length - 1];
     if (oldest) {
       cursor = {
-        createdAt: oldest.created_at as string,
-        id: oldest.id as string,
+        createdAt: oldest.created_at,
+        id: oldest.id,
       };
     }
-    kept = rows.filter((r) => !blocked.has(r.author_id as string)).reverse();
+    kept = rows.filter((r) => !blocked.has(r.author_id)).reverse();
     if (kept.length > 0 || !hasEarlier) break;
   }
 
-  const authorIds = Array.from(new Set(kept.map((r) => r.author_id as string)));
+  const authorIds = Array.from(new Set(kept.map((r) => r.author_id)));
   const { data: authors } = authorIds.length
     ? await supabase
         .from("profiles")
@@ -134,12 +158,14 @@ export async function readCommentBatch(
   return {
     hasEarlier,
     cursor: hasEarlier ? cursor : null,
+    supportsReplies,
     comments: kept.map((r) => {
-      const a = byId.get(r.author_id as string);
+      const a = byId.get(r.author_id);
       return {
-        id: r.id as string,
-        content: r.content as string,
-        createdAt: r.created_at as string,
+        id: r.id,
+        parentId: r.parent_comment_id ?? null,
+        content: r.content,
+        createdAt: r.created_at,
         isOwn: viewerId !== null && r.author_id === viewerId,
         author: a
           ? {
