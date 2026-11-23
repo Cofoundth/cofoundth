@@ -48,9 +48,11 @@ import {
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { cn } from "@/components/ui";
 
-/** The < and > replace the full-image tap target on larger, hoverable screens. */
+/** The < and > replace the tap zones on larger, hoverable screens. */
 const ARROW =
   "absolute top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-white text-navy shadow-lg opacity-0 transition-opacity duration-150 hover:bg-cream motion-reduce:transition-none focus-visible:opacity-100 group-hover/gallery:opacity-100 group-has-[[data-gallery-zone]:hover]/card:opacity-100 group-has-[:focus-visible]/gallery:opacity-100 md:[@media(hover:hover)_and_(pointer:fine)]:grid";
+const TAP_ZONE =
+  "absolute inset-y-0 z-20 w-1/2 cursor-pointer rounded-none focus-visible:inset-ring-2 focus-visible:inset-ring-white md:[@media(hover:hover)_and_(pointer:fine)]:hidden";
 
 export type ProductGalleryLabels = {
   /** Labels for the screenshot controls, which have no visible text. */
@@ -295,13 +297,20 @@ export function ProductGallery({
 
       {active && several && (
         <>
-          {/* Taps advance while swipes still bubble to the deck's gesture handler. */}
+          {/* A tap changes the screenshot. A drag still belongs to the deck. */}
+          <button
+            type="button"
+            aria-label={labels.previousImage}
+            onClick={() => show(neighbour(-1))}
+            onKeyDown={onArrowKeyDown}
+            className={cn(TAP_ZONE, "left-0")}
+          />
           <button
             type="button"
             aria-label={labels.nextImage}
             onClick={() => show(neighbour(1))}
             onKeyDown={onArrowKeyDown}
-            className="absolute inset-0 z-20 size-full cursor-pointer touch-pan-y rounded-none focus-visible:inset-ring-2 focus-visible:inset-ring-white md:[@media(hover:hover)_and_(pointer:fine)]:hidden"
+            className={cn(TAP_ZONE, "right-0")}
           />
           <button
             type="button"

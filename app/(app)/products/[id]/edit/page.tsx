@@ -1,4 +1,4 @@
-// /products/<id>/edit — a product's maker changes it: the name, the
+// /products/<id>/edit — a maker or an admin changes the name, the
 // description, the link, the category, where it runs and the screenshots. The
 // same form as Add product (../../ProductForm.tsx), saved in place by
 // updateProductAction (lib/post-actions.ts), so the product keeps its page,
@@ -9,7 +9,8 @@
 // (lib/roles.ts isEditProductPath), so app/(app)/layout.tsx and proxy.ts gate
 // it like Add product:
 //   signed out   the layout sends them to /login with this page as `next`.
-//   founder      the form, for a product of their own. Anyone else's, a post,
+//   founder      the form, for a product of their own. Admins can also edit
+//                any curated listing. Other listings, a post,
 //                or an id that is not there is a 404 — which says nothing
 //                about whose it is. Not onboarded yet: the layout sends them
 //                through /onboarding first, as everywhere in the app.
@@ -28,6 +29,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, EyeOff } from "lucide-react";
 import { requireUser } from "@/lib/auth";
+import { CURATED_PRODUCT_LABEL } from "@/lib/curated-products";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountRole } from "@/lib/account";
 import { canPostProduct, roleHome } from "@/lib/roles";
@@ -38,8 +40,8 @@ import {
   productPath,
   productPlatformsOf,
 } from "@/lib/post-types";
-import { Card, Section } from "@/components/ui";
-import { readListingWithAvailability } from "@/lib/product-store-data";
+import { Card, CardChip, Section } from "@/components/ui";
+import { readProductForEdit } from "@/lib/product-edit-access";
 import { ProductForm } from "../../ProductForm";
 
 export const dynamic = "force-dynamic";
@@ -57,14 +59,13 @@ export default async function EditProductPage({
   const user = await requireUser();
   const supabase = await createClient();
   const role = await getAccountRole(supabase, user.id);
-  if (!canPostProduct(role)) redirect(roleHome(role) ?? "/products");
-
-  // Through the maker's own client. `maybeSingle`: a malformed id is a plain
-  // 404 rather than a thrown error.
-  const { data: post } = await readListingWithAvailability(supabase, id);
-  if (!post || post.kind !== "show_and_tell" || post.author_id !== user.id) {
+  const mayEditOwn = canPostProduct(role);
+  const target = await readProductForEdit(supabase, user, id, mayEditOwn);
+  if (!target) {
+    if (!mayEditOwn) redirect(roleHome(role) ?? "/products");
     notFound();
   }
+  const { post } = target;
 
   const [tBack, tTitle, tIntro, tHidden] = await Promise.all([
     tServer("Back to the product"),
@@ -84,6 +85,7 @@ export default async function EditProductPage({
       </Link>
 
       <div className="mb-8">
+        {post.is_curated && <CardChip className="mb-2">{CURATED_PRODUCT_LABEL}</CardChip>}
         <h1 className="text-d2 mb-2">{tTitle}</h1>
         <p className="text-sm text-ink-muted">{tIntro}</p>
       </div>
@@ -115,6 +117,7 @@ export default async function EditProductPage({
               image_urls: (post.image_urls as string[] | null) ?? null,
             }),
             hidden: post.hidden === true,
+            isCurated: post.is_curated,
           }}
         />
       </Card>

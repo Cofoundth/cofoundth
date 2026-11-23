@@ -76,6 +76,7 @@ export type EditableProduct = {
   images: string[];
   /** A moderator hid it: saving changes it, but does not put it on the deck. */
   hidden: boolean;
+  isCurated?: boolean;
 };
 
 function availabilityOf(product?: EditableProduct) {
@@ -144,6 +145,7 @@ export function ProductForm({
   const [storeTouched, setStoreTouched] = useState<Partial<Record<PhonePlatform, boolean>>>({});
   const [inStores, setInStores] = useState(!!(storeLinks.ios || storeLinks.android));
   const shots = useScreenshots(product?.images);
+  const minImages = product?.isCurated ? 0 : MIN_PRODUCT_IMAGES;
   const mobileSelected = platforms.some(isMobileProductPlatform);
   const showStoreFields = mobileSelected && inStores;
   const needsPrimaryLink = platforms.some((platform) => !isMobileProductPlatform(platform));
@@ -181,7 +183,7 @@ export function ProductForm({
   const blocked =
     isPending ||
     shots.preparing ||
-    shots.shots.length < MIN_PRODUCT_IMAGES ||
+    shots.count < minImages ||
     !category ||
     platforms.length === 0 ||
     !name.trim() ||
@@ -348,7 +350,7 @@ export function ProductForm({
         autoComplete="url"
       />
 
-      <ScreenshotPicker shots={shots} id="product-screenshots" />
+      <ScreenshotPicker shots={shots} id="product-screenshots" minImages={minImages} />
 
       {state?.error && (
         // Server actions return English literals; the CLIENT translates them,

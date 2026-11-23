@@ -75,7 +75,18 @@ type Shot = { file: File | null; url: string };
 
 export type Screenshots = ReturnType<typeof useScreenshots>;
 
-export function useScreenshots(existing: readonly string[] = []) {
+export function useScreenshots(
+  existing: readonly string[] = [],
+  {
+    linkedCount = 0,
+    onFilesChange,
+    onPreparingChange,
+  }: {
+    linkedCount?: number;
+    onFilesChange?: (files: File[]) => void;
+    onPreparingChange?: (preparing: boolean) => void;
+  } = {},
+) {
   const tr = useT();
 
   // REACT STATE is the source of truth, not the input's own FileList, and that
@@ -158,7 +169,7 @@ export function useScreenshots(existing: readonly string[] = []) {
 
     const badType = picked.find((f) => !ACCEPTED.includes(f.type));
     const typed = picked.filter((f) => ACCEPTED.includes(f.type));
-    const room = Math.max(0, MAX_PRODUCT_IMAGES - shots.length);
+    const room = Math.max(0, MAX_PRODUCT_IMAGES - shots.length - linkedCount);
 
     // Only compress what there is ROOM for. Downscaling five files to then
     // throw three of them away is a second of someone's battery for nothing.
@@ -167,6 +178,7 @@ export function useScreenshots(existing: readonly string[] = []) {
     const prepared: File[] = [];
     if (candidates.length) {
       setPreparing(true);
+      onPreparingChange?.(true);
       try {
         for (const f of candidates) {
           prepared.push((await downscaleImage(f)).file);
@@ -176,6 +188,7 @@ export function useScreenshots(existing: readonly string[] = []) {
         // on `preparing`; leaving it true after a throw would wedge the form.
         // (downscaleImage itself never throws — this is for the loop.)
         setPreparing(false);
+        onPreparingChange?.(false);
       }
     }
 
@@ -236,30 +249,39 @@ export function useScreenshots(existing: readonly string[] = []) {
     // StrictMode, so creating the URLs inside one creates two per file and
     // keeps one — measured as 6 createObjectURL calls for 3 screenshots.
     const entries = take.map((file) => ({ file, url: trackUrl(file) }));
-    setShots((prev) => [...prev, ...entries]);
+    const next = [...shots, ...entries];
+    setShots(next);
+    onFilesChange?.(newFiles(next));
   }
 
   // Keyed by object URL, not by index: removing the second of four would
   // otherwise re-key every thumbnail after it and reuse the wrong <img>.
   function remove(url: string) {
     dropUrl(url);
-    setShots((prev) => prev.filter((s) => s.url !== url));
+    const next = shots.filter((s) => s.url !== url);
+    setShots(next);
+    onFilesChange?.(newFiles(next));
     setError(null);
   }
 
   return {
     shots,
     /** The NEW files to submit, in strip order. */
-    files: shots.flatMap((s) => (s.file ? [s.file] : [])),
+    files: newFiles(shots),
     /** The screenshots the product already had and still keeps, in strip
      *  order — always before the new ones. Empty when adding a product. */
     kept: shots.flatMap((s) => (s.file ? [] : [s.url])),
     preparing,
     error,
-    full: shots.length >= MAX_PRODUCT_IMAGES,
+    count: shots.length + linkedCount,
+    full: shots.length + linkedCount >= MAX_PRODUCT_IMAGES,
     pick,
     remove,
   };
+}
+
+function newFiles(shots: Shot[]): File[] {
+  return shots.flatMap(({ file }) => (file ? [file] : []));
 }
 
 /**
@@ -270,9 +292,11 @@ export function useScreenshots(existing: readonly string[] = []) {
 export function ScreenshotPicker({
   shots,
   id,
+  minImages = MIN_PRODUCT_IMAGES,
 }: {
   shots: Screenshots;
   id: string;
+  minImages?: number;
 }) {
   const tr = useT();
   // The picker input's ref lives HERE, not in the hook: the state object is
@@ -297,12 +321,12 @@ export function ScreenshotPicker({
             legible (ProductForm gates on it), and it counts down as they
             add; at or above it, the count against the cap. */}
         <span className="text-xs text-ink-muted tabular-nums">
-          {shots.shots.length < MIN_PRODUCT_IMAGES
+          {shots.count < minImages
             ? tr("Add {n} more").replace(
                 "{n}",
-                String(MIN_PRODUCT_IMAGES - shots.shots.length),
+                String(minImages - shots.count),
               )
-            : `${shots.shots.length}/${MAX_PRODUCT_IMAGES}`}
+            : `${shots.count}/${MAX_PRODUCT_IMAGES}`}
         </span>
       </div>
 
@@ -335,7 +359,7 @@ export function ScreenshotPicker({
               <img src={s.url} alt="" className="h-full w-full object-cover" />
               {/* Sentence case, not the badge tier's tracked caps: Thai has no
                   caps and the tracking is stripped in the th locale anyway. */}
-              {i === 0 && (
+              {i === 0 && shots.count === shots.shots.length && (
                 <CardChip className="absolute bottom-1 left-1 bg-navy/80 text-white">
                   {tr("Cover")}
                 </CardChip>
@@ -345,6 +369,7 @@ export function ScreenshotPicker({
               <button
                 type="button"
                 onClick={() => shots.remove(s.url)}
+                disabled={shots.preparing}
                 className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-navy/80 text-white transition-colors hover:bg-navy"
                 aria-label={tr("Remove")}
               >
@@ -388,8 +413,8 @@ export function ScreenshotPicker({
           )}
         </span>
         <span className="block">
-          {tr("{min} to {max} images. JPG/PNG, up to 5MB each.")
-            .replace("{min}", String(MIN_PRODUCT_IMAGES))
+          {tr(minImages ? "{min} to {max} images. JPG/PNG, up to 5MB each." : "Up to {max} screenshots, including links.")
+            .replace("{min}", String(minImages))
             .replace("{max}", String(MAX_PRODUCT_IMAGES))}
         </span>
       </p>

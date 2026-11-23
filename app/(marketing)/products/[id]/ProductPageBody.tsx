@@ -376,6 +376,7 @@ async function MemberProduct({
 
   const authorId = post.author_id as string;
   const isAuthor = authorId === userId;
+  const mayEdit = post.is_curated ? await isAdminUser(supabase, viewer) : isAuthor;
 
   // THE MODERATION GATE — see "THE TWO GATES" in the header. The maker's two
   // flags through the service role; a failed or empty read counts as
@@ -397,7 +398,7 @@ async function MemberProduct({
       const devTestProduct =
         post.hidden === false &&
         (await devTestAuthorIds([authorId])).has(authorId);
-      if (!devTestProduct && !(await isAdminUser(supabase, viewer))) {
+      if (!devTestProduct && !(post.is_curated ? mayEdit : await isAdminUser(supabase, viewer))) {
         return missing(mode, locale);
       }
     }
@@ -456,14 +457,14 @@ async function MemberProduct({
     (author?.full_name as string | null) ?? t("A founder", locale);
   const authorHref = `/profile/${authorId}`;
 
-  // `?added=1` / `?saved=1`, for the maker only (see the header). Whether a
+  // `?added=1` / `?saved=1`, for the maker or curator. Whether a
   // new product is really on the shelf is ASKED, not assumed: the shelf's own
   // author gate (publicProductAuthors), plus the development-only test-account
   // allowance, decides that — so a maker whose account the shelf cannot show
   // is told it is saved, never that it is on the deck.
   // A page's only: the modal is never where a save lands.
   const added = mode === "page" && isAuthor && search.added === "1";
-  const saved = mode === "page" && isAuthor && !added && search.saved === "1";
+  const saved = mode === "page" && mayEdit && !added && search.saved === "1";
   const onShelf =
     added &&
     post.hidden === false &&
@@ -579,7 +580,7 @@ async function MemberProduct({
         {/* Report wraps its reason box onto its own line. */}
         <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-5 text-sm">
           <div className="ml-auto flex items-center gap-4">
-            {isAuthor && (
+            {mayEdit && (
               <Link href={`${productPath(id)}/edit`} className={ROW_LINK}>
                 <Pencil
                   className="h-3.5 w-3.5"

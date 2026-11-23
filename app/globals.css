@@ -49,11 +49,30 @@
   }
 }
 
+@custom-variant deck-touch {
+  @media (width < 48rem), (pointer: coarse) {
+    @slot;
+  }
+}
+
+@media (width < 48rem), (pointer: coarse) {
+  /* A card owns single-finger swipes even when the press lands in a clipped
+     title or image. Keep pinch zoom available and leave dialogs scrollable. */
+  [data-deck-card],
+  [data-deck-card] * {
+    touch-action: pinch-zoom;
+  }
+}
+
 /* A SHORT screen (under 720px tall: most laptops once the browser's own chrome
    is taken off). The auth pages must not scroll, and their budget has to hold
    with an error message showing, which adds ~60-80px — so they tighten their
    vertical rhythm here, and only here. app/(auth)/ and components/auth/. */
 @custom-variant short (@media (height < 45rem));
+
+@custom-variant short-landscape (@media (height < 30rem) and (min-aspect-ratio: 4/3));
+
+@custom-variant compact-phone-landscape (@media (width < 48rem) and (height < 25rem) and (min-aspect-ratio: 4/3));
 
 @theme inline {
   /* ── Palette — Onfound's warm neutral system ──────────────────────────

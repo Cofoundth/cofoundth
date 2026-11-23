@@ -19,7 +19,6 @@ import { countComments, readCommentBatch } from "@/lib/comment-thread";
 import { webUrl } from "@/lib/web-url";
 import {
   LIKE_BEFORE_COMMENTING,
-  MAX_POST_IMAGE_BYTES,
   MAX_PRODUCT_BLURB,
   MAX_PRODUCT_NAME,
   MAX_PRODUCT_IMAGES,
@@ -29,6 +28,8 @@ import {
   postImages,
   productPlatformsOf,
 } from "@/lib/post-types";
+import { filesIn, removePostImages, uploadAll } from "@/lib/post-image-upload";
+import { readProductForEdit } from "@/lib/product-edit-access";
 import { validateProductLinks } from "@/lib/product-store-links";
 import { readProductLike } from "@/lib/product-likes";
 import { queryWithProductStoreColumns } from "@/lib/product-store-data";
@@ -98,120 +99,6 @@ function parseTags(raw: string): string[] | { error: string } {
     }
   }
   return tags;
-}
-
-// Keyed by the same four types as POST_IMAGE_TYPES in lib/post-types.ts, which
-// the pickers build their `accept` and their early type check from.
-const IMG_EXT: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
-};
-const MAX_IMG_BYTES = MAX_POST_IMAGE_BYTES;
-
-// The two per-file rules, pulled out of uploadPostImage so a batch can check
-// every file BEFORE uploading any of them. Same checks, same order, same
-// strings — uploadPostImage still runs them itself, so it stays safe to call
-// on its own and the single-image path behaves exactly as it did.
-function imageFileError(file: File): string | null {
-  if (!IMG_EXT[file.type]) return "Please upload a JPG, PNG, WebP, or GIF.";
-  if (file.size > MAX_IMG_BYTES) return "Max image size is 5MB.";
-  return null;
-}
-
-async function uploadPostImage(
-  userId: string,
-  file: File,
-): Promise<{ url?: string; path?: string; error?: string }> {
-  const bad = imageFileError(file);
-  if (bad) return { error: bad };
-  const admin = createAdminClient();
-  // Date.now() alone is not unique when five screenshots upload in PARALLEL:
-  // same millisecond + same extension = the same key, and `upsert: false`
-  // turns that into a failed upload of a perfectly good file. Hence the suffix.
-  const path = `${userId}/post-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${IMG_EXT[file.type]}`;
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const { error } = await admin.storage
-    .from("post-images")
-    .upload(path, bytes, {
-      upsert: false,
-      cacheControl: "3600",
-      contentType: file.type,
-    });
-  if (error) return { error: error.message };
-  return {
-    path,
-    url: admin.storage.from("post-images").getPublicUrl(path).data.publicUrl,
-  };
-}
-
-// Best-effort: drop objects that uploaded before a sibling failed. Without it
-// a member who retries three times leaves two orphan sets in the bucket that
-// no row references and nothing will ever clean up.
-async function removePostImages(uploads: { path?: string }[]) {
-  const paths = uploads
-    .map((u) => u.path)
-    .filter((p): p is string => typeof p === "string");
-  if (!paths.length) return;
-  const { error } = await createAdminClient()
-    .storage.from("post-images")
-    .remove(paths);
-  if (error) console.error("[post.create] orphaned images", paths, error.message);
-}
-
-/** Every image in the form under `name`, as a list, empty entries dropped. */
-function filesIn(formData: FormData, name: string): File[] {
-  return formData
-    .getAll(name)
-    .filter((e): e is File => e instanceof File && e.size > 0);
-}
-
-/**
- * Validate ALL of them, then upload all of them, or none. Shared by the two
- * writers below: a post's one cover and a product's screenshots go through the
- * same checks, the same bucket and the same orphan cleanup.
- *
- * Validating before uploading ANY is what keeps a 6MB fourth file from leaving
- * three objects in the bucket and no row — and a size or type rejection still
- * reads as the same plain sentence it always did. On success the caller owns
- * the uploads: if its insert then fails it must removePostImages() them.
- */
-async function uploadAll(
-  userId: string,
-  files: File[],
-  tag: string,
-  /** The sentence for a failed batch of several, which says NOTHING was
-   *  saved, in the caller's own words: a post is posted, a product is added,
-   *  an edit is saved. */
-  nothingSaved: string,
-): Promise<
-  | { uploads: { url?: string; path?: string }[]; error?: undefined }
-  | { error: string; uploads?: undefined }
-> {
-  for (const file of files) {
-    const bad = imageFileError(file);
-    if (bad) return { error: bad };
-  }
-
-  const uploads = await Promise.all(
-    files.map((file) => uploadPostImage(userId, file)),
-  );
-  const failed = uploads.findIndex((u) => !u.url);
-  if (failed >= 0) {
-    console.error(
-      `[${tag}] image ${failed + 1} of ${uploads.length} failed:`,
-      uploads[failed].error,
-    );
-    await removePostImages(uploads);
-    // One file: the storage error itself, exactly as before. Several: say that
-    // NOTHING was posted, because the alternative is a product quietly going
-    // up with two of its five screenshots and the member never knowing which.
-    return uploads.length === 1
-      ? { error: uploads[0].error ?? "Couldn't upload the image. Try again." }
-      : { error: nothingSaved };
-  }
-  return { uploads };
 }
 
 /**
@@ -510,11 +397,8 @@ function revalidateProduct(productId: string) {
 
 /**
  * EDIT a product, from /products/<id>/edit (app/(app)/products/[id]/edit).
- * Its MAKER only, and only a product: the row is re-read through their own
- * client and refused unless it is a `show_and_tell` they wrote — a server
- * action is invocable with any arguments, so the page's own check is not the
- * gate. Every field rule is createProductAction's (productFields), so an edit
- * can never write what adding would have refused.
+ * Makers edit their own listings. Admins can edit any curated listing. The
+ * action rechecks access independently of the edit page.
  *
  * WHAT IT NEVER TOUCHES: `kind` (a product stays a product — migration 0081
  * refuses the change at the database too), `hidden` (moderation; 0078),
@@ -546,23 +430,21 @@ export async function updateProductAction(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
-  // The ladder's `product` cell, as for adding one. Only a founder has
-  // products to begin with; this keeps the two writes saying the same thing.
   const role = await getAccountRole(supabase, user.id);
-  if (!canPostProduct(role)) return { error: "Only founders can add products." };
-
-  const product = await ownProduct(supabase, productId, user.id);
-  if (!product) return { error: PRODUCT_UNAVAILABLE };
+  const target = await readProductForEdit(supabase, user, productId, canPostProduct(role));
+  if (!target) return { error: PRODUCT_UNAVAILABLE };
+  const { post, client } = target;
+  const oldImages = postImages(post);
 
   const kept = Array.from(
     new Set(formData.getAll("keep").map((v) => String(v))),
-  ).filter((url) => product.images.includes(url));
+  ).filter((url) => oldImages.includes(url));
   const files = filesIn(formData, "images");
   if (kept.length + files.length > MAX_PRODUCT_IMAGES)
     return { error: `Up to ${MAX_PRODUCT_IMAGES} images per product.` };
   // An edit cannot leave fewer than the minimum, including on a product saved
   // before the rule (the founder's call: they keep theirs until edited).
-  if (kept.length + files.length < MIN_PRODUCT_IMAGES)
+  if (!post.is_curated && kept.length + files.length < MIN_PRODUCT_IMAGES)
     return { error: `Add at least ${MIN_PRODUCT_IMAGES} screenshots.` };
   const uploaded = await uploadAll(
     user.id,
@@ -573,12 +455,9 @@ export async function updateProductAction(
   if (uploaded.error !== undefined) return { error: uploaded.error };
   const imageUrls = [...kept, ...uploaded.uploads.map((u) => u.url as string)];
 
-  // Scoped to the maker twice — `forum_posts_update_own` (RLS) and the
-  // author_id filter here — and `.select()` so a row that matched nothing
-  // reads as a failure rather than a silent success.
   // The listing trigger saves the product's availability in the same write.
   const { data: updated, error } = await queryWithProductStoreColumns(
-    (includeStores) => supabase
+    (includeStores) => client
       .from("forum_posts")
       .update({
         title,
@@ -591,8 +470,8 @@ export async function updateProductAction(
         image_url: imageUrls[0] ?? null,
         image_urls: imageUrls,
       })
-      .eq("id", product.id)
-      .eq("author_id", user.id)
+      .eq("id", post.id)
+      .eq("author_id", post.author_id)
       .eq("kind", PRODUCT_KIND)
       .select("id"),
     !iosStoreUrl && !androidStoreUrl && !platforms.includes("mobile"),
@@ -606,15 +485,21 @@ export async function updateProductAction(
 
   // Screenshots the edit dropped (lib/post-cleanup.ts: the maker's own folder
   // only, best-effort).
-  await removeOwnImages(
-    user.id,
-    product.images.filter((url) => !imageUrls.includes(url)),
-    "product.images",
-  );
-  revalidateProduct(product.id);
+  // Curated screenshot URLs can be reused across listings.
+  if (!post.is_curated) {
+    await removeOwnImages(
+      user.id,
+      oldImages.filter((url) => !imageUrls.includes(url)),
+      "product.images",
+    );
+  } else {
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/posts");
+  }
+  revalidateProduct(post.id);
 
   // OUTSIDE any try: redirect() throws to do its job.
-  redirect(`${productPath(product.id)}?saved=1`);
+  redirect(`${productPath(post.id)}?saved=1`);
 }
 
 /**

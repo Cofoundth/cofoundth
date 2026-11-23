@@ -57,8 +57,8 @@
 // the stack does not update an inherited CSS variable on every descendant.
 //
 // ── THE GESTURE ────────────────────────────────────────────────────────────
-//   touch-action: pan-y    A vertical swipe still scrolls the page. The browser
-//                          takes it and tells us with pointercancel.
+//   touch action           The phone card owns single-finger gestures. On
+//                          desktop the browser can still claim a vertical pan.
 //   capture after the lock Never on pointerdown: a mouse press captured to the
 //                          card delivers its click to the card, so the real
 //                          link would stop working on a plain tap. A TOUCH
@@ -88,7 +88,7 @@
 // footer row), the ↑ and the gallery controls, and neither a link nor a
 // button can nest in <a>. ONE absolutely-positioned <a> to the product's page
 // covers the card at `z-10`. The footer link, the ↑ and desktop arrows sit at
-// `z-20`. On phones the gallery gets a tap target above the stretched link
+// `z-20`. On phones the gallery gets tap zones above the stretched link
 // and below the ↑. Keeping these controls outside the link lets each handle
 // its own click, and the card still handles swipes.
 //
@@ -96,7 +96,7 @@
 // order, and the primary destination should not be the last stop.
 //
 // ── THE GALLERY ────────────────────────────────────────────────────────────
-// The top card's screenshots advance on tap or with the desktop arrows. Cards
+// The top card's screenshots change with tap zones or desktop arrows. Cards
 // behind paint their first image only, and the next card preloads the rest.
 
 import Link from "next/link";
@@ -255,6 +255,16 @@ type ProductDeckLabels = {
 const MOUNTED = 3;
 /** Travel before a press is read as a horizontal or a vertical gesture. */
 const LOCK_PX = 8;
+
+function swipeAxis(dx: number, dy: number, touch: boolean): "x" | "y" | null {
+  const x = Math.abs(dx);
+  const y = Math.abs(dy);
+  if (Math.max(x, y) < LOCK_PX) return null;
+  if (!touch) return x >= y ? "x" : "y";
+  if (x >= LOCK_PX && x >= y) return "x";
+  // Let a diagonal touch settle before giving up on a horizontal swipe.
+  return y >= 2 * LOCK_PX && y > 1.5 * x ? "y" : null;
+}
 /** Share of the card's width that commits a slow drag. */
 const COMMIT_RATIO = 0.3;
 const FLICK_PX_PER_MS = 0.5;
@@ -276,13 +286,13 @@ const LINK_REL = "noopener noreferrer nofollow";
  * because a box this size has no fixed shape to crop to.
  *
  * On phones the summary takes its natural height and the gallery fills the
- * remaining space. The 4rem reserve keeps the details button visible even
- * when the summary needs to scroll on a very short screen. On wide screens
- * the summary takes roughly 38% of the width beside the gallery.
+ * remaining space, without a nested scroll area for the summary. On wide screens
+ * the summary takes roughly 38% of the width beside the gallery. Short wide
+ * cards give the copy more width and use the compact stats row.
  * ./loading.tsx draws the same panel and the compact band used on phones.
  */
 const CARD_BODY =
-  "flex max-h-[calc(100%_-_4rem)] min-h-0 shrink-0 flex-col gap-2 p-3 sm:gap-3 sm:p-5 deck-wide:max-h-none deck-wide:w-(--deck-panel-width) deck-wide:justify-center deck-wide:gap-3 deck-wide:p-(--deck-panel-inset) deck-wide:short:gap-2";
+  "flex max-h-[calc(100%_-_4rem)] min-h-0 shrink-0 flex-col gap-2 p-3 sm:gap-3 sm:p-5 deck-touch:max-h-none deck-wide:max-h-none deck-wide:w-(--deck-panel-width) deck-wide:justify-center deck-wide:gap-3 deck-wide:p-(--deck-panel-inset) deck-wide:short:gap-2 deck-wide:short-landscape:gap-1.5";
 
 /** A big card would need a long drag to commit, and would swing its corners a
  *  long way at full tilt: both are measured against at most this width. */
@@ -1059,21 +1069,15 @@ function Stack({
     cancelAnimationFrame(frame.current);
     frame.current = 0;
     gesture.current = null;
-    // The click a drag would produce comes straight after pointerup, inside
-    // this same task. Later than that it would swallow a keyboard Enter.
-    if (justDragged.current) {
-      setTimeout(() => {
-        justDragged.current = false;
-      }, 0);
-    }
   }
 
   function onPointerDown(event: ReactPointerEvent<HTMLElement>) {
     if (event.button !== 0 || !event.isPrimary) return;
     if (locked || flying.current || gesture.current) return;
+    justDragged.current = false;
     if ((event.target as Element).closest("[data-deck-nodrag]")) return;
 
-    justDragged.current = false;
+    const touch = event.pointerType === "touch";
     const card = event.currentTarget;
     const g: Gesture = {
       pointerId: event.pointerId,
@@ -1113,14 +1117,9 @@ function Stack({
         if (g.lock === null) {
           const dx = e.clientX - g.startX;
           const dy = e.clientY - g.startY;
-          if (Math.max(Math.abs(dx), Math.abs(dy)) < LOCK_PX) return;
-          // Either way this press is no longer a tap on the link.
-          justDragged.current = true;
-          if (Math.abs(dy) > Math.abs(dx)) {
-            g.lock = "y";
-            return;
-          }
-          g.lock = "x";
+          if (Math.max(Math.abs(dx), Math.abs(dy)) >= LOCK_PX) justDragged.current = true;
+          g.lock = swipeAxis(dx, dy, touch);
+          if (g.lock !== "x") return;
           // Measured from the lock point, so the card does not jump by the
           // travel it took to get here.
           g.originX = g.startX + Math.sign(dx) * LOCK_PX;
@@ -1153,8 +1152,9 @@ function Stack({
         if (g.lock === null) {
           const dx = e.clientX - g.startX;
           const dy = e.clientY - g.startY;
-          if (Math.abs(dx) >= LOCK_PX && Math.abs(dx) > Math.abs(dy)) {
-            g.lock = "x";
+          if (Math.max(Math.abs(dx), Math.abs(dy)) >= LOCK_PX) justDragged.current = true;
+          g.lock = swipeAxis(dx, dy, touch);
+          if (g.lock === "x") {
             g.originX = g.startX + Math.sign(dx) * LOCK_PX;
           }
         }
@@ -1183,7 +1183,9 @@ function Stack({
       options,
     );
 
-    window.addEventListener("pointercancel", cancel, options);
+    window.addEventListener("pointercancel", (e) => {
+      if (e.pointerId === g.pointerId) cancel();
+    }, options);
     window.addEventListener("blur", cancel, options);
     // Ctrl+click on a Mac: the native menu swallows the pointerup.
     window.addEventListener("contextmenu", cancel, options);
@@ -1198,7 +1200,9 @@ function Stack({
   }
 
   function onClickCapture(event: MouseEvent<HTMLElement>) {
-    if (!justDragged.current) return;
+    // Touch clicks can arrive after pointerup. A new press clears the flag,
+    // and keyboard and assistive technology clicks have no pointer count.
+    if (!justDragged.current || event.detail === 0) return;
     event.preventDefault();
     event.stopPropagation();
   }
@@ -1218,7 +1222,7 @@ function Stack({
       tabIndex={0}
       onKeyDown={onKeyDown}
       // Center the capped stack in the space below the toolbar.
-      className="relative flex min-h-0 w-full flex-1 flex-col rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy deck-wide:my-auto deck-wide:max-h-[42rem] deck-wide:md:max-lg:max-h-[37rem] deck-wide:[--deck-panel-width:clamp(min(16rem,50%),38.2%,32.5rem)] deck-wide:[--deck-panel-inset:clamp(1.25rem,2.125vw,2rem)] deck-wide:short:[--deck-panel-inset:clamp(0.75rem,2.4dvh,1rem)]"
+      className="relative flex min-h-0 w-full flex-1 flex-col rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy deck-wide:my-auto deck-wide:max-h-[42rem] deck-wide:md:max-lg:max-h-[37rem] deck-wide:[--deck-panel-width:clamp(min(16rem,50%),38.2%,32.5rem)] deck-wide:[--deck-panel-inset:clamp(1.25rem,2.125vw,2rem)] deck-wide:short:[--deck-panel-width:clamp(min(20rem,66%),42%,32.5rem)] deck-wide:short:[--deck-panel-inset:clamp(0.625rem,2.4dvh,1rem)]"
     >
       <div ref={stageRef} className="relative min-h-0 flex-1">
         {deck.slice(index, index + MOUNTED).map((product, depth) => (
@@ -1330,15 +1334,13 @@ function Stack({
             </div>
 
             <div className={CARD_BODY}>
-              {/* Touch panning is resolved up to the nearest scroll container,
-                  which can be this panel or a clamped or truncated descendant. */}
-              <div className="relative z-20 flex min-h-0 touch-pan-y flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-y-contain **:touch-pan-y sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:gap-2">
-                <div className="flex min-w-0 shrink-0 flex-col gap-1.5 sm:gap-3 deck-wide:gap-2.5 deck-wide:short:gap-1.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="line-clamp-1 min-w-0 text-xl wrap-anywhere sm:text-2xl deck-wide:line-clamp-2 deck-wide:text-d2 deck-wide:lg:text-d3 deck-wide:short:line-clamp-1 deck-wide:short:text-d2">
+              <div className="relative z-20 flex min-h-0 touch-pan-y flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-y-contain **:touch-pan-y sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:gap-1.5 deck-wide:short-landscape:gap-1 deck-touch:overflow-visible">
+                <div className="flex min-w-0 shrink-0 flex-col gap-1.5 sm:gap-3 deck-wide:gap-2.5 deck-wide:short:gap-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="min-w-0 text-xl wrap-anywhere deck-wide:text-d1 deck-wide:lg:text-d2 deck-wide:short:text-xl deck-wide:short-landscape:text-lg/6 compact-phone-landscape:text-base/5">
                       {product.name}
                     </h2>
-                    <CardChip className="bg-cream px-3 py-1.5 text-xs sm:text-sm">
+                    <CardChip className="bg-cream px-3 py-1.5 text-xs sm:text-sm deck-wide:short:py-0.5">
                       {t(product.bucket === "game" ? "Game" : "App", locale)}
                     </CardChip>
                   </div>
@@ -1354,16 +1356,16 @@ function Stack({
                       </CardChip>
                     )}
                     {product.platformLabels.map((label) => (
-                      <CardChip key={label} className="px-3 py-1.5 text-xs sm:text-sm">
+                      <CardChip key={label} className="px-3 py-1.5 text-xs sm:text-sm deck-wide:short:py-0.5">
                         {label}
                       </CardChip>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex shrink-0 flex-col deck-wide:gap-3 deck-wide:border-y deck-wide:border-line deck-wide:py-3 deck-wide:short:gap-1.5 deck-wide:short:py-1.5">
+                <div className="flex shrink-0 flex-col deck-wide:gap-3 deck-wide:border-y deck-wide:border-line deck-wide:py-3 deck-wide:short:border-0 deck-wide:short:py-0">
                   {product.blurb && product.blurb.trim() !== product.name && (
-                    <p className="min-h-0 wrap-anywhere font-serif text-sm leading-snug text-ink sm:text-base deck-wide:line-clamp-5 deck-wide:text-lg deck-wide:lg:text-xl deck-wide:short:line-clamp-3 deck-wide:short:text-lg">
+                    <p className="min-h-0 wrap-anywhere font-serif text-sm leading-snug text-ink sm:text-base deck-wide:line-clamp-5 deck-wide:text-lg deck-wide:lg:text-xl deck-wide:short:line-clamp-none deck-wide:short:text-base deck-wide:short-landscape:text-sm deck-touch:short-landscape:line-clamp-2 compact-phone-landscape:line-clamp-1">
                       {product.blurb}
                     </p>
                   )}
@@ -1376,13 +1378,13 @@ function Stack({
                     data-deck-nodrag=""
                     draggable={false}
                     onClick={openProduct}
-                    className="group/stats relative z-20 hidden min-w-0 shrink-0 cursor-pointer grid-cols-2 gap-3 deck-wide:grid"
+                    className="group/stats relative z-20 hidden min-w-0 shrink-0 cursor-pointer grid-cols-2 gap-3 deck-wide:grid deck-wide:short:hidden"
                   >
                     <CardStats product={product} locale={locale} />
                   </Link>
                 </div>
                 {product.maker && (
-                  <div className="flex min-w-0 shrink-0 items-center gap-2 text-xs text-ink sm:text-sm deck-wide:text-base deck-wide:short:text-sm">
+                  <div className="flex min-w-0 shrink-0 items-center gap-2 text-xs text-ink sm:text-sm deck-wide:text-base deck-wide:short:text-sm compact-phone-landscape:hidden">
                     <div aria-hidden="true">
                       <Avatar name={product.maker.name} url={product.maker.avatarUrl} size="xs" />
                     </div>
@@ -1398,13 +1400,12 @@ function Stack({
                   the stat strip in the wide panel. Not prefetched: each card
                   mounting would otherwise fetch its page, and a skip must not
                   cause a request of its own. */}
-              <div className="mt-auto flex min-w-0 shrink-0 items-center border-t border-line pt-2 sm:pt-3 deck-wide:hidden">
+              <div className="mt-auto flex min-w-0 shrink-0 items-center border-t border-line pt-2 sm:pt-3 deck-wide:hidden deck-wide:short:mt-0 deck-wide:short:flex deck-wide:short:pt-1.5">
                 <Link
                   href={pageHrefOf(product)}
                   prefetch={false}
                   aria-label={product.footerAria}
                   aria-haspopup="dialog"
-                  data-deck-nodrag=""
                   draggable={false}
                   onClick={openProduct}
                   className="relative z-20 -my-2 inline-flex min-w-0 cursor-pointer items-center gap-4 py-2 text-sm"

@@ -2,23 +2,32 @@
 
 import { useRef, useState, useTransition, type FormEvent } from "react";
 import { ChevronDown, FileSpreadsheet, Plus } from "lucide-react";
+import { ScreenshotPicker, useScreenshots } from "@/components/ScreenshotPicker";
 import { Button, Card, Input, LinkButton, Textarea } from "@/components/ui";
 import {
+  CURATED_SCREENSHOT_BYTES_ERROR,
   EMPTY_CURATED_PRODUCT,
   MAX_CURATED_MAKER_NAME,
   MAX_CURATED_PRODUCTS,
   MAX_PRODUCT_WORKBOOK_BYTES,
   PRODUCT_IMPORT_COLUMNS,
+  curatedScreenshotLinks,
   readCuratedProductRows,
   validateCuratedProduct,
   type CuratedProductColumn,
   type CuratedProductInput,
 } from "@/lib/curated-products";
 import { useT } from "@/lib/i18n-client";
-import { CATEGORY_LABEL, MAX_PRODUCT_BLURB, MAX_PRODUCT_NAME, PRODUCT_CATEGORIES, productPath } from "@/lib/post-types";
+import { CATEGORY_LABEL, MAX_PRODUCT_BLURB, MAX_PRODUCT_NAME, MAX_UPLOAD_IMAGE_BYTES, PRODUCT_CATEGORIES, productPath } from "@/lib/post-types";
 import { publishCuratedProducts } from "./actions";
 
-type Draft = { id: string; input: CuratedProductInput; openInitially: boolean };
+type Draft = {
+  id: string;
+  input: CuratedProductInput;
+  openInitially: boolean;
+  files?: File[];
+  preparing?: boolean;
+};
 type Published = { id: string; title: string };
 
 const PLATFORM_CHOICES = [
@@ -45,13 +54,19 @@ export function CuratedProductEditor() {
   const [reading, setReading] = useState(false);
   const [publishing, startPublishing] = useTransition();
   const busy = reading || publishing;
-  const previews = drafts.map((draft) => ({ ...draft, error: validateCuratedProduct(draft.input).error }));
+  const preparing = drafts.some((draft) => draft.preparing);
+  const totalBytes = drafts.flatMap((draft) => draft.files ?? []).reduce((sum, file) => sum + file.size, 0);
+  const overBudget = totalBytes > MAX_UPLOAD_IMAGE_BYTES;
+  const previews = drafts.map((draft) => ({
+    ...draft,
+    error: validateCuratedProduct(draft.input, draft.files?.length).error,
+  }));
   const invalid = previews.filter((draft) => draft.error).length;
   const full = drafts.length >= MAX_CURATED_PRODUCTS;
 
-  function updateDraft(id: string, column: CuratedProductColumn, value: string) {
+  function updateDraft(id: string, update: (draft: Draft) => Draft) {
     setDrafts((current) => current.map((draft) =>
-      draft.id === id ? { ...draft, input: { ...draft.input, [column]: value } } : draft,
+      draft.id === id ? update(draft) : draft,
     ));
   }
 
@@ -95,11 +110,16 @@ export function CuratedProductEditor() {
 
   function publish(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || invalid || !drafts.length) return;
+    if (busy || preparing || invalid || overBudget || !drafts.length) return;
     setPublishError(undefined);
+    const payload = new FormData();
+    payload.set("drafts", JSON.stringify(drafts.map(({ id, input }) => ({ id, input }))));
+    for (const { id, files = [] } of drafts) {
+      for (const file of files) payload.append(id, file);
+    }
     startPublishing(async () => {
       try {
-        const result = await publishCuratedProducts(drafts.map(({ id, input }) => ({ id, input })));
+        const result = await publishCuratedProducts(payload);
         if (!result.published) {
           setPublishError(result.error);
           return;
@@ -183,17 +203,21 @@ export function CuratedProductEditor() {
                 key={draft.id}
                 draft={draft}
                 index={index}
-                onChange={(column, value) => updateDraft(draft.id, column, value)}
+                onChange={(column, value) => updateDraft(draft.id, (row) => ({
+                  ...row, input: { ...row.input, [column]: value },
+                }))}
+                onFilesChange={(files) => updateDraft(draft.id, (row) => ({ ...row, files }))}
+                onPreparingChange={(preparing) => updateDraft(draft.id, (row) => ({ ...row, preparing }))}
                 onRemove={() => setDrafts((current) => current.filter((row) => row.id !== draft.id))}
               />
             ))}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3">
               <p aria-live="polite" className="text-sm text-ink-muted">
-                {invalid
+                {overBudget ? tr(CURATED_SCREENSHOT_BYTES_ERROR) : invalid
                   ? tr("Fix {n} rows before publishing.").replace("{n}", String(invalid))
                   : tr("{n} ready to publish").replace("{n}", String(drafts.length))}
               </p>
-              <Button type="submit" disabled={invalid > 0}>
+              <Button type="submit" disabled={preparing || overBudget || invalid > 0}>
                 {publishing ? tr("Publishing…") : tr("Confirm and publish")}
               </Button>
             </div>
@@ -209,15 +233,24 @@ function DraftRow({
   draft,
   index,
   onChange,
+  onFilesChange,
+  onPreparingChange,
   onRemove,
 }: {
   draft: Draft & { error?: string };
   index: number;
   onChange: (column: CuratedProductColumn, value: string) => void;
+  onFilesChange: (files: File[]) => void;
+  onPreparingChange: (preparing: boolean) => void;
   onRemove: () => void;
 }) {
   const tr = useT();
   const { input } = draft;
+  const shots = useScreenshots([], {
+    linkedCount: curatedScreenshotLinks(input.screenshots).length,
+    onFilesChange,
+    onPreparingChange,
+  });
   const categoryKnown = PRODUCT_CATEGORIES.some((category) => category === input.category);
   const platformKnown = PLATFORM_CHOICES.some(({ value }) => value === input.platforms);
   const selectClass = "w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink";
@@ -289,6 +322,7 @@ function DraftRow({
               />
             ))}
           </div>
+          <ScreenshotPicker shots={shots} id={`${draft.id}-images`} minImages={0} />
           <Textarea
             id={`${draft.id}-screenshots`}
             label={tr("Screenshot links (optional)")}
@@ -297,7 +331,7 @@ function DraftRow({
             value={input.screenshots}
             onChange={(event) => onChange("screenshots", event.target.value)}
           />
-          <Button type="button" variant="secondary" size="sm" onClick={onRemove}>
+          <Button type="button" variant="secondary" size="sm" disabled={shots.preparing} onClick={onRemove}>
             {tr("Remove row")}
           </Button>
         </div>

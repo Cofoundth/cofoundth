@@ -12,6 +12,7 @@ export const CURATED_PRODUCT_LABEL = "Cofoundของdee";
 export const MAX_CURATED_PRODUCTS = 50;
 export const MAX_CURATED_MAKER_NAME = 100;
 export const MAX_PRODUCT_WORKBOOK_BYTES = 2 * 1024 * 1024;
+export const CURATED_SCREENSHOT_BYTES_ERROR = "Upload up to 4 MB of screenshots per batch. Remove a file or publish fewer products at a time.";
 
 export const PRODUCT_IMPORT_COLUMNS = [
   "name",
@@ -33,7 +34,11 @@ export const EMPTY_CURATED_PRODUCT: CuratedProductInput = {
   maker: "", ios: "", android: "", screenshots: "",
 };
 
-export function validateCuratedProduct(input: CuratedProductInput) {
+export function curatedScreenshotLinks(value: string) {
+  return value.split(/[|\n]/).map((url) => url.trim()).filter(Boolean);
+}
+
+export function validateCuratedProduct(input: CuratedProductInput, fileCount = 0) {
   const title = input.name.trim();
   const content = input.description.trim();
   const category = input.category.trim().toLowerCase();
@@ -43,7 +48,7 @@ export function validateCuratedProduct(input: CuratedProductInput) {
   const maker = input.maker.trim();
   const ios = input.ios.trim();
   const android = input.android.trim();
-  const images = input.screenshots.split(/[|\n]/).map((url) => url.trim()).filter(Boolean);
+  const images = curatedScreenshotLinks(input.screenshots);
 
   if (!title) return { error: "Name your product." };
   if (title.length > MAX_PRODUCT_NAME) return { error: "Keep the product name short." };
@@ -62,7 +67,8 @@ export function validateCuratedProduct(input: CuratedProductInput) {
     android,
   });
   if (links.error !== undefined) return { error: links.error };
-  if (images.length > MAX_PRODUCT_IMAGES) return { error: "Use up to 8 screenshot links." };
+  if (images.length + fileCount > MAX_PRODUCT_IMAGES)
+    return { error: "Use up to 8 screenshots per product, including links." };
   if (images.some((raw) => {
     const url = webUrl(raw);
     return !url || url.protocol !== "https:" || url.username || url.password || url.href.length > MAX_LINK_LENGTH;
