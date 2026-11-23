@@ -111,6 +111,7 @@ export function ProductGallery({
   /** The image painted: `wanted` once it has loaded, the one before until
    *  then, so a change never shows an empty box. */
   const [shown, setShown] = useState(0);
+  const [wideCover, setWideCover] = useState(false);
   /** What the handlers read. `wanted` is only this, rendered. */
   const wantedRef = useRef(0);
   /** Groups ready to show: every picture in them has loaded or failed, and at
@@ -193,7 +194,7 @@ export function ProductGallery({
   const visible = active ? shown : 0;
 
   return (
-    <div className={cn("group/gallery", box)}>
+    <div className={cn("group/gallery", box)} data-wide-cover={wideCover ? "" : undefined}>
       {/* The picture on screen again, cropped to the box and blurred, under
           the letterboxed one. Same URL, so it costs no request. */}
       {backdrop && (
@@ -228,7 +229,12 @@ export function ProductGallery({
             loading="eager"
             draggable={false}
             sizes={sizes}
-            onLoad={() => settle(g, 0, true)}
+            onLoad={({ currentTarget }) => {
+              if (g === 0) {
+                setWideCover(currentTarget.naturalWidth * 3 >= currentTarget.naturalHeight * 4);
+              }
+              settle(g, 0, true);
+            }}
             onError={() => settle(g, 0, false)}
             className={cn(
               fit === "cover" ? "object-cover" : "object-contain",
@@ -281,7 +287,7 @@ export function ProductGallery({
       {several && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-navy/40 px-2 py-1.5"
+          className="pointer-events-none absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-navy/40 px-2 py-1.5 max-md:short-landscape:bottom-14"
         >
           {groups.map((_, i) => (
             <span

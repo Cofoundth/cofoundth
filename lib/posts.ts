@@ -583,7 +583,7 @@ export async function getLikedProductsPage(
     const query = admin
       .from("forum_likes")
       .select(
-        `product:forum_posts!inner(id, title, content, link_url, image_url, image_urls, tags, ${availability}, ${AUTHOR_GATE_EMBED})`,
+        `product:forum_posts!inner(id, author_id, title, content, link_url, image_url, image_urls, tags, ${availability}, ${AUTHOR_GATE_EMBED})`,
         { count: "exact" },
       )
       .eq("user_id", viewerId)
@@ -598,7 +598,7 @@ export async function getLikedProductsPage(
     }
 
     return query.range(offset, offset + limit - 1)
-      .overrideTypes<{ product: ProductListingSummary }[], { merge: false }>();
+      .overrideTypes<{ product: ProductListingSummary & { author_id: string } }[], { merge: false }>();
   });
   if (offset > 0 && error?.code === "PGRST103") {
     return { products: [], count: count ?? 0 };

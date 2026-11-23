@@ -42,6 +42,22 @@ import type { PhonePlatform } from "./product-view";
 
 /** Every link out to a maker's site. ./product-view.ts says why each word. */
 const LINK_REL = "noopener noreferrer nofollow";
+const TRY_LINKS_ID = "product-try-links";
+
+/** Focus the first try destination without adding a fragment-history entry
+ * to the product dialog's URL. */
+export function GoToProductLinks() {
+  const tr = useT();
+  return (
+    <button
+      type="button"
+      className="text-sm text-navy underline underline-offset-4"
+      onClick={() => document.getElementById(TRY_LINKS_ID)?.querySelector("a")?.focus()}
+    >
+      {tr("Go to product links")}
+    </button>
+  );
+}
 
 /** The phone OS this browser is running on, or null on anything else. */
 function phoneOS(): PhonePlatform | null {
@@ -131,6 +147,7 @@ function StandaloneTryLinks(props: ProductTryLinksProps) {
 function TryLinks({ product, viewer, main, stores, tried }: ProductTryLinksProps & {
   tried: ProductTry;
 }) {
+  if (!main && stores.length === 0) return null;
   const storeLinks: ProductStoreLinks = Object.fromEntries(stores.map(({ platform, href }) => [platform, href]));
 
   function link(destination: TryDestination, key: string, variant: "primary" | "secondary") {
@@ -157,7 +174,7 @@ function TryLinks({ product, viewer, main, stores, tried }: ProductTryLinksProps
   }
 
   return (
-    <div className="mt-6 grid gap-3">
+    <div id={TRY_LINKS_ID} className="mt-6 grid gap-3">
       {main && link(main, "main", "primary")}
       {stores.length > 0 && (
         <div className={stores.length > 1 ? "grid gap-2 min-[400px]:grid-cols-2" : undefined}>

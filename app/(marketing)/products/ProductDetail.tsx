@@ -199,7 +199,7 @@ export function ProductDetail({
             <div className="mt-3">{rateSlot}</div>
           )}
 
-          {(main || stores.length > 0) && (
+          {(main || stores.length > 0 || feedback.reviewable) && (
             <ProductTryLinks
               main={main}
               stores={stores}
@@ -210,6 +210,7 @@ export function ProductDetail({
                 liked: feedback.liked,
                 myScore: feedback.myScore,
                 sample: feedback.sample,
+                tried: feedback.tried,
               }}
               viewer={feedback.viewer}
             />

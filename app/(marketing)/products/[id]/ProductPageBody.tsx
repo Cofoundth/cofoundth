@@ -49,6 +49,7 @@ import { CommentThread } from "@/components/CommentThread";
 import { countComments, readCommentBatch } from "@/lib/comment-thread";
 import { readListingWithAvailability } from "@/lib/product-store-data";
 import { hasTriedProduct, TRY_BEFORE_COMMENTING } from "@/lib/product-tries";
+import { webUrl } from "@/lib/web-url";
 import {
   PRODUCT_PARAM,
   deckContextQuery,
@@ -59,6 +60,7 @@ import {
 } from "../deck-position";
 import { PARAM, parseCategoryParam } from "../categories";
 import { findFixture } from "../fixtures";
+import { GoToProductLinks } from "../PhoneHandoff";
 import { ProductDetail, type ProductDetailPost } from "../ProductDetail";
 import { ProductMaker } from "../ProductMaker";
 
@@ -294,30 +296,13 @@ async function PublicProduct({
             />
           )
         )}
-        {/* "Sign in to …" goes to sign-in, and both carry this product as
-            `next`, so the reader comes back to it with the comment box. */}
         {!signedIn && (
-          <div className={commentsGated ? "mt-5 grid max-w-xl auto-rows-fr gap-2 sm:grid-cols-2" : "mt-5 grid sm:w-fit"}>
-            {commentsGated && (
-              <Link
-                href={authHref("/login", returnPath)}
-                className={buttonClasses({
-                  size: "sm",
-                  variant: "secondary",
-                  className: "min-h-11 text-center whitespace-normal",
-                })}
-              >
-                {(await tServer("Sign in to see all {n} comments")).replace(
-                  "{n}",
-                  String(total),
-                )}
-              </Link>
-            )}
+          <div className="mt-5 grid sm:w-fit">
             <Link
               href={authHref("/login", returnPath)}
               className={buttonClasses({ size: "sm", className: "min-h-11 text-center whitespace-normal" })}
             >
-              {await tServer("Sign in to comment")}
+              {t(commentsGated ? "Sign in to read and leave comments" : "Sign in to comment", locale)}
             </Link>
           </div>
         )}
@@ -446,6 +431,7 @@ async function MemberProduct({
     mayComment && (isAuthor || hasTriedProduct(supabase, userId, id)),
   ]);
   const mayPostFeedback = !!myLike && hasTriedOrOwnsProduct;
+  const canTry = webUrl(post.link_url) !== null;
 
   const [commentsLabel, tEdit] = await Promise.all([
     tServer("Comments"),
@@ -539,11 +525,12 @@ async function MemberProduct({
           liked: !!myLike,
           myScore,
           sample: false,
+          tried: mayComment && hasTriedOrOwnsProduct,
           viewer: { signedIn: true, canComment: mayComment },
         }}
         rateSlot={
           mayRate ? (
-            <RatingControl postId={id} initialScore={myScore} liked={!!myLike} />
+            <RatingControl postId={id} initialScore={myScore} liked={!!myLike} canTry={canTry} />
           ) : isAuthor && post.hidden === false ? (
             <p className="text-sm text-ink-muted">
               {t("Only other members can rate your product.", locale)}
@@ -628,17 +615,22 @@ async function MemberProduct({
 
         {mayPostFeedback && <CommentComposer postId={id} centerText />}
         {mayComment && !mayPostFeedback && (
-          <p className="text-sm text-ink-muted">
-            {t(myLike ? TRY_BEFORE_COMMENTING : "Swipe right on the product card to like it.", locale)}
-            {!myLike && (
-              <>
-                {" "}
-                <Link href={productCardHref(id)} className="text-navy underline underline-offset-4">
-                  {t("Open product card", locale)}
-                </Link>
-              </>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
+            <p>
+              {t(myLike
+                ? TRY_BEFORE_COMMENTING
+                : canTry && mayRate
+                  ? "Try the product, then choose Like and send in the review."
+                  : "Swipe right on the product card to like it.", locale)}
+            </p>
+            {canTry && (myLike || mayRate) ? (
+              <GoToProductLinks />
+            ) : !myLike && (
+              <Link href={productCardHref(id)} className="text-navy underline underline-offset-4">
+                {t("Open product card", locale)}
+              </Link>
             )}
-          </p>
+          </div>
         )}
       </section>
     </ProductFrame>

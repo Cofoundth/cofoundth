@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { MouseEventHandler } from "react";
+import type { MouseEventHandler, ReactNode } from "react";
 import { Package } from "lucide-react";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import { Card, CardChip } from "@/components/ui";
@@ -18,6 +18,7 @@ export function ProductGridCard({
   curated,
   locale,
   onClick,
+  actions,
 }: {
   href: string;
   name: string;
@@ -28,18 +29,19 @@ export function ProductGridCard({
   curated?: boolean;
   locale: Locale;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
+  actions?: ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      prefetch={false}
-      onClick={onClick}
-      aria-haspopup={onClick ? "dialog" : undefined}
-      className="group block h-full rounded-3xl"
+    <Card
+      padding="none"
+      className="flex h-full flex-col overflow-hidden border border-ink-muted/40 transition-shadow hover:shadow-md"
     >
-      <Card
-        padding="none"
-        className="h-full overflow-hidden border border-ink-muted/40 transition-shadow group-hover:shadow-md"
+      <Link
+        href={href}
+        prefetch={false}
+        onClick={onClick}
+        aria-haspopup={onClick ? "dialog" : undefined}
+        className="group block flex-1 rounded-3xl focus-visible:-outline-offset-4"
       >
         <div className="relative grid aspect-video place-items-center bg-cream">
           {cover ? (
@@ -68,7 +70,8 @@ export function ProductGridCard({
             {curated && <CardChip>{CURATED_PRODUCT_LABEL}</CardChip>}
           </div>
         </div>
-      </Card>
-    </Link>
+      </Link>
+      {actions && <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line px-4 py-2">{actions}</div>}
+    </Card>
   );
 }

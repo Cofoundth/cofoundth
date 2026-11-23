@@ -21,11 +21,13 @@ export function RatingControl({
   postId,
   initialScore,
   liked,
+  canTry,
 }: {
   postId: string;
   /** The member's own current score, or null when they have not rated it. */
   initialScore: number | null;
   liked: boolean;
+  canTry: boolean;
 }) {
   const tr = useT();
   const labelId = useId();
@@ -94,6 +96,10 @@ export function RatingControl({
               ))}
             </div>
           </>
+        ) : canTry ? (
+          <p className="text-sm text-ink-muted">
+            {tr("Try the product, then choose Like and send in the review.")}
+          </p>
         ) : (
           <>
             <p className="text-sm text-ink-muted">{tr("Swipe right on the product card to like it.")}</p>

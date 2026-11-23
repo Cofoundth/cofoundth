@@ -105,6 +105,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useOptimistic,
@@ -120,11 +121,13 @@ import {
   type RefObject,
 } from "react";
 import {
+  ArrowRight,
   ChevronDown,
   ChevronUp,
   ExternalLink,
   MessageCircle,
   SearchX,
+  SkipForward,
   Smartphone,
   Star,
   X,
@@ -230,7 +233,11 @@ type ProductDeckLabels = {
   discardComment: string;
   deckName: string;
   skip: string;
-  like: string;
+  likeAndTry: string;
+  swipeToLikeAndTry: string;
+  swipeToTry: string;
+  next: string;
+  nextProduct: string;
   tryIt: string;
   /** "{name}, {n} of {total}", announced to screen readers only. */
   position: string;
@@ -281,9 +288,8 @@ const LINK_REL = "noopener noreferrer nofollow";
 /**
  * The shelf sizes itself to the viewport and the stage takes whatever
  * the filter and the buttons leave, so the card's size comes from the screen,
- * never from its content, and a card change never moves the page. Its pictures
- * are letterboxed over a blurred copy of themselves (ProductGallery `backdrop`),
- * because a box this size has no fixed shape to crop to.
+ * within the available space. In the stacked layout a wide cover gets a
+ * shorter card. Images use contain over a blurred backdrop.
  *
  * On phones the summary takes its natural height and the gallery fills the
  * remaining space, without a nested scroll area for the summary. On wide screens
@@ -741,6 +747,7 @@ function Stack({
   const locked = !visible || shelfLocked || handoff !== null;
 
   const stageRef = useRef<HTMLDivElement>(null);
+  const swipeCueId = useId();
   /** The `after` this deck last read from or wrote to the address. undefined
    *  until the first read, which always applies. */
   const knownAfter = useRef<string | null | undefined>(undefined);
@@ -1218,7 +1225,9 @@ function Stack({
       ref={rootRef}
       role="group"
       aria-label={labels.deckName}
+      aria-describedby={current ? swipeCueId : undefined}
       aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp"
+      data-deck-stack=""
       tabIndex={0}
       onKeyDown={onKeyDown}
       // Center the capped stack in the space below the toolbar.
@@ -1272,7 +1281,7 @@ function Stack({
               aria-hidden="true"
               className="pointer-events-none absolute top-4 left-4 z-30 rounded-full bg-navy px-3 py-1.5 text-sm font-medium text-white opacity-0"
             >
-              {signedIn ? labels.like : labels.tryIt}
+              {signedIn ? labels.likeAndTry : labels.tryIt}
             </span>
             <span
               data-deck-hint="skip"
@@ -1309,6 +1318,20 @@ function Stack({
                   sizes="31vw"
                   className="hidden rounded-t-3xl lg:block deck-wide:rounded-tr-none deck-wide:rounded-bl-3xl"
                 />
+              )}
+              {depth === 0 && (
+                <Button
+                  variant="inverse"
+                  size="xs"
+                  data-deck-nodrag=""
+                  aria-label={labels.nextProduct}
+                  aria-disabled={locked}
+                  onClick={skip}
+                  className="absolute bottom-3 left-3 z-20 min-h-10 border border-line px-2.5 font-medium shadow-sm"
+                >
+                  {labels.next}
+                  <SkipForward className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
+                </Button>
               )}
               {/* "More about", where a dating app keeps its own: the
                   pictures' corner. Out of the tab order: the card's link above
@@ -1413,6 +1436,13 @@ function Stack({
                   <CardFooterFace product={product} locale={locale} />
                 </Link>
               </div>
+              <p
+                id={depth === 0 ? swipeCueId : undefined}
+                className={cn("flex shrink-0 items-center gap-1.5 text-xs text-ink-muted sm:text-sm deck-wide:short:text-xs", depth > 0 && "invisible")}
+              >
+                <ArrowRight className="size-3.5 shrink-0" aria-hidden="true" />
+                {signedIn ? labels.swipeToLikeAndTry : labels.swipeToTry}
+              </p>
               {FEATURES.productDeckActions && (
                 <div
                   data-deck-nodrag=""

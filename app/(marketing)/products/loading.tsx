@@ -66,7 +66,7 @@ export default function Loading() {
         </div>
 
         <div className="mt-3 flex min-h-0 flex-1 flex-col lg:mt-4 short:mt-2">
-          <div className="relative flex min-h-0 flex-1 flex-col deck-wide:my-auto deck-wide:max-h-[42rem] deck-wide:md:max-lg:max-h-[37rem] deck-wide:[--deck-panel-width:clamp(min(16rem,50%),38.2%,32.5rem)] deck-wide:[--deck-panel-inset:clamp(1.25rem,2.125vw,2rem)] deck-wide:short:[--deck-panel-inset:clamp(0.75rem,2.4dvh,1rem)]">
+          <div className="relative flex min-h-0 flex-1 flex-col deck-wide:my-auto deck-wide:max-h-[42rem] deck-wide:md:max-lg:max-h-[37rem] deck-wide:[--deck-panel-width:clamp(min(16rem,50%),38.2%,32.5rem)] deck-wide:[--deck-panel-inset:clamp(1.25rem,2.125vw,2rem)] deck-wide:short:[--deck-panel-width:clamp(min(20rem,66%),42%,32.5rem)] deck-wide:short:[--deck-panel-inset:clamp(0.625rem,2.4dvh,1rem)]">
             <div className="relative min-h-0 flex-1">
               {[2, 1].map((depth) => (
                 <Card
@@ -81,23 +81,25 @@ export default function Loading() {
                 className={CARD}
                 style={{ "--depth": 0 } as CSSProperties}
               >
-                <div className="min-h-0 min-w-0 flex-1 bg-line/50" />
-                <div className="flex max-h-[calc(100%_-_4rem)] min-h-0 shrink-0 flex-col gap-2 p-3 sm:gap-3 sm:p-5 deck-wide:max-h-none deck-wide:w-(--deck-panel-width) deck-wide:justify-center deck-wide:gap-3 deck-wide:p-(--deck-panel-inset) deck-wide:short:gap-2">
-                  <div className="flex min-h-0 flex-col gap-2 overflow-hidden sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:gap-2">
-                    <div className="flex shrink-0 flex-col gap-1.5 sm:gap-3 deck-wide:gap-2.5 deck-wide:short:gap-1.5">
+                <div className="relative min-h-0 min-w-0 flex-1 bg-line/50">
+                  <div className="absolute bottom-3 left-3 h-10 w-16 rounded-full bg-line/70" />
+                </div>
+                <div className="flex max-h-[calc(100%_-_4rem)] min-h-0 shrink-0 flex-col gap-2 p-3 sm:gap-3 sm:p-5 deck-wide:max-h-none deck-wide:w-(--deck-panel-width) deck-wide:justify-center deck-wide:gap-3 deck-wide:p-(--deck-panel-inset) deck-wide:short:gap-2 deck-wide:short-landscape:gap-1.5">
+                  <div className="flex min-h-0 flex-col gap-2 overflow-hidden sm:gap-3 deck-wide:contents deck-wide:short:flex deck-wide:short:gap-1.5 deck-wide:short-landscape:gap-1">
+                    <div className="flex shrink-0 flex-col gap-1.5 sm:gap-3 deck-wide:gap-2.5 deck-wide:short:gap-1">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="h-7 w-3/4 rounded bg-line/60 sm:h-8 deck-wide:h-[43px] deck-wide:lg:h-[55px] deck-wide:short:h-[43px]" />
+                        <div className="h-7 w-3/4 rounded bg-line/60 deck-wide:h-[33px] deck-wide:lg:h-[41px] deck-wide:short:h-7" />
                         <div className="h-7 w-12 rounded-full bg-line/50 sm:h-8" />
                       </div>
                       <div className="h-8 w-16 rounded-full bg-line/50" />
                     </div>
-                    <div className="flex shrink-0 flex-col deck-wide:gap-3 deck-wide:border-y deck-wide:border-line deck-wide:py-3 deck-wide:short:gap-1.5 deck-wide:short:py-1.5">
+                    <div className="flex shrink-0 flex-col deck-wide:gap-3 deck-wide:border-y deck-wide:border-line deck-wide:py-3 deck-wide:short:border-0 deck-wide:short:py-0">
                       <div className="flex flex-col gap-2">
                         <div className={`${LINE} w-full`} />
                         <div className={`${LINE} w-11/12`} />
                         <div className={`${LINE} hidden w-2/3 deck-wide:block`} />
                       </div>
-                      <div className="hidden shrink-0 grid-cols-2 gap-3 deck-wide:grid">
+                      <div className="hidden shrink-0 grid-cols-2 gap-3 deck-wide:grid deck-wide:short:hidden">
                         {[0, 1].map((i) => (
                           <div key={i} className="flex flex-col gap-1.5">
                             <div className="h-[2.0625rem] w-14 rounded-lg bg-line/60 lg:h-[2.625rem] short:h-[2.0625rem]" />
@@ -111,10 +113,11 @@ export default function Loading() {
                       <div className="h-5 w-24 rounded bg-line/50 short:h-4" />
                     </div>
                   </div>
-                  <div className="mt-auto flex shrink-0 items-center gap-4 border-t border-line pt-2 sm:pt-3 deck-wide:hidden">
+                  <div className="mt-auto flex shrink-0 items-center gap-4 border-t border-line pt-2 sm:pt-3 deck-wide:hidden deck-wide:short:mt-0 deck-wide:short:flex deck-wide:short:pt-1.5">
                     <div className="h-5 w-20 rounded-full bg-line/70" />
                     <div className="h-5 w-10 rounded-full bg-line/50" />
                   </div>
+                  <div className="h-4 w-28 shrink-0 rounded bg-line/50 sm:h-5 deck-wide:short:h-4" />
                   {FEATURES.productDeckActions && (
                     <div className="hidden shrink-0 grid-cols-2 gap-3 deck-wide:grid">{actions}</div>
                   )}

@@ -9,13 +9,19 @@ import {
   productImages,
   productName,
 } from "@/app/(marketing)/products/product-view";
+import { getAccountRole } from "@/lib/account";
 import { requireUser } from "@/lib/auth";
 import { getBlockedIds } from "@/lib/blocking";
 import { t } from "@/lib/i18n";
 import { getLocale, tServer } from "@/lib/i18n-server";
 import { productPath } from "@/lib/post-types";
+import { getMyProductRatings } from "@/lib/product-ratings";
+import { getTriedProductIds } from "@/lib/product-tries";
 import { getLikedProductsPage } from "@/lib/posts";
-import { LIKED_PRODUCTS_PATH } from "@/lib/roles";
+import { canComment, canRate, LIKED_PRODUCTS_PATH } from "@/lib/roles";
+import { createClient } from "@/lib/supabase/server";
+import { webUrl } from "@/lib/web-url";
+import { LikedProductReviewButton } from "./LikedProductReviewButton";
 
 const PAGE_SIZE = 24;
 
@@ -36,10 +42,11 @@ export default async function LikedProductsPage({
   searchParams: Promise<{ page?: string | string[] }>;
 }) {
   const user = await requireUser();
-  const [{ page: rawPage }, blocked, locale] = await Promise.all([
+  const [{ page: rawPage }, blocked, locale, supabase] = await Promise.all([
     searchParams,
     getBlockedIds(user.id),
     getLocale(),
+    createClient(),
   ]);
   const requested = typeof rawPage === "string" ? Number(rawPage) : 1;
   const page =
@@ -47,9 +54,22 @@ export default async function LikedProductsPage({
     requested <= Math.floor(Number.MAX_SAFE_INTEGER / PAGE_SIZE)
       ? requested
       : 1;
-  const liked = await getLikedProductsPage(user.id, blocked, (page - 1) * PAGE_SIZE, PAGE_SIZE);
+  const [liked, role] = await Promise.all([
+    getLikedProductsPage(user.id, blocked, (page - 1) * PAGE_SIZE, PAGE_SIZE),
+    getAccountRole(supabase, user.id),
+  ]);
   const lastPage = Math.max(1, Math.ceil((liked?.count ?? 0) / PAGE_SIZE));
   if (liked && page > lastPage) redirect(pageHref(lastPage));
+
+  const mayRate = canRate(role);
+  const mayComment = canComment(role);
+  const reviewIds = mayRate
+    ? (liked?.products ?? []).filter((product) => product.author_id !== user.id).map((product) => product.id)
+    : [];
+  const [scores, triedIds] = await Promise.all([
+    getMyProductRatings(supabase, reviewIds, user.id),
+    mayComment ? getTriedProductIds(supabase, user.id, reviewIds) : new Set<string>(),
+  ]);
 
   const tr = (message: string) => t(message, locale);
   return (
@@ -73,27 +93,47 @@ export default async function LikedProductsPage({
           {liked.products.map((product) => {
             const cover = productImages(product)[0];
             const name = productName(product, tr("Product"));
+            const href = productPath(product.id);
             return (
               <li key={product.id}>
                 <ProductGridCard
-                  href={productPath(product.id)}
+                  href={href}
                   name={name}
                   cover={cover}
                   rating={product.rating}
                   mobileOnly={isPhoneOnly(product.link_url, product.platforms)}
                   curated={product.is_curated}
                   locale={locale}
+                  actions={
+                    <>
+                      <form action={unlikeProductAction.bind(null, product.id)}>
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="sm"
+                          className="min-h-11"
+                          aria-label={tr("Unlike {name}").replace("{name}", () => name)}
+                        >
+                          {tr("Unlike")}
+                        </Button>
+                      </form>
+                      {mayRate && product.author_id !== user.id && (
+                        <LikedProductReviewButton
+                          product={{
+                            id: product.id,
+                            name,
+                            reviewable: true,
+                            liked: true,
+                            myScore: scores.get(product.id) ?? null,
+                            sample: false,
+                            tried: triedIds.has(product.id),
+                          }}
+                          allowTryConfirmation={mayComment && webUrl(product.link_url) !== null}
+                        />
+                      )}
+                    </>
+                  }
                 />
-                <form action={unlikeProductAction.bind(null, product.id)} className="mt-1 flex justify-end">
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={tr("Unlike {name}").replace("{name}", () => name)}
-                  >
-                    {tr("Unlike")}
-                  </Button>
-                </form>
               </li>
             );
           })}

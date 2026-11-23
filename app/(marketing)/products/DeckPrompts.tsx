@@ -99,6 +99,7 @@ export type PromptProduct = {
   liked: boolean;
   myScore: number | null;
   sample: boolean;
+  tried?: boolean;
 };
 
 export type DeckViewer = {
@@ -375,16 +376,18 @@ export function useProductPrompts({
 }
 
 /** Feedback after a try. Save the like before sending either kind of feedback. */
-function ReviewDialog({
+export function ReviewDialog({
   product,
   initialScore,
   recording,
+  allowTryConfirmation = false,
   onSaved,
   onClose,
 }: {
   product: PromptProduct;
   initialScore: number | null;
   recording?: Promise<boolean>;
+  allowTryConfirmation?: boolean;
   onSaved: (id: string, score: number) => void;
   onClose: () => void;
 }) {
@@ -398,6 +401,7 @@ function ReviewDialog({
   // page's RatingControl).
   const [hover, setHover] = useState<number | null>(null);
   const [comment, setComment] = useState("");
+  const [confirmedTry, setConfirmedTry] = useState(false);
   /** What has already gone through, so a retry after a partial failure
    *  re-sends only what failed — above all, never the same comment twice. */
   const [savedScore, setSavedScore] = useState<number | null>(initialScore);
@@ -409,7 +413,9 @@ function ReviewDialog({
   const [isPending, startTransition] = useTransition();
   const shown = hover ?? score ?? 0;
   const text = comment.trim();
-  const canComment = recording !== undefined;
+  const canCommentAfterTry = product.tried === true || recording !== undefined;
+  const offerConfirmation = allowTryConfirmation && !canCommentAfterTry;
+  const canComment = canCommentAfterTry || (offerConfirmation && confirmedTry);
   const canSendComment = canComment && !!text && !commentPosted;
   const newScore = score !== savedScore ? score : null;
   const canSend = !product.sample && !isPending &&
@@ -453,9 +459,13 @@ function ReviewDialog({
       if (canSendComment) {
         const fd = new FormData();
         fd.set("content", text);
-        const res = (await recording)
+        const needsConfirmation = offerConfirmation && confirmedTry;
+        const tried = product.tried || await (
+          needsConfirmation ? recordProductTryAction(product.id).catch(() => false) : recording
+        );
+        const res = tried
           ? await createPostCommentAction(product.id, null, fd).catch(() => ({ error: UNREACHABLE }))
-          : { error: TRY_BEFORE_COMMENTING };
+          : { error: needsConfirmation ? UNREACHABLE : TRY_BEFORE_COMMENTING };
         if (res?.error) {
           ok = false;
           setCommentError(res.error);
@@ -474,12 +484,13 @@ function ReviewDialog({
       onEscape={dismiss}
       labelledBy={titleId}
       size="md"
+      panelClassName="short-landscape:p-4"
     >
-      <h3 id={titleId} className="mb-5 text-xl">
+      <h3 id={titleId} className="mb-5 text-xl short-landscape:mb-3">
         {tr("How was {name}?").replace("{name}", () => product.name)}
       </h3>
 
-      <p id={starsLabelId} className="mb-2 text-sm text-ink-muted">
+      <p id={starsLabelId} className="mb-2 text-sm text-ink-muted short-landscape:mb-1">
         {tr("Your rating")}
       </p>
       <div
@@ -500,7 +511,7 @@ function ReviewDialog({
             onPointerEnter={(e) => {
               if (e.pointerType === "mouse") setHover(n);
             }}
-            className="grid h-12 w-12 place-items-center text-navy transition-colors hover:bg-cream"
+            className="grid h-12 w-12 place-items-center text-navy transition-colors hover:bg-cream short-landscape:h-11"
           >
             <Star
               aria-hidden="true"
@@ -517,9 +528,22 @@ function ReviewDialog({
         </p>
       )}
 
+      {offerConfirmation && (
+        <label className="mt-3 flex min-h-11 w-fit cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="size-4 accent-navy"
+            checked={confirmedTry}
+            disabled={isPending}
+            onChange={(event) => setConfirmedTry(event.target.checked)}
+          />
+          {tr("I’ve tried it and want to comment")}
+        </label>
+      )}
+
       {canComment && (
-        <div className="mt-5">
-          <p id={commentLabelId} className="mb-2 text-sm text-ink-muted">
+        <div className="mt-5 short-landscape:mt-3">
+          <p id={commentLabelId} className="mb-2 text-sm text-ink-muted short-landscape:mb-1">
             {tr("Add a comment (optional)")}
           </p>
           <Textarea
@@ -530,6 +554,7 @@ function ReviewDialog({
             rows={3}
             maxLength={2000}
             resize="y"
+            className="short-landscape:h-16 short-landscape:py-2"
             placeholder={tr("What worked, and what would you change?")}
           />
           {commentPosted && (
@@ -546,7 +571,7 @@ function ReviewDialog({
       )}
 
       {product.sample && (
-        <p className="mt-5 text-sm text-ink-muted">
+        <p className="mt-5 text-sm text-ink-muted short-landscape:mt-3">
           {tr("This is a sample product, so nothing here is saved.")}
         </p>
       )}
@@ -556,7 +581,7 @@ function ReviewDialog({
           {tr(likeError)}
         </p>
       )}
-      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end short-landscape:mt-3 short-landscape:flex-row short-landscape:justify-end">
         <Button variant="secondary" onClick={dismiss} aria-disabled={isPending}>
           {tr("Maybe later")}
         </Button>

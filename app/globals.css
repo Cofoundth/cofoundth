@@ -44,7 +44,7 @@
 /* The product deck uses a side panel at tablet widths and on landscape
    phones. Narrow portrait screens stack the gallery above the summary. */
 @custom-variant deck-wide {
-  @media (width >= 48rem), (width >= 35rem) and (min-aspect-ratio: 4/3) {
+  @media (width >= 48rem), (min-aspect-ratio: 4/3) {
     @slot;
   }
 }
@@ -384,6 +384,15 @@
    A signed-in member keeps the app shell: that is their navigation. */
 body:has([data-deck-page]) [data-marketing-chrome] {
   display: none;
+}
+
+/* Size the stacked card to its cover. Later screenshots stay in the
+   same frame so browsing the gallery does not move the controls. */
+@media (width < 48rem) and (aspect-ratio < 4/3) {
+  [data-deck-stack]:has(> div > [data-deck-card]:not([inert]) [data-wide-cover]) {
+    max-height: calc(16.5rem + 60vw);
+    margin-block: auto;
+  }
 }
 
 @media (width >= 64rem) {
