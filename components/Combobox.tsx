@@ -12,6 +12,7 @@ type ComboboxProps = {
   onChange: (value: string) => void;
   placeholder?: string;
   id?: string;
+  "aria-label"?: string;
   /** When set, a hidden input is rendered so the value submits with a form. */
   name?: string;
   /** Allow values not present in `options` (free text). Defaults to true. */
@@ -31,6 +32,7 @@ export default function Combobox({
   onChange,
   placeholder,
   id,
+  "aria-label": ariaLabel,
   name,
   allowCustom = true,
   className,
@@ -106,7 +108,8 @@ export default function Combobox({
     if (e.key === "ArrowDown") {
       e.preventDefault();
       if (!open) return openMenu();
-      setActive(Math.min(activeIndex + 1, filtered.length - 1));
+      if (filtered.length > 0)
+        setActive(Math.min(activeIndex + 1, filtered.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       if (!open) return openMenu();
@@ -135,8 +138,12 @@ export default function Combobox({
         id={id}
         type="text"
         role="combobox"
+        aria-label={ariaLabel}
         aria-expanded={open}
-        aria-controls={listId}
+        aria-controls={open ? listId : undefined}
+        aria-activedescendant={
+          open && activeIndex >= 0 ? `${listId}-option-${activeIndex}` : undefined
+        }
         aria-autocomplete="list"
         autoComplete="off"
         value={open ? query : value}
@@ -186,6 +193,7 @@ export default function Combobox({
               return (
                 <li
                   key={option}
+                  id={`${listId}-option-${i}`}
                   role="option"
                   aria-selected={selected}
                   onMouseEnter={() => setActive(i)}

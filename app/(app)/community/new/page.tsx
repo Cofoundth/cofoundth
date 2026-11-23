@@ -2,21 +2,22 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PostComposer } from "./PostComposer";
 import { Card, Section } from "@/components/ui";
+import { tServer } from "@/lib/i18n-server";
 
-export default function NewPostPage() {
+export default async function NewPostPage() {
   return (
     <Section width="narrow">
       <Link
         href="/community"
         className="text-sm text-ink-muted hover:text-navy mb-8 inline-flex items-center gap-1.5"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to community
+        <ArrowLeft aria-hidden className="w-4 h-4" /> {await tServer("Back to community")}
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-d2 mb-2">New post</h1>
+        <h1 className="text-d2 mb-2">{await tServer("New post")}</h1>
         <p className="text-sm text-ink-muted">
-          Share what you&rsquo;re building, ask a question, or request feedback.
+          {await tServer("Share what you’re building, ask a question, or request feedback.")}
         </p>
       </div>
 

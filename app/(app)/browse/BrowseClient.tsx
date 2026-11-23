@@ -474,7 +474,7 @@ export function BrowseClient({
           Complement Score and says so. Free text is scanned for role/industry
           words in Thai or English; the grid re-ranks by fit. */}
       <Card className="mb-8">
-        <h2 className="text-lg font-bold tracking-normal mb-1">
+        <h2 id="founder-match-heading" className="text-lg font-bold tracking-normal mb-1">
           {tr("Who are you looking for?")}
         </h2>
         <p className="text-sm text-ink-muted mb-4">
@@ -496,6 +496,7 @@ export function BrowseClient({
             />
             <input
               value={matchQuery}
+              aria-labelledby="founder-match-heading"
               onChange={(e) => setMatchQuery(e.target.value)}
               placeholder={tr("e.g. a technical co-founder in FinTech")}
               className="w-full h-11 pl-11 pr-4 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
@@ -701,6 +702,7 @@ export function BrowseClient({
                 </div>
               )}
               <Combobox
+                aria-label={tr("Industry")}
                 options={INDUSTRY_OPTIONS.filter(
                   (i) => !industryFilters.includes(i),
                 )}
@@ -738,6 +740,7 @@ export function BrowseClient({
                 </div>
               )}
               <Combobox
+                aria-label={tr("Can help with")}
                 options={HELP_TOPICS.filter(
                   (h) => !helpFilters.includes(h),
                 ).map((h) => tr(h))}
@@ -770,6 +773,7 @@ export function BrowseClient({
                 </div>
               )}
               <Combobox
+                aria-label={tr("Needs help with")}
                 options={HELP_TOPICS.filter(
                   (h) => !needsFilters.includes(h),
                 ).map((h) => tr(h))}
@@ -802,6 +806,7 @@ export function BrowseClient({
                 </div>
               )}
               <Combobox
+                aria-label={tr("Activities")}
                 options={ACTIVITIES.filter(
                   (a) => !activityFilters.includes(a),
                 ).map((a) => tr(a))}

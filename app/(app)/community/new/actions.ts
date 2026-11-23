@@ -6,7 +6,7 @@ import { getAccountRole } from "@/lib/account";
 import { canPostThread } from "@/lib/roles";
 import { isRateLimited, RATE_LIMITED } from "@/lib/write-limits";
 
-export type PostState = { error?: string } | null;
+export type PostState = { error: string; invalidTag?: string } | null;
 
 export async function createPostAction(
   _prev: PostState,
@@ -34,7 +34,8 @@ export async function createPostAction(
   for (const tag of tags) {
     if (!/^[\p{L}\p{N}\p{M}]+(-[\p{L}\p{N}\p{M}]+)*$/u.test(tag) || tag.length > 30) {
       return {
-        error: `Bad tag "${tag}" — letters, digits, and hyphens only, max 30 chars.`,
+        error: 'Invalid tag "{tag}". Use up to 30 letters, numbers, or hyphens.',
+        invalidTag: tag,
       };
     }
   }

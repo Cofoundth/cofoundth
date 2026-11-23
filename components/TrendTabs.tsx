@@ -16,13 +16,14 @@ export function TrendTabs({
 
   return (
     <div>
-      <div className="flex items-center gap-1 mb-4 border-b border-line">
+      <div className="mb-4 flex flex-wrap items-center gap-x-1 border-b border-line">
         {series.map((s, i) => (
           <button
             key={s.name}
             type="button"
             onClick={() => setActive(i)}
-            className={`px-4 py-2 text-sm tracking-wide border-b-2 -mb-px rounded-none transition-colors ${
+            aria-pressed={i === active}
+            className={`-mb-px min-h-11 rounded-none border-b-2 px-3 py-2 text-sm tracking-wide transition-colors sm:px-4 ${
               i === active
                 ? "border-navy text-navy font-medium"
                 : "border-transparent text-ink-muted hover:text-navy"

@@ -43,22 +43,25 @@ function Section({
 }
 
 function Field({
+  htmlFor,
   label,
   hint,
   required,
   children,
 }: {
+  htmlFor?: string;
   label: string;
   hint?: string;
   required?: boolean;
   children: React.ReactNode;
 }) {
+  const Caption = htmlFor ? "label" : "p";
   return (
     <div>
-      <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+      <Caption htmlFor={htmlFor} className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
         {label}
-        {required && <span className="text-gold-ink ml-1">*</span>}
-      </label>
+        {required && <span aria-hidden="true" className="text-gold-ink ml-1">*</span>}
+      </Caption>
       {children}
       {hint && <p className="text-xs text-ink-muted mt-1.5">{hint}</p>}
     </div>
@@ -97,8 +100,9 @@ export function CreateOrgForm() {
       />
 
       <Section title={tr("The company")}>
-      <Field label={tr("Company name")} required>
+      <Field htmlFor="org-name" label={tr("Company name")} required>
         <input
+          id="org-name"
           name="name"
           type="text"
           required
@@ -113,8 +117,9 @@ export function CreateOrgForm() {
         <OrgLogoField value={logoUrl} onChange={setLogoUrl} />
       </Field>
 
-      <Field label={tr("Tagline")} hint={tr("One line on what you do.")}>
+      <Field htmlFor="org-tagline" label={tr("Tagline")} hint={tr("One line on what you do.")}>
         <input
+          id="org-tagline"
           name="tagline"
           type="text"
           maxLength={140}
@@ -124,11 +129,13 @@ export function CreateOrgForm() {
       </Field>
 
       <Field
+        htmlFor="org-pitch"
         label={tr("What your company does")}
         required
         hint={tr("Up to ~200 words. What you build, for whom, and the value.")}
       >
         <textarea
+          id="org-pitch"
           name="pitch"
           rows={5}
           value={pitch}
@@ -151,8 +158,9 @@ export function CreateOrgForm() {
       </Section>
 
       <Section title={tr("What you're building")}>
-      <Field label={tr("Product link")} required>
+      <Field htmlFor="org-product-url" label={tr("Product link")} required>
         <input
+          id="org-product-url"
           name="product_url"
           type="url"
           required
@@ -167,10 +175,10 @@ export function CreateOrgForm() {
         <OrgProductImagesField value={productImages} onChange={setProductImages} />
       </Field>
 
-      <Field
-        label={tr("What are you looking for?")}
-        hint={tr("This places your company under these tabs in the directory.")}
-      >
+      <fieldset>
+        <legend className="mb-2 text-xs uppercase tracking-[0.15em] text-ink-muted">
+          {tr("What are you looking for?")}
+        </legend>
         <div className="flex flex-col gap-2">
           <label className="inline-flex items-center gap-2 text-sm text-ink cursor-pointer">
             <input
@@ -186,7 +194,10 @@ export function CreateOrgForm() {
             {tr("Funding from investors")}
           </label>
         </div>
-      </Field>
+        <p className="mt-1.5 text-xs text-ink-muted">
+          {tr("This places your company under these tabs in the directory.")}
+        </p>
+      </fieldset>
 
       </Section>
 
@@ -195,8 +206,9 @@ export function CreateOrgForm() {
       <Section title={tr("Optional details")}>
         <div className="space-y-6">
           <div className="grid sm:grid-cols-2 gap-6">
-            <Field label={tr("Location")}>
+            <Field htmlFor="org-location" label={tr("Location")}>
               <input
+                id="org-location"
                 name="location"
                 type="text"
                 maxLength={80}
@@ -204,8 +216,8 @@ export function CreateOrgForm() {
                 className={inputCls}
               />
             </Field>
-            <Field label={tr("Stage")}>
-              <select name="stage" defaultValue="" className={inputCls}>
+            <Field htmlFor="org-stage" label={tr("Stage")}>
+              <select id="org-stage" name="stage" defaultValue="" className={inputCls}>
                 <option value="">{tr("Select…")}</option>
                 {STAGES.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -222,7 +234,7 @@ export function CreateOrgForm() {
               company search on /companies matches org industries as plain text,
               so the mismatch quietly cost relevance. Controlled vocabulary now;
               the action whitelists it again server-side. */}
-          <Field label={tr("Industry")}>
+          <Field htmlFor="org-industry" label={tr("Industry")}>
             {industry.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
                 {/* Left hand-rolled. `<ToggleChip selected removable>` is the
@@ -246,6 +258,7 @@ export function CreateOrgForm() {
               </div>
             )}
             <Combobox
+              id="org-industry"
               options={INDUSTRIES.filter((i) => !industry.includes(i))}
               value=""
               onChange={(v) => {
@@ -265,8 +278,9 @@ export function CreateOrgForm() {
             ))}
           </Field>
 
-          <Field label={tr("What we offer")} hint={tr("Separate with commas")}>
+          <Field htmlFor="org-capabilities" label={tr("What we offer")} hint={tr("Separate with commas")}>
             <input
+              id="org-capabilities"
               name="capabilities"
               type="text"
               placeholder={tr("e.g. Software, inventory tools, mobile app")}
@@ -275,10 +289,12 @@ export function CreateOrgForm() {
           </Field>
 
           <Field
+            htmlFor="org-partnership-seeking"
             label={tr("Partnerships we're seeking")}
             hint={tr("Separate with commas")}
           >
             <input
+              id="org-partnership-seeking"
               name="partnership_seeking"
               type="text"
               placeholder={tr("e.g. Media companies, ad agencies, influencers")}

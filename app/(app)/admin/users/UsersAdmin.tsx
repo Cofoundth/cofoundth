@@ -63,7 +63,8 @@ export function UsersAdmin({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name or email…"
+          placeholder={tr("Search name or email…")}
+          aria-label={tr("Search name or email…")}
           className="flex-1 px-3 py-2 border border-line bg-white text-sm text-ink focus:outline-none focus:border-navy rounded-xl"
         />
         <div className="flex flex-wrap gap-1.5">

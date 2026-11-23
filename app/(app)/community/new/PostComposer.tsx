@@ -4,10 +4,12 @@ import { useActionState } from "react";
 import { ArrowRight } from "lucide-react";
 import { createPostAction, type PostState } from "./actions";
 import { Button } from "@/components/ui";
+import { useT } from "@/lib/i18n-client";
 
 const INITIAL: PostState = null;
 
 export function PostComposer() {
+  const tr = useT();
   const [state, formAction, isPending] = useActionState<PostState, FormData>(
     createPostAction,
     INITIAL,
@@ -20,7 +22,7 @@ export function PostComposer() {
           htmlFor="title"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          Title
+          {tr("Title")}
         </label>
         <input
           id="title"
@@ -29,7 +31,7 @@ export function PostComposer() {
           required
           maxLength={200}
           autoFocus
-          placeholder="Ask a question, share a milestone, request feedback…"
+          placeholder={tr("Ask a question, share a milestone, request feedback…")}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
       </div>
@@ -39,7 +41,7 @@ export function PostComposer() {
           htmlFor="content"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          Content
+          {tr("Content")}
         </label>
         <textarea
           id="content"
@@ -47,7 +49,7 @@ export function PostComposer() {
           required
           maxLength={5000}
           rows={10}
-          placeholder="Markdown welcome. Be specific — better questions get better answers."
+          placeholder={tr("Markdown welcome. Be specific — better questions get better answers.")}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy resize-y rounded-xl"
         />
       </div>
@@ -57,30 +59,33 @@ export function PostComposer() {
           htmlFor="tags"
           className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2"
         >
-          Tags <span className="normal-case tracking-normal text-ink-muted">(up to 5, comma or space separated)</span>
+          {tr("Tags")}
         </label>
         <input
           id="tags"
           name="tags"
           type="text"
           maxLength={200}
-          placeholder="fundraising, sales, hiring, thai-market"
+          aria-describedby="post-tags-hint"
+          placeholder={tr("fundraising, sales, hiring, thai-market")}
           className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
         />
-        <p className="text-xs text-ink-muted mt-2">
-          Letters, digits, and hyphens — Thai works too. Helps others find your post.
+        <p id="post-tags-hint" className="text-xs text-ink-muted mt-2">
+          {tr("Add up to 5 tags separated by commas or spaces. Use letters, numbers, or hyphens.")}
         </p>
       </div>
 
       {state?.error && (
-        <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
-          {state.error}
+        <div role="alert" className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
+          {state.invalidTag
+            ? tr(state.error).replace("{tag}", () => state.invalidTag ?? "")
+            : tr(state.error)}
         </div>
       )}
 
       <div className="pt-4 border-t border-line flex justify-end">
         <Button type="submit" size="lg" disabled={isPending}>
-          {isPending ? "Publishing…" : "Publish post"}
+          {tr(isPending ? "Publishing…" : "Publish post")}
           {!isPending && <ArrowRight className="w-4 h-4" />}
         </Button>
       </div>

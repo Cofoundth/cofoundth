@@ -28,7 +28,7 @@ export default async function AdminInsightsPage() {
   return (
     <Section>
       <AdminTabs />
-      <div className="mb-8 pb-8 border-b border-line flex items-end justify-between gap-4">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-8">
         <div className="max-w-[640px]">
           <div className="flex min-w-0 items-baseline gap-2.5">
             <h1 className="text-d2 truncate">Insights</h1>
@@ -72,10 +72,10 @@ export default async function AdminInsightsPage() {
                 {rows.map((r) => (
                   <div
                     key={r.id}
-                    className="px-5 py-4 flex items-center justify-between gap-4"
+                    className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-3 mb-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                         <span className="text-xs uppercase tracking-[0.2em] text-navy border border-line px-2 py-0.5 rounded-full">
                           {r.locale}
                         </span>
@@ -96,7 +96,7 @@ export default async function AdminInsightsPage() {
                         {r.title}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <form
                         action={togglePublishAction.bind(
                           null,

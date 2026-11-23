@@ -477,10 +477,11 @@ function StepRole({
     <div className="space-y-10">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+          <label htmlFor="onboarding-first-name" className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
             {tr("First name")}
           </label>
           <input
+            id="onboarding-first-name"
             type="text"
             value={data.first_name}
             onChange={(e) => set("first_name", e.target.value)}
@@ -489,10 +490,11 @@ function StepRole({
           />
         </div>
         <div>
-          <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+          <label htmlFor="onboarding-last-name" className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
             {tr("Last name")}
           </label>
           <input
+            id="onboarding-last-name"
             type="text"
             value={data.last_name}
             onChange={(e) => set("last_name", e.target.value)}
@@ -856,10 +858,11 @@ function StepPitch({
       </div>
 
       <div>
-        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
+        <label htmlFor="onboarding-project-url" className="block text-xs uppercase tracking-[0.15em] text-ink-muted mb-2">
           {tr("Link to your project (optional)")}
         </label>
         <input
+          id="onboarding-project-url"
           type="text"
           value={data.project_url}
           onChange={(e) => set("project_url", e.target.value)}

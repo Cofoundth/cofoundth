@@ -21,14 +21,18 @@ export function AdminTabs() {
   const pathname = usePathname();
   const tr = useT();
   return (
-    <nav className="flex items-center gap-1 mb-8 border-b border-line">
+    <nav
+      aria-label={tr("Admin")}
+      className="mb-8 flex max-w-full flex-wrap items-center gap-x-1 border-b border-line"
+    >
       {TABS.map((t) => {
         const active = pathname?.startsWith(t.href);
         return (
           <Link
             key={t.href}
             href={t.href}
-            className={`px-4 py-2 text-sm tracking-wide border-b-2 -mb-px transition-colors ${
+            aria-current={active ? "page" : undefined}
+            className={`-mb-px flex min-h-11 items-center border-b-2 px-3 py-2 text-sm tracking-wide transition-colors sm:px-4 ${
               active
                 ? "border-navy text-navy font-medium"
                 : "border-transparent text-ink-muted hover:text-navy"

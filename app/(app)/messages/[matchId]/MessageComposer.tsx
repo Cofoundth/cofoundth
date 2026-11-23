@@ -124,6 +124,7 @@ export function MessageComposer({ matchId }: { matchId: string }) {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder={tr("Write a message…")}
+            aria-label={tr("Write a message…")}
             className="flex-1 px-4 py-3 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy resize-none rounded-xl"
             onKeyDown={(e) => {
               // Enter sends; Shift+Enter inserts a newline.

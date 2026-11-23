@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Trash2, UserPlus } from "lucide-react";
 import {
@@ -32,6 +32,7 @@ export function ManagePanel({
 }) {
   const tr = useT();
   const router = useRouter();
+  const inviteEmailId = useId();
   const [pending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"member" | "admin">("member");
@@ -78,11 +79,12 @@ export function ManagePanel({
 
       {/* Invite */}
       <form onSubmit={sendInvite} className="space-y-3">
-        <label className="block text-xs uppercase tracking-[0.15em] text-ink-muted">
+        <label htmlFor={inviteEmailId} className="block text-xs uppercase tracking-[0.15em] text-ink-muted">
           {tr("Invite a teammate")}
         </label>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
+            id={inviteEmailId}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -90,6 +92,7 @@ export function ManagePanel({
             className="flex-1 px-4 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
           <select
+            aria-label={tr("Role")}
             value={role}
             onChange={(e) => setRole(e.target.value as "member" | "admin")}
             className="px-3 py-2.5 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
@@ -180,6 +183,7 @@ export function ManagePanel({
                     </span>
                   ) : (
                     <select
+                      aria-label={tr("Role for {name}").replace("{name}", m.name)}
                       value={m.role}
                       disabled={pending}
                       onChange={(e) =>

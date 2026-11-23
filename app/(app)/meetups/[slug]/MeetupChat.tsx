@@ -113,6 +113,7 @@ export function MeetupChat({
           onChange={(e) => setText(e.target.value)}
           maxLength={2000}
           placeholder={tr("Message the attendees…")}
+          aria-label={tr("Message the attendees…")}
           className="min-w-0 flex-1 h-11 px-4 border border-line bg-white text-ink text-sm focus:outline-none focus:border-navy rounded-xl"
         />
         <button

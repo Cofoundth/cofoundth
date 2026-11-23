@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n-client";
 import type { AccountRole } from "@/lib/roles";
 
 type GoogleSignInButtonProps = {
@@ -41,6 +42,7 @@ export function GoogleSignInButton({
   next,
   role,
 }: GoogleSignInButtonProps) {
+  const tr = useT();
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleClick() {
@@ -73,7 +75,7 @@ export function GoogleSignInButton({
       className="w-full px-8 py-4 border border-line bg-white hover:bg-cream disabled:opacity-60 text-ink text-sm tracking-wide transition-colors inline-flex items-center justify-center gap-3"
     >
       <GoogleLogo />
-      {isLoading ? "Redirecting…" : label}
+      {tr(isLoading ? "Redirecting…" : label)}
     </button>
   );
 }

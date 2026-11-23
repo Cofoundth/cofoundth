@@ -203,8 +203,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
       {/* Personal */}
       <Section title={tr("Personal information")}>
         <div id="rf-name" className="grid grid-cols-2 gap-4">
-          <Field label={tr("First name")}>
+          <Field htmlFor="settings-first_name" label={tr("First name")}>
             <input
+              id="settings-first_name"
               name="first_name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -212,8 +213,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
               className={reqInput(nameMissing)}
             />
           </Field>
-          <Field label={tr("Last name")}>
+          <Field htmlFor="settings-last_name" label={tr("Last name")}>
             <input
+              id="settings-last_name"
               name="last_name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -224,8 +226,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         </div>
         {nameMissing && <RequiredFlag tr={tr} />}
         <div className="grid grid-cols-2 gap-4">
-          <Field label={tr("Age (optional)")}>
+          <Field htmlFor="settings-age" label={tr("Age (optional)")}>
             <input
+              id="settings-age"
               name="age"
               type="number"
               min={16}
@@ -234,8 +237,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
               className={inputCls}
             />
           </Field>
-          <Field label={tr("Location (optional)")}>
+          <Field htmlFor="settings-location" label={tr("Location (optional)")}>
             <Combobox
+              id="settings-location"
               name="location"
               options={provinceOptions(locale)}
               value={provinceLabel(location, locale)}
@@ -246,32 +250,36 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           </Field>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label={tr("LinkedIn (optional)")}>
+          <Field htmlFor="settings-linkedin_url" label={tr("LinkedIn (optional)")}>
             <input
+              id="settings-linkedin_url"
               name="linkedin_url"
               defaultValue={initial.linkedin_url ?? ""}
               placeholder="linkedin.com/in/you"
               className={inputCls}
             />
           </Field>
-          <Field label={tr("X (optional)")}>
+          <Field htmlFor="settings-x_url" label={tr("X (optional)")}>
             <input
+              id="settings-x_url"
               name="x_url"
               defaultValue={initial.x_url ?? ""}
               placeholder="x.com/you"
               className={inputCls}
             />
           </Field>
-          <Field label={tr("Instagram (optional)")}>
+          <Field htmlFor="settings-instagram_url" label={tr("Instagram (optional)")}>
             <input
+              id="settings-instagram_url"
               name="instagram_url"
               defaultValue={initial.instagram_url ?? ""}
               placeholder="instagram.com/you"
               className={inputCls}
             />
           </Field>
-          <Field label={tr("Facebook (optional)")}>
+          <Field htmlFor="settings-facebook_url" label={tr("Facebook (optional)")}>
             <input
+              id="settings-facebook_url"
               name="facebook_url"
               defaultValue={initial.facebook_url ?? ""}
               placeholder="facebook.com/you"
@@ -279,8 +287,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             />
           </Field>
         </div>
-        <Field label={tr("Work experience (optional)")}>
+        <Field htmlFor="settings-work_experience" label={tr("Work experience (optional)")}>
           <textarea
+            id="settings-work_experience"
             name="work_experience"
             defaultValue={initial.work_experience ?? ""}
             rows={4}
@@ -291,8 +300,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             )}
           />
         </Field>
-        <Field label={tr("Education (optional)")}>
+        <Field htmlFor="settings-education" label={tr("Education (optional)")}>
           <textarea
+            id="settings-education"
             name="education"
             defaultValue={initial.education ?? ""}
             rows={2}
@@ -319,8 +329,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           </Chip>
         </div>
         {type === "company" && (
-          <Field label={tr("Company name")}>
+          <Field htmlFor="settings-company_name" label={tr("Company name")}>
             <input
+              id="settings-company_name"
               name="company_name"
               defaultValue={initial.company_name ?? ""}
               maxLength={100}
@@ -398,6 +409,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         </div>
         <input
           type="text"
+          aria-label={tr("Other industry")}
           placeholder={tr("Other — type and press Enter")}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -466,9 +478,11 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
       <Section title={tr("Info & ideas")}>
         <div id="rf-pitch">
           <Field
+            htmlFor="settings-pitch"
             label={`${tr("Introduce yourself — or if you’ve got an idea, pitch it to attract other founders")} (${pitch.trim().length}/${LONG_TEXT_MAX})`}
           >
             <textarea
+              id="settings-pitch"
               name="pitch"
               value={pitch}
               onChange={(e) => setPitch(e.target.value)}
@@ -482,8 +496,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           </Field>
           {pitchMissing && <RequiredFlag tr={tr} />}
         </div>
-        <Field label={tr("Link to your project (optional)")}>
+        <Field htmlFor="settings-project_url" label={tr("Link to your project (optional)")}>
           <input
+            id="settings-project_url"
             name="project_url"
             defaultValue={initial.project_url ?? ""}
             placeholder="https://"
@@ -496,8 +511,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             onChange={setProjectImages}
           />
         </Field>
-        <Field label={tr("Why this, why now (optional)")}>
+        <Field htmlFor="settings-why_this" label={tr("Why this, why now (optional)")}>
           <textarea
+            id="settings-why_this"
             name="why_this"
             defaultValue={initial.why_this ?? ""}
             rows={3}
@@ -508,8 +524,9 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             )}
           />
         </Field>
-        <Field label={tr("Background (optional)")}>
+        <Field htmlFor="settings-background" label={tr("Background (optional)")}>
           <textarea
+            id="settings-background"
             name="background"
             defaultValue={initial.background ?? ""}
             rows={4}
@@ -520,7 +537,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             )}
           />
         </Field>
-        <Field label={tr("Skills (type and press Enter)")}>
+        <Field htmlFor="settings-skills" label={tr("Skills (type and press Enter)")}>
           {skills.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {skills.map((sk) => (
@@ -535,6 +552,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             </div>
           )}
           <Combobox
+            id="settings-skills"
             options={COMMON_SKILLS}
             value=""
             onChange={(v) => {
@@ -554,7 +572,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
 
         {/* Outcomes, not hard skills — see lib/help-topics.ts. The label has to
             carry the "I can help with…" frame or the chips read ambiguously. */}
-        <Field label={tr("I can help with")}>
+        <Field htmlFor="settings-help_with" label={tr("I can help with")}>
           {helpWith.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {helpWith.map((h) => (
@@ -569,6 +587,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             </div>
           )}
           <Combobox
+            id="settings-help_with"
             options={HELP_TOPICS.filter((h) => !helpWith.includes(h)).map((h) =>
               tr(h),
             )}
@@ -592,7 +611,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
 
         {/* The demand side of the same vocabulary. Storing only what someone can
             offer left nothing to match it against. */}
-        <Field label={tr("What do you need help with?")}>
+        <Field htmlFor="settings-needs_help_with" label={tr("What do you need help with?")}>
           {needsHelp.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {needsHelp.map((h) => (
@@ -607,6 +626,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             </div>
           )}
           <Combobox
+            id="settings-needs_help_with"
             options={HELP_TOPICS.filter((h) => !needsHelp.includes(h)).map((h) =>
               tr(h),
             )}
@@ -629,7 +649,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
         </Field>
 
         {/* Feeds meetups: what this member would actually DO with someone. */}
-        <Field label={tr("What do you do for fun?")}>
+        <Field htmlFor="settings-activities" label={tr("What do you do for fun?")}>
           {activities.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {activities.map((a) => (
@@ -644,6 +664,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
             </div>
           )}
           <Combobox
+            id="settings-activities"
             options={ACTIVITIES.filter((a) => !activities.includes(a)).map((a) =>
               tr(a),
             )}
@@ -737,17 +758,22 @@ function Section({
 }
 
 function Field({
+  htmlFor,
   label,
   children,
 }: {
+  htmlFor?: string;
   label: string;
   children: React.ReactNode;
 }) {
+  const Caption = htmlFor ? "label" : "p";
   return (
-    <label className="block space-y-1.5">
-      <span className="text-sm text-ink-muted">{label}</span>
+    <div className="space-y-1.5">
+      <Caption htmlFor={htmlFor} className="block text-sm text-ink-muted">
+        {label}
+      </Caption>
       {children}
-    </label>
+    </div>
   );
 }
 
