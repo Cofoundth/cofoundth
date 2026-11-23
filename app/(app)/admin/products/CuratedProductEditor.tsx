@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, useTransition, type FormEvent } from "react";
 import { ChevronDown, FileSpreadsheet, Plus } from "lucide-react";
 import { ScreenshotPicker, useScreenshots } from "@/components/ScreenshotPicker";
 import { Button, Card, Input, LinkButton, Textarea } from "@/components/ui";
@@ -47,6 +47,10 @@ const TEXT_FIELDS = [
 export function CuratedProductEditor() {
   const tr = useT();
   const upload = useRef<HTMLInputElement>(null);
+  const previewHeading = useRef<HTMLHeadingElement>(null);
+  const formatId = useId();
+  const [formatOpen, setFormatOpen] = useState(false);
+  const [focusTarget, setFocusTarget] = useState<{ draftId?: string } | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [published, setPublished] = useState<Published[]>([]);
   const [importError, setImportError] = useState<string>();
@@ -64,6 +68,13 @@ export function CuratedProductEditor() {
   const invalid = previews.filter((draft) => draft.error).length;
   const full = drafts.length >= MAX_CURATED_PRODUCTS;
 
+  useEffect(() => {
+    if (!focusTarget) return;
+    const { draftId } = focusTarget;
+    const target = draftId ? document.getElementById(`${draftId}-name`) : previewHeading.current;
+    target?.focus();
+  }, [focusTarget]);
+
   function updateDraft(id: string, update: (draft: Draft) => Draft) {
     setDrafts((current) => current.map((draft) =>
       draft.id === id ? update(draft) : draft,
@@ -71,10 +82,12 @@ export function CuratedProductEditor() {
   }
 
   function addDraft() {
+    const id = crypto.randomUUID();
     setDrafts((current) => [
       ...current,
-      { id: crypto.randomUUID(), input: { ...EMPTY_CURATED_PRODUCT }, openInitially: true },
+      { id, input: { ...EMPTY_CURATED_PRODUCT }, openInitially: true },
     ]);
+    setFocusTarget({ draftId: id });
   }
 
   async function importWorkbook(file: File) {
@@ -100,6 +113,7 @@ export function CuratedProductEditor() {
             openInitially: index === 0,
           })),
         ]);
+        setFocusTarget({});
       }
     } catch {
       setImportError("Couldn't read this workbook. Check the .xlsx file and try again.");
@@ -134,15 +148,27 @@ export function CuratedProductEditor() {
 
   return (
     <div className="space-y-6">
-      <Card padding="responsive" className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" disabled={busy || full} onClick={addDraft}>
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" disabled={busy || full} onClick={addDraft} className="min-h-11">
             <Plus className="size-4" aria-hidden="true" />
             {tr("Add a product")}
           </Button>
-          <Button type="button" variant="secondary" disabled={busy || full} onClick={() => upload.current?.click()}>
+          <Button type="button" variant="secondary" disabled={busy || full} onClick={() => upload.current?.click()} className="min-h-11 bg-white">
             <FileSpreadsheet className="size-4" aria-hidden="true" />
             {tr("Import from Excel")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-expanded={formatOpen}
+            aria-controls={formatId}
+            onClick={() => setFormatOpen((open) => !open)}
+            className="group/format min-h-11 text-ink-muted"
+          >
+            {tr("Excel format")}
+            <ChevronDown className="size-4 group-aria-expanded/format:rotate-180" aria-hidden="true" />
           </Button>
           <input
             ref={upload}
@@ -156,9 +182,8 @@ export function CuratedProductEditor() {
             }}
           />
         </div>
-        <details className="text-sm text-ink-muted">
-          <summary className="w-fit cursor-pointer py-2 font-medium text-ink">{tr("Excel format")}</summary>
-          <div className="space-y-2">
+        <div id={formatId} hidden={!formatOpen}>
+          <Card padding="sm" className="space-y-2 text-sm text-ink-muted">
             <p>{tr("Use the first worksheet, one product per row. Start with these column names.")}</p>
             <p className="wrap-anywhere rounded-xl bg-cream p-3 font-mono text-xs text-ink">
               {PRODUCT_IMPORT_COLUMNS.join(", ")}
@@ -167,12 +192,12 @@ export function CuratedProductEditor() {
             <p>{tr("Categories")}{": "}{PRODUCT_CATEGORIES.join(", ")}.</p>
             <p>{tr("Use web, mobile, or web,mobile for platforms. Separate screenshot URLs with |.")}</p>
             <p>{tr("Choose an Excel .xlsx file up to 2 MB.")}</p>
-          </div>
-        </details>
+          </Card>
+        </div>
         {reading && <p role="status" className="text-sm text-ink-muted">{tr("Reading Excel file…")}</p>}
         {full && <p role="status" className="text-sm text-ink-muted">{tr("Review up to 50 products at a time.")}</p>}
         {importError && <p role="alert" className="text-sm text-danger-ink">{tr(importError)}</p>}
-      </Card>
+      </div>
 
       {published.length > 0 && (
         <Card padding="responsive">
@@ -193,7 +218,9 @@ export function CuratedProductEditor() {
 
       {previews.length > 0 && (
         <form onSubmit={publish} noValidate>
-          <h2 className="mb-2 text-xl">{tr("Review before publishing")}</h2>
+          <h2 ref={previewHeading} tabIndex={-1} className="mb-2 scroll-mt-20 text-xl">
+            {tr("Review before publishing")}
+          </h2>
           <p className="mb-4 text-sm text-ink-muted">
             {tr("Open a row to edit it. Confirm when the list is ready to go live.")}
           </p>
