@@ -93,9 +93,10 @@ export default async function CommunityPage({
         canLoadMore={feed.length >= 50}
         initialQuery={q ?? ""}
         canComment={mayComment}
-        composer={mayPost ? <PostComposer /> : null}
+        composer={mayPost ? <PostComposer key="post-composer" /> : null}
         emptyState={
           <EmptyState
+            key="empty-feed"
             icon={MessageCircle}
             title={emptyTitle}
             description={emptyBody}
