@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { updateProfileAction } from "./actions";
 import { useT, useLocale } from "@/lib/i18n-client";
 import { provinceOptions, provinceLabel, canonicalProvince } from "@/lib/provinces";
@@ -12,10 +11,9 @@ import { COMMON_SKILLS } from "@/lib/skills";
 import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
 import { LONG_TEXT_MAX } from "@/lib/limits";
-import { Button, SectionHeading, ToggleChip } from "@/components/ui";
+import { SectionHeading, ToggleChip } from "@/components/ui";
 import { SETTINGS_HEADING, SETTINGS_SECTION } from "./settings-layout";
-
-type SaveResult = { error?: string; ok?: boolean } | null;
+import { SettingsSaveActions, type EditOutcome } from "./SettingsSaveActions";
 
 const ROLES = [
   { value: "technical", label: "Technical" },
@@ -70,6 +68,7 @@ const STATUS_TAGS = [
 ];
 
 export type ProfileInitial = {
+  onboarded?: boolean;
   full_name?: string | null;
   first_name?: string | null;
   last_name?: string | null;
@@ -107,17 +106,71 @@ export type ProfileInitial = {
 };
 
 export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
+  const [editor, setEditor] = useState({
+    saved: initial,
+    revision: 0,
+    outcome: null as EditOutcome | null,
+  });
+
+  return (
+    <ProfileDraft
+      key={editor.revision}
+      initial={editor.saved}
+      outcome={editor.outcome}
+      onSaved={(saved) => setEditor((previous) => ({
+        saved, revision: previous.revision + 1, outcome: "saved",
+      }))}
+      onDiscard={() => setEditor((previous) => ({
+        ...previous, revision: previous.revision + 1, outcome: "discarded",
+      }))}
+    />
+  );
+}
+
+function ProfileDraft({
+  initial, outcome, onSaved, onDiscard,
+}: {
+  initial: ProfileInitial;
+  outcome: EditOutcome | null;
+  onSaved: (saved: ProfileInitial) => void;
+  onDiscard: () => void;
+}) {
   const tr = useT();
   const locale = useLocale();
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, setState] = useState<SaveResult>(null);
+  const savedFields = useRef<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const needsOnboardingSave = initial.onboarded === false;
+
+  function measureChanges() {
+    if (formRef.current && !isPending) {
+      setDirty(JSON.stringify([...new FormData(formRef.current)]) !== savedFields.current);
+    }
+  }
+
+  // Hidden inputs update when a chip is selected or an image finishes
+  // uploading. Read those values after React commits them to the form.
+  useLayoutEffect(() => {
+    if (!formRef.current || isPending) return;
+    savedFields.current ??= JSON.stringify([...new FormData(formRef.current)]);
+    const frame = requestAnimationFrame(measureChanges);
+    return () => cancelAnimationFrame(frame);
+  });
 
   function handleSave() {
-    if (!formRef.current) return;
+    if (!formRef.current || isPending || uploading) return;
     const fd = new FormData(formRef.current);
+    if (!needsOnboardingSave && JSON.stringify([...fd]) === savedFields.current) return;
+    setError(null);
     startTransition(async () => {
-      setState(await updateProfileAction(null, fd));
+      const result = await updateProfileAction(fd).catch(() => ({
+        error: "Couldn’t save your changes. Try again.",
+      }));
+      if ("profile" in result) onSaved(result.profile);
+      else setError(result.error);
     });
   }
 
@@ -178,6 +231,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
   const pitchMissing = !pitch.trim();
 
   useEffect(() => {
+    if (outcome) return;
     const firstId = [
       nameMissing && "rf-name",
       roleMissing && "rf-role",
@@ -194,12 +248,14 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
   return (
     <form
       ref={formRef}
+      onInput={measureChanges}
       onSubmit={(e) => {
         e.preventDefault();
         handleSave();
       }}
       className="space-y-10"
     >
+      <fieldset disabled={isPending} className="min-w-0 space-y-10">
       {/* Personal */}
       <Section title={tr("Personal information")}>
         <div id="rf-name" className="grid grid-cols-2 gap-4">
@@ -509,6 +565,7 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           <ProjectImagesField
             value={projectImages}
             onChange={setProjectImages}
+            onUploadChange={setUploading}
           />
         </Field>
         <Field htmlFor="settings-why_this" label={tr("Why this, why now (optional)")}>
@@ -686,33 +743,19 @@ export function EditProfileForm({ initial }: { initial: ProfileInitial }) {
           ))}
         </Field>
       </Section>
+      </fieldset>
 
       {/* Save bar */}
-      <div className="sticky bottom-0 -mx-6 lg:-mx-10 px-6 lg:px-10 py-4 bg-cream/95 backdrop-blur border-t border-line flex items-center gap-4">
-        {/* py-2.5 + hover:bg-navy/90 are both re-passed overrides: the button
-            shipped off-scale (px-6 py-2.5, between sm and md) and its hover
-            went LIGHTER — navy at 90% over the cream save bar is rgb(49,47,44),
-            where the primary variant's hover:bg-navy-dark is rgb(13,12,10). */}
-        <Button
-          onClick={handleSave}
-          disabled={isPending}
-          className="py-2.5 hover:bg-navy/90"
-        >
-          {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-          {tr("Save changes")}
-        </Button>
-        {state?.ok && (
-          <span className="inline-flex items-center gap-1.5 text-sm text-green-700">
-            <Check className="w-4 h-4" /> {tr("Saved")}
-          </span>
-        )}
-        {state?.error && (
-          // Server actions return English literals; the client translates
-          // them (untranslated, every refusal read English in the Thai UI).
-          <span role="alert" className="text-sm text-danger-ink">
-            {tr(state.error)}
-          </span>
-        )}
+      <div className="sticky bottom-0 z-10 -mx-6 border-t border-line bg-cream/95 px-6 py-3 backdrop-blur lg:-mx-10 lg:px-10">
+        <SettingsSaveActions
+          dirty={dirty}
+          canSave={dirty || needsOnboardingSave}
+          saving={isPending}
+          uploading={uploading}
+          outcome={outcome}
+          error={error}
+          onDiscard={onDiscard}
+        />
       </div>
     </form>
   );

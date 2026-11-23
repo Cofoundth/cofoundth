@@ -12,12 +12,10 @@
 // `onboarded: true`. Sharing it would mean one form whose shape depends on a
 // role prop, which is how the field you forgot to hide ships.
 
-import { useActionState } from "react";
+import { useState, useTransition } from "react";
 import { useT } from "@/lib/i18n-client";
-import { Button } from "@/components/ui";
-import { updateIdentityAction, type EditProfileState } from "./actions";
-
-const INITIAL: EditProfileState = null;
+import { updateIdentityAction } from "./actions";
+import { SettingsSaveActions, type EditOutcome } from "./SettingsSaveActions";
 
 export function IdentityForm({
   firstName,
@@ -27,14 +25,43 @@ export function IdentityForm({
   lastName: string;
 }) {
   const tr = useT();
-  const [state, formAction, isPending] = useActionState<
-    EditProfileState,
-    FormData
-  >(updateIdentityAction, INITIAL);
+  const [saved, setSaved] = useState({ first: firstName, last: lastName });
+  const [draft, setDraft] = useState(saved);
+  const [outcome, setOutcome] = useState<EditOutcome | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const dirty = draft.first !== saved.first || draft.last !== saved.last;
+
+  function save(formData: FormData) {
+    if (isPending || !dirty) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await updateIdentityAction(formData).catch(() => ({
+        error: "Couldn’t save your changes. Try again.",
+      }));
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
+      const names = { first: result.profile.first_name ?? "", last: result.profile.last_name ?? "" };
+      setSaved(names);
+      setDraft(names);
+      setOutcome("saved");
+    });
+  }
+
+  function discard() {
+    setDraft(saved);
+    setError(null);
+    setOutcome("discarded");
+  }
 
   return (
-    <form action={formAction} className="space-y-5">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={(event) => {
+      event.preventDefault();
+      save(new FormData(event.currentTarget));
+    }} className="space-y-5">
+      <fieldset disabled={isPending} className="grid min-w-0 grid-cols-2 gap-4">
         <div>
           <label
             htmlFor="identity-first"
@@ -49,7 +76,11 @@ export function IdentityForm({
             required
             maxLength={40}
             autoComplete="given-name"
-            defaultValue={firstName}
+            value={draft.first}
+            onChange={(event) => {
+              setDraft({ ...draft, first: event.target.value });
+              setOutcome(null);
+            }}
             className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
         </div>
@@ -66,26 +97,23 @@ export function IdentityForm({
             type="text"
             maxLength={40}
             autoComplete="family-name"
-            defaultValue={lastName}
+            value={draft.last}
+            onChange={(event) => {
+              setDraft({ ...draft, last: event.target.value });
+              setOutcome(null);
+            }}
             className="w-full px-4 py-3 border border-line bg-white text-ink focus:outline-none focus:border-navy rounded-xl"
           />
         </div>
-      </div>
+      </fieldset>
 
-      {state?.error && (
-        <div className="px-4 py-3 border border-danger-line bg-danger-surface text-sm text-danger-ink rounded-xl">
-          {tr(state.error)}
-        </div>
-      )}
-      {state?.ok && (
-        <div className="text-sm text-gold-ink">{tr("Saved")}</div>
-      )}
-
-      {/* components/ui/Button.tsx defaults to type="button" — a submit here
-          has to say so or the form silently stops submitting. */}
-      <Button type="submit" size="sm" disabled={isPending}>
-        {isPending ? tr("Saving…") : tr("Save")}
-      </Button>
+      <SettingsSaveActions
+        dirty={dirty}
+        saving={isPending}
+        outcome={outcome}
+        error={error}
+        onDiscard={discard}
+      />
     </form>
   );
 }

@@ -11,8 +11,9 @@ import { canonicalProvince } from "@/lib/provinces";
 import { LONG_TEXT_MAX } from "@/lib/limits";
 import { ACTIVITIES } from "@/lib/activities";
 import { HELP_TOPICS } from "@/lib/help-topics";
+import type { ProfileInitial } from "./EditProfileForm";
 
-export type EditProfileState = { error?: string; ok?: boolean } | null;
+export type EditProfileState = { error: string } | { profile: ProfileInitial };
 export type DeleteAccountState = { error?: string } | null;
 
 // Settings > Danger zone. The terms page promises this exists ("You may
@@ -105,7 +106,6 @@ const pickFrom = (values: string[], allowed: readonly string[], max: number) => 
 ].slice(0, max);
 
 export async function updateProfileAction(
-  _prev: EditProfileState,
   formData: FormData,
 ): Promise<EditProfileState> {
   const supabase = await createClient();
@@ -314,52 +314,52 @@ export async function updateProfileAction(
   if (profile_type === "company" && !company_name)
     return { error: "Company name is required for company profiles." };
 
-  // ---- Persist (RLS restricts to own row; .eq is belt-and-suspenders)
+  const profile = {
+    full_name,
+    first_name: first_name || null,
+    last_name: last_name || null,
+    age,
+    location: location || null,
+    linkedin_url,
+    instagram_url,
+    facebook_url,
+    x_url,
+    i_am,
+    intent,
+    looking_for,
+    industry,
+    stage: stage || null,
+    building_since: building_since || null,
+    commitment: commitment || null,
+    runway: runway || null,
+    experience: experience || null,
+    pitch: pitch || null,
+    project_url,
+    project_images,
+    why_this: why_this || null,
+    background: background || null,
+    work_experience: work_experience || null,
+    education: education || null,
+    skills,
+    activities,
+    help_with,
+    needs_help_with,
+    type: profile_type,
+    company_name: profile_type === "company" ? company_name : null,
+    capabilities: profile_type === "company" ? capabilities : [],
+    partnership_seeking:
+      profile_type === "company" ? partnership_seeking : [],
+    status_tags,
+    // A complete, validated save through the editor also completes
+    // onboarding — so /settings works as a standalone path to a finished
+    // profile, fully separate from the wizard.
+    onboarded: true,
+  };
+
   const { error } = await supabase
     .from("profiles")
-    .update({
-      full_name,
-      first_name: first_name || null,
-      last_name: last_name || null,
-      age,
-      location: location || null,
-      linkedin_url,
-      instagram_url,
-      facebook_url,
-      x_url,
-      i_am,
-      intent,
-      looking_for,
-      industry,
-      stage: stage || null,
-      building_since: building_since || null,
-      commitment: commitment || null,
-      runway: runway || null,
-      experience: experience || null,
-      pitch: pitch || null,
-      project_url,
-      project_images,
-      why_this: why_this || null,
-      background: background || null,
-      work_experience: work_experience || null,
-      education: education || null,
-      skills,
-      activities,
-      help_with,
-      needs_help_with,
-      type: profile_type,
-      company_name: profile_type === "company" ? company_name : null,
-      capabilities: profile_type === "company" ? capabilities : [],
-      partnership_seeking:
-        profile_type === "company" ? partnership_seeking : [],
-      status_tags,
-      // A complete, validated save through the editor also completes
-      // onboarding — so /settings works as a standalone path to a finished
-      // profile, fully separate from the wizard.
-      onboarded: true,
-    })
+    .update(profile)
     .eq("id", user.id);
-
   if (error) {
     console.error("[settings.profile]", error.message);
     return { error: SAVE_FAILED };
@@ -371,7 +371,7 @@ export async function updateProfileAction(
   // not re-render on client-side navigation. Without the "layout" scope the
   // rail keeps showing the old value until a full page load.
   revalidatePath("/", "layout");
-  return { ok: true };
+  return { profile };
 }
 
 // The identity-only editor, and the exact complement of the refusal above.
@@ -394,7 +394,6 @@ export async function updateProfileAction(
 // through the full editor, so there is exactly one writer per role and no
 // second path to `full_name` for anybody.
 export async function updateIdentityAction(
-  _prev: EditProfileState,
   formData: FormData,
 ): Promise<EditProfileState> {
   const supabase = await createClient();
@@ -441,7 +440,7 @@ export async function updateIdentityAction(
   // re-render on client-side navigation — same reason updateProfileAction
   // scopes this one "layout".
   revalidatePath("/", "layout");
-  return { ok: true };
+  return { profile: { first_name, last_name } };
 }
 
 export type PasswordState = { error?: string; ok?: boolean } | null;

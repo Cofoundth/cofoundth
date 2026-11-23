@@ -12,10 +12,12 @@ import { useT } from "@/lib/i18n-client";
 export function ProjectImagesField({
   value,
   onChange,
+  onUploadChange,
   max = 3,
 }: {
   value: string[];
   onChange: (urls: string[]) => void;
+  onUploadChange?: (uploading: boolean) => void;
   max?: number;
 }) {
   const tr = useT();
@@ -28,13 +30,14 @@ export function ProjectImagesField({
     e.target.value = "";
     if (!files.length) return;
     const take = files.slice(0, max - value.length);
+    onUploadChange?.(true);
     start(async () => {
       setError(null);
       const urls: string[] = [];
       for (const f of take) {
         const fd = new FormData();
         fd.append("file", f);
-        const res = await uploadProjectImageAction(fd);
+        const res = await uploadProjectImageAction(fd).catch(() => ({ error: "Upload failed.", url: undefined }));
         if (res.error) {
           setError(res.error);
           break;
@@ -42,6 +45,7 @@ export function ProjectImagesField({
         if (res.url) urls.push(res.url);
       }
       if (urls.length) onChange([...value, ...urls].slice(0, max));
+      onUploadChange?.(false);
     });
   }
 
@@ -57,6 +61,7 @@ export function ProjectImagesField({
             <img src={url} alt="" className="w-full h-full object-cover" />
             <button
               type="button"
+              disabled={pending}
               onClick={() => onChange(value.filter((u) => u !== url))}
               className="absolute top-1 right-1 bg-navy/80 hover:bg-navy text-white p-0.5 rounded-full"
               aria-label={tr("Remove")}

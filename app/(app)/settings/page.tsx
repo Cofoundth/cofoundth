@@ -79,6 +79,7 @@ export default async function SettingsPage({
   // straight to a client component.
   const arr = (v: unknown) => [...((v as string[] | null) ?? [])].map(String);
   const initial = {
+    onboarded: profile.onboarded === true,
     full_name: profile.full_name ?? "",
     first_name: profile.first_name ?? "",
     last_name: profile.last_name ?? "",
