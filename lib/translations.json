@@ -390,6 +390,8 @@
   "Try widening your filters, or check back as more founders onboard.": "ลองขยายตัวกรองดู หรือแวะกลับมาใหม่ตอนมี founder เข้ามาเพิ่ม",
   "Complement": "Complement",
   "View profile": "ดูโปรไฟล์",
+  "Sign in to view this profile": "เข้าสู่ระบบเพื่อดูโปรไฟล์",
+  "You’ll go to {name}’s profile after signing in.": "หลังเข้าสู่ระบบ คุณจะไปที่โปรไฟล์ของ {name}",
   "Verified founder": "Founder ที่ผ่านการยืนยัน",
   "Technical": "เทคนิคอล",
   "Business": "ธุรกิจ",

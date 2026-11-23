@@ -30,7 +30,6 @@ import {
   type PreviewComment,
   type PublicAuthor,
 } from "@/lib/public-post";
-import { Avatar } from "@/components/Avatar";
 import { ShareButton } from "@/components/ShareButton";
 import { ReportButton } from "@/components/ReportButton";
 import { PublicRateButton } from "@/components/PublicPostActions";
@@ -61,6 +60,7 @@ import {
 import { PARAM, parseCategoryParam } from "../categories";
 import { findFixture } from "../fixtures";
 import { ProductDetail, type ProductDetailPost } from "../ProductDetail";
+import { ProductMaker } from "../ProductMaker";
 
 export type ProductSearch = DeckSearch & {
   added?: string | string[];
@@ -154,6 +154,7 @@ export async function ProductPageBody({
       post={post}
       createdAt={post.created_at}
       author={author}
+      profileHref={`/profile/${encodeURIComponent(post.author_id)}`}
       rating={rating}
       comments={comments}
       total={total}
@@ -195,14 +196,14 @@ function missing(mode: ProductMode, locale: Locale) {
 /**
  * A product for a logged-out visitor (or, in development, a sample for
  * anyone). Read-only: the rating's average and count, "Sign in to rate", the
- * first comments, and the ways in. Every sign-in link carries this page, with
- * the deck context, as `next` (lib/auth-href.ts), so signing in comes back to
- * it with the stars and the comment box.
+ * first comments, and the ways in. Signing in to leave feedback returns to
+ * the product. Signing in from the byline opens the maker's profile.
  */
 async function PublicProduct({
   post,
   createdAt,
   author,
+  profileHref,
   rating,
   comments,
   total,
@@ -216,6 +217,7 @@ async function PublicProduct({
   post: ProductDetailPost;
   createdAt: string;
   author: PublicAuthor;
+  profileHref?: string;
   rating: ProductRating | null;
   comments: PreviewComment[];
   total: number;
@@ -252,16 +254,13 @@ async function PublicProduct({
         }}
         rateSlot={signedIn ? null : <PublicRateButton next={returnPath} />}
         maker={
-          <div className="flex items-center gap-3">
-            <Avatar name={author.full_name} url={author.photo_url} size="sm" />
-            <p className="min-w-0 text-sm text-ink-muted">
-              <span className="font-medium text-navy">{authorName}</span>
-              {" · "}
-              {await tServer("shipped")}
-              {" · "}
-              {publicTimeAgo(createdAt, locale)}
-            </p>
-          </div>
+          <ProductMaker
+            name={authorName}
+            photoUrl={author.photo_url}
+            shippedAt={publicTimeAgo(createdAt, locale)}
+            profileHref={profileHref}
+            signedIn={signedIn}
+          />
         }
       >
         <div className="mt-6 flex items-center justify-end border-t border-line pt-5">
@@ -434,7 +433,7 @@ async function MemberProduct({
       : Promise.resolve(null),
     supabase
       .from("profiles")
-      .select("id, full_name, photo_url")
+      .select("slug, full_name, photo_url")
       .eq("id", authorId)
       .maybeSingle(),
     readProductLike(supabase, userId, id),
@@ -448,14 +447,13 @@ async function MemberProduct({
   ]);
   const mayPostFeedback = !!myLike && hasTriedOrOwnsProduct;
 
-  const [commentsLabel, tShipped, tEdit] = await Promise.all([
+  const [commentsLabel, tEdit] = await Promise.all([
     tServer("Comments"),
-    tServer("shipped"),
     tServer("Edit"),
   ]);
   const authorName =
     (author?.full_name as string | null) ?? t("A founder", locale);
-  const authorHref = `/profile/${authorId}`;
+  const authorHref = `/profile/${encodeURIComponent(author?.slug ?? authorId)}`;
 
   // `?added=1` / `?saved=1`, for the maker or curator. Whether a
   // new product is really on the shelf is ASKED, not assumed: the shelf's own
@@ -553,27 +551,13 @@ async function MemberProduct({
           ) : null
         }
         maker={
-          <div className="flex items-center gap-3">
-            <Link href={authorHref}>
-              <Avatar
-                name={author?.full_name as string}
-                url={author?.photo_url as string | null}
-                size="sm"
-              />
-            </Link>
-            <p className="min-w-0 text-sm text-ink-muted">
-              <Link
-                href={authorHref}
-                className="font-medium text-navy transition-colors hover:text-gold-ink"
-              >
-                {authorName}
-              </Link>
-              {" · "}
-              {tShipped}
-              {" · "}
-              {timeAgo(post.created_at as string, locale)}
-            </p>
-          </div>
+          <ProductMaker
+            name={authorName}
+            photoUrl={author?.photo_url ?? null}
+            shippedAt={timeAgo(post.created_at as string, locale)}
+            profileHref={authorHref}
+            signedIn
+          />
         }
       >
 
