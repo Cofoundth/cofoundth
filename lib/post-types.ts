@@ -93,6 +93,8 @@ export type ProductItem = PostItem & {
   rating: ProductRating;
   ios_store_url?: string | null;
   android_store_url?: string | null;
+  is_curated?: boolean;
+  curated_maker_name?: string | null;
 };
 
 /**

@@ -60,6 +60,8 @@ export type PublicPostRow = {
   link_url: string | null;
   ios_store_url?: string | null;
   android_store_url?: string | null;
+  is_curated?: boolean;
+  curated_maker_name?: string | null;
   image_url: string | null;
   image_urls: string[] | null;
   tags: string[] | null;

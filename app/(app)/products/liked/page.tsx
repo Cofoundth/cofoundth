@@ -81,6 +81,7 @@ export default async function LikedProductsPage({
                   cover={cover}
                   rating={product.rating}
                   mobileOnly={isPhoneOnly(product.link_url, product.platforms)}
+                  curated={product.is_curated}
                   locale={locale}
                 />
                 <form action={unlikeProductAction.bind(null, product.id)} className="mt-1 flex justify-end">

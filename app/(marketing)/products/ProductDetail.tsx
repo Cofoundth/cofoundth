@@ -58,6 +58,7 @@ import {
 } from "./product-view";
 import type { DeckViewer, PromptProduct } from "./DeckPrompts";
 import { ProductTryLinks } from "./PhoneHandoff";
+import { CURATED_PRODUCT_LABEL } from "@/lib/curated-products";
 
 /** The columns this reads. Both pages' own selects carry them. */
 export type ProductDetailPost = {
@@ -67,6 +68,8 @@ export type ProductDetailPost = {
   link_url: string | null;
   ios_store_url?: string | null;
   android_store_url?: string | null;
+  is_curated?: boolean;
+  curated_maker_name?: string | null;
   image_url: string | null;
   image_urls?: string[] | null;
   tags: string[] | null;
@@ -152,12 +155,13 @@ export function ProductDetail({
       {/* A stack of cards: component spacing, the card grid's own gap-4. */}
       <div className="grid gap-4">
         <Card as="article" padding="responsive">
-          {(category || mobileOnly) && (
+          {(category || mobileOnly || post.is_curated) && (
             <div className="mb-3 flex flex-wrap gap-2">
               {category && (
                 <CardChip>{t(CATEGORY_LABEL[category], locale)}</CardChip>
               )}
               {mobileOnly && <CardChip>{t("Mobile only", locale)}</CardChip>}
+              {post.is_curated && <CardChip>{CURATED_PRODUCT_LABEL}</CardChip>}
             </div>
           )}
 
@@ -166,7 +170,13 @@ export function ProductDetail({
               audiences. Its paired 1.3 is the Thai display floor. */}
           <h1 className="text-d2 mb-2">{name}</h1>
 
-          {maker}
+          {post.is_curated ? (
+            post.curated_maker_name && (
+              <p className="wrap-anywhere text-sm text-ink-muted">
+                {t("Made by {name}", locale).replace("{name}", () => post.curated_maker_name ?? "")}
+              </p>
+            )
+          ) : maker}
 
           {(rating || platforms.length > 0) && (
             <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">

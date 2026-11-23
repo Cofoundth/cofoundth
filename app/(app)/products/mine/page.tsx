@@ -65,6 +65,7 @@ import { getAccountRole } from "@/lib/account";
 import { ADD_PRODUCT_PATH, canPostProduct, roleHome } from "@/lib/roles";
 import { getBlockedIds } from "@/lib/blocking";
 import { getProductRatings } from "@/lib/product-ratings";
+import { queryWithProductAvailability, type ProductListingSummary } from "@/lib/product-store-data";
 import {
   CATEGORY_LABEL,
   UNRATED,
@@ -108,12 +109,16 @@ export default async function MyProductsPage() {
   const locale = await getLocale();
 
   // Newest first, hidden ones included (see the header).
-  const { data: rows } = await supabase
-    .from("forum_posts")
-    .select("id, title, content, image_url, image_urls, tags, created_at, hidden")
-    .eq("author_id", user.id)
-    .eq("kind", "show_and_tell")
-    .order("created_at", { ascending: false });
+  const { data: rows } = await queryWithProductAvailability((availability, filterCurated) => {
+    const query = supabase
+      .from("forum_posts")
+      .select(`id, title, content, image_url, image_urls, tags, created_at, hidden, ${availability}`)
+      .eq("author_id", user.id)
+      .eq("kind", "show_and_tell")
+      .order("created_at", { ascending: false });
+    return (filterCurated ? query.eq("availability.is_curated", false) : query)
+      .overrideTypes<(ProductListingSummary & { created_at: string; hidden: boolean })[], { merge: false }>();
+  }, { excludeCurated: true });
   const products = rows ?? [];
   const ids = products.map((p) => p.id as string);
 

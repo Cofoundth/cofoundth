@@ -523,6 +523,8 @@ async function MemberProduct({
           link_url: (post.link_url as string | null) ?? null,
           ios_store_url: post.ios_store_url,
           android_store_url: post.android_store_url,
+          is_curated: post.is_curated,
+          curated_maker_name: post.curated_maker_name,
           platforms: post.platforms,
           image_url: (post.image_url as string | null) ?? null,
           image_urls: (post.image_urls as string[] | null) ?? null,

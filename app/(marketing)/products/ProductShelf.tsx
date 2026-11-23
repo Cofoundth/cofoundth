@@ -478,12 +478,13 @@ export async function ProductShelf({
     const host = displayHost(p.link);
     const mobileOnly = phoneOnly(p.link, p.platforms);
     const platformLabels = mobileOnly ? [] : platformLabelsOf(p.platforms);
-    const makerName = p.author?.full_name?.trim();
+    const makerName = p.is_curated ? p.curated_maker_name : p.author?.full_name?.trim();
     return {
       id: p.id,
       bucket: productBucketOf(p.tags),
       name,
-      maker: makerName ? { name: makerName, avatarUrl: p.author?.photo_url ?? null } : null,
+      maker: makerName ? { name: makerName, avatarUrl: p.is_curated ? null : p.author?.photo_url ?? null } : null,
+      curated: p.is_curated,
       platformLabels: platformLabels.map((label) => t(label, locale)),
       blurb: p.content,
       isOwn: p.isOwn,

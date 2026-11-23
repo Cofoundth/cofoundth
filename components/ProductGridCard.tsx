@@ -6,6 +6,7 @@ import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import { Card, CardChip } from "@/components/ui";
 import { t, type Locale } from "@/lib/i18n";
 import type { ProductRating } from "@/lib/post-types";
+import { CURATED_PRODUCT_LABEL } from "@/lib/curated-products";
 
 export function ProductGridCard({
   href,
@@ -14,6 +15,7 @@ export function ProductGridCard({
   rating,
   likeCount,
   mobileOnly,
+  curated,
   locale,
   onClick,
 }: {
@@ -23,6 +25,7 @@ export function ProductGridCard({
   rating: ProductRating;
   likeCount?: number;
   mobileOnly: boolean;
+  curated?: boolean;
   locale: Locale;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 }) {
@@ -62,6 +65,7 @@ export function ProductGridCard({
               </span>
             )}
             {mobileOnly && <CardChip>{t("Mobile only", locale)}</CardChip>}
+            {curated && <CardChip>{CURATED_PRODUCT_LABEL}</CardChip>}
           </div>
         </div>
       </Card>

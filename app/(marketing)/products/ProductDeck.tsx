@@ -133,6 +133,7 @@ import { likeProductAction } from "@/app/(app)/community/[id]/actions";
 import { ProductGallery } from "@/components/ProductGallery";
 import { Avatar } from "@/components/Avatar";
 import { ProductGridCard } from "@/components/ProductGridCard";
+import { CURATED_PRODUCT_LABEL } from "@/lib/curated-products";
 import { ProductRatingSummary } from "@/components/ProductRatingSummary";
 import {
   Button,
@@ -189,6 +190,7 @@ export type DeckProduct = PromptProduct & {
   /** Used in the card link, announcements, and prompt titles. */
   name: string;
   maker: { name: string; avatarUrl: string | null } | null;
+  curated?: boolean;
   platformLabels: readonly string[];
   blurb: string;
   isOwn: boolean;
@@ -559,6 +561,7 @@ export function ProductDeck({
                       rating={product.rating}
                       likeCount={sort === "likes" ? product.likeCount : undefined}
                       mobileOnly={product.mobileOnly}
+                      curated={product.curated}
                       locale={locale}
                       onClick={(event) => {
                         if (!isPlainClick(event)) return;
@@ -1340,6 +1343,7 @@ function Stack({
                     </CardChip>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 empty:hidden">
+                    {product.curated && <CardChip>{CURATED_PRODUCT_LABEL}</CardChip>}
                     {product.mobileOnly && (
                       <CardChip
                         id={`mobile-only-${product.id}`}

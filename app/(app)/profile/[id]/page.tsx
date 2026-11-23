@@ -245,8 +245,8 @@ export default async function ProfileDetailPage({
         .eq("kind", "milestone")
         .order("created_at", { ascending: false })
         .limit(4),
-      queryWithProductAvailability((availability) =>
-        supabase
+      queryWithProductAvailability((availability, filterCurated) => {
+        const query = supabase
           .from("forum_posts")
           .select(`id, title, content, image_url, image_urls, tags, link_url, ${availability}`)
           .eq("author_id", profile.id)
@@ -254,9 +254,10 @@ export default async function ProfileDetailPage({
           .eq("kind", "show_and_tell")
           .not("link_url", "is", null)
           .order("created_at", { ascending: false })
-          .limit(6)
-          .overrideTypes<ProductListingSummary[], { merge: false }>(),
-      ),
+          .limit(6);
+        return (filterCurated ? query.eq("availability.is_curated", false) : query)
+          .overrideTypes<ProductListingSummary[], { merge: false }>();
+      }, { excludeCurated: true }),
     ],
   );
   const products = productRows ?? [];
