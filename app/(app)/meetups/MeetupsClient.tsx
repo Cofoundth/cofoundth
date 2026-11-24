@@ -33,6 +33,7 @@ import {
   MEETUP_TOPICS,
   meetupCalendarUrl,
   meetupCoverUrl,
+  meetupPhase,
   meetupWhenParts,
   type MeetupCategory,
   type MeetupFormat,
@@ -63,6 +64,7 @@ export type MeetupItemData = {
   format: MeetupFormat;
   location: string | null;
   online_url: string | null;
+  phase: ReturnType<typeof meetupPhase>;
   starts_at: string;
   ends_at: string | null;
   capacity: number | null;
@@ -433,6 +435,7 @@ function MeetupCard({
   const tr = useT();
   const when = meetupWhenParts(m.starts_at);
   const cancelled = m.status === "cancelled";
+  const signupsOpen = !cancelled && m.phase === "upcoming";
   const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
   const where = m.restricted
     ? tr("Shared once you're in")
@@ -469,6 +472,10 @@ function MeetupCard({
           {cancelled ? (
             <span className="absolute top-3 right-3 text-xs uppercase tracking-[0.15em] text-danger-ink bg-danger-surface border border-danger-line rounded-full px-2 py-0.5">
               {tr("Cancelled")}
+            </span>
+          ) : m.phase === "ongoing" ? (
+            <span className="absolute top-3 right-3 rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-ink">
+              {tr("In progress")}
             </span>
           ) : (
             m.visibility === "private" && (
@@ -529,14 +536,14 @@ function MeetupCard({
             )}
             <span className="text-xs text-ink-muted truncate">
               {m.count === 0 ? (
-                tr("Be the first to join")
+                tr(signupsOpen ? "Be the first to join" : "Nobody RSVP'd to this one.")
               ) : (
                 <>
                   {m.count} {tr("going")}
                 </>
               )}
             </span>
-            {!cancelled && spotsLeft !== null && m.count > 0 && (
+            {signupsOpen && spotsLeft !== null && m.count > 0 && (
               <span
                 className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${
                   spotsLeft === 0
@@ -596,7 +603,8 @@ function MeetupDialog({
   const when = meetupWhenParts(m.starts_at);
   const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
   const cancelled = m.status === "cancelled";
-  const isPast = new Date(m.starts_at).getTime() < openedAt;
+  const phase = meetupPhase(m, openedAt);
+  const signupsOpen = !cancelled && phase === "upcoming";
   // "Open" on the address, the way their dialog does it: the pin when the
   // host placed one, else a text search — never a geocode guess.
   const mapsUrl =
@@ -657,6 +665,11 @@ function MeetupDialog({
               <Lock className="h-3 w-3" /> {tr("Private")}
             </span>
           )}
+          {!cancelled && phase !== "upcoming" && (
+            <span className="rounded-full bg-cream px-2.5 py-0.5 text-ink">
+              {tr(phase === "ongoing" ? "In progress" : "Ended")}
+            </span>
+          )}
           {cancelled && (
             <span className="inline-flex items-center rounded-full bg-danger-surface border border-danger-line px-2.5 py-0.5 text-danger-ink">
               {tr("Cancelled")}
@@ -676,14 +689,16 @@ function MeetupDialog({
                 {when.weekday}, {when.day} {when.monthYear} · {when.time}
               </span>
             </span>
-            <a
-              href={meetupCalendarUrl(m)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink"
-            >
-              <CalendarPlus className="w-3.5 h-3.5" /> {tr("Add")}
-            </a>
+            {signupsOpen && (
+              <a
+                href={meetupCalendarUrl(m)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1 text-xs text-navy hover:text-gold-ink"
+              >
+                <CalendarPlus className="w-3.5 h-3.5" /> {tr("Add")}
+              </a>
+            )}
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 text-ink min-w-0">
@@ -703,7 +718,7 @@ function MeetupDialog({
             {/* The link and the address ARE the door on a private meetup —
                 withholding them is what makes "request to join" mean
                 anything now that private meetups are listed. */}
-            {m.restricted ? null : m.format === "online" && m.online_url ? (
+            {m.restricted || cancelled ? null : m.format === "online" && m.online_url ? (
               <a
                 href={m.online_url}
                 target="_blank"
@@ -746,14 +761,14 @@ function MeetupDialog({
           )}
           <span className="text-xs text-ink-muted">
             {m.count === 0
-              ? tr("Be the first to join")
+              ? tr(signupsOpen && canRsvp ? "Be the first to join" : "No one has RSVP'd yet.")
               : `${m.count}${m.capacity != null ? `/${m.capacity}` : ""} ${tr("going")}`}
           </span>
           <Link
             href={`/meetups/${m.slug}`}
-            className="ml-auto text-xs text-ink-muted hover:text-navy"
+            className="ml-auto inline-flex min-h-9 items-center text-xs text-ink-muted hover:text-navy"
           >
-            {tr("Full details")}
+            {tr(m.isHost && canHost && !cancelled && phase !== "ended" ? "Manage meetup" : "Full details")}
           </Link>
         </div>
 
@@ -770,7 +785,7 @@ function MeetupDialog({
             meetupId={m.id}
             canRsvp={canRsvp}
             canHost={canHost}
-            closed={cancelled || isPast}
+            closed={!signupsOpen}
             state={{
               isHost: m.isHost,
               mine: m.mine,

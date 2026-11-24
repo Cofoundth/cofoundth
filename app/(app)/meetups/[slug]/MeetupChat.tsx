@@ -1,46 +1,68 @@
 "use client";
 
-// The meetup's attendee chat — the reference app's Messages > Meetups thread,
-// mounted where attendees already are: on the meetup page itself. Messages
-// arrive server-rendered; posting goes through postMeetupMessageAction (RLS
-// allows attendees only) and refreshes the route for the new row. No socket:
-// the app's realtime pill is a documented no-op under HttpOnly auth.
-
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { Send } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
 import { timeAgo } from "@/lib/time";
 import { Avatar } from "@/components/Avatar";
+import type { ChatMessage } from "@/lib/meetup-data";
 import { postMeetupMessageAction } from "../actions";
-
-export type ChatMessage = {
-  id: string;
-  content: string;
-  created_at: string;
-  author: {
-    id: string;
-    slug: string | null;
-    full_name: string | null;
-    photo_url: string | null;
-  } | null;
-};
 
 export function MeetupChat({
   meetupId,
-  messages,
+  initialMessages,
   locale,
 }: {
   meetupId: string;
-  messages: ChatMessage[];
+  initialMessages: ChatMessage[];
   locale: string;
 }) {
   const tr = useT();
-  const router = useRouter();
+  const [messages, setMessages] = useState(initialMessages);
+  const [refresh, setRefresh] = useState(0);
+  const [available, setAvailable] = useState(true);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let loading = false;
+
+    async function poll() {
+      if (document.hidden || loading) return;
+      loading = true;
+      try {
+        const response = await fetch(`/api/meetups/${meetupId}/chat`, {
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
+        if (response.status === 401 || response.status === 403) {
+          setAvailable(false);
+          setMessages([]);
+        } else if (response.ok) {
+          const next: ChatMessage[] = await response.json();
+          if (controller.signal.aborted) return;
+          setMessages(next);
+          setAvailable(true);
+        }
+      } catch {
+        // Keep the last successful read while the connection recovers.
+      } finally {
+        loading = false;
+      }
+    }
+
+    void poll();
+    const timer = window.setInterval(poll, 5000);
+    document.addEventListener("visibilitychange", poll);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", poll);
+    };
+  }, [meetupId, refresh]);
 
   function send() {
     const clean = text.trim();
@@ -53,8 +75,12 @@ export function MeetupChat({
         return;
       }
       setText("");
-      router.refresh();
+      setRefresh((value) => value + 1);
     });
+  }
+
+  if (!available) {
+    return <p className="text-sm text-ink-muted">{tr("This chat is no longer available.")}</p>;
   }
 
   return (

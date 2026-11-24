@@ -38,6 +38,8 @@ import {
   MEETUP_CATEGORY_SECTIONS,
   MEETUP_TOPICS,
   nextBangkokDay,
+  toBangkokInput,
+  type Meetup,
   type MeetupCategory,
   type MeetupTopic,
 } from "@/lib/meetups";
@@ -89,17 +91,24 @@ type Step = 1 | 2 | 3 | 4;
 export function HostMeetupWizard({
   inModal,
   onClose,
+  initial,
+  action = hostMeetupAction,
 }: {
   /** Rendered inside the /meetups create dialog: own the shell height, and
    *  show the Close / Exit affordances the dialog needs. */
   inModal?: boolean;
   /** Present only when there is something to close — the dialog. */
   onClose?: () => void;
+  initial?: Pick<Meetup,
+    "category" | "topic" | "format" | "starts_at" | "ends_at" | "lat" | "lng" |
+    "location" | "online_url" | "visibility" | "title" | "description" | "capacity" | "image_url"
+  >;
+  action?: (state: HostMeetupState, formData: FormData) => Promise<HostMeetupState>;
 } = {}) {
   const tr = useT();
   const locale = useLocale();
   const [state, formAction, pending] = useActionState<HostMeetupState, FormData>(
-    hostMeetupAction,
+    action,
     undefined,
   );
 
@@ -109,19 +118,23 @@ export function HostMeetupWizard({
   /** Set when Next is pressed on a start time that has already passed. */
   const [pastStart, setPastStart] = useState(false);
 
-  const [category, setCategory] = useState<MeetupCategory | null>(null);
-  const [topic, setTopic] = useState<MeetupTopic | null>(null);
-  const [format, setFormat] = useState<"in_person" | "online">("in_person");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
-  const [location, setLocation] = useState("");
-  const [onlineUrl, setOnlineUrl] = useState("");
-  const [visibility, setVisibility] = useState<"public" | "private">("public");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [capacity, setCapacity] = useState("");
+  const initialStart = initial ? toBangkokInput(initial.starts_at) : "";
+  const initialEnd = initial?.ends_at ? toBangkokInput(initial.ends_at) : "";
+  const [category, setCategory] = useState<MeetupCategory | null>(initial?.category ?? null);
+  const [topic, setTopic] = useState<MeetupTopic | null>(initial?.topic ?? null);
+  const [format, setFormat] = useState<"in_person" | "online">(initial?.format ?? "in_person");
+  const [date, setDate] = useState(initialStart.slice(0, 10));
+  const [startTime, setStartTime] = useState(initialStart.slice(11));
+  const [endTime, setEndTime] = useState(initialEnd.slice(11));
+  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(
+    initial?.lat != null && initial.lng != null ? { lat: initial.lat, lng: initial.lng } : null,
+  );
+  const [location, setLocation] = useState(initial?.location ?? "");
+  const [onlineUrl, setOnlineUrl] = useState(initial?.online_url ?? "");
+  const [visibility, setVisibility] = useState<"public" | "private">(initial?.visibility ?? "public");
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [capacity, setCapacity] = useState(initial?.capacity?.toString() ?? "");
 
   // The pin the sheet is editing. Kept apart from `pin` so backing out of the
   // sheet leaves an already-saved location alone.
@@ -175,6 +188,7 @@ export function HostMeetupWizard({
     date && startTime && endTime && endTime < startTime,
   );
   const endsAt =
+    startsAt === initialStart && endTime === initialEnd.slice(11) ? initialEnd :
     date && endTime
       ? `${endsNextDay ? nextBangkokDay(date) : date}T${endTime}`
       : "";
@@ -186,6 +200,9 @@ export function HostMeetupWizard({
     format === "online"
       ? URL_OK.test(onlineUrl.trim())
       : pin !== null || location.trim() !== "";
+  const legacyWithoutVenue = initial?.format === format &&
+    !initial.location && !initial.online_url && initial.lat == null &&
+    !location.trim() && !onlineUrl.trim() && !pin;
   const placeSet = pin !== null || location.trim() !== "";
 
   const dirty =
@@ -745,7 +762,7 @@ export function HostMeetupWizard({
             className="block w-full text-sm text-ink-muted file:mr-3 file:rounded-full file:border-0 file:bg-navy file:px-4 file:py-2 file:text-sm file:text-white hover:file:bg-navy-dark file:cursor-pointer"
           />
           <p className="mt-2 text-xs text-ink-muted">
-            {tr("Skip it and we'll use the category artwork.")}
+            {tr(initial?.image_url ? "Leave empty to keep the current cover." : "Skip it and we'll use the category artwork.")}
           </p>
         </div>
       </div>
@@ -764,7 +781,7 @@ export function HostMeetupWizard({
         ) : (
           <>
             {state?.error && (
-              <p className="mb-3 rounded-xl border border-danger-line bg-danger-surface px-4 py-3 text-sm text-danger-ink">
+              <p role="alert" className="mb-3 rounded-xl border border-danger-line bg-danger-surface px-4 py-3 text-sm text-danger-ink">
                 {tr(state.error)}
               </p>
             )}
@@ -798,7 +815,9 @@ export function HostMeetupWizard({
               </div>
             ) : step === 4 ? (
               <Button type="submit" fullWidth disabled={pending}>
-                {pending ? tr("Creating…") : tr("Create meetup")}
+                {initial
+                  ? tr(pending ? "Saving…" : "Save changes")
+                  : tr(pending ? "Creating…" : "Create meetup")}
               </Button>
             ) : (
               <Button
@@ -806,10 +825,12 @@ export function HostMeetupWizard({
                 fullWidth
                 disabled={
                   (step === 1 && category === null) ||
-                  (step === 2 && topic === null) ||
-                  (step === 3 && !(date && startTime && placeReady))
+                  (step === 2 && topic === null && initial?.topic !== null) ||
+                  (step === 3 && !(date && startTime && (placeReady || legacyWithoutVenue)))
                 }
-                onClick={() => {
+                onClick={(event) => {
+                  // The final step replaces this control with the submit button.
+                  event.preventDefault();
                   if (step === 3 && startsAt && startsInPast(startsAt)) {
                     setPastStart(true);
                     return;

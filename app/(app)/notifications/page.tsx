@@ -25,6 +25,8 @@ export const dynamic = "force-dynamic";
 // tab, but Mark-all-read clears everything (one read state, not three).
 const TAB_TYPES: Record<string, string[]> = {
   meetups: [
+    "meetup_cancelled",
+    "meetup_rescheduled",
     "meetup_rsvp",
     "meetup_request",
     "meetup_request_approved",

@@ -13,6 +13,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { nowISO } from "@/lib/time";
 import { requireUser } from "@/lib/auth";
 import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
@@ -21,12 +22,14 @@ import {
   MEETUP_TOPICS,
   meetupCoverUrl,
   meetupWhenParts,
+  meetupPhase,
   meetupCalendarUrl,
   type Meetup,
 } from "@/lib/meetups";
-import { isPast } from "@/lib/time";
+import { loadMeetupChat, privateMeetupVenues } from "@/lib/meetup-data";
 import { Avatar } from "@/components/Avatar";
-import { MeetupChat, type ChatMessage } from "./MeetupChat";
+import { MeetupChat } from "./MeetupChat";
+import { CancelHostedMeetup } from "./CancelHostedMeetup";
 import { getLocale } from "@/lib/i18n-server";
 import { EmptyState, LinkButton } from "@/components/ui";
 import {
@@ -150,9 +153,10 @@ export default async function MeetupDetailPage({ params }: Props) {
   // page (title, description, when, who's going) stays readable — that is what
   // someone decides to knock on.
   const restricted = m.visibility === "private" && !isHost && !going;
+  const venues = await privateMeetupVenues(supabase, m.visibility === "private" && !restricted ? [m.id] : []);
   const mSafe = restricted
     ? { ...m, location: null, online_url: null, lat: null, lng: null }
-    : m;
+    : { ...m, ...venues.get(m.id) };
   const mineStatus: MyRsvp = going
     ? "going"
     : allRows.some((a) => a.user_id === user.id)
@@ -181,7 +185,9 @@ export default async function MeetupDetailPage({ params }: Props) {
     )?.id ?? null;
 
   const cancelled = m.status === "cancelled";
-  const past = isPast(m.starts_at);
+  const phase = meetupPhase(m, Date.parse(nowISO()));
+  const upcoming = phase === "upcoming";
+  const canManage = isHost && canHost && !cancelled && phase !== "ended";
   const when = meetupWhenParts(m.starts_at);
   const endTime = m.ends_at ? meetupWhenParts(m.ends_at).time : null;
 
@@ -218,25 +224,15 @@ export default async function MeetupDetailPage({ params }: Props) {
     tServer("No one has RSVP'd yet."),
     tServer("Add to Calendar"),
     tServer("This meetup is full."),
-    tServer("Edit"),
+    tServer("Edit meetup"),
   ]);
   const tShared = await tServer("Shared once you're in");
 
   const spotsFull = m.capacity != null && !going && count >= m.capacity;
   const cat = MEETUP_CATEGORIES[m.category] ?? MEETUP_CATEGORIES.other;
-  // Attendee chat — RLS returns rows only when the viewer has an RSVP, so a
-  // non-attendee simply gets an empty list and we show the locked hint.
-  const { data: chatRaw } = await supabase
-    .from("meetup_messages")
-    .select(
-      "id, content, created_at, author:profiles(id, slug, full_name, photo_url)",
-    )
-    .eq("meetup_id", m.id)
-    .order("created_at", { ascending: true })
-    .limit(200);
-  const chatMessages = ((chatRaw ?? []) as unknown as ChatMessage[]).filter(
-    (msg) => !msg.author || !blocked.has(msg.author.id),
-  );
+  const chatMessages = going && !cancelled
+    ? await loadMeetupChat(supabase, m.id, blocked) ?? []
+    : [];
   const locale = await getLocale();
   const tChatTitle = await tServer("Attendee chat");
   const tChatLocked = await tServer(
@@ -252,21 +248,25 @@ export default async function MeetupDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-3xl mx-auto px-6 lg:px-10 py-14">
-      <div className="flex items-center justify-between mb-8">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <Link
           href="/meetups"
           className="text-sm text-ink-muted hover:text-navy inline-flex items-center gap-1.5"
         >
           <ArrowLeft className="w-4 h-4" /> {tBack}
         </Link>
-        {admin && (
-          <Link
-            href={`/admin/meetups/${m.id}/edit`}
-            className="text-sm text-ink-muted hover:text-navy inline-flex items-center gap-1.5"
-          >
-            <Pencil className="w-3.5 h-3.5" /> {tEdit}
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {((canManage && upcoming) || admin) && (
+            <LinkButton
+              href={canManage && upcoming ? `/meetups/${m.slug}/edit` : `/admin/meetups/${m.id}/edit`}
+              variant="secondary"
+              size="sm"
+            >
+              <Pencil className="h-4 w-4" /> {tEdit}
+            </LinkButton>
+          )}
+          {canManage && <CancelHostedMeetup meetupId={m.id} />}
+        </div>
       </div>
 
       {/* Cover — the host's upload, else the category artwork. */}
@@ -316,9 +316,9 @@ export default async function MeetupDetailPage({ params }: Props) {
           {tCancelledBanner}
         </div>
       )}
-      {!cancelled && past && (
+      {!cancelled && !upcoming && (
         <div className="mb-6 px-4 py-3 border border-line rounded-xl bg-cream text-sm text-ink-muted">
-          {tEnded}
+          {phase === "ongoing" ? await tServer("This meetup is in progress.") : tEnded}
         </div>
       )}
 
@@ -354,7 +354,7 @@ export default async function MeetupDetailPage({ params }: Props) {
               ) : m.format === "online" ? (
                 <>
                   {tOnline}
-                  {mSafe.online_url && (
+                  {!cancelled && mSafe.online_url && (
                     <>
                       <br />
                       <a
@@ -389,7 +389,7 @@ export default async function MeetupDetailPage({ params }: Props) {
           meetupId={m.id}
           canRsvp={canRsvp}
           canHost={canHost}
-          closed={cancelled || past}
+          closed={cancelled || !upcoming}
           state={{
             isHost,
             mine: mineStatus,
@@ -403,7 +403,7 @@ export default async function MeetupDetailPage({ params }: Props) {
             requesters,
           }}
         />
-        {!cancelled && !past && (
+        {!cancelled && upcoming && (
           <LinkButton
             href={meetupCalendarUrl(mSafe)}
             target="_blank"
@@ -422,7 +422,7 @@ export default async function MeetupDetailPage({ params }: Props) {
           <Users className="w-4 h-4" />
           {tWhosGoing} · {count}
           {m.capacity != null ? `/${m.capacity}` : ""} {tGoing}
-          {spotsFull && !past && !cancelled && (
+          {spotsFull && upcoming && !cancelled && (
             <span className="text-danger-ink normal-case tracking-normal">
               — {tFull}
             </span>
@@ -436,7 +436,7 @@ export default async function MeetupDetailPage({ params }: Props) {
             dense
             padding="lg"
             description={
-              past || cancelled
+              !upcoming || cancelled
                 ? tNobodyClosed
                 : !canRsvp
                   ? tNobodyReadOnly
@@ -483,7 +483,7 @@ export default async function MeetupDetailPage({ params }: Props) {
           {going ? (
             <MeetupChat
               meetupId={m.id}
-              messages={chatMessages}
+              initialMessages={chatMessages}
               locale={locale}
             />
           ) : (

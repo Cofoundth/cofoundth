@@ -5,7 +5,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { type Meetup } from "@/lib/meetups";
+import { DEFAULT_MEETUP_DURATION_MS, meetupPhase, type Meetup } from "@/lib/meetups";
+import { privateMeetupVenues } from "@/lib/meetup-data";
 import { nowISO } from "@/lib/time";
 import { getAccountRole } from "@/lib/account";
 import { canHostMeetup, canRsvpMeetup } from "@/lib/roles";
@@ -53,6 +54,8 @@ export default async function MeetupsPage({
   const user = await requireUser();
   const supabase = await createClient();
   const now = nowISO();
+  const nowMs = Date.parse(now);
+  const fallbackStart = new Date(nowMs - DEFAULT_MEETUP_DURATION_MS).toISOString();
   const { create } = await searchParams;
 
   // RLS already hides drafts. Private meetups ARE listed since 0072 — private
@@ -65,12 +68,14 @@ export default async function MeetupsPage({
       supabase
         .from("meetups")
         .select(SELECT)
-        .gte("starts_at", now)
+        .or(
+          `and(status.eq.cancelled,starts_at.gt.${now}),and(status.eq.published,ends_at.gt.${now}),and(status.eq.published,ends_at.is.null,starts_at.gt.${fallbackStart})`,
+        )
         .order("starts_at", { ascending: true }),
       supabase
         .from("meetups")
         .select(SELECT)
-        .lt("starts_at", now)
+        .or(`ends_at.lte.${now},and(ends_at.is.null,starts_at.lte.${fallbackStart})`)
         .eq("status", "published")
         .order("starts_at", { ascending: false })
         .limit(10),
@@ -99,12 +104,13 @@ export default async function MeetupsPage({
     (m) => !blocked.has(m.created_by),
   );
 
-  const ids = [...upcoming, ...past].map((m) => m.id);
+  const listed = [...upcoming, ...past];
+  const ids = listed.map((m) => m.id);
   const hostedIds = new Set(
     [...upcoming, ...past].filter((m) => m.created_by === user.id).map((m) => m.id),
   );
 
-  const [{ data: rsvps }, { data: invitesRaw }, { data: matchRows }] =
+  const [{ data: rsvps }, { data: invitesRaw }, { data: matchRows }, privateVenues] =
     await Promise.all([
       ids.length
         ? supabase
@@ -125,6 +131,7 @@ export default async function MeetupsPage({
         .from("matches")
         .select("id, profile_a_id, profile_b_id")
         .or(`profile_a_id.eq.${user.id},profile_b_id.eq.${user.id}`),
+      privateMeetupVenues(supabase, listed.filter((m) => m.visibility === "private").map((m) => m.id)),
     ]);
 
   // Every count / roster figure below is SEATS ONLY. A 'requested' row is a
@@ -203,12 +210,14 @@ export default async function MeetupsPage({
     // of the listing would make "the host chooses who joins" decorative. The
     // description stays — it is what a founder reads before knocking.
     const restricted = m.visibility === "private" && !isHost && mine !== "going";
+    const venue = privateVenues.get(m.id) ?? m;
     return {
       ...m,
-      location: restricted ? null : m.location,
-      online_url: restricted ? null : m.online_url,
-      lat: restricted ? null : m.lat,
-      lng: restricted ? null : m.lng,
+      location: restricted ? null : venue.location,
+      online_url: restricted ? null : venue.online_url,
+      lat: restricted ? null : venue.lat,
+      lng: restricted ? null : venue.lng,
+      phase: meetupPhase(m, nowMs),
       restricted,
       count: countBy.get(m.id) ?? 0,
       goers: (goersBy.get(m.id) ?? [])
@@ -240,10 +249,10 @@ export default async function MeetupsPage({
     <Section>
       <MeetupsClient
         thisMonth={upcoming
-          .filter((m) => bkkMonth(m.starts_at) === currentMonth)
+          .filter((m) => bkkMonth(m.starts_at) <= currentMonth)
           .map(toItem)}
         later={upcoming
-          .filter((m) => bkkMonth(m.starts_at) !== currentMonth)
+          .filter((m) => bkkMonth(m.starts_at) > currentMonth)
           .map(toItem)}
         past={past.map(toItem)}
         nearby={nearbyIds.map((id) => faces.get(id)).filter(Boolean) as MiniProfile[]}

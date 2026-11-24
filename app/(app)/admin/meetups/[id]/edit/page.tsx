@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
 import { isUuid } from "@/lib/slug";
+import { privateMeetupVenues } from "@/lib/meetup-data";
 import type { Meetup } from "@/lib/meetups";
 import { MeetupForm } from "../../MeetupForm";
 import { MeetupDangerZone } from "../../MeetupDangerZone";
@@ -27,12 +28,13 @@ export default async function EditMeetupPage({ params }: Props) {
   const { data } = await admin
     .from("meetups")
     .select(
-      "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, created_by, created_at, updated_at",
+      "id, slug, title, description, format, location, online_url, starts_at, ends_at, capacity, status, visibility, created_by, created_at, updated_at",
     )
     .eq("id", id)
     .maybeSingle();
   if (!data) notFound();
-  const meetup = data as Meetup;
+  const venues = await privateMeetupVenues(admin, data.visibility === "private" ? [id] : []);
+  const meetup = { ...data, ...venues.get(id) } as Meetup;
 
   return (
     <div className="max-w-[640px] mx-auto px-6 lg:px-10 py-10">

@@ -8,9 +8,12 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBlockedIds, isBlockedEitherWay } from "@/lib/blocking";
 import { notifyUsers } from "@/lib/notify";
-import { slugify } from "@/lib/slug";
+import { isUuid, slugify } from "@/lib/slug";
 import {
   bangkokInputToISO,
+  meetupPhase,
+  toBangkokInput,
+  type Meetup,
   MEETUP_CATEGORIES,
   MEETUP_TOPICS,
   type MeetupCategory,
@@ -47,6 +50,11 @@ async function goingCountOf(
     .eq("meetup_id", meetupId)
     .eq("status", "going");
   return count ?? 0;
+}
+
+function seatError(error: { message: string }): string | undefined {
+  if (error.message === "meetup_full") return "This meetup is full.";
+  if (error.message === "meetup_closed") return "Sign-ups for this meetup have closed.";
 }
 
 // Toggle the caller's RSVP for a meetup. Runs on the user's RLS client:
@@ -90,8 +98,8 @@ export async function rsvpAction(
     .maybeSingle();
   if (!meetup) return { error: "Meetup not found." };
   if (meetup.status === "cancelled") return { error: "This meetup was cancelled." };
-  if (new Date(meetup.starts_at as string).getTime() < Date.now()) {
-    return { error: "This meetup has already happened." };
+  if (Date.parse(meetup.starts_at) <= Date.now()) {
+    return { error: "Sign-ups for this meetup have closed." };
   }
 
   // A blocked pair never lands in the same room. This has to run BEFORE the
@@ -137,9 +145,7 @@ export async function rsvpAction(
       ? "going"
       : "requested";
 
-    // Advisory capacity check, and only for a SEAT — a request costs nothing,
-    // and a full private meetup still takes knocks (someone may leave). A race
-    // at the very last seat is possible and acceptable at this scale.
+    // A request leaves capacity untouched. The database serializes seat grants.
     if (nextStatus === "going" && meetup.capacity != null) {
       const goingCount = await goingCountOf(supabase, meetupId);
       if (
@@ -160,6 +166,8 @@ export async function rsvpAction(
         { onConflict: "meetup_id,user_id", ignoreDuplicates: true },
       );
       if (error) {
+        const reason = seatError(error);
+        if (reason) return { error: reason };
         console.error("[meetups.rsvp]", error);
         return { error: "Couldn't RSVP. Try again." };
       }
@@ -220,6 +228,8 @@ export async function rsvpAction(
       count,
     };
   }
+
+  if (hostId === user.id) return { error: "The host is included in the attendee count." };
 
   // Cancel — deletes whichever row exists, seat or request.
   const { error } = await supabase
@@ -289,34 +299,50 @@ export async function respondRequestAction(
   if ((row.status as string) === "going") return { ok: true };
 
   if (approve) {
+    if (Date.parse(meetup.starts_at) <= Date.now()) {
+      return { error: "Sign-ups for this meetup have closed." };
+    }
+    if (await isBlockedEitherWay(user.id, userId)) {
+      return { error: "That request is no longer there." };
+    }
     if (meetup.capacity != null) {
       const goingCount = await goingCountOf(admin, meetupId);
       if (goingCount >= (meetup.capacity as number)) {
         return { error: "This meetup is full." };
       }
     }
-    const { error } = await admin
+    const { data: updated, error } = await admin
       .from("meetup_rsvps")
       .update({ status: "going" })
       .eq("meetup_id", meetupId)
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .eq("status", "requested")
+      .select("user_id")
+      .maybeSingle();
     if (error) {
+      const reason = seatError(error);
+      if (reason) return { error: reason };
       console.error("[meetups.request.approve]", error);
       return { error: "Couldn't update that request. Try again." };
     }
+    if (!updated) return { error: "That request is no longer there." };
   } else {
     // Declining DELETES the knock rather than parking a 'declined' status:
     // the founder can ask again later, and the host's list stays the list of
     // people actually waiting.
-    const { error } = await admin
+    const { data: deleted, error } = await admin
       .from("meetup_rsvps")
       .delete()
       .eq("meetup_id", meetupId)
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .eq("status", "requested")
+      .select("user_id")
+      .maybeSingle();
     if (error) {
       console.error("[meetups.request.decline]", error);
       return { error: "Couldn't update that request. Try again." };
     }
+    if (!deleted) return { error: "That request is no longer there." };
   }
 
   // The knock has been answered, so the host's "asked to join" notification is
@@ -396,8 +422,8 @@ export async function inviteFoundersAction(
   if (meetup.status === "cancelled") {
     return { error: "This meetup was cancelled." };
   }
-  if (new Date(meetup.starts_at as string).getTime() < Date.now()) {
-    return { error: "This meetup has already happened." };
+  if (Date.parse(meetup.starts_at) <= Date.now()) {
+    return { error: "Sign-ups for this meetup have closed." };
   }
   if (
     (meetup.visibility as string) === "private" &&
@@ -509,7 +535,7 @@ export async function respondInviteAction(
 
   const { data: meetup } = await supabase
     .from("meetups")
-    .select("id, slug, status, starts_at, capacity, created_by")
+    .select("id, slug, status, starts_at, created_by")
     .eq("id", meetupId)
     .maybeSingle();
   if (!meetup) return { error: "Meetup not found." };
@@ -537,34 +563,22 @@ export async function respondInviteAction(
     if (meetup.status === "cancelled") {
       return { error: "This meetup was cancelled." };
     }
-    if (new Date(meetup.starts_at as string).getTime() < Date.now()) {
-      return { error: "This meetup has already happened." };
-    }
-    if (meetup.capacity != null) {
-      const goingCount = await goingCountOf(admin, meetupId);
-      if (goingCount >= (meetup.capacity as number)) {
-        return { error: "This meetup is full." };
-      }
-    }
-    // The seat first, the bookkeeping second: if the insert fails the invite
-    // stays 'pending' and the founder can try again, rather than reading as
-    // accepted with no seat behind it.
-    const { error: seatErr } = await admin.from("meetup_rsvps").upsert(
-      { meetup_id: meetupId, user_id: user.id, status: "going" },
-      { onConflict: "meetup_id,user_id" },
-    );
-    if (seatErr) {
-      console.error("[meetups.invite.accept]", seatErr);
-      return { error: "Couldn't join the meetup. Try again." };
+    if (Date.parse(meetup.starts_at) <= Date.now()) {
+      return { error: "Sign-ups for this meetup have closed." };
     }
   }
 
-  const { error } = await admin
-    .from("meetup_invites")
-    .update({ status: accept ? "accepted" : "declined" })
-    .eq("meetup_id", meetupId)
-    .eq("invitee_id", user.id);
+  const { error } = await admin.rpc("answer_meetup_invite", {
+    event_id: meetupId,
+    attendee_id: user.id,
+    accept_invite: accept,
+  });
   if (error) {
+    const reason = seatError(error);
+    if (reason) return { error: reason };
+    if (error.message === "meetup_invite_answered") {
+      return { error: "That invite was already answered." };
+    }
     console.error("[meetups.invite.respond]", error);
     return { error: "Couldn't answer that invite. Try again." };
   }
@@ -719,6 +733,19 @@ export async function hostMeetupAction(
   _prev: HostMeetupState,
   formData: FormData,
 ): Promise<HostMeetupState> {
+  return saveHostedMeetup(formData);
+}
+
+export async function updateHostedMeetupAction(
+  id: string,
+  _prev: HostMeetupState,
+  formData: FormData,
+): Promise<HostMeetupState> {
+  if (!isUuid(id)) return { error: "Meetup not found." };
+  return saveHostedMeetup(formData, id);
+}
+
+async function saveHostedMeetup(formData: FormData, id?: string): Promise<HostMeetupState> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -735,6 +762,21 @@ export async function hostMeetupAction(
           ? "Explorer accounts can join meetups, not host them."
           : "Investor accounts can't host meetups.",
     };
+  }
+
+  let existing: Pick<Meetup, "slug" | "topic" | "status" | "starts_at" | "ends_at" | "image_url" | "updated_at"> | null = null;
+  if (id) {
+    const { data } = await supabase
+      .from("meetups")
+      .select("slug, topic, status, starts_at, ends_at, image_url, updated_at")
+      .eq("id", id)
+      .eq("created_by", user.id)
+      .maybeSingle();
+    if (!data) return { error: "Meetup not found." };
+    if (data.status !== "published" || meetupPhase(data, Date.now()) !== "upcoming") {
+      return { error: "Only upcoming meetups can be edited." };
+    }
+    existing = data;
   }
 
   const title = String(formData.get("title") ?? "").trim();
@@ -758,13 +800,13 @@ export async function hostMeetupAction(
   if (description.length > 5000) {
     return { error: "Description is too long (5000 max)." };
   }
-  if (!(category in MEETUP_CATEGORIES)) {
+  if (!Object.hasOwn(MEETUP_CATEGORIES, category)) {
     return { error: "Pick a category." };
   }
   // Required for anything created through the wizard. The COLUMN stays
   // nullable (legacy rows have no topic) — the requirement lives here, at the
   // only place that writes new ones.
-  if (!(topic in MEETUP_TOPICS)) {
+  if (!Object.hasOwn(MEETUP_TOPICS, topic) && !(topic === "" && existing?.topic === null)) {
     return { error: "Pick a topic." };
   }
   if (format !== "in_person" && format !== "online") {
@@ -774,15 +816,19 @@ export async function hostMeetupAction(
     return { error: "Enter a valid meeting link (https://…)." };
   }
 
-  const starts_at = bangkokInputToISO(startsRaw);
+  const starts_at = existing && startsRaw === toBangkokInput(existing.starts_at)
+    ? existing.starts_at
+    : bangkokInputToISO(startsRaw);
   if (!starts_at) return { error: "Pick a start date and time." };
-  if (new Date(starts_at).getTime() < Date.now()) {
+  if (Date.parse(starts_at) <= Date.now()) {
     return { error: "Pick a time in the future." };
   }
 
   let ends_at: string | null = null;
   if (endsRaw) {
-    ends_at = bangkokInputToISO(endsRaw);
+    ends_at = existing?.ends_at && endsRaw === toBangkokInput(existing.ends_at)
+      ? existing.ends_at
+      : bangkokInputToISO(endsRaw);
     if (!ends_at) return { error: "End time is invalid." };
     if (new Date(ends_at).getTime() <= new Date(starts_at).getTime()) {
       return { error: "End time must be after the start time." };
@@ -791,8 +837,8 @@ export async function hostMeetupAction(
 
   let capacity: number | null = null;
   if (capacityRaw) {
-    const n = parseInt(capacityRaw, 10);
-    if (!Number.isFinite(n) || n < 2 || n > 500) {
+    const n = Number(capacityRaw);
+    if (!Number.isInteger(n) || n < 2 || n > 500) {
       return { error: "Capacity must be between 2 and 500." };
     }
     capacity = n;
@@ -809,6 +855,7 @@ export async function hostMeetupAction(
     lat = Number(latRaw);
     lng = Number(lngRaw);
     if (
+      !latRaw || !lngRaw ||
       !Number.isFinite(lat) ||
       !Number.isFinite(lng) ||
       Math.abs(lat) > 90 ||
@@ -819,12 +866,13 @@ export async function hostMeetupAction(
   }
 
   const admin = createAdminClient();
-  const slug = await uniqueSlug(admin, title);
+  const slug = existing?.slug ?? await uniqueSlug(admin, title);
 
   // Optional cover upload → the public meetup-covers bucket. The bucket caps
   // size (2MB) and MIME (jpeg/png/webp) server-side; this trusts those caps
   // rather than re-implementing them. No cover → the category SVG fallback.
-  let image_url: string | null = null;
+  let image_url = existing?.image_url ?? null;
+  let uploadedPath: string | null = null;
   if (cover instanceof File && cover.size > 0) {
     if (cover.size > 2 * 1024 * 1024) {
       return { error: "Cover image must be under 2MB." };
@@ -840,46 +888,92 @@ export async function hostMeetupAction(
       .from("meetup-covers")
       .upload(path, cover, { contentType: cover.type || "image/jpeg" });
     if (upErr) return { error: "Could not upload the cover image." };
+    uploadedPath = path;
     image_url = admin.storage.from("meetup-covers").getPublicUrl(path).data
       .publicUrl;
   }
 
-  const { data: created, error } = await admin
-    .from("meetups")
-    .insert({
-      slug,
-      title,
-      description: description || null,
-      category: category as MeetupCategory,
-      topic: topic as MeetupTopic,
-      format: format as MeetupFormat,
-      location: format === "in_person" ? location || null : null,
-      online_url: format === "online" ? onlineUrl || null : null,
-      starts_at,
-      ends_at,
-      capacity,
-      status: "published",
-      image_url,
-      visibility,
-      lat,
-      lng,
-      created_by: user.id,
-    })
-    .select("id, slug")
-    .single();
-  if (error || !created) {
-    return { error: "Could not create the meetup. Try again." };
+  const draft = {
+    title,
+    description: description || null,
+    category: category as MeetupCategory,
+    topic: topic ? (topic as MeetupTopic) : null,
+    format: format as MeetupFormat,
+    location: format === "in_person" ? location || null : null,
+    online_url: format === "online" ? onlineUrl || null : null,
+    starts_at,
+    ends_at,
+    capacity,
+    image_url,
+    visibility,
+    lat: format === "in_person" ? lat : null,
+    lng: format === "in_person" ? lng : null,
+  };
+  const result = id && existing
+    ? await admin.from("meetups")
+      .update({ ...draft, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("created_by", user.id)
+      .eq("status", "published")
+      .eq("updated_at", existing.updated_at)
+      .gt("starts_at", new Date().toISOString())
+      .select("id")
+      .maybeSingle()
+    : await admin.rpc("publish_hosted_meetup", {
+      meetup_values: { ...draft, slug, created_by: user.id },
+    });
+
+  if (result.error || !result.data) {
+    if (uploadedPath) await admin.storage.from("meetup-covers").remove([uploadedPath]);
+    if (result.error?.message === "meetup_capacity_below_attendance") {
+      return { error: "Capacity can't be lower than the number already going." };
+    }
+    if (result.error) console.error("[meetups.save]", result.error);
+    return { error: id ? "Could not save the meetup. Reload and try again." : "Could not create the meetup. Try again." };
   }
 
-  // The host is going to their own meetup — count them from the start.
-  await admin.from("meetup_rsvps").insert({
-    meetup_id: created.id,
-    user_id: user.id,
-    status: "going",
-  });
+  revalidatePath("/meetups");
+  revalidatePath(`/meetups/${slug}`);
+  revalidatePath("/admin/meetups");
+  redirect(`/meetups/${slug}`);
+}
+
+export async function cancelHostedMeetupAction(id: string): Promise<MeetupActionResult> {
+  if (!isUuid(id)) return { error: "Meetup not found." };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !canHostMeetup(await getAccountRole(supabase, user.id))) {
+    return { error: "Only the host can cancel this meetup." };
+  }
+
+  const { data: meetup } = await supabase.from("meetups")
+    .select("slug, status, starts_at, ends_at, updated_at")
+    .eq("id", id)
+    .eq("created_by", user.id)
+    .maybeSingle();
+  if (!meetup) return { error: "Only the host can cancel this meetup." };
+  if (meetup.status === "cancelled") return { ok: true };
+  if (meetup.status !== "published" || meetupPhase(meetup, Date.now()) === "ended") {
+    return { error: "This meetup has ended." };
+  }
+
+  const { data, error } = await createAdminClient().from("meetups")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("created_by", user.id)
+    .eq("status", "published")
+    .eq("updated_at", meetup.updated_at)
+    .select("id")
+    .maybeSingle();
+  if (error || !data) {
+    if (error) console.error("[meetups.host.cancel]", error);
+    return { error: "Couldn't cancel the meetup. Reload and try again." };
+  }
 
   revalidatePath("/meetups");
-  redirect(`/meetups/${created.slug}`);
+  revalidatePath(`/meetups/${meetup.slug}`);
+  revalidatePath("/admin/meetups");
+  return { ok: true };
 }
 
 // Report a meetup into the same moderation queue posts and profiles use.

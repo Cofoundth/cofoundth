@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin";
+import { privateMeetupVenues } from "@/lib/meetup-data";
 import { slugify } from "@/lib/slug";
 import { bangkokInputToISO, type MeetupFormat, type MeetupStatus } from "@/lib/meetups";
 
@@ -151,13 +152,31 @@ export async function updateMeetupAction(
   if ("error" in parsed) return { error: parsed.error };
 
   const admin = createAdminClient();
+  const { data: existing } = await admin.from("meetups")
+    .select("visibility, location, lat, lng, updated_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (!existing) return { error: "Meetup not found." };
+  const venues = await privateMeetupVenues(admin, existing.visibility === "private" ? [id] : []);
+  const oldVenue = venues.get(id) ?? existing;
+  const keepPin = parsed.format === "in_person" && parsed.location === oldVenue.location;
+
   const { data: updated, error } = await admin
     .from("meetups")
-    .update({ ...parsed, updated_at: new Date().toISOString() })
+    .update({
+      ...parsed,
+      lat: keepPin ? oldVenue.lat : null,
+      lng: keepPin ? oldVenue.lng : null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id)
+    .eq("updated_at", existing.updated_at)
     .select("slug")
     .single();
   if (error || !updated) {
+    if (error?.message === "meetup_capacity_below_attendance") {
+      return { error: "Capacity can't be lower than the number already going." };
+    }
     console.error("[admin.meetups.update]", error);
     return { error: "Couldn't save the meetup. Try again." };
   }

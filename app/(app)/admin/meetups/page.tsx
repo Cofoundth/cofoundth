@@ -7,8 +7,9 @@ import { isAdminUser } from "@/lib/admin";
 import { tServer } from "@/lib/i18n-server";
 import { AdminTabs } from "@/components/AdminTabs";
 import { Card, EmptyState, LinkButton, Section } from "@/components/ui";
-import { meetupWhenParts, type Meetup } from "@/lib/meetups";
-import { isPast } from "@/lib/time";
+import { privateMeetupVenues } from "@/lib/meetup-data";
+import { meetupPhase, meetupWhenParts, type Meetup } from "@/lib/meetups";
+import { nowISO } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +30,16 @@ export default async function AdminMeetupsPage() {
   const { data: meetupsRaw } = await admin
     .from("meetups")
     .select(
-      "id, slug, title, format, location, online_url, starts_at, ends_at, capacity, status, created_by, created_at, updated_at, description",
+      "id, slug, title, format, location, online_url, starts_at, ends_at, capacity, status, visibility, created_by, created_at, updated_at, description",
     )
     .order("starts_at", { ascending: false });
   const meetups = (meetupsRaw ?? []) as Meetup[];
+  const now = Date.parse(nowISO());
+  const [venues, inProgress, ended] = await Promise.all([
+    privateMeetupVenues(admin, meetups.filter((m) => m.visibility === "private").map((m) => m.id)),
+    tServer("In progress"),
+    tServer("Ended"),
+  ]);
 
   // RSVP counts for every meetup in one query. SEATS only: since 0072 a
   // meetup_rsvps row is either a seat ('going') or a pending request on a
@@ -82,7 +89,9 @@ export default async function AdminMeetupsPage() {
         <Card padding="none" className="overflow-hidden divide-y divide-line">
           {meetups.map((m) => {
             const when = meetupWhenParts(m.starts_at);
-            const past = isPast(m.starts_at);
+            const phase = meetupPhase(m, now);
+            const venue = venues.get(m.id) ?? m;
+            const phaseLabel = phase === "ongoing" ? inProgress : phase === "ended" ? ended : null;
             return (
               <Link
                 key={m.id}
@@ -98,8 +107,8 @@ export default async function AdminMeetupsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="text-ink truncate">{m.title}</div>
                   <div className="text-xs text-ink-muted">
-                    {m.format === "online" ? "Online" : m.location || "In person"}
-                    {past ? " · past" : ""}
+                    {m.format === "online" ? "Online" : venue.location || "In person"}
+                    {m.status === "published" && phaseLabel ? ` · ${phaseLabel}` : ""}
                   </div>
                 </div>
                 <div className="shrink-0 inline-flex items-center gap-1 text-xs text-ink-muted">

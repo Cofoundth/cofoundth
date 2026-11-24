@@ -276,6 +276,18 @@ export function bangkokInputToISO(v: string): string | null {
   return isNaN(d.getTime()) ? null : d.toISOString();
 }
 
+export const DEFAULT_MEETUP_DURATION_MS = 2 * 60 * 60_000;
+
+export function meetupPhase(
+  m: { starts_at: string; ends_at?: string | null },
+  now: number,
+): "upcoming" | "ongoing" | "ended" {
+  const start = Date.parse(m.starts_at);
+  const end = m.ends_at ? Date.parse(m.ends_at) : start + DEFAULT_MEETUP_DURATION_MS;
+  if (now < start) return "upcoming";
+  return now < end ? "ongoing" : "ended";
+}
+
 // ── Add to Google Calendar ──────────────────────────────────────────────────
 // Google Calendar's TEMPLATE link wants UTC as YYYYMMDDTHHMMSSZ.
 function toGCalDate(d: Date): string {
@@ -298,7 +310,7 @@ export function meetupCalendarUrl(m: {
   // Default to a 2-hour block when no end time was set.
   const end = m.ends_at
     ? new Date(m.ends_at)
-    : new Date(start.getTime() + 2 * 60 * 60_000);
+    : new Date(start.getTime() + DEFAULT_MEETUP_DURATION_MS);
 
   const where =
     m.format === "online"

@@ -60,6 +60,8 @@ export function notifHref(n: NotifLike): string {
     // where the HOST's Requests list lives (MeetupJoinControls renders it on
     // the detail page), so "someone requested a spot" deep-links to the place
     // the host answers it.
+    case "meetup_cancelled":
+    case "meetup_rescheduled":
     case "meetup_rsvp":
     case "meetup_request":
     case "meetup_request_approved":
@@ -120,6 +122,10 @@ export function notifText(
       return tr("{name} invited you to a meetup")
         .replace("{name}", () => name)
         .concat(n.data?.title ? ` · ${n.data.title}` : "");
+    case "meetup_cancelled":
+      return tr("{title} was cancelled").replace("{title}", () => n.data?.title || tr("The meetup"));
+    case "meetup_rescheduled":
+      return tr("{title} has a new time").replace("{title}", () => n.data?.title || tr("The meetup"));
     // These two name the MEETUP rather than the host: what the reader wants
     // to know is which door opened, not who turned the handle.
     case "meetup_request_approved":
